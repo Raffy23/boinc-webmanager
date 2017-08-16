@@ -1,15 +1,21 @@
 Boinc Webmanager
 =====================
 
-The Boinc Webmanager provides a simple Web UI for multiple Boinc Clients
+The Boinc Webmanager provides a simple Web UI for multiple Boinc Clients, similar to any other 
+Account Management Website like BAM. In contrast to these Websites the Server needs direct access
+to the Boinc core client and is able to view Tasks and directly control the client
 
 
 ## Installation
 1. Clone the Project from Github with `git clone`
 2. Download and Install `sbt` and `scala`
-3. Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
-4. Create a `application.conf` file with the Settings (See Configuration Section for more information)
-5. Copy the Fat-Jar and Run it with `java -jar Boinc-Webmanager-assembly-XXXX-SNAPSHOT.jar`
+3. - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
+   - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
+4. Copy the Fat-Jar to any location where the Application has read / write access
+5. Create a `application.conf` file with the Settings (See Configuration Section for more information)
+6. Create the `webroot` Folder an copy the `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into it
+7. Copy FontAwesome & NProcess css and font files into the Directory
+8. Copy the Fat-Jar and Run it with `java -jar Boinc-Webmanager-assembly-XXXX-SNAPSHOT.jar`
 
 ## Configuration
 Sample application.conf: 
@@ -52,3 +58,8 @@ boinc.projects {
   }
 }
 ````
+
+### TODO
+- [ ] Server Statistics
+- [ ] Complete basic client UI
+- [ ] Multiple Languages (en / de)
