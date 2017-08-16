@@ -1,0 +1,63 @@
+// (5) shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
+import sbtcrossproject.{crossProject, CrossType}
+
+enablePlugins(ScalaJSPlugin)
+
+name := "Boinc-Webmanager"
+
+version := "0.1b"
+
+scalaVersion in ThisBuild := "2.12.2"
+
+scalaJSUseMainModuleInitializer := true
+
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
+
+val akkaVersion = "2.4.19"
+val akkHttpVersion = "10.0.9"
+val http4sVersion = "0.15.14a"
+
+lazy val root = project.in(file(".")).
+  aggregate(clientJS, serverJVM).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val manager = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Full)
+  .in(file("."))
+  .settings(
+    name := "Boinc-Webmanager",
+    version := "0.1b-SNAPSHOT",
+    mainClass in assembly := Some("at.happywetter.boinc.WebServer"),
+    test in assembly := {}
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %% "http4s-dsl" % http4sVersion,
+      "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+      "com.github.benhutchison" %% "prickle" % "1.1.13",
+      "com.github.pureconfig" %% "pureconfig" % "0.7.2",
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+      "org.jsoup" % "jsoup" % "1.10.3" //MK_DATA_EXTRACTOR
+    )
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.3",
+      "com.github.benhutchison" %%% "prickle" % "1.1.13",
+      "com.github.japgolly.scalacss" %%% "core" % "0.5.3",
+      "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
+      "com.lihaoyi" %%% "scalatags" % "0.6.5"
+    ),
+    jsDependencies ++= Seq(
+      "org.webjars.npm" % "navigo" % "4.0.0" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
+      "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "nprogress"
+    )
+  )
+
+lazy val shared = project in file("shared")
+
+lazy val serverJVM = manager.jvm.dependsOn(shared)
+lazy val clientJS = manager.js.dependsOn(shared)
