@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.routes
 
 import scala.scalajs.js
-import scala.scalajs.js.Dictionary
 import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
 
 /**

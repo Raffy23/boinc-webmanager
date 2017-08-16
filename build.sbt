@@ -4,14 +4,11 @@ import sbtcrossproject.{crossProject, CrossType}
 enablePlugins(ScalaJSPlugin)
 
 name := "Boinc-Webmanager"
-
 version := "0.1b"
-
 scalaVersion in ThisBuild := "2.12.2"
-
-scalaJSUseMainModuleInitializer := true
-
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
+
+//scalaJSUseMainModuleInitializer := true
 
 val akkaVersion = "2.4.19"
 val akkHttpVersion = "10.0.9"
@@ -29,9 +26,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   .in(file("."))
   .settings(
     name := "Boinc-Webmanager",
-    version := "0.1b-SNAPSHOT",
-    mainClass in assembly := Some("at.happywetter.boinc.WebServer"),
-    test in assembly := {}
+    version := "0.1b-SNAPSHOT"
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
@@ -51,13 +46,14 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
       "com.lihaoyi" %%% "scalatags" % "0.6.5"
     ),
+    resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(
-      "org.webjars.npm" % "navigo" % "4.0.0" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
-      "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "nprogress"
+      "org.webjars.npm" % "navigo" % "5.3.1" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
+      "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "NProgress"
     )
   )
 
 lazy val shared = project in file("shared")
 
-lazy val serverJVM = manager.jvm.dependsOn(shared)
-lazy val clientJS = manager.js.dependsOn(shared)
+lazy val serverJVM = manager.jvm.dependsOn(shared).settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
+lazy val clientJS = manager.js.dependsOn(shared).settings(mainClass := Some("at.happywetter.boinc.web.Main"))

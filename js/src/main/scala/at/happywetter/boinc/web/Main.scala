@@ -16,10 +16,13 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
   * @version 19.07.2017
   */
 @JSExportTopLevel("Main")
-object Bootstrapper {
+object Main {
 
   @JSExport
-  def launch(): Unit = {
+  def launch(): Unit = main()
+
+  @JSExport
+  def main(): Unit = {
     println("Booting Application ...")
 
     NProgress.start()
