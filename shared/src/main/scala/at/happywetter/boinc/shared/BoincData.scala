@@ -158,7 +158,8 @@ final case class BoincState(hostInfo: HostInfo
                      ,apps: Map[String,App]
                      ,workunits: List[Workunit]
                      ,boincVersion: String
-                     ,platform: String)
+                     ,platform: String
+                     ,results: List[Result])
 
 final case class Workunit(name: String
                     ,appName: String

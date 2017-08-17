@@ -25,6 +25,8 @@ object LayoutManager {
     val mainElement = loadMainElement(page)
     dom.window.console.log("Rendering View: " + page.getClass.getSimpleName)
 
+    println(s"LayoutManager: render ${page.getClass.getSimpleName}")
+
     mainElement.innerHTML = ""
     mainElement.appendChild(page.component.render)
     page.onRender()

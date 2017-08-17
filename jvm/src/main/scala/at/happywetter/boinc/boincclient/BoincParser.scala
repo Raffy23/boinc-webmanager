@@ -3,6 +3,7 @@ package at.happywetter.boinc.boincclient
 import at.happywetter.boinc.shared._
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.xml.NodeSeq
 
 /**
@@ -131,8 +132,9 @@ object BoincStateParser {
                        (node \ "core_client_release").text
 
     val apps: mutable.Map[String,App] = new mutable.HashMap[String,App]()
-    val projects: mutable.ListBuffer[Project] = new mutable.ListBuffer[Project]
-    val workunits: mutable.ListBuffer[Workunit] = new mutable.ListBuffer[Workunit]
+    val projects: ListBuffer[Project] = new ListBuffer[Project]
+    val workunits: ListBuffer[Workunit] = new ListBuffer[Workunit]
+    val results: ListBuffer[Result] = new ListBuffer[Result]
 
     var curProject: Project = null
     val curApp: mutable.Queue[NodeSeq] = new mutable.Queue[NodeSeq]()
@@ -158,11 +160,23 @@ object BoincStateParser {
             )
           }
         case "workunit" => workunits += WorkunitParser.fromXML(n)
-        case _ => /* Do nothing */
+        case "result" => results += ResultParser.fromXML(n)
+        case _ => /* Nothing to do ... */
+
+        // Maybe implement following tags in near future:
+        // executing_as_daemon, global_preferences, time_stats, net_stats ?
       }
     }
 
-    BoincState(hostInfo,projects.toList,apps.toMap,workunits.toList,boincVersion,(node \  "platform_name").text)
+    BoincState(
+      hostInfo,
+      projects.toList,
+      apps.toMap,
+      workunits.toList,
+      boincVersion,
+      (node \  "platform_name").text,
+      results.toList
+    )
   }
 
 }

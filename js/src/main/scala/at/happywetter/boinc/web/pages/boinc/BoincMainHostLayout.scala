@@ -28,7 +28,7 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
       import scalatags.JsDom.all._
       new ModalDialog(div("Please wait ..."), h4("Loading"),(_) => {}, (_) => {}).renderToBody().show()
 
-      ClientCacheHelper.updateClientCache(boinc,() => {
+      ClientCacheHelper.updateClientCache(boinc,(_) => {
         root.appendChild(renderView(HostInfoCache.get(boincClientName).get))
         ModalDialog.remove()
         NProgress.done(true)

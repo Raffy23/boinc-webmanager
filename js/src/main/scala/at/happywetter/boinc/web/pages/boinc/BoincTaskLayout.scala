@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.{Result, Workunit}
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientCacheHelper, ClientManager}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, ModalDialog, Tooltip}
@@ -75,9 +75,9 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                 span(style := "float:right", result.activeTask.map(t => t.done*100).getOrElse(0D).toString.split("\\.")(0) + " %")
               ),
               td(data("extra-flags") := "", prettyPrintStatus(result, inital = true)),
-              td(convTime(result.activeTask.map(t => t.time).getOrElse(0D))),
-              td(convTime(result.remainingCPU)),
-              td(convDate(new Date(result.reportDeadline*1000))),
+              td(BoincFormater.convertTime(result.activeTask.map(t => t.time).getOrElse(0D))),
+              td(BoincFormater.convertTime(result.remainingCPU)),
+              td(BoincFormater.convertDate(new Date(result.reportDeadline*1000))),
               td(data("wu-name") := result.wuName, result.wuName),
               td(
                 Tooltip(if(result.supsended) "Fortsetzen" else "Anhalten",
@@ -134,7 +134,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                               tbody(
                                 tr(td("Projekt: "), td(result.project)),
                                 tr(td("Name: "), td(result.name)),
-                                tr(td("Verbleibende Zeit: "), td(convTime(result.remainingCPU)))
+                                tr(td("Verbleibende Zeit: "), td(BoincFormater.convertTime(result.remainingCPU)))
                               )
                             )
                           )
@@ -203,7 +203,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
       if (wu.isDefined) {
         updateTaskFlags(wu.get)
       } else {
-        ClientCacheHelper.updateClientCache(boinc, () => {
+        ClientCacheHelper.updateClientCache(boinc, (_) => {
           dom.window.setTimeout(() => {renderStatusExtraFlags(wuName)}, 10)
         })
       }
@@ -258,8 +258,8 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
         node.childNodes.item(1).firstChild.nextSibling.textContent = (task.activeTask.get.done *100).toString.split("\\.")(0) + " %"
 
         node.childNodes.item(2).textContent = prettyPrintStatus(task, inital = false)
-        node.childNodes.item(3).textContent = convTime(task.activeTask.map(t => t.time).getOrElse(0D))
-        node.childNodes.item(4).textContent = convTime(task.remainingCPU)
+        node.childNodes.item(3).textContent = BoincFormater.convertTime(task.activeTask.map(t => t.time).getOrElse(0D))
+        node.childNodes.item(4).textContent = BoincFormater.convertTime(task.remainingCPU)
       })
     })
   }
@@ -271,8 +271,8 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
     tasks.forEach((node, _, _) => {
-      val date = convStringToTime(node.childNodes.item(3).firstChild.textContent) + (now.getTime() - lastRefresh.getTime()) / 1000
-      node.childNodes.item(3).firstChild.textContent = convTime(date)
+      val date = BoincFormater.convertTime(node.childNodes.item(3).firstChild.textContent) + (now.getTime() - lastRefresh.getTime()) / 1000
+      node.childNodes.item(3).firstChild.textContent = BoincFormater.convertTime(date)
     })
 
     lastRefresh = now
@@ -354,7 +354,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
           (cacheMiss) => {
             if (cacheMiss.isDefined) {
-              ClientCacheHelper.updateClientCache(boinc, () => {replaceNames(names)})
+              ClientCacheHelper.updateClientCache(boinc, (_) => {replaceNames(names)})
             }
 
             NProgress.done(true)
@@ -363,41 +363,13 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     }
 
     if (TaskSpecCache.isCacheValid(boincClientName)) replaceNames(names.toList)
-    else ClientCacheHelper.updateClientCache(boinc, () => {replaceNames(names.toList)})
+    else ClientCacheHelper.updateClientCache(boinc, (_) => {replaceNames(names.toList)})
   }
 
   private def replaceProjectNames(uri: String, name: String): Unit = {
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
     val nodeList = dom.document.querySelectorAll(s"div[id='workunits'] > table > tbody td[data-project-uri='$uri']")
     nodeList.forEach((node,_,_) => {node.textContent = name})
-  }
-
-  private def convDate(date: Date): String = date.toLocaleDateString() + " " + date.toLocaleTimeString()
-
-  private def convTime(time: Double): String = {
-    val day  = time.toInt / 86400
-    val hour = time.toInt / 3600
-    val min  = (time.toInt / 60) % 60
-    val sec  = time.toInt % 60
-
-    if(day >0) s"$day T," else "" ++
-      s"${hour.formatted("%02d")}:${min.formatted("%02d")}:${sec.formatted("%02d")}"
-  }
-
-  private def convStringToTime(time: String): Int = {
-    if (time.length < 1)
-      return 0
-
-    val day =
-      if(time.contains("T")) time.split("T")(0).toInt * 86400
-      else 0
-
-    val strRaw = time.split(":")
-    val hour = (if (day > 0) strRaw(0).split(",")(1).toInt else strRaw(0).toInt) * 3600
-    val min  = strRaw(1).toInt * 60
-    val sec  = strRaw(2).toInt
-
-    day + hour + min + sec
   }
 
   override val routerHook = Some(new Hook {
