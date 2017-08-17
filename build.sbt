@@ -30,12 +30,12 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
       "org.http4s" %% "http4s-dsl" % http4sVersion,
       "org.http4s" %% "http4s-blaze-server" % http4sVersion,
       "com.github.benhutchison" %% "prickle" % "1.1.13",
       "com.github.pureconfig" %% "pureconfig" % "0.7.2",
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
-      "org.jsoup" % "jsoup" % "1.10.3" //MK_DATA_EXTRACTOR
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
     )
   )
   .jsSettings(

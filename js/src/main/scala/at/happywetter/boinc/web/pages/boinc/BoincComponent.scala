@@ -11,8 +11,6 @@ import org.scalajs.dom
   */
 trait BoincComponent {
 
-
-
   def onRender(client: BoincClient)
 
 }

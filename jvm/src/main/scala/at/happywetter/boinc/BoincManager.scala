@@ -3,6 +3,7 @@ package at.happywetter.boinc
 import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 
 import at.happywetter.boinc.boincclient.BoincClient
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration._
@@ -26,8 +27,10 @@ class BoincManager(implicit val scheduler: ScheduledExecutorService) {
     val curTime = System.currentTimeMillis() - timeout.toMillis
 
     lastUsed.foreach { case (name, time) => {
-      if(time < curTime)
+      if(time < curTime) {
+        BoincManager.logger.debug("Close Socket Connection from " + name)
         boincClients(name).close()
+      }
     }}
   }, timeout.toMinutes, timeout.toMinutes, TimeUnit.MINUTES )
 
@@ -46,4 +49,7 @@ class BoincManager(implicit val scheduler: ScheduledExecutorService) {
 
   def getAllHostNames: Seq[String] = lastUsed.keys.toSeq
 
+}
+object BoincManager {
+  protected val logger: Logger = LoggerFactory.getLogger(BoincManager.getClass.getCanonicalName)
 }
