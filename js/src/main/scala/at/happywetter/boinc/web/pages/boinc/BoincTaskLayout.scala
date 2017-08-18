@@ -236,6 +236,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
           case Result.ActiveTaskState.PROCESS_ABORTED => "Abgebrochen"
           case Result.ActiveTaskState.PROCESS_SUSPENDED => if(result.supsended) "Angehalten" else "Verdrängt"
           case Result.ActiveTaskState.PROCESS_EXITED => "Beendet"
+          case Result.ActiveTaskState.PROCESS_UNINITIALIZED => "Verdrängt"
           case state => state.toString
         }).getOrElse("Bereit")
       case Result.State.Result_Files_Uploaded => "Meldebereit"

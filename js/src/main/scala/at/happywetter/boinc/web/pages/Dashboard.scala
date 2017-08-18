@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages
 
+import at.happywetter.boinc.shared.Result
 import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.component.DashboardMenu
@@ -62,78 +63,89 @@ object Dashboard extends Layout {
 
     println("Dashboard - onRender")
     ClientManager.readClients().foreach(clients => {
-      val container = dom.document.getElementById("client-container")
+
 
       DashboardMenu.removeMenuReferences("boinc-client-entry")
       clients.foreach(client =>
         DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
       )
 
-      import scalacss.ScalatagsCss._
-      import scalatags.JsDom.all._
-      container.appendChild(
-        div(
-          h2(BoincClientLayout.Style.pageHeader, "Übersicht: "),
-          div(
-            table(TableTheme.table,
-              thead(
-                th("Host"), th("CPU Kerne"), th("Netzwerk"), th("Vorrausichtliche",br(),"Berechnungsdauer"), th("Nächste WU Deadline"), th("Festplatte")
-              ),
-              tbody(
-                clients.map(c => ClientManager.clients(c)).map(client => {
 
-                  client.getState.foreach(state => {
+      if (dom.window.location.pathname == "/view/dashboard")
+        renderDashboardContent(clients)
 
-                    dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
-                      s"${
-                        state.results
-                          .filter(p => p.activeTask.nonEmpty)
-                          .map(p =>
-                            state.workunits
-                              .find(wu => wu.name == p.wuName)
-                              .map(wu => state.apps(wu.appName))
-                              .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
-                              .getOrElse(0)
-                          ).sum
-                      } / ${state.hostInfo.cpus}"
-
-                    dom.document.getElementById(s"dashboard-${client.hostname}-time").textContent =
-                      BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus)
-
-                    dom.document.getElementById(s"dashboard-${client.hostname}-deadline").textContent =
-                      BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min)
-
-                    val progressBar = dom.document.getElementById(s"dashboard-${client.hostname}-disk")
-                    progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
-                    progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
-
-                    progressBar.parentNode.appendChild(
-                      span(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100))
-                        .render
-                    )
-
-                    ClientCacheHelper.updateCache(client.hostname, state)
-                  })
-
-                  tr(
-                    td(client.hostname),
-                    td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),
-                    td(style := "text-align:center;", id := s"dashboard-${client.hostname}-network", "-- / --"),
-                    td(style := "text-align:center;", id := s"dashboard-${client.hostname}-time", "--"),
-                    td(style := "text-align:center;", id := s"dashboard-${client.hostname}-deadline", "--"),
-                    td(style := "width: 100px", BoincClientLayout.Style.progressBar, JsDom.tags2.progress(id := s"dashboard-${client.hostname}-disk")),
-                  )
-                })
-              )
-            )
-          )
-
-        ).render
-      )
 
       AppRouter.router.updatePageLinks()
       NProgress.done(true)
     })
+  }
+
+  private def renderDashboardContent(clients: List[String]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+    import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
+
+    val container = dom.document.getElementById("client-container")
+    container.appendChild(
+      div(
+        h2(BoincClientLayout.Style.pageHeader, "Übersicht: "),
+        div(
+          table(TableTheme.table,
+            thead(
+              th("Host"), th("CPU Kerne"), th("Netzwerk"), th("Vorrausichtliche",br(),"Berechnungsdauer"), th("Nächste WU Deadline"), th("Festplatte")
+            ),
+            tbody(
+              clients.map(c => ClientManager.clients(c)).map(client => {
+
+                client.getState.foreach(state => {
+
+                  dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
+                    s"${
+                      state.results
+                        .filter(p => p.activeTask.nonEmpty)
+                        .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+                        .map(p =>
+                          state.workunits
+                            .find(wu => wu.name == p.wuName)
+                            .map(wu => state.apps(wu.appName))
+                            .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
+                            .getOrElse(0)
+                        ).sum
+                    } / ${state.hostInfo.cpus}"
+
+                  dom.document.getElementById(s"dashboard-${client.hostname}-time").textContent =
+                    BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus)
+
+                  dom.document.getElementById(s"dashboard-${client.hostname}-deadline").textContent =
+                    BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min)
+
+                  val progressBar = dom.document.getElementById(s"dashboard-${client.hostname}-disk")
+                  progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
+                  progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
+
+                  progressBar.parentNode.appendChild(
+                    span(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100))
+                      .render
+                  )
+
+                  ClientCacheHelper.updateCache(client.hostname, state)
+                })
+
+                tr(
+                  td(client.hostname),
+                  td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),
+                  td(style := "text-align:center;", id := s"dashboard-${client.hostname}-network", "-- / --"),
+                  td(style := "text-align:center;", id := s"dashboard-${client.hostname}-time", "--"),
+                  td(style := "text-align:center;", id := s"dashboard-${client.hostname}-deadline", "--"),
+                  td(style := "width: 240px", BoincClientLayout.Style.progressBar, JsDom.tags2.progress(style := "calc(100% - 4.5em)!important", id := s"dashboard-${client.hostname}-disk")),
+                )
+              })
+            )
+          )
+        )
+
+      ).render
+    )
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
