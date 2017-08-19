@@ -66,8 +66,14 @@ boinc.projects {
 }
 ````
 
+## Security Notice
+The Webmanager does transfer all Data with HTTP, which means anyone can steal the JWT-Token and pose
+as the logged in User. In Production the Server should be configured to be behind a HTTPs-Proxy. 
+
+*TODO: Describe Howto + sample nginx configuration*  
+
 ### TODO
 - [ ] Server Statistics
 - [ ] Complete basic client UI
 - [ ] Multiple Languages (en / de)
-- [ ] Implement basic authentication 
+  - [ ] Readme in German
