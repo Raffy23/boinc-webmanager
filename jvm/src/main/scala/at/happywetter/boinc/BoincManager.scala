@@ -27,7 +27,7 @@ class BoincManager(implicit val scheduler: ScheduledExecutorService) {
     val curTime = System.currentTimeMillis() - timeout.toMillis
 
     lastUsed.foreach { case (name, time) => {
-      if(time < curTime) {
+      if(time < curTime && boincClients(name).isAuthenticated) {
         BoincManager.logger.debug("Close Socket Connection from " + name)
         boincClients(name).close()
       }

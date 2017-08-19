@@ -11,10 +11,10 @@ import org.scalajs.dom.experimental.Headers
 object FetchHelper {
 
   val header = new Headers()
-
-  //TODO: Add some Auth Headers here ...
   header.append("Content-Type", "application/json")
 
-
+  def setToken(token: String): Unit = {
+    header.set("X-Authorization", token)
+  }
 
 }

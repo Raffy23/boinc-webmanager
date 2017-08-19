@@ -266,6 +266,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
   }
 
   private var lastRefresh = new Date()
+  // TODO: Profile Function, it takes too much time hand locks the page
   private def updateActiveTaskTimes(): Unit = {
     val tasks = dom.document.querySelectorAll(s"div[id='workunits'] > table > tbody > tr[data-wu-state='1']")
     val now = new Date()
@@ -381,13 +382,13 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
     override def after(): Unit = {
       refreshHandle = dom.window.setInterval(() => updateActiveTasks(), 5000)
-      timeUpdateHandle = dom.window.setInterval(() => updateActiveTaskTimes(), 1000)
+      //timeUpdateHandle = dom.window.setInterval(() => updateActiveTaskTimes(), 1000)
       fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), 600000)
     }
 
     override def leave(): Unit = {
       dom.window.clearInterval(refreshHandle)
-      dom.window.clearInterval(timeUpdateHandle)
+      //dom.window.clearInterval(timeUpdateHandle)
       dom.window.clearInterval(fullSyncHandle)
     }
 

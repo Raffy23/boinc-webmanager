@@ -13,6 +13,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalacss.DevDefaults._
 import scalatags.JsDom
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 
@@ -75,7 +76,7 @@ object LoginPage {
     )
   }
 }
-class LoginPage(loginValidator: (String,String) => Boolean ) extends Layout {
+class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Layout {
 
   val component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
@@ -93,10 +94,15 @@ class LoginPage(loginValidator: (String,String) => Boolean ) extends Layout {
               val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
               val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
 
-              if( loginValidator(username, password)) AppRouter.navigate(event, DashboardLocation)
-              else {
-                dom.window.alert("Wrong Username or Password!")
-                NProgress.done(true)
+              loginValidator(username, password).foreach {
+                case true =>
+                  dom.window.sessionStorage.setItem("username", username)
+                  dom.window.sessionStorage.setItem("password", password)
+                  AppRouter.navigate(event, DashboardLocation)
+
+                case _ =>
+                  dom.window.alert("Wrong Username or Password!")
+                  NProgress.done(true)
               }
 
               event.preventDefault()
@@ -117,11 +123,14 @@ class LoginPage(loginValidator: (String,String) => Boolean ) extends Layout {
 
       done()
 
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-      Future {
-        if( loginValidator(usr, pwd))
-          AppRouter.navigate(DashboardLocation)
-      }
+      if (usr != null && pwd != null)
+        loginValidator(usr, pwd).foreach {
+          case true => AppRouter.navigate(DashboardLocation)
+          case _ =>
+            dom.window.sessionStorage.removeItem("username")
+            dom.window.sessionStorage.removeItem("password")
+            NProgress.done(true)
+        }
     }
 
     override def after(): Unit = {}

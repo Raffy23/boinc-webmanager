@@ -3,7 +3,7 @@ package at.happywetter.boinc
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import at.happywetter.boinc.boincclient.BoincClient
-import at.happywetter.boinc.server.{BoincApiRoutes, JsonMiddleware, WebResourcesRoute, XMLProjectStore}
+import at.happywetter.boinc.server._
 import org.http4s.server.blaze.BlazeBuilder
 
 import scala.io.StdIn
@@ -25,12 +25,15 @@ object WebServer extends App  {
     hostManager.add(name, new BoincClient(address = host.address, port = host.port, password = host.password))
   }
 
+  private val authService = new AuthenticationService(config)
+
 
   private val builder =
     BlazeBuilder
     .bindHttp(config.server.port, config.server.address)
-    .mountService(JsonMiddleware(BoincApiRoutes(hostManager, projects)), "/api")
+    .mountService(JsonMiddleware(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
     .mountService(WebResourcesRoute(config), "/")
+    .mountService(authService.authService, "/auth")
 
   private val server = builder.run
 

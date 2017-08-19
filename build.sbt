@@ -35,7 +35,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %% "http4s-blaze-server" % http4sVersion,
       "com.github.benhutchison" %% "prickle" % "1.1.13",
       "com.github.pureconfig" %% "pureconfig" % "0.7.2",
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+      "com.auth0" % "java-jwt" % "3.2.0"
     )
   )
   .jsSettings(
@@ -50,6 +51,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
     jsDependencies ++= Seq(
       "org.webjars.npm" % "navigo" % "5.3.1" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
       "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "NProgress"
+//      "org.webjars.npm" % "crypto-js" % "3.1.9-1"
     )
   )
 

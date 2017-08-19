@@ -34,9 +34,12 @@ server {
   address: "127.0.0.1"
   port: 8080
   
-  # Username and Password, currently unused, it is hardcoded into the client!
+  # Username and Password for the Login
   username: "admin"
   password: "password"
+  
+  # Secret is used to sign and encrypt session tokens 
+  secret: "8831cae805746a6b0dcad897c28175c25c48535357219f0a20dca867ddce0a8a"
   
   # The Path where the Files are served (should contain css and javascript of the client)
   webroot: "./web/"

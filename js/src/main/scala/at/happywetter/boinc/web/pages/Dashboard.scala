@@ -3,6 +3,7 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.Result
 import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, NProgress}
@@ -42,10 +43,7 @@ object Dashboard extends Layout {
     }
 
     override def before(done: js.Function0[Unit]): Unit = {
-      val usr = dom.window.sessionStorage.getItem("username")
-      val pwd = dom.window.sessionStorage.getItem("password")
-
-      if (usr == null || pwd == null) {
+      if (!AuthClient.hasToken) {
         dom.console.error("Username or password was not defined!")
         AppRouter.navigate(LoginPageLocation)
       } else {
