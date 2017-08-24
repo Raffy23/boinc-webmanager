@@ -80,7 +80,8 @@ final case class HostInfo(domainName: String
                          ,diskFree: Double
                          ,osName: String
                          ,osVersion: String
-                         ,coproc: List[CoProcessor])
+                         ,coproc: List[CoProcessor]
+                         ,virtualBox: Option[String])
 
 final case class CoProcessor(name: String
                                ,memory: Double
@@ -159,7 +160,8 @@ final case class BoincState(hostInfo: HostInfo
                      ,workunits: List[Workunit]
                      ,boincVersion: String
                      ,platform: String
-                     ,results: List[Result])
+                     ,results: List[Result]
+                     ,net_stats: NetStats)
 
 final case class Workunit(name: String
                     ,appName: String
@@ -167,3 +169,39 @@ final case class Workunit(name: String
                     ,fopsBound: Double
                     ,memBound: Double
                     ,diskBound: Double)
+
+final case class NetStats(bwup: Double,
+                          avgUpload: Double,
+                          avgUploadTime: Double,
+                          bwdowm: Double,
+                          avgDownload: Double,
+                          avgDownloadTime: Double)
+
+//TODO: Convert Magic Numbers to "Magic" Scala Structures
+final case class CCState(networkStatus: Int, //CCState.State.Value,
+                         amsPassword_error: Int,
+                         taskSuspendReason: Int,
+                         taskMode: Int, //CCState.State.Value,
+                         taskModePermission: Int,
+                         taskModeDelay: Double,
+                         gpuSuspendReason: Int,
+                         gpuMode: Int, //CCState.State.Value,
+                         gpuModePermission: Int,
+                         gpuModeDelay: Double,
+                         networkSuspendReason: Int,
+                         networkMode: Int, //CCState.State.Value,
+                         networkModePermission: Int,
+                         networkModeDelay: Double,
+                         disallowAttach: Boolean,
+                         simpleGUIOnly: Boolean,
+                         maxEventLogLines: Int)
+
+object CCState {
+
+  object State extends Enumeration {
+    val Enabled: State.Value = Value(1)
+    val Auto: State.Value = Value(2)
+    val Disabled: State.Value = Value(3)
+  }
+
+}

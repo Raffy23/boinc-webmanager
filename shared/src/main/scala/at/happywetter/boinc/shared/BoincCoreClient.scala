@@ -21,6 +21,7 @@ trait BoincCoreClient {
   def getProjects: Future[List[Project]]
   def getState: Future[BoincState]
   def getFileTransfer: Future[List[FileTransfer]]
+  def getCCState: Future[CCState]
 
   def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean]
   def project(name: String, action: ProjectAction): Future[Boolean]

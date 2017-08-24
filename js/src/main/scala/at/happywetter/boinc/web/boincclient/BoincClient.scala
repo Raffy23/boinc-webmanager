@@ -100,4 +100,11 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
+
+  override def getCCState: Future[CCState] = {
+    Fetch.fetch(baseURI + BoincRPC.Command.GetCCStatus, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[CCState].fromString(json = data).get)
+  }
 }

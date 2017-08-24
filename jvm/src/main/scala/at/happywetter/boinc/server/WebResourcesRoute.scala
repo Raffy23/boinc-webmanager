@@ -29,7 +29,7 @@ object WebResourcesRoute {
     case request@GET -> Root =>
       StaticFile.fromString(config.server.webroot + "index.html", Some(request))
         .map(Task.now)
-        .getOrElse(InternalServerError())
+        .getOrElse(InternalServerError("Could not read index.html File!"))
         .putHeaders(Header("X-Frame-Options", "DENY"))
         .putHeaders(Header("X-XSS-Protection", "1"))
 
@@ -40,7 +40,7 @@ object WebResourcesRoute {
     case GET -> "view" /: _ =>
       StaticFile.fromString(config.server.webroot + "index.html", None)
         .map(Task.now)
-        .getOrElse(InternalServerError())
+        .getOrElse(InternalServerError("Could not read index.html File!"))
         .putHeaders(Header("X-Frame-Options", "DENY"))
         .putHeaders(Header("X-XSS-Protection", "1"))
 

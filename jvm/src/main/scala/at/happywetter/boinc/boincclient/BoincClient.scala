@@ -5,9 +5,11 @@ import java.math.BigInteger
 import java.net.{InetAddress, Socket}
 import java.security.MessageDigest
 
+import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared._
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -50,12 +52,14 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   var reader: InputStream = _
   var authenticated = false
 
-  private def connect() = {
+  protected val logger: Logger = LoggerFactory.getLogger(BoincClient.getClass.getCanonicalName)
+
+  private def connect(): Unit = {
     this.socket = new Socket(InetAddress.getByName(address), port)
     this.reader = this.socket.getInputStream
   }
 
-  private def sendData(data: String) = this.socket.getOutputStream.write(("<boinc_gui_rpc_request>\n" + data + "\n</boinc_gui_rpc_request>\n\u0003").getBytes)
+  private def sendData(data: String): Unit = this.socket.getOutputStream.write(("<boinc_gui_rpc_request>\n" + data + "\n</boinc_gui_rpc_request>\n\u0003").getBytes)
 
   private def readXML(): NodeSeq = XML.loadString(readStringFromSocket())
 
@@ -75,18 +79,20 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
     readXML()
   }
 
-  private def handleSocketConnection() = {
+  private def handleSocketConnection(): Unit = {
     if (socket == null || socket.isClosed) {
       this.connect()
     }
   }
 
   def authenticate(): Boolean = {
-    println("sending auth")
+    logger.trace("Sending auth Challenge to " + address + ":" + port)
     val nonce = (this.rpc("<auth1>") \ "nonce").text
     val result = this.rpc("<auth2>\n<nonce_hash>" + md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
     authenticated = (result \ "_").xml_==(<authorized/>)
+    logger.trace("Client connection is " + (if(authenticated) "" else " *NOT* authenticated!"))
+
     authenticated
   }
 
@@ -113,6 +119,8 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   }
 
   override def getTasks(active: Boolean = true): Future[List[Result]] = Future {
+    logger.trace("Get Tasks from" + address + ":" + port)
+
     val tasks: mutable.MutableList[Result] = new mutable.MutableList()
     val xml = execCommand(if (active) BoincClient.Command.GetActiveResults else BoincClient.Command.GetResults)
 
@@ -123,36 +131,48 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   }
 
   override def getHostInfo: Future[HostInfo] = Future {
+    logger.trace("Get HostInfo from" + address + ":" + port)
     HostInfoParser.fromXML(execCommand(BoincClient.Command.GetHostInfo) \ "host_info")
   }
 
   override def isNetworkAvailable: Future[Boolean] = Future {
+    logger.trace("Get NetworkStatus from" + address + ":" + port)
     (execCommand(BoincClient.Command.GetNetworkAvailable) \ "success").xml_==(<success/>)
   }
 
   override def getDiskUsage: Future[DiskUsage] = Future {
+    logger.trace("Get Diskusage from" + address + ":" + port)
     DiskUsageParser.fromXML(execCommand(BoincClient.Command.GetDiskUsage) \ "disk_usage_summary")
   }
 
   override def getProjects: Future[List[Project]] = Future {
-    println("Get Projects: ")
+    logger.trace("Get Projects from" + address + ":" + port)
     ProjectParser.fromXML(execCommand(BoincClient.Command.GetProjectStatus) \ "projects")
   }
 
   override def getState: Future[BoincState] = Future {
+    logger.trace("Get State from" + address + ":" + port)
     BoincStateParser.fromXML(execCommand(BoincClient.Command.GetState) \ "client_state")
   }
 
   override def getFileTransfer: Future[List[FileTransfer]] = Future {
+    logger.trace("Get FileTransfer from" + address + ":" + port)
     FileTransferParser.fromXML(execCommand(BoincClient.Command.GetFileTransfer) \ "file_transfers")
   }
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] = Future {
+    logger.trace("Set Workunit state for" + address + ":" + port)
     (this.execAction(s"<${action.toString}><project_url>$project</project_url><name>$name</name></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
   override def project(name: String, action: ProjectAction): Future[Boolean] = Future {
+    logger.trace("Set Project state for " + address + ":" + port)
     (this.execAction(s"<${action.toString}><project_url>$name</project_url></${action.toString}>") \ "success").xml_==(<success/>)
+  }
+
+  override def getCCState = Future {
+    logger.trace("Get CCState for " + address + ":" + port)
+    CCStateParser.fromXML(execCommand(BoincClient.Command.GetCCStatus))
   }
 
   def isAuthenticated: Boolean = this.authenticated

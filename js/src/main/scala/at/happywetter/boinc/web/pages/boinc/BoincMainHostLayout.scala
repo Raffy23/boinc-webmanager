@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientCacheHelper}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ModalDialog}
@@ -50,28 +50,16 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
          tr(td(b("Prozessor")), td(boincData.hostInfo.cpuVendor,br(),small(boincData.hostInfo.cpuModel),br(),small(small(boincData.hostInfo.cpuFeatures.mkString(", "))))),
          tr(td(b("# CPU Kerne")), td(boincData.hostInfo.cpus)),
          tr(td(b("IP-Adresse (Lokal)")), td(boincData.hostInfo.ipAddr)),
-         tr(td(b("RAM")), td(prettyPrintSize(boincData.hostInfo.memory))),
-         tr(td(b("Swap")), td(prettyPrintSize(boincData.hostInfo.swap))),
+         tr(td(b("RAM")), td(BoincFormater.convertSize(boincData.hostInfo.memory))),
+         tr(td(b("Swap")), td(BoincFormater.convertSize(boincData.hostInfo.swap))),
          tr(td(b("Speicherplatz")), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
-           prettyPrintSize(boincData.hostInfo.diskFree), " frei von ", prettyPrintSize(boincData.hostInfo.diskTotal))),
+           BoincFormater.convertSize(boincData.hostInfo.diskFree), " frei von ", BoincFormater.convertSize(boincData.hostInfo.diskTotal))),
          tr(td(b("Platform (BOINC)")), td(boincData.platform)),
        )
       )
     ).render
   }
 
-  private val labels = List("Bytes","KB","MB","GB","TB","PB")
-  private def prettyPrintSize(size: Double): String = {
-    var value = size
-    var cnt   = 0
-
-    while ((value/1024) >= 1) {
-      value = value / 1024
-      cnt = cnt + 1
-    }
-
-    s"${value.formatted("%.1f")} ${labels(cnt)}"
-  }
 }
 
 object BoincMainHostLayout {

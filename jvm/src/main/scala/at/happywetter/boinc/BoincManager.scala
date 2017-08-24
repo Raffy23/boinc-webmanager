@@ -39,6 +39,7 @@ class BoincManager(implicit val scheduler: ScheduledExecutorService) {
     if (lastUsed.get(name).nonEmpty )
       lastUsed(name) = System.currentTimeMillis()
 
+    boincClients.get(name).map(b => b.getCCState)
     boincClients.get(name)
   }
 
@@ -48,6 +49,8 @@ class BoincManager(implicit val scheduler: ScheduledExecutorService) {
   }
 
   def getAllHostNames: Seq[String] = lastUsed.keys.toSeq
+
+  def destroy(): Unit = boincClients.foreach { case (_, client) => client.close() }
 
 }
 object BoincManager {

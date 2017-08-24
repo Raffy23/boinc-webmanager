@@ -14,8 +14,8 @@ object TableTheme extends StyleSheet.Inline {
   import dsl._
 
   val table = style(
-    width :=! s"calc(100% - 70px)",
-    maxWidth :=! s"calc(100% - 70px)",
+    width :=! s"calc(100% - 20px)",
+    //maxWidth :=! s"calc(100% - 20px)",
     marginBottom(20 px),
     border :=! "1px solid #DDD",
     borderSpacing.`0`,

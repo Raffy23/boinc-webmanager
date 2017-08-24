@@ -35,6 +35,7 @@ object BoincApiRoutes {
           case "state" => Ok(client.getState.map(Pickle.intoString(_)))
           case "filetransfers" => Ok(client.getFileTransfer.map(Pickle.intoString(_)))
           case "disk" => Ok(client.getDiskUsage.map(Pickle.intoString(_)))
+          case "ccstate" => Ok(client.getCCState.map(Pickle.intoString(_)))
 
           case _ => NotAcceptable()
         }

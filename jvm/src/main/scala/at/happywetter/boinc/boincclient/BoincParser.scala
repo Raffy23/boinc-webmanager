@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 /**
   * Created by: 
@@ -71,7 +71,8 @@ object HostInfoParser {
             ,(node \ "d_free").text.toDouble
             ,(node \ "os_name").text
             ,(node \ "os_version").text
-            ,getCoproc(node \ "coprocs"))
+            ,getCoproc(node \ "coprocs")
+            ,(node \ "virtualbox_version").toList.headOption.map(n => n.text))
   }
 
 }
@@ -136,6 +137,15 @@ object BoincStateParser {
     val workunits: ListBuffer[Workunit] = new ListBuffer[Workunit]
     val results: ListBuffer[Result] = new ListBuffer[Result]
 
+    val netStats = NetStats(
+      (node \ "net_stats" \ "bwup").text.toDouble,
+      (node \ "net_stats" \ "avg_up").text.toDouble,
+      (node \ "net_stats" \ "avg_time_up").text.toDouble,
+      (node \ "net_stats" \ "bwdown").text.toDouble,
+      (node \ "net_stats" \ "avg_down").text.toDouble,
+      (node \ "net_stats" \ "avg_time_down").text.toDouble
+    )
+
     var curProject: Project = null
     val curApp: mutable.Queue[NodeSeq] = new mutable.Queue[NodeSeq]()
 
@@ -162,9 +172,11 @@ object BoincStateParser {
         case "workunit" => workunits += WorkunitParser.fromXML(n)
         case "result" => results += ResultParser.fromXML(n)
         case _ => /* Nothing to do ... */
+        //case tag => println(tag + " => " + n) //DEBUGING CODE
 
         // Maybe implement following tags in near future:
-        // executing_as_daemon, global_preferences, time_stats, net_stats ?
+        // executing_as_daemon, global_preferences, time_stats ?
+        // Some flags may be present: have_ati, have_nv ...
       }
     }
 
@@ -175,7 +187,8 @@ object BoincStateParser {
       workunits.toList,
       boincVersion,
       (node \  "platform_name").text,
-      results.toList
+      results.toList,
+      netStats
     )
   }
 
@@ -232,5 +245,29 @@ object FileTransferParser {
       ,(node \ "url").text
     )
   }
+
+}
+
+object CCStateParser {
+
+  def fromXML(node: NodeSeq): CCState = CCState(
+      (node \ "network_status").text.toInt,
+      (node \ "ams_password_error").text.toInt,
+      (node \ "task_suspend_reason").text.toInt,
+      (node \ "task_mode").text.toInt,
+      (node \ "task_mode_perm").text.toInt,
+      (node \ "task_mode_delay").text.toInt,
+      (node \ "gpu_suspend_reason").text.toInt,
+      (node \ "gpu_mode").text.toInt,
+      (node \ "gpu_mode_perm").text.toInt,
+      (node \ "gpu_mode_delay").text.toInt,
+      (node \ "network_suspend_reason").text.toInt,
+      (node \ "network_mode").text.toInt,
+      (node \ "network_mode_perm").text.toInt,
+      (node \ "network_mode_delay").text.toDouble,
+      (node \ "disallow_attach").text.toInt==1,
+      (node \ "simple_gui_only").text.toInt==1,
+      (node \ "max_event_log_lines").text.toInt
+    )
 
 }

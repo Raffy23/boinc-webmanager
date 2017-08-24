@@ -37,12 +37,16 @@ class AuthenticationService(config: Config) {
         .map(b => Unpickle[User].fromString(b.decodeUtf8.right.get))
         .map(requestBody =>
           requestBody.toOption.map(user => {
+            println("GOT: " + user.username + " => " + config.server.username.equals(user.username))
+            println("GOT: " + user.passwordHash + " => " + AuthenticationService.sha256Hash(user.nonce+config.server.password))
+
+
             if ( config.server.username.equals(user.username)
               && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce+config.server.password)))
               Ok(jwtBuilder.withClaim("user", user.username).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm))
             else
-              BadRequest()
-          }).getOrElse(BadRequest())
+              BadRequest("Username or Password are invalid!")
+          }).getOrElse(BadRequest("Missing User POST-Data!"))
         )
         .runLast.unsafePerformSync.get
   }

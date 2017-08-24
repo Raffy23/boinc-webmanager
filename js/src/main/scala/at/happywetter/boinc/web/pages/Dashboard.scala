@@ -96,7 +96,6 @@ object Dashboard extends Layout {
               clients.map(c => ClientManager.clients(c)).map(client => {
 
                 client.getState.foreach(state => {
-
                   dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
                     s"${
                       state.results
@@ -121,13 +120,20 @@ object Dashboard extends Layout {
                   progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
                   progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
 
-                  progressBar.parentNode.appendChild(
-                    span(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100))
-                      .render
+                  progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render
                   )
 
                   ClientCacheHelper.updateCache(client.hostname, state)
                 })
+
+                client.getFileTransfer.foreach(transfers => {
+                  var upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+                  var download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+
+                  dom.document.getElementById(s"dashboard-${client.hostname}-network").textContent =
+                    BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
+                })
+
 
                 tr(
                   td(client.hostname),
@@ -135,7 +141,7 @@ object Dashboard extends Layout {
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-network", "-- / --"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-time", "--"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-deadline", "--"),
-                  td(style := "width: 240px", BoincClientLayout.Style.progressBar, JsDom.tags2.progress(style := "calc(100% - 4.5em)!important", id := s"dashboard-${client.hostname}-disk")),
+                  td(style := "width: 240px", BoincClientLayout.Style.progressBar, JsDom.tags2.progress(style := "width:calc(100% - 5em);margin-right:20px", id := s"dashboard-${client.hostname}-disk")),
                 )
               })
             )

@@ -78,7 +78,7 @@ object BoincClientLayout {
 
     val pageHeader = style(
       paddingBottom(9 px),
-      margin(40 px, 70 px, 20 px, auto),
+      margin(40 px, 20 px, 20 px, auto),
       borderBottom :=! "1px solid #DDD",
       fontSize(28 px),
       fontWeight._300
