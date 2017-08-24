@@ -2,7 +2,8 @@ package at.happywetter.boinc.server
 
 import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.BoincRPC.{ProjectAction, WorkunitAction}
-import at.happywetter.boinc.shared.{ProjectRequestBody, WorkunitRequestBody}
+import at.happywetter.boinc.shared.{BoincModeChange, BoincRPC, ProjectRequestBody, WorkunitRequestBody}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -41,6 +42,7 @@ object BoincApiRoutes {
         }
       }).getOrElse(NotFound())
 
+
     // Modification of Tasks and Projects
     case request @ POST -> Root / "boinc" / name / "tasks" / task =>
       hostManager.get(name).map(client => {
@@ -60,6 +62,43 @@ object BoincApiRoutes {
           request.body
             .map(b => Unpickle[ProjectRequestBody].fromString(b.decodeUtf8.right.get))
             .map(requestBody => client.project(requestBody.get.project, ProjectAction.fromValue(requestBody.get.action).get))
+            .map(f => f.map(response => Pickle.intoString(response)))
+            .runLast.unsafePerformSync.get
+        )
+      }).getOrElse(BadRequest())
+
+
+
+
+    // Change run modes
+    case request @ POST -> Root / "boinc" / name / "cpu" =>
+      hostManager.get(name).map(client => {
+        Ok(
+          request.body
+            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(requestBody => client.setCpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+            .map(f => f.map(response => Pickle.intoString(response)))
+            .runLast.unsafePerformSync.get
+        )
+      }).getOrElse(BadRequest())
+
+    case request @ POST -> Root / "boinc" / name / "gpu" =>
+      hostManager.get(name).map(client => {
+        Ok(
+          request.body
+            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(requestBody => client.setGpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+            .map(f => f.map(response => Pickle.intoString(response)))
+            .runLast.unsafePerformSync.get
+        )
+      }).getOrElse(BadRequest())
+
+    case request @ POST -> Root / "boinc" / name / "network" =>
+      hostManager.get(name).map(client => {
+        Ok(
+          request.body
+            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(requestBody => client.setNetwork(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
             .runLast.unsafePerformSync.get
         )

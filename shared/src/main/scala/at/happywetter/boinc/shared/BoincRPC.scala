@@ -1,5 +1,7 @@
 package at.happywetter.boinc.shared
 
+import at.happywetter.boinc.shared.BoincRPC.ProjectAction.values
+
 /**
   * Created by: 
   *
@@ -17,6 +19,8 @@ object BoincRPC {
     val Never   = Value("never")
     val Auto    = Value("auto")
     val Restore = Value("restore")
+
+    def fromValue(s: String): Option[Value] = values.find(_.toString == s)
   }
 
   object Command extends Enumeration {

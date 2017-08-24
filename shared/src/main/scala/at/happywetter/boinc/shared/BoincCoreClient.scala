@@ -14,6 +14,7 @@ import scala.concurrent.Future
   */
 trait BoincCoreClient {
 
+  // Read Boinc Stuff
   def getTasks(active: Boolean = true): Future[List[Result]]
   def getHostInfo: Future[HostInfo]
   def isNetworkAvailable: Future[Boolean]
@@ -23,6 +24,12 @@ trait BoincCoreClient {
   def getFileTransfer: Future[List[FileTransfer]]
   def getCCState: Future[CCState]
 
+  // Change Boinc workunits / projects
   def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean]
   def project(name: String, action: ProjectAction): Future[Boolean]
+
+  // Change Run Modes
+  def setCpu(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
+  def setGpu(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
+  def setNetwork(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
 }

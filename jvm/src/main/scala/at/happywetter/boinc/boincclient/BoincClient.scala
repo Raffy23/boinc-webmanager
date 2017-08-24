@@ -8,7 +8,7 @@ import java.security.MessageDigest
 import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared._
+import at.happywetter.boinc.shared.{BoincRPC, _}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
@@ -173,6 +173,18 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   override def getCCState = Future {
     logger.trace("Get CCState for " + address + ":" + port)
     CCStateParser.fromXML(execCommand(BoincClient.Command.GetCCStatus))
+  }
+
+  override def setCpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    (this.execAction(s"<set_cpu_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_cpu_mode>") \ "success").xml_==(<success/>)
+  }
+
+  override def setGpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    (this.execAction(s"<set_gpu_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_gpu_mode>") \ "success").xml_==(<success/>)
+  }
+
+  override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    (this.execAction(s"<set_network_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_network_mode>") \ "success").xml_==(<success/>)
   }
 
   def isAuthenticated: Boolean = this.authenticated

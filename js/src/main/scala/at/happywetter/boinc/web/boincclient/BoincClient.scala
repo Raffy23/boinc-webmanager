@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.boincclient
 
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared._
+import at.happywetter.boinc.shared.{BoincRPC, _}
 import at.happywetter.boinc.web.helper.FetchHelper
 import org.scalajs.dom.experimental.{Fetch, Headers, HttpMethod, RequestInit}
 
@@ -106,5 +106,50 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .toFuture
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[CCState].fromString(json = data).get)
+  }
+
+  override def setCpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + "cpu",
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+        )
+      )
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Boolean].fromString(json = data).get)
+  }
+
+  override def setGpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + "gpu",
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+        )
+      )
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Boolean].fromString(json = data).get)
+  }
+
+  override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + "network",
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+        )
+      )
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
 }
