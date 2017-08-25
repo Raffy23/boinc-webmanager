@@ -134,7 +134,6 @@ object Dashboard extends Layout {
                     BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
                 })
 
-
                 tr(
                   td(client.hostname),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),

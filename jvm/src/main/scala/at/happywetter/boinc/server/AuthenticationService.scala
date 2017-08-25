@@ -1,7 +1,6 @@
 package at.happywetter.boinc.server
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
-import java.time.temporal.TemporalAmount
+import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
@@ -13,6 +12,7 @@ import prickle.Unpickle
 
 import scala.util.Random
 import scalaz.concurrent.Task
+import scala.language.implicitConversions
 
 /**
   * Created by: 
@@ -22,9 +22,9 @@ import scalaz.concurrent.Task
   */
 class AuthenticationService(config: Config) {
 
+  import AuthenticationService.toDate
   import org.http4s._
   import org.http4s.dsl._
-  import AuthenticationService.toDate
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()
@@ -37,13 +37,15 @@ class AuthenticationService(config: Config) {
         .map(b => Unpickle[User].fromString(b.decodeUtf8.right.get))
         .map(requestBody =>
           requestBody.toOption.map(user => {
-            println("GOT: " + user.username + " => " + config.server.username.equals(user.username))
-            println("GOT: " + user.passwordHash + " => " + AuthenticationService.sha256Hash(user.nonce+config.server.password))
-
-
             if ( config.server.username.equals(user.username)
               && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce+config.server.password)))
-              Ok(jwtBuilder.withClaim("user", user.username).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm))
+              try {
+                Ok(jwtBuilder.withClaim("user", user.username).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm))
+              } catch {
+                case ex: Exception =>
+                  ex.printStackTrace()
+                  InternalServerError()
+              }
             else
               BadRequest("Username or Password are invalid!")
           }).getOrElse(BadRequest("Missing User POST-Data!"))

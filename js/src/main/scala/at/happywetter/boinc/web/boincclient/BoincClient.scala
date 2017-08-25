@@ -152,4 +152,28 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
+
+  override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = {
+    Fetch.fetch(baseURI + BoincRPC.Command.ReadGlobalPrefsOverride, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[GlobalPrefsOverride].fromString(json = data).get)
+  }
+
+  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = ???
+
+  override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + "run_mode",
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+        )
+      )
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Boolean].fromString(json = data).get)
+  }
 }

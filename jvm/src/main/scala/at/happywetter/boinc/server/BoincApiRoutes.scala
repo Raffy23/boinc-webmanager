@@ -37,6 +37,7 @@ object BoincApiRoutes {
           case "filetransfers" => Ok(client.getFileTransfer.map(Pickle.intoString(_)))
           case "disk" => Ok(client.getDiskUsage.map(Pickle.intoString(_)))
           case "ccstate" => Ok(client.getCCState.map(Pickle.intoString(_)))
+          case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(Pickle.intoString(_)))
 
           case _ => NotAcceptable()
         }
@@ -68,9 +69,18 @@ object BoincApiRoutes {
       }).getOrElse(BadRequest())
 
 
-
-
     // Change run modes
+    case request @ POST -> Root / "boinc" / name / "run_mode" =>
+      hostManager.get(name).map(client => {
+        Ok(
+          request.body
+            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(requestBody => client.setRun(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+            .map(f => f.map(response => Pickle.intoString(response)))
+            .runLast.unsafePerformSync.get
+        )
+      }).getOrElse(BadRequest())
+
     case request @ POST -> Root / "boinc" / name / "cpu" =>
       hostManager.get(name).map(client => {
         Ok(

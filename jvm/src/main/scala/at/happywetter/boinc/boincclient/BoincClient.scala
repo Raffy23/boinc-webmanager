@@ -45,7 +45,9 @@ object BoincClient {
     val GetNetworkAvailable = Value("<network_available/>")
     val GetProjectStatus = Value("<get_project_status/>")
     val GetFileTransfer = Value("<get_file_transfers/>")
-    val ReadGlobalPrefsOverride = Value("<read_global_prefs_override/>")
+    val GetGlobalPrefsOverride = Value("<get_global_prefs_working/>")
+    val ReadGlobalPrefsFile = Value("<read_global_prefs_override/>")
+    val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
   }
 
 }
@@ -169,14 +171,17 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
     (this.execAction(s"<${action.toString}><project_url>$name</project_url></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
-  override def getCCState = Future {
+  override def getCCState: Future[CCState] = Future {
     logger.trace("Get CCState for " + address + ":" + port)
     execCommand(BoincClient.Command.GetCCStatus).toCCState
   }
 
-  override def getGlobalPrefsOverride = Future {
+  override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = Future {
     logger.trace("Get GlobalPrefsOverride for " + address + ":" + port)
-    execCommand(BoincClient.Command.ReadGlobalPrefsOverride).toGlobalPrefs
+    val n = execCommand(BoincClient.Command.GetGlobalPrefsOverride)
+    println(n)
+
+    (n \ "global_preferences").toGlobalPrefs
   }
 
   override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = Future {

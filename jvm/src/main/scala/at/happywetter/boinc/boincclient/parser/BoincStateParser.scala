@@ -1,6 +1,5 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.boincclient.WorkunitParser
 import at.happywetter.boinc.shared._
 
 import scala.collection.mutable

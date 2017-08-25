@@ -231,6 +231,8 @@ final case class GlobalPrefsOverride(runOnBatteries: Boolean,
                                      dailyXFerLimitMB: Double,
                                      dailyXFerPeriodDays: Int,
                                      networkWifiOnly: Boolean,
-                                     cpuTimes: Array[(Double, Double)],   // length == 7
-                                     netTimes: Array[(Double, Double)]    // length == 7
+                                     cpuTimes: List[(Double, Double)],   // length == 7
+                                     netTimes: List[(Double, Double)]    // length == 7
                                     )
+
+final case class TimeSpan(start: Double, end: Double)
