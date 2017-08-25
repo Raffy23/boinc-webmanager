@@ -24,6 +24,9 @@ trait BoincCoreClient {
   def getFileTransfer: Future[List[FileTransfer]]
   def getCCState: Future[CCState]
 
+  def getGlobalPrefsOverride: Future[GlobalPrefsOverride]
+  def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean]
+
   // Change Boinc workunits / projects
   def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean]
   def project(name: String, action: ProjectAction): Future[Boolean]
@@ -32,4 +35,5 @@ trait BoincCoreClient {
   def setCpu(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
   def setGpu(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
   def setNetwork(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
+  def setRun(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]
 }

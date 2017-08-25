@@ -1,21 +1,19 @@
 package at.happywetter.boinc.boincclient
 
-import java.io.{BufferedReader, InputStream, InputStreamReader}
+import java.io.InputStream
 import java.math.BigInteger
 import java.net.{InetAddress, Socket}
 import java.security.MessageDigest
 
-import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.{BoincRPC, _}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
-import scala.concurrent.Future
-import scala.io.Source
-import scala.xml.{NodeSeq, XML}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.xml.{NodeSeq, XML}
 
 /**
   * Basic Class for the BOINC Communication
@@ -25,6 +23,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @version 08.07.2016
   */
 
+
+//https://github.com/BOINC/boinc/blob/f691a3f0f9e30a12ee19558125465d779fae815e/android/BOINC/app/src/main/java/edu/berkeley/boinc/rpc/RpcClient.java
 object BoincClient {
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
@@ -173,6 +173,16 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   override def getCCState = Future {
     logger.trace("Get CCState for " + address + ":" + port)
     CCStateParser.fromXML(execCommand(BoincClient.Command.GetCCStatus))
+  }
+
+
+
+  override def getGlobalPrefsOverride = ???
+
+  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = ???
+
+  override def setRun(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    (this.execAction(s"<set_run_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_run_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setCpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {

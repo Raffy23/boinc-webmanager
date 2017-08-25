@@ -38,6 +38,7 @@ object BoincRPC {
     val GetNetworkAvailable = Value("network_available")
     val GetProjectStatus = Value("projects")
     val GetFileTransfer = Value("filetransfers")
+    val ReadGlobalPrefsOverride = Value("read_global_prefs_override")
 
     import scala.language.implicitConversions
     implicit def unapply(arg: Command): String = arg.toString
