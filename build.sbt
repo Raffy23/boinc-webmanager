@@ -50,8 +50,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(
       "org.webjars.npm" % "navigo" % "5.3.1" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
-      "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "NProgress"
-//      "org.webjars.npm" % "crypto-js" % "3.1.9-1"
+      "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "NProgress",
+      "org.webjars.bower" % "chart.js" % "2.6.0" / "Chart.js" commonJSName "ChartJS" minified "Chart.min.js"
     )
   )
 

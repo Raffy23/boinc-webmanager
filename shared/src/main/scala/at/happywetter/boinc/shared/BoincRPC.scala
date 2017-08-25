@@ -1,7 +1,5 @@
 package at.happywetter.boinc.shared
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction.values
-
 /**
   * Created by: 
   *

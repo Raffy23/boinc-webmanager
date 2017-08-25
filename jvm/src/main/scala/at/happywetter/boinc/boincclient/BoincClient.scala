@@ -14,6 +14,7 @@ import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.{NodeSeq, XML}
+import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 
 /**
   * Basic Class for the BOINC Communication
@@ -22,16 +23,15 @@ import scala.xml.{NodeSeq, XML}
   * @author Raphael Ludwig
   * @version 08.07.2016
   */
-
-
-//https://github.com/BOINC/boinc/blob/f691a3f0f9e30a12ee19558125465d779fae815e/android/BOINC/app/src/main/java/edu/berkeley/boinc/rpc/RpcClient.java
 object BoincClient {
+
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
     val Never   = Value("<never/>")
     val Auto    = Value("<auto/>")
     val Restore = Value("<restore/>")
   }
+
   object Command extends Enumeration {
     val GetHostInfo   = Value("<get_host_info/>")
     val GetState      = Value("<get_state/>")
@@ -45,7 +45,9 @@ object BoincClient {
     val GetNetworkAvailable = Value("<network_available/>")
     val GetProjectStatus = Value("<get_project_status/>")
     val GetFileTransfer = Value("<get_file_transfers/>")
+    val ReadGlobalPrefsOverride = Value("<read_global_prefs_override/>")
   }
+
 }
 class BoincClient(address: String, port: Int = 31416, password: String) extends BoincCoreClient {
   var socket: Socket = _
@@ -124,15 +126,12 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
     val tasks: mutable.MutableList[Result] = new mutable.MutableList()
     val xml = execCommand(if (active) BoincClient.Command.GetActiveResults else BoincClient.Command.GetResults)
 
-    for (task <- xml \ "results" \ "result")
-      tasks.+=(ResultParser.fromXML(task))
-
-    tasks.toList
+    (for (task <- xml \ "results" \ "result") yield task.toResult).toList
   }
 
   override def getHostInfo: Future[HostInfo] = Future {
     logger.trace("Get HostInfo from" + address + ":" + port)
-    HostInfoParser.fromXML(execCommand(BoincClient.Command.GetHostInfo) \ "host_info")
+    (execCommand(BoincClient.Command.GetHostInfo) \ "host_info").toHostInfo
   }
 
   override def isNetworkAvailable: Future[Boolean] = Future {
@@ -142,22 +141,22 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def getDiskUsage: Future[DiskUsage] = Future {
     logger.trace("Get Diskusage from" + address + ":" + port)
-    DiskUsageParser.fromXML(execCommand(BoincClient.Command.GetDiskUsage) \ "disk_usage_summary")
+    (execCommand(BoincClient.Command.GetDiskUsage) \ "disk_usage_summary").toDiskUsage
   }
 
   override def getProjects: Future[List[Project]] = Future {
     logger.trace("Get Projects from" + address + ":" + port)
-    ProjectParser.fromXML(execCommand(BoincClient.Command.GetProjectStatus) \ "projects")
+    (execCommand(BoincClient.Command.GetProjectStatus) \ "projects").toProjects
   }
 
   override def getState: Future[BoincState] = Future {
     logger.trace("Get State from" + address + ":" + port)
-    BoincStateParser.fromXML(execCommand(BoincClient.Command.GetState) \ "client_state")
+    (execCommand(BoincClient.Command.GetState) \ "client_state").toState
   }
 
   override def getFileTransfer: Future[List[FileTransfer]] = Future {
     logger.trace("Get FileTransfer from" + address + ":" + port)
-    FileTransferParser.fromXML(execCommand(BoincClient.Command.GetFileTransfer) \ "file_transfers")
+    (execCommand(BoincClient.Command.GetFileTransfer) \ "file_transfers").toFileTransfers
   }
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] = Future {
@@ -172,14 +171,18 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def getCCState = Future {
     logger.trace("Get CCState for " + address + ":" + port)
-    CCStateParser.fromXML(execCommand(BoincClient.Command.GetCCStatus))
+    execCommand(BoincClient.Command.GetCCStatus).toCCState
   }
 
+  override def getGlobalPrefsOverride = Future {
+    logger.trace("Get GlobalPrefsOverride for " + address + ":" + port)
+    execCommand(BoincClient.Command.ReadGlobalPrefsOverride).toGlobalPrefs
+  }
 
-
-  override def getGlobalPrefsOverride = ???
-
-  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = ???
+  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = Future {
+    logger.trace("Setting GlobalPrefsOverride for " + address + ":" + port)
+    (this.execAction(s"<set_global_prefs_override>${globalPrefsOverride.toXML}</set_global_prefs_override>") \ "success").xml_==(<success/>)
+  }
 
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double) = Future {
     (this.execAction(s"<set_run_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_run_mode>") \ "success").xml_==(<success/>)
