@@ -81,7 +81,7 @@ object ModalDialog {
 
     val content = style(
       position.relative,
-      backgroundColor(c"#F7F7F7"),
+      backgroundColor(c"#FFF"),
       margin.auto,
       padding.`0`,
       minWidth(200 px),

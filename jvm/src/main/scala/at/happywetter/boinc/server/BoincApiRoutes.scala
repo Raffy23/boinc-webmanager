@@ -1,10 +1,12 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.BoincManager
+import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.shared.BoincRPC.{ProjectAction, WorkunitAction}
-import at.happywetter.boinc.shared.{BoincModeChange, BoincRPC, ProjectRequestBody, WorkunitRequestBody}
+import at.happywetter.boinc.shared._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * Created by: 
@@ -56,6 +58,20 @@ object BoincApiRoutes {
         )
       }).getOrElse(BadRequest())
 
+
+    case request @ POST -> Root / "boinc" / name / "project" =>
+      hostManager.get(name).map(client => {
+        Ok(
+          request.body
+            .map(b => Unpickle[AddProjectBody].fromString(b.decodeUtf8.right.get))
+            .map(requestBody => {
+              WebRPC
+                .lookupAccount(requestBody.get.projectUrl, requestBody.get.user, Some(requestBody.get.password))
+                .map{ case (_, auth) => auth.map(accKey => client.attachProject(requestBody.get.projectUrl, accKey, requestBody.get.projectName))}
+                .map( result => result.getOrElse(Future{false}).map(s => Pickle.intoString(s)))
+            }).runLast.unsafePerformSync.get
+        )
+      }).getOrElse(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "projects" =>
       hostManager.get(name).map(client => {

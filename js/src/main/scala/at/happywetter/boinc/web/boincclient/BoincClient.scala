@@ -176,4 +176,22 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
+
+  // Needs to have WebRPC exposed to client ...
+  override def attachProject(url: String, authenticator: String, name: String) = ???
+
+  def attachProject(url: String, username: String, password: String, name: String): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + "project",
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(AddProjectBody(url, name, username, password))
+        )
+      )
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Boolean].fromString(json = data).get)
+  }
 }

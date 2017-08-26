@@ -92,26 +92,13 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   def authenticate(): Boolean = {
     logger.trace("Sending auth Challenge to " + address + ":" + port)
     val nonce = (this.rpc("<auth1>") \ "nonce").text
-    val result = this.rpc("<auth2>\n<nonce_hash>" + md5(nonce + password) + "</nonce_hash>\n</auth2>")
+    val result = this.rpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
     authenticated = (result \ "_").xml_==(<authorized/>)
     logger.trace("Client connection is " + (if(authenticated) "" else " *NOT* authenticated!"))
 
     authenticated
   }
-
-  private def md5(str: String): String = {
-    //http://web.archive.org/web/20140209230440/http://www.sergiy.ca/how-to-make-java-md5-and-sha-1-hashes-compatible-with-php-or-mysql/
-    val hash = new BigInteger(1, MessageDigest.getInstance("MD5").digest(str.getBytes("UTF-8")))
-    var result = hash.toString(16)
-
-    while (result.length() < 32) { //40 for SHA-1
-      result = "0" + result
-    }
-
-    result
-  }
-
 
   def execCommand(cmd: BoincClient.Command.Value): NodeSeq = execAction(cmd.toString)
 
@@ -203,6 +190,17 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double) = Future {
     (this.execAction(s"<set_network_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_network_mode>") \ "success").xml_==(<success/>)
+  }
+
+  override def attachProject(url: String, authenticator: String, name: String) = Future {
+    (this.execAction(
+        <project_attach>
+          <project_url>${url}</project_url>
+          <authenticator>${authenticator}</authenticator>
+          <project_name>${name}</project_name>
+        </project_attach>.toString()
+      ) \ "success"
+    ).xml_==(<success/>)
   }
 
   def isAuthenticated: Boolean = this.authenticated

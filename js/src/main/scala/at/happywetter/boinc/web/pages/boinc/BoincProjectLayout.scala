@@ -4,14 +4,13 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ModalDialog, Tooltip}
-import at.happywetter.boinc.web.routes
+import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLSelectElement}
+import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement, HTMLSelectElement}
 
 import scala.scalajs.js
 
@@ -33,7 +32,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
       root.appendChild(
         div( id := "projects",
           h2(BoincClientLayout.Style.pageHeader, "Projekte: "),
-          div(style := "position:absolute;top:80px;right:70px;",
+          div(style := "position:absolute;top:80px;right:20px;",
             new Tooltip("Neues Projekt hinzufügen",
               a(href := "#add-project", i(`class` := "fa fa-plus-square"), style := "color:#333;text-decoration:none;font-size:30px",
                 onclick := { (event: Event) => {
@@ -45,9 +44,10 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                     new ModalDialog(div(
                       table(TableTheme.table,
                         tbody(
-                          tr(td("Projekt"),
+                          tr(td("Projekt", style := "width:125px"),
                             td(
-                              select(LoginPage.Style.input,
+                              select(LoginPage.Style.input, style := "margin:0", id := "pad-project",
+                                option(disabled, selected := "selected", "Bitte wählen Sie ein Projekt aus ..."),
                                 data.map(project => option(value := project._1, project._1)).toList,
                                 onchange := { (event: Event) => {
                                   val element = data(event.target.asInstanceOf[HTMLSelectElement].value)
@@ -67,14 +67,30 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                         )
                       ),
                       br(),
-                      table(
+                      h4("Benutzerdaten: "),
+                      table(style := "width: calc(100% - 20px)",
                         tbody(
-                          tr(td("Username"), td(input(LoginPage.Style.input))),
-                          tr(td("Password"), td(input(LoginPage.Style.input))),
+                          tr(td("Username"), td(input(LoginPage.Style.input, placeholder := "example@boinc-user.com", style := "margin:0", id := "pad-username"))),
+                          tr(td("Password"), td(input(LoginPage.Style.input, placeholder := "Passwort", `type` := "password", style := "margin:0", id := "pad-password"))),
                         )
-                      )),
+                      ), br(), br()),
                       h2("Projekt hinzufügen"),
-                      (dialog: ModalDialog) => {dialog.hide()},
+                      (dialog: ModalDialog) => {
+                        NProgress.start()
+
+                        val select = dom.document.getElementById("pad-project").asInstanceOf[HTMLSelectElement]
+                        val element = data(select.value)
+                        val username = dom.document.getElementById("pad-username").asInstanceOf[HTMLInputElement].value
+                        val password = dom.document.getElementById("pad-password").asInstanceOf[HTMLInputElement].value
+                        client.attachProject(element.url, username, password, element.name).foreach(result => {
+                          NProgress.done(true)
+                          dialog.hide()
+                          onRender(client)
+
+                          if(!result)
+                            dom.window.alert("Couldn't attach to Project!")
+                        })
+                      },
                       (dialog: ModalDialog) => {dialog.hide()}
                     ).renderToBody().show()
 

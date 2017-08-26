@@ -32,7 +32,6 @@ object LayoutManager {
     page.onRender()
   }
 
-
   private def loadMainElement(page: Layout): HTMLElement = {
     val firstTry = dom.document.querySelector(page.requestedParent.getOrElse("main"))
 

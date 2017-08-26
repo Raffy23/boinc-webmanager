@@ -2,6 +2,7 @@ package at.happywetter.boinc.server
 
 import java.io.File
 
+import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.BoincProjectMetaData
 
 import scala.collection.mutable
@@ -33,5 +34,19 @@ class XMLProjectStore(path: String) {
       )
   )
 
+  def importFrom(config: Config): Unit = {
+    config.boinc.projects.customProjects.foreach { case (name, project) =>
+      projects += (
+        (name,
+          BoincProjectMetaData(
+            name, project.url, project.generalArea, "", "", "", List()
+          )
+        )
+      )
+    }
+  }
+
+
   def getProjects: Map[String, BoincProjectMetaData] = projects.toMap
+
 }

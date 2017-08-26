@@ -3,10 +3,15 @@ package at.happywetter.boinc
 import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
-import at.happywetter.boinc.boincclient.BoincClient
+import at.happywetter.boinc.boincclient.{BoincClient, WebRPC}
 import at.happywetter.boinc.server._
+import at.happywetter.boinc.shared.AddProjectBody
+import org.http4s.Request
+import org.http4s.dsl.{BadRequest, NotAcceptable, NotFound, Ok}
 import org.http4s.server.blaze.BlazeBuilder
+import prickle.{Pickle, Unpickle}
 
+import scala.concurrent.Future
 import scala.io.StdIn
 
 /**
@@ -50,6 +55,7 @@ object WebServer extends App  {
   }
 
   private val authService = new AuthenticationService(config)
+  projects.importFrom(config)
 
 
   private val builder =
@@ -60,7 +66,6 @@ object WebServer extends App  {
     .mountService(authService.authService, "/auth")
 
   private val server = builder.run
-
   println(s"Server online at http://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
   StdIn.readLine()               // let it run until user presses return
 

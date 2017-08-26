@@ -42,7 +42,7 @@ object TableTheme extends StyleSheet.Inline {
     ),
 
     unsafeChild("tbody>tr>td:last-of-type")(
-      padding(1 px, 1 px, 1 px, 10 px),
+      //padding(1 px, 1 px, 1 px, 10 px),
 
       unsafeChild("a")(
         textDecoration := "none",
