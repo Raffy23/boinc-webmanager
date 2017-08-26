@@ -1,12 +1,14 @@
 package at.happywetter.boinc.web.pages
+import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc.{BoincGlobalPrefsLayout, BoincMainHostLayout, BoincProjectLayout, BoincTaskLayout}
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
+import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
-import scala.scalajs.js.{Dictionary, UndefOr}
+import scala.scalajs.js.Dictionary
 import scalatags.JsDom
 
 /**
@@ -26,8 +28,8 @@ object BoincLayout extends Layout {
   override def requestParentLayout() = { Some(Dashboard) }
 
   override val component: JsDom.TypedTag[HTMLElement] =  {
-    import scalatags.JsDom.all._
     import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
 
     div(BoincClientLayout.Style.content, id := "client-data")
   }
@@ -35,7 +37,14 @@ object BoincLayout extends Layout {
   override val routerHook: Option[Hook] = Some(new Hook {
     override def already(): Unit = child.routerHook.foreach(p => p.already())
 
-    override def before(done: js.Function0[Unit]): Unit = {done()}
+    override def before(done: js.Function0[Unit]): Unit = {
+      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+      AuthClient.tryLogin.foreach {
+        case true => done()
+        case false => AppRouter.navigate(LoginPageLocation)
+      }
+    }
 
     override def leave(): Unit = {
       if (child != null) {

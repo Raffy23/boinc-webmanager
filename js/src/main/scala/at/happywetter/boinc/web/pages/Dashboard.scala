@@ -43,11 +43,11 @@ object Dashboard extends Layout {
     }
 
     override def before(done: js.Function0[Unit]): Unit = {
-      if (!AuthClient.hasToken) {
-        dom.console.error("Username or password was not defined!")
-        AppRouter.navigate(LoginPageLocation)
-      } else {
-        done()
+      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+      AuthClient.tryLogin.foreach {
+        case true => done()
+        case false => AppRouter.navigate(LoginPageLocation)
       }
     }
 
