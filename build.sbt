@@ -36,7 +36,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "com.github.benhutchison" %% "prickle" % "1.1.13",
       "com.github.pureconfig" %% "pureconfig" % "0.7.2",
       "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
-      "com.auth0" % "java-jwt" % "3.2.0"
+      "com.auth0" % "java-jwt" % "3.2.0",
+      "com.lihaoyi" %% "scalatags" % "0.6.5"
     )
   )
   .jsSettings(

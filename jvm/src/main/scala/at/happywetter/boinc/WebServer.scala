@@ -22,6 +22,11 @@ object WebServer extends App  {
   private lazy val config = AppConfig.conf
   private lazy val projects = new XMLProjectStore(config.boinc.projects.xmlSource)
 
+  if (config.development.getOrElse(false)) {
+    println("WebServer was launched with development options!")
+    println("All resources will be served from: " + config.server.webroot)
+  }
+
   // Check environment
   if (!new File("./application.conf").exists()) {
     System.err.println("Unable to read ./application.conf!")
@@ -34,7 +39,7 @@ object WebServer extends App  {
     System.exit(1)
   }
 
-  if (!new File(config.server.webroot).exists()) {
+  if (config.development.getOrElse(false) && !new File(config.server.webroot).exists()) {
     System.err.println("Webroot is not a valid Directory!")
     System.exit(1)
   }
