@@ -1,5 +1,5 @@
 package at.happywetter.boinc.web.pages
-import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincProjectLayout, BoincTaskLayout}
+import at.happywetter.boinc.web.pages.boinc.{BoincGlobalPrefsLayout, BoincMainHostLayout, BoincProjectLayout, BoincTaskLayout}
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import org.scalajs.dom
@@ -53,10 +53,9 @@ object BoincLayout extends Layout {
   override def beforeRender(params: Dictionary[String]): Unit = {
     val oldChild = child
 
-    def updateView(implicit view: String): BoincPageLayout = {
+    def updateView(implicit view: String): Unit = {
       if (view == currentState) {
         child.routerHook.foreach(p => p.already())
-        child
       } else {
         if (child != null)
           child.routerHook.foreach(p => p.leave())
@@ -65,22 +64,24 @@ object BoincLayout extends Layout {
           case "boinc"    => new BoincMainHostLayout(params)
           case "projects" => new BoincProjectLayout(params)
           case "tasks"    => new BoincTaskLayout(params)
+          case "global_prefs" => new BoincGlobalPrefsLayout(params)
         }
 
         currentState = view
         nChild.routerHook.foreach(p => p.before(() => {}))
-        nChild
+        child = nChild
       }
     }
 
     params.getOrElse("action","_DEFAULT_ACTION_") match {
-      case view @ "boinc"      => child = updateView(view)
+      case view @ "boinc"      => updateView(view)
       case view @ "messages"   => dom.window.alert("Not implemented")
-      case view @ "projects"   => child = updateView(view)
-      case view @ "tasks"      => child = updateView(view)
+      case view @ "projects"   => updateView(view)
+      case view @ "tasks"      => updateView(view)
       case view @ "transfers"  => dom.window.alert("Not implemented")
       case view @ "statistics" => dom.window.alert("Not implemented")
       case view @ "disk"       => dom.window.alert("Not implemented")
+      case view @ "global_prefs" => updateView(view)
       case _ =>
         if (child != null)
           child.routerHook.foreach(p => p.leave())
@@ -95,6 +96,7 @@ object BoincLayout extends Layout {
             case _: BoincMainHostLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/boinc", absolute = true)
             case _: BoincProjectLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/projects", absolute = true)
             case _: BoincTaskLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/tasks", absolute = true)
+            case _: BoincGlobalPrefsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/global_prefs", absolute = true)
             case _ => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
           }
         }, 100)

@@ -57,7 +57,8 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
         li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/tasks", "Aufgaben", data("navigo") := "" )),
         li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/transfers", "Übertragungen", data("navigo") := "")),
         li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/statistics", "Statistiken", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/disk", "Festplatte", data("navigo") := ""))
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/disk", "Festplatte", data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/global_prefs", "Einstellungen", data("navigo") := ""))
       ).render
     })
 
