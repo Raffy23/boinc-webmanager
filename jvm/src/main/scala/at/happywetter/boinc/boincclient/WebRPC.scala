@@ -19,8 +19,6 @@ object WebRPC {
     if (password.isDefined)
       request = request.param("passwd_hash", BoincCryptoHelper.md5(password.get+email.toLowerCase()))
 
-    println(request)
-    println(request.asString.body)
     val response = XML.loadString(request.asString.body)
     ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
   }
