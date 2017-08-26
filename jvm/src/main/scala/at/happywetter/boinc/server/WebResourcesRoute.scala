@@ -83,8 +83,8 @@ object WebResourcesRoute {
       else fromResource(file + ".gz", request)
 
     lazy val normalFile =
-      if (config.development.getOrElse(false)) fromFile(file + ".gz", request)
-      else fromResource(file + ".gz", request)
+      if (config.development.getOrElse(false)) fromFile(file, request)
+      else fromResource(file, request)
 
 
     val cType = contentTypes.get(file.substring(file.lastIndexOf("."), file.length))
