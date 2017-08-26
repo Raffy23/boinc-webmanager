@@ -5,17 +5,20 @@ The Boinc Webmanager provides a simple Web UI for multiple Boinc Clients, simila
 Account Management Website like BAM. In contrast to these Websites the Server needs direct access
 to the Boinc core client and is able to view Tasks and directly control the client
 
+## Features
+* Display multiple Clients in a simple Dashboard View
+* Show Projects / Workunits and Boinc Information from each Client
+* Limited control over Workunits and Projects (suspend, delete, ...)
+
 
 ## Installation
 1. Clone the Project from Github with `git clone`
 2. Download and Install `sbt` and `scala`
-3. - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
-   - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
+3. - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
+   - Copy `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
+   - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
 4. Copy the Fat-Jar to any location where the Application has read / write access
 5. Create a `application.conf` file with the Settings (See Configuration Section for more information)
-6. Create the `webroot` Folder an copy the `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into it
-7. Copy FontAwesome & NProcess css and font files into the Directory
-   - *TODO: what to copy & where to* 
 8. Run it with `java -jar Boinc-Webmanager-assembly-XXXX-SNAPSHOT.jar`
 
 After these Steps you should be able to view the Client at the following URL http://127.0.0.1:8080 
@@ -27,6 +30,9 @@ Sample application.conf:
 
 # Default Boinc port
 boinc-default-port: 31416
+
+# True if the WebServer should run in development mode
+development: false 
 
 # Basic Settings of the Server
 server {
@@ -41,8 +47,8 @@ server {
   # Secret is used to sign and encrypt session tokens 
   secret: "8831cae805746a6b0dcad897c28175c25c48535357219f0a20dca867ddce0a8a"
   
-  # The Path where the Files are served (should contain css and javascript of the client)
-  webroot: "./web/"
+  # The Path where the Files are served (Only needed in development mode)
+  #webroot: "./web/"
 }
 
 # Settings about the Boinc hosts
@@ -69,11 +75,3 @@ boinc.projects {
 ## Security Notice
 The Webmanager does transfer all Data with HTTP, which means anyone can steal the JWT-Token and pose
 as the logged in User. In Production the Server should be configured to be behind a HTTPs-Proxy. 
-
-*TODO: Describe Howto + sample nginx configuration*  
-
-### TODO
-- [ ] Server Statistics
-- [ ] Complete basic client UI
-- [ ] Multiple Languages (en / de)
-  - [ ] Readme in German
