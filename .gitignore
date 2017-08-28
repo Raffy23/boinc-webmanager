@@ -1,6 +1,7 @@
 *.log
 *.idea
-*target*
+target
 application.conf
 web
 /.gtm/
+
