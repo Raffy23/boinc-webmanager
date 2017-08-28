@@ -1,7 +1,17 @@
-*.log
+# Hide IntelliJ Files:
 *.idea
-target
+
+# Don't push Scala build directories
+js/target
+jvm/target
+shared/target
+/target
+
+# Ignore custom configuration files
 application.conf
-web
+all_projects_list.xml
+/web
+
+# Ignore .gtm folder
 /.gtm/
 
