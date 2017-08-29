@@ -1,0 +1,52 @@
+package at.happywetter.boinc.web.util
+
+import at.happywetter.boinc.web.helper.FetchHelper
+import at.happywetter.boinc.web.util.I18N.Locale
+import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
+import prickle.Unpickle
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+/**
+  * Created by: 
+  *
+  * @author Raphael
+  * @version 29.08.2017
+  */
+object LanguageDataProvider {
+
+  val fallbackLanguage: String = Locale.English
+  val languageData = new mutable.HashMap[String,Map[String,String]]()
+  var available = new ListBuffer[String]
+
+  def bootstrap: Future[Map[String,String]] = {
+    fetchAvailableLanguages
+      .flatMap(languages => {
+        languages.foreach(available += _)
+        Locale.current = languages.find(s => s == Locale.current).getOrElse(fallbackLanguage)
+
+        fetchLanguage()
+      })
+      .map(lang => {
+        languageData.put(Locale.current, lang)
+        lang
+      })
+  }
+
+  def fetchAvailableLanguages: Future[List[String]] =
+    Fetch.fetch("/language", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[List[String]].fromString(json = data).get)
+
+  def fetchLanguage(lang: String = Locale.current): Future[Map[String, String]] =
+    Fetch.fetch("/language/" + lang, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .toFuture
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Map[String, String]].fromString(json = data).get)
+
+
+}

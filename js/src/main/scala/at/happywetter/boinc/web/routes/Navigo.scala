@@ -4,8 +4,9 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
 
 /**
-  * Created by: 
+  * For Navigo Version 5.3.1
   *
+  * Created by:
   * @author Raphael
   * @version 24.07.2017
   */
@@ -20,8 +21,6 @@ object Navigo extends js.Object {
   val REPLACE_WILDCARD: String = js.native
   val FOLLOWED_BY_SLASH_REGEXP: String = js.native
   var MATCH_REGEXP_FLAGS: String = js.native
-
-  //type RouteCallback = js.Function0[Unit] | js.Function1[String, Unit] | js.Function2[String, String, Unit]
 
 }
 

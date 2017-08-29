@@ -41,7 +41,7 @@ object AuthClient {
   private def requestToken(user: User): Future[String] = {
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
       .toFuture
-      .flatMap(response => if (response.status == 200) response.text().toFuture else Future{""})git
+      .flatMap(response => if (response.status == 200) response.text().toFuture else Future{""})
 
   }
 

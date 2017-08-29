@@ -3,16 +3,11 @@ package at.happywetter.boinc
 import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
-import at.happywetter.boinc.boincclient.{BoincClient, WebRPC}
+import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.shared.AddProjectBody
-import org.http4s.Request
-import org.http4s.dsl.{BadRequest, NotAcceptable, NotFound, Ok}
 import org.http4s.server.blaze.BlazeBuilder
-import prickle.{Pickle, Unpickle}
 
-import scala.concurrent.Future
-import scala.io.StdIn
+import scala.io.{Source, StdIn}
 
 /**
   * @author Raphael
@@ -58,12 +53,16 @@ object WebServer extends App  {
   projects.importFrom(config)
 
 
+  println(Source.fromResource("lang/de.properties"))
+
+
   private val builder =
     BlazeBuilder
     .bindHttp(config.server.port, config.server.address)
     .mountService(JsonMiddleware(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
     .mountService(WebResourcesRoute(config), "/")
     .mountService(authService.authService, "/auth")
+    .mountService(JsonMiddleware(LanguageService.apply()), "/language")
 
   private val server = builder.run
   println(s"Server online at http://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")

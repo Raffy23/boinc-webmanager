@@ -5,9 +5,12 @@ import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.{BoincLayout, Dashboard, LoginPage}
 import at.happywetter.boinc.web.routes.AppRouter.{BoincHomeLocation, DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
+import at.happywetter.boinc.web.util.I18N.Locale
+import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -30,9 +33,17 @@ object Main {
     initRouter()
     LayoutManager.init()
 
-    dom.console.log("Finished, navigating to Path")
-    AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
-    NProgress.done(true)
+    // Load Languages before jumping to UI
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+    LanguageDataProvider.bootstrap.foreach(_ => {
+      dom.console.log("Finished, navigating to Path")
+      dom.console.log("Setting current language to: " + Locale.current)
+      dom.console.log("Language Name: " + "language_name".translate)
+
+      AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
+      NProgress.done(true)
+    })
+
   }
 
   def initRouter(): Unit = {
@@ -44,7 +55,7 @@ object Main {
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((param) => {
       dom.console.log(param)
-      dom.window.alert("Page was not found!")
+      dom.window.alert("page_not_found".translate)
       AppRouter.navigate(DashboardLocation)
     })
 
