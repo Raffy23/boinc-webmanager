@@ -16,11 +16,15 @@ import scala.util.Try
   */
 object LanguageService {
 
-  val languages: List[String] =
+  val languages: List[(String, String, String)] =
     ResourceWalker
       .listFiles("/lang")
       .filter(_.endsWith(".properties"))
       .map(_.split("\\.")(0))
+      .map(language => {
+        val prop = loadProp(language)
+        (language, prop.getProperty("language_name"), prop.getProperty("language_icon"))
+      })
 
   import org.http4s._
   import org.http4s.dsl._
@@ -39,14 +43,15 @@ object LanguageService {
   }
 
 
-
-
-  private def load(lang: String): Map[String, String] = {
-    import scala.collection.JavaConverters._
-
+  private def loadProp(lang: String): Properties = {
     val content = new Properties()
     content.load(Thread.currentThread().getContextClassLoader.getResourceAsStream("lang/" +  lang + ".properties"))
 
-    content.asScala.toMap
+    content
+  }
+
+  private def load(lang: String): Map[String, String] = {
+    import scala.collection.JavaConverters._
+    loadProp(lang).asScala.toMap
   }
 }

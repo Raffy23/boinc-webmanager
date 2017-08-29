@@ -7,13 +7,13 @@ import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, NProgress}
-import at.happywetter.boinc.web.storage.{HostInfoCache, TaskSpecCache}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
-import scala.scalajs.js.{Date, Dictionary, UndefOr}
+import scala.scalajs.js.Dictionary
 import scalatags.JsDom
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -27,13 +27,15 @@ object Dashboard extends Layout {
   object Style extends StyleSheet.Inline {
   }
 
-  lazy val component: JsDom.TypedTag[HTMLElement] = {
+  lazy val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
     import scalatags.JsDom.all._
 
+    Some(
     div(
       DashboardMenu.component.render,
       div(id := "client-container", style := "margin-left:218px"
       )
+    )
     )
   }
 
@@ -59,19 +61,15 @@ object Dashboard extends Layout {
   override def onRender(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-    println("Dashboard - onRender")
     ClientManager.readClients().foreach(clients => {
-
 
       DashboardMenu.removeMenuReferences("boinc-client-entry")
       clients.foreach(client =>
         DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
       )
 
-
       if (dom.window.location.pathname == "/view/dashboard")
         renderDashboardContent(clients)
-
 
       AppRouter.router.updatePageLinks()
       NProgress.done(true)
@@ -86,12 +84,13 @@ object Dashboard extends Layout {
     val container = dom.document.getElementById("client-container")
     container.appendChild(
       div(
-        h2(BoincClientLayout.Style.pageHeader, "Übersicht: "),
+        h2(BoincClientLayout.Style.pageHeader, "dashboard_overview".translate),
         div(
           table(TableTheme.table,
-            thead(
-              th("Host"), th("CPU Kerne"), th("Netzwerk"), th("Vorrausichtliche",br(),"Berechnungsdauer"), th("Nächste WU Deadline"), th("Festplatte")
-            ),
+            thead(tr(
+              th("table_host".translate), th("table_cpu".translate), th("table_network".translate),
+              th("table_computinduration".translate.toTags), th("table_wudeadline".translate), th("table_disk".translate)
+            )),
             tbody(
               clients.map(c => ClientManager.clients(c)).map(client => {
 

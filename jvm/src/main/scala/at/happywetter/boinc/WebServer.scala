@@ -52,10 +52,6 @@ object WebServer extends App  {
   private val authService = new AuthenticationService(config)
   projects.importFrom(config)
 
-
-  println(Source.fromResource("lang/de.properties"))
-
-
   private val builder =
     BlazeBuilder
     .bindHttp(config.server.port, config.server.address)

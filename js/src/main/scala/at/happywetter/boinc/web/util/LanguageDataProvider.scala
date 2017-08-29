@@ -20,13 +20,13 @@ object LanguageDataProvider {
 
   val fallbackLanguage: String = Locale.English
   val languageData = new mutable.HashMap[String,Map[String,String]]()
-  var available = new ListBuffer[String]
+  var available = new ListBuffer[(String, String, String)]
 
   def bootstrap: Future[Map[String,String]] = {
     fetchAvailableLanguages
       .flatMap(languages => {
         languages.foreach(available += _)
-        Locale.current = languages.find(s => s == Locale.current).getOrElse(fallbackLanguage)
+        Locale.current = languages.map(_._1).find(s => s == Locale.current).getOrElse(fallbackLanguage)
 
         fetchLanguage()
       })
@@ -36,17 +36,20 @@ object LanguageDataProvider {
       })
   }
 
-  def fetchAvailableLanguages: Future[List[String]] =
+  def loadLanguage(lang: String): Future[Map[String, String]] =
+    if (languageData.keys.exists(_ == lang)) Future { languageData(lang) }
+    else fetchLanguage(lang).map(data => {languageData.put(lang, data); data})
+
+  def fetchAvailableLanguages: Future[List[(String, String, String)]] =
     Fetch.fetch("/language", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
       .flatMap(response => response.text().toFuture)
-      .map(data => Unpickle[List[String]].fromString(json = data).get)
+      .map(data => Unpickle[List[(String, String, String)]].fromString(json = data).get)
 
-  def fetchLanguage(lang: String = Locale.current): Future[Map[String, String]] =
+  private def fetchLanguage(lang: String = Locale.current): Future[Map[String, String]] =
     Fetch.fetch("/language/" + lang, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Map[String, String]].fromString(json = data).get)
-
 
 }

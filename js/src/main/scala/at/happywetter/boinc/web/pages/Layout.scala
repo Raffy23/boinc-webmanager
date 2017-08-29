@@ -13,7 +13,10 @@ import scalatags.JsDom
   * @version 25.07.2017
   */
 trait Layout {
-  val component: JsDom.TypedTag[HTMLElement]
+
+  def render: Option[JsDom.TypedTag[HTMLElement]] = { None }
+  val staticComponent: Option[JsDom.TypedTag[HTMLElement]]
+
   val routerHook: Option[Hook]
 
   val requestedParent: Option[String] = None

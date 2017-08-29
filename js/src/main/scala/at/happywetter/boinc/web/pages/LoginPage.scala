@@ -1,19 +1,22 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.pages.LoginPage.Style
-import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, NProgress}
+import at.happywetter.boinc.web.pages.component.DropdownMenu
+import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
+import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
+import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
 import scala.concurrent.Future
 import scala.language.postfixOps
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.scalajs.js.Dictionary
+import scala.scalajs.js.{Date, Dictionary}
 import scalacss.DevDefaults._
 import scalatags.JsDom
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 
@@ -78,16 +81,48 @@ object LoginPage {
 }
 class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Layout {
 
-  val component: JsDom.TypedTag[HTMLElement] = {
+  val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = None
+
+  override def render: Option[JsDom.TypedTag[HTMLElement]] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
+    Some(
     div(
+      div(new Date().getTime(), " -> ", Locale.current),
+      div(id := "language-selector-area", style := "position:fixed;top:74px;right:22px",
+        new DropdownMenu(
+          List(
+            "login_lang_chooser".translate,
+            LanguageDataProvider.available
+              .find{ case (c,_,_) => c == Locale.current}
+              .map{ case (lang_code, lang_name, lang_icon) => img(src := s"/files/images/$lang_icon", alt := lang_name, style := "height:2em;vertical-align:middle;margin-left:6px")}
+              .get),
+          LanguageDataProvider.available.map{ case (lang_code, lang_name, icon) => {
+            a(href := "#change-language",
+              img(src := s"/files/images/$icon", alt := lang_name, style := "height:2em;vertical-align:middle;margin-right:6px"), lang_name,
+              onclick := { (event: Event) =>
+                event.preventDefault()
+
+                NProgress.start()
+                LanguageDataProvider
+                  .loadLanguage(lang_code)
+                  .foreach(_ => {
+                    Locale.current = lang_code
+
+                    LayoutManager.render(this)
+                    NProgress.done(true)
+                  })
+              }
+            )
+          }}.toList
+        ).render()
+      ),
       div(
         form(Style.content, id := "login-form",
           h2(style := "margin-bottom: 25px", "Login"),
-          input(Style.input, `type` := "text", placeholder := "Username", id := "login-username"),
-          input(Style.input, `type` := "password", placeholder := "Password", id := "login-password"),
+          input(Style.input, `type` := "text", placeholder := "login_username".translate, id := "login-username"),
+          input(Style.input, `type` := "password", placeholder := "login_password".translate, id := "login-password"),
           button(Style.button, onclick := {
             (event: Event) => {
               NProgress.start()
@@ -101,18 +136,18 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
                   AppRouter.navigate(event, DashboardLocation)
 
                 case _ =>
-                  dom.window.alert("Wrong Username or Password!")
+                  dom.window.alert("login_wrong_password_msg".translate)
                   NProgress.done(true)
               }
 
               event.preventDefault()
             }
-          }, "Login")
+          }, "login_btn".translate)
         )
       )
     )
+    )
   }
-
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
 

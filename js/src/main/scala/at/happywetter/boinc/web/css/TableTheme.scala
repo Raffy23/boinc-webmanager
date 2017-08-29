@@ -26,8 +26,8 @@ object TableTheme extends StyleSheet.Inline {
       border :=! "1px solid #DDD",
       borderBottomWidth(2 px),
       padding(10 px),
-      textAlign.left,
-      fontSize(17 px)
+      textAlign.center,
+      fontSize(15 px)
     ),
 
     unsafeChild("tr>td")(

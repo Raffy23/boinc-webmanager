@@ -30,12 +30,13 @@ object Main {
 
     NProgress.start()
     AppCSS.load()
-    initRouter()
-    LayoutManager.init()
 
     // Load Languages before jumping to UI
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
     LanguageDataProvider.bootstrap.foreach(_ => {
+      initRouter()
+      LayoutManager.init()
+
       dom.console.log("Finished, navigating to Path")
       dom.console.log("Setting current language to: " + Locale.current)
       dom.console.log("Language Name: " + "language_name".translate)

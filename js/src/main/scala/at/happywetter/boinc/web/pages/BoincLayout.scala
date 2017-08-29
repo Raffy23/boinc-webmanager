@@ -27,11 +27,11 @@ object BoincLayout extends Layout {
   override val requestedParent = Some("main #client-container")
   override def requestParentLayout() = { Some(Dashboard) }
 
-  override val component: JsDom.TypedTag[HTMLElement] =  {
+  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] =  {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    div(BoincClientLayout.Style.content, id := "client-data")
+    Some(div(BoincClientLayout.Style.content, id := "client-data"))
   }
 
   override val routerHook: Option[Hook] = Some(new Hook {

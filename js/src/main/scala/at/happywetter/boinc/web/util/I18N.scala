@@ -11,7 +11,7 @@ import org.scalajs.dom
 object I18N {
 
   object Locale {
-    var current: String = getDefault
+    var current: String = "en"//getDefault
 
     val German = "de"
     val English = "en"
@@ -20,10 +20,18 @@ object I18N {
   }
 
 
-  implicit class TranslateableString(str: String) {
+  implicit class TranslatableString(str: String) {
+    def translate: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
+  }
 
-    def translate: String = {
-      LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
+  implicit class HtmlString(str: String) {
+    import scalatags.JsDom.all._
+
+
+    def toTags: List[Modifier] = {
+      val data = str.split("\n")
+
+      List(data(0),br(),data(1))
     }
 
   }

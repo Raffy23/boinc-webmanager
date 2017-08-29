@@ -22,13 +22,18 @@ object LayoutManager {
   rootElement.appendChild(PageLayout.footer.render)
 
   def render(page: Layout): Unit = {
+    dom.window.console.log(s"LayoutManager: Rendering ${page.getClass.getSimpleName}")
     val mainElement = loadMainElement(page)
-    dom.window.console.log("Rendering View: " + page.getClass.getSimpleName)
-
-    println(s"LayoutManager: render ${page.getClass.getSimpleName}")
 
     mainElement.innerHTML = ""
-    mainElement.appendChild(page.component.render)
+
+    if (page.staticComponent.isDefined)
+      mainElement.appendChild(page.staticComponent.get.render)
+
+    val pageContent = page.render
+    if (pageContent.isDefined)
+      mainElement.appendChild(pageContent.get.render)
+
     page.onRender()
   }
 

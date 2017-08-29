@@ -9,6 +9,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.language.postfixOps
 import scalacss.DevDefaults._
 import scalatags.JsDom
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -63,7 +64,7 @@ object DashboardMenu {
 
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
-        a(href := AppRouter.href(DashboardLocation), "Dashboard", data("navigo") := "",
+        a(href := AppRouter.href(DashboardLocation), "dashboard_menu_home".translate, data("navigo") := "",
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)
@@ -71,7 +72,7 @@ object DashboardMenu {
       ),
 
       li(Style.elem,
-        a(href :="#settings", "Einstellungen",
+        a(href :="#settings", "dashboard_menu_settings".translate,
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)
