@@ -54,20 +54,15 @@ object Tooltip {
       )
     )
   }
-
-  def unapply(arg: Tooltip): HTMLElement = arg.render()
-  def apply(text: String, parent: JsDom.TypedTag[HTMLElement]): Tooltip = new Tooltip(text, parent)
-
-  //implicit def toHTMLElement(arg: Tooltip): HTMLElement = arg.unapply()
 }
 
-class Tooltip(text: String, parent: JsDom.TypedTag[HTMLElement], textOrientation: StyleA = Style.topText) {
+class Tooltip(text: String, parent: JsDom.TypedTag[HTMLElement], textOrientation: StyleA = Style.topText, tooltipId: Option[String] = None) {
 
   val component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    div(Style.tooltip, parent, span(Style.tooltipText,textOrientation, text))
+    div(Style.tooltip, parent, span(Style.tooltipText,textOrientation, text, id := tooltipId.getOrElse("")))
   }
 
   def render(): HTMLElement = component.render

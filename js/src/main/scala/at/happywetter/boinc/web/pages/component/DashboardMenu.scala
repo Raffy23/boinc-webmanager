@@ -64,7 +64,7 @@ object DashboardMenu {
 
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
-        a(href := AppRouter.href(DashboardLocation), "dashboard_menu_home".translate, data("navigo") := "",
+        a(href := AppRouter.href(DashboardLocation), "dashboard_menu_home".localize, data("navigo") := "",
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)
@@ -72,7 +72,7 @@ object DashboardMenu {
       ),
 
       li(Style.elem,
-        a(href :="#settings", "dashboard_menu_settings".translate,
+        a(href :="#settings", "dashboard_menu_settings".localize,
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)

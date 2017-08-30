@@ -26,7 +26,7 @@ object AppCSS {
       TopNavigation,
       ContextMenu.Style,
       Tooltip.Style,
-      ModalDialog.Style,
+      SimpleModalDialog.Style,
       BoincMainHostLayout.Style,
       DropdownMenu.Style
     )

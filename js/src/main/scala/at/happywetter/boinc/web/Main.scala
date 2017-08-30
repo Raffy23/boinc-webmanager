@@ -39,7 +39,7 @@ object Main {
 
       dom.console.log("Finished, navigating to Path")
       dom.console.log("Setting current language to: " + Locale.current)
-      dom.console.log("Language Name: " + "language_name".translate)
+      dom.console.log("Language Name: " + "language_name".localize)
 
       AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
       NProgress.done(true)
@@ -56,7 +56,7 @@ object Main {
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((param) => {
       dom.console.log(param)
-      dom.window.alert("page_not_found".translate)
+      dom.window.alert("page_not_found".localize)
       AppRouter.navigate(DashboardLocation)
     })
 

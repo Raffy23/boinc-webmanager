@@ -21,7 +21,7 @@ object I18N {
 
 
   implicit class TranslatableString(str: String) {
-    def translate: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
+    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
   }
 
   implicit class HtmlString(str: String) {

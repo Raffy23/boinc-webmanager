@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, ModalDialog, Tooltip}
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, SimpleModalDialog, Tooltip}
 import at.happywetter.boinc.web.routes.{Hook, NProgress}
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, ProjectNameCache, TaskSpecCache}
 import org.scalajs.dom
@@ -18,6 +18,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scalatags.JsDom
 import scalatags.JsDom.TypedTag
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -51,11 +52,13 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     import scalatags.JsDom.all._
 
     div( id := "workunits",
-      h2(BoincClientLayout.Style.pageHeader, "Workunits: "),
+      h2(BoincClientLayout.Style.pageHeader, "workunit_header".localize),
       table(TableTheme.table, TableTheme.table_lastrowsmall,
         thead(
           tr(
-            th("Projekt"), th("Fortschritt"),th("Status"), th("Vergangen"), th("Verbleiben"), th("Ablaufdatum"), th("Andwendung"), th()
+            th("table_project".localize), th("table_progress".localize),th("table_status".localize),
+            th("table_past_time".localize), th("table_remain_time".localize), th("table_expiry_date".localize),
+            th("table_application".localize), th()
           )
         ),
         tbody(
@@ -80,7 +83,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
               td(BoincFormater.convertDate(new Date(result.reportDeadline*1000))),
               td(data("wu-name") := result.wuName, result.wuName),
               td(
-                Tooltip(if(result.supsended) "Fortsetzen" else "Anhalten",
+                new Tooltip(if(result.supsended) "state_continue".localize else "state_stop".localize,
                   a(href:="#", onclick := {
                     (event: Event) => {
                       event.preventDefault()
@@ -99,8 +102,12 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                         boinc.workunit(result.project, result.name, if (state) WorkunitAction.Resume else WorkunitAction.Suspend).onComplete(f => f.fold( (e) => e.printStackTrace(),
                           response => {
                             if (!response) {
-                              dom.window.alert("Action was not successful!")
+                              //TODO: Use a better Dialog
+                              dom.window.alert("not_succ_action".localize)
                             } else {
+                              val tooltip = dom.document.getElementById("tooltip-"+result.name)
+                              tooltip.textContent = if(result.supsended) "state_continue".localize else "state_stop".localize
+
                               source.setAttribute("data-in-process", "false")
                               source.setAttribute("data-suspended", (!state).toString)
                               source.firstChild.asInstanceOf[HTMLElement].classList.add(s"fa-${if (!state) "play" else "pause"}-circle-o")
@@ -116,54 +123,54 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                       }
                     }
                   },
-                  i(`class` := s"fa fa-${ if(result.supsended) "play" else "pause" }-circle-o"), data("suspended") := result.supsended, data("in-process") := "false")
+                  i(`class` := s"fa fa-${ if(result.supsended) "play" else "pause" }-circle-o"), data("suspended") := result.supsended, data("in-process") := "false"),
+                  tooltipId = Some("tooltip-"+result.name)
                 ).render(),
 
-                Tooltip("Abbrechen",
+                new Tooltip("workunit_cancel".localize,
                   a(href:="#", i(`class` := "fa fa-stop-circle-o"),
                     onclick := {
                     (event: Event) => {
                       event.preventDefault()
 
-                      new ModalDialog(
+                      new SimpleModalDialog(
                         bodyElement = div(
-                          "Sind Sie sicher das diese Workunit abgebrochen werden soll?",br(),
-                          "Dabei geht jgendlicher Fortschritt verloren und dem Projektserver wird mitgeteilt dass die Workunit abgebrochen wurde",br(),p(
-                            b("Details: "),br(),
+                          "workunit_dialog_cancel_content".localize,p(
+                            b("workunit_dialog_cancel_details".localize),br(),
                             table(
                               tbody(
-                                tr(td("Projekt: "), td(result.project)),
-                                tr(td("Name: "), td(result.name)),
-                                tr(td("Verbleibende Zeit: "), td(BoincFormater.convertTime(result.remainingCPU)))
+                                tr(td("workunit_dialog_cancel_project".localize), td(result.project)),
+                                tr(td("workunit_dialog_cancel_name".localize), td(result.name)),
+                                tr(td("workunit_dialog_cancel_remaining_time".localize), td(BoincFormater.convertTime(result.remainingCPU)))
                               )
                             )
                           )
                         ),
-                        okAction = (dialog: ModalDialog) => {
+                        okAction = (dialog: SimpleModalDialog) => {
                           dialog.hide()
-                          boinc.workunit(result.project, result.name, WorkunitAction.Suspend)
-                          dom.window.alert("WU wurde nur Pausiert!")
+                          boinc.workunit(result.project, result.name, WorkunitAction.Abort)
                         },
-                        abortAction = (dialog: ModalDialog) => {dialog.hide()},
-                        headerElement = div(h3("Workunit Abbrechen?"))
+                        abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
+                        headerElement = div(h3("workunit_dialog_cancel_header".localize))
                       ).renderToBody().show()
                     }
                   }
                   )
                 ).render(),
 
-                Tooltip("Eigenschaften",
+                new Tooltip("workunit_dialog_properties".localize,
                   a(href:="#", i(`class` := "fa fa-info-circle"),
                     onclick := {
                       (event: Event) => {
                         event.preventDefault()
 
-                        new ModalDialog(
-                          bodyElement = div("TODO: Details anzeigen"),
-                          okAction = (dialog: ModalDialog) => {dialog.hide()},
-                          abortAction = (dialog: ModalDialog) => {dialog.hide()},
-                          headerElement = div(h3("Eigenschaften: ")),
-                          abortLabel = "Schließen",
+                        new SimpleModalDialog(
+                          //TODO: Show some Details ...
+                          bodyElement = div(""),
+                          okAction = (dialog: SimpleModalDialog) => {dialog.hide()},
+                          abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
+                          headerElement = div(h3("workunit_dialog_properties".localize)),
+                          abortLabel = "dialog_close".localize,
                           okLabel = ""
                         ).renderToBody().show()
                       }
@@ -187,7 +194,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
           if (app.get.nonCpuIntensive) {
             node.setAttribute("data-extra-flags", "nci")
-            node.textContent = node.textContent + " (nicht CPU-intensiv)"
+            node.textContent = node.textContent + "boinc_flags_nci".localize
           }
 
           if (app.get.version.avgCpus > 1) {
@@ -215,17 +222,17 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     if (inital) renderStatusExtraFlags(result.wuName)
 
     Result.State(result.state) match {
-      case Result.State.Result_New => "Neu"
-      case Result.State.Result_Aborted => "Abgebrochen"
-      case Result.State.Result_Compute_Error => "Berechnungsfehler"
+      case Result.State.Result_New => "boinc_status_new".localize
+      case Result.State.Result_Aborted => "boinc_status_aborted".localize
+      case Result.State.Result_Compute_Error => "boinc_status_error".localize
       case Result.State.Result_Files_Downloaded =>
         result.activeTask.map(task => Result.ActiveTaskState(task.activeTaskState) match {
           case Result.ActiveTaskState.PROCESS_EXECUTING => {
-            var base = "Aktiv"
+            var base = "boinc_status_executing".localize
 
             if (!inital) {
               val node = dom.document.querySelector(s"div[id='workunits'] > table > tbody > tr[data-wu-id='${result.wuName}'] > td:nth-child(3)").asInstanceOf[HTMLElement]
-              if (node.getAttribute("data-extra-flags").contains("nci")) base = base + " (nicht CPU intensiv)"
+              if (node.getAttribute("data-extra-flags").contains("nci")) base = base + "boinc_flags_nci".localize
               if (node.getAttribute("data-extra-flags").contains("cpu")) {
                 base = base + "(" + node.getAttribute("data-cpu") + " CPUs)"
               }
@@ -233,16 +240,16 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
             base
           }
-          case Result.ActiveTaskState.PROCESS_ABORTED => "Abgebrochen"
-          case Result.ActiveTaskState.PROCESS_SUSPENDED => if(result.supsended) "Angehalten" else "Verdrängt"
-          case Result.ActiveTaskState.PROCESS_EXITED => "Beendet"
-          case Result.ActiveTaskState.PROCESS_UNINITIALIZED => "Verdrängt"
+          case Result.ActiveTaskState.PROCESS_ABORTED => "boinc_status_abort".localize
+          case Result.ActiveTaskState.PROCESS_SUSPENDED => if(result.supsended) "boinc_status_suspend1".localize else "boinc_status_suspend2".localize
+          case Result.ActiveTaskState.PROCESS_EXITED => "boinc_status_exited".localize
+          case Result.ActiveTaskState.PROCESS_UNINITIALIZED => "boinc_status_uninit".localize
           case state => state.toString
         }).getOrElse("Bereit")
-      case Result.State.Result_Files_Uploaded => "Meldebereit"
-      case Result.State.Result_Files_Uploading => "Lädt hoch"
-      case Result.State.Result_File_Downloading => "Downloading"
-      case Result.State.Result_Upload_Failed => "Upload Fehlgeschlagen!"
+      case Result.State.Result_Files_Uploaded => "boinc_status_uploaded".localize
+      case Result.State.Result_Files_Uploading => "boinc_status_uploading".localize
+      case Result.State.Result_File_Downloading => "boinc_status_downloading".localize
+      case Result.State.Result_Upload_Failed => "boinc_status_upload_fail".localize
     }
   }
 

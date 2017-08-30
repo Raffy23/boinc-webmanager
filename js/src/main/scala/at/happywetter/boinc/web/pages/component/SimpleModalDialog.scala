@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.pages.component.ModalDialog.Style
+import at.happywetter.boinc.web.pages.component.SimpleModalDialog.Style
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -10,18 +10,18 @@ import scalacss.DevDefaults._
 import scalatags.JsDom
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 08.08.2017
   */
-class ModalDialog(
-                   bodyElement: JsDom.TypedTag[HTMLElement],
-                   headerElement: JsDom.TypedTag[HTMLElement] = JsDom.tags.span,
-                   okAction: (ModalDialog) => Unit,
-                   abortAction: (ModalDialog) => Unit,
-                   okLabel: String = "OK",
-                   abortLabel: String = "Abbrechen") {
+class SimpleModalDialog(
+                         bodyElement: JsDom.TypedTag[HTMLElement],
+                         headerElement: JsDom.TypedTag[HTMLElement] = JsDom.tags.span,
+                         okAction: (SimpleModalDialog) => Unit,
+                         abortAction: (SimpleModalDialog) => Unit,
+                         okLabel: String = "OK",
+                         abortLabel: String = "Abbrechen") {
 
   val component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
@@ -48,7 +48,7 @@ class ModalDialog(
 
   def render(): HTMLElement = component.render
 
-  def renderToBody(): ModalDialog = {
+  def renderToBody(): SimpleModalDialog = {
     val existingDialog = dom.document.getElementById("modal-dialog")
     if (existingDialog != null)
       dom.document.body.removeChild(existingDialog)
@@ -61,7 +61,7 @@ class ModalDialog(
   def show(): Unit = dom.document.getElementById("modal-dialog").asInstanceOf[HTMLElement].style = "display:block;"
 }
 
-object ModalDialog {
+object SimpleModalDialog {
 
   object Style extends StyleSheet.Inline {
     import dsl._

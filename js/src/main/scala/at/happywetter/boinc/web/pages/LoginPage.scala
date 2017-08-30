@@ -93,7 +93,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
       div(id := "language-selector-area", style := "position:fixed;top:74px;right:22px",
         new DropdownMenu(
           List(
-            "login_lang_chooser".translate,
+            "login_lang_chooser".localize,
             LanguageDataProvider.available
               .find{ case (c,_,_) => c == Locale.current}
               .map{ case (lang_code, lang_name, lang_icon) => img(src := s"/files/images/$lang_icon", alt := lang_name, style := "height:2em;vertical-align:middle;margin-left:6px")}
@@ -121,8 +121,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
       div(
         form(Style.content, id := "login-form",
           h2(style := "margin-bottom: 25px", "Login"),
-          input(Style.input, `type` := "text", placeholder := "login_username".translate, id := "login-username"),
-          input(Style.input, `type` := "password", placeholder := "login_password".translate, id := "login-password"),
+          input(Style.input, `type` := "text", placeholder := "login_username".localize, id := "login-username"),
+          input(Style.input, `type` := "password", placeholder := "login_password".localize, id := "login-password"),
           button(Style.button, onclick := {
             (event: Event) => {
               NProgress.start()
@@ -136,13 +136,13 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
                   AppRouter.navigate(event, DashboardLocation)
 
                 case _ =>
-                  dom.window.alert("login_wrong_password_msg".translate)
+                  dom.window.alert("login_wrong_password_msg".localize)
                   NProgress.done(true)
               }
 
               event.preventDefault()
             }
-          }, "login_btn".translate)
+          }, "login_btn".localize)
         )
       )
     )

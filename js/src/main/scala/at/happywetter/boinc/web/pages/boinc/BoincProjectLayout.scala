@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ModalDialog, Tooltip}
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, SimpleModalDialog, Tooltip}
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
@@ -41,7 +41,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
                   //TODO: Use some cache ...
                   ClientManager.queryCompleteProjectList().foreach(data => {
-                    new ModalDialog(div(
+                    new SimpleModalDialog(div(
                       table(TableTheme.table,
                         tbody(
                           tr(td("Projekt", style := "width:125px"),
@@ -75,7 +75,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                         )
                       ), br(), br()),
                       h2("Projekt hinzufügen"),
-                      (dialog: ModalDialog) => {
+                      (dialog: SimpleModalDialog) => {
                         NProgress.start()
 
                         val select = dom.document.getElementById("pad-project").asInstanceOf[HTMLSelectElement]
@@ -91,7 +91,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                             dom.window.alert("Couldn't attach to Project!")
                         })
                       },
-                      (dialog: ModalDialog) => {dialog.hide()}
+                      (dialog: SimpleModalDialog) => {dialog.hide()}
                     ).renderToBody().show()
 
                     NProgress.done(true)
@@ -116,11 +116,11 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                   td(project.userTotalCredit),
                   td(project.hostAvgCredit),
                   td(
-                    Tooltip(if (project.dontRequestWork) "Neuen Aufgaben zulassen" else "Keine neue Aufgaben" ,
+                    new Tooltip(if (project.dontRequestWork) "Neuen Aufgaben zulassen" else "Keine neue Aufgaben" ,
                       a(href := "#change-project-state", i(`class` := s"fa fa-${if (project.dontRequestWork) "play" else "pause" }-circle-o"))
                     ).render(),
 
-                    Tooltip("Aktualisieren",
+                    new Tooltip("Aktualisieren",
                       a(href := "#refresh-project", i(`class` := "fa fa-fw fa-refresh", style := "font-size:20px"),
                       onclick := {
                         (event: Event) => {
@@ -141,7 +141,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                       })
                     ).render(),
 
-                    Tooltip("Eigenschaften",
+                    new Tooltip("Eigenschaften",
                       a(href := "#project-properties", i(`class` := "fa fa-info-circle"))
                     ).render()
                   )

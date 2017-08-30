@@ -84,12 +84,12 @@ object Dashboard extends Layout {
     val container = dom.document.getElementById("client-container")
     container.appendChild(
       div(
-        h2(BoincClientLayout.Style.pageHeader, "dashboard_overview".translate),
+        h2(BoincClientLayout.Style.pageHeader, "dashboard_overview".localize),
         div(
           table(TableTheme.table,
             thead(tr(
-              th("table_host".translate), th("table_cpu".translate), th("table_network".translate),
-              th("table_computinduration".translate.toTags), th("table_wudeadline".translate), th("table_disk".translate)
+              th("table_host".localize), th("table_cpu".localize), th("table_network".localize),
+              th("table_computinduration".localize.toTags), th("table_wudeadline".localize), th("table_disk".localize)
             )),
             tbody(
               clients.map(c => ClientManager.clients(c)).map(client => {
