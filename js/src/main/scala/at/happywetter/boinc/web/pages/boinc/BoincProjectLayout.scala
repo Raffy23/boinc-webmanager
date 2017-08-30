@@ -120,7 +120,32 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                   td(project.hostAvgCredit),
                   td(
                     new Tooltip(if (project.dontRequestWork) "project_allow_more_work".localize else "project_dont_allow_more_work".localize ,
-                      a(href := "#change-project-state", i(`class` := s"fa fa-${if (project.dontRequestWork) "play" else "pause" }-circle-o"))
+                      a(href := "#change-project-state", i(`class` := s"fa fa-${if (project.dontRequestWork) "play" else "pause" }-circle-o"),
+                        onclick := { (event: Event) => {
+                          event.preventDefault()
+                          NProgress.start()
+
+                          val source = event.target.asInstanceOf[HTMLElement]
+                          val state  = source.classList.contains("fa-pause-circle-o")
+                          source.classList.add("fa-spin")
+
+                          boinc.project(project.url,if (state) ProjectAction.NoMoreWork else  ProjectAction.AllowMoreWork).foreach(result => {
+                            NProgress.done(true)
+                            if (!result) dom.window.alert("not_succ_action".localize)
+                            else {
+                              source.classList.remove("fa-spin")
+                              if (state) {
+                                source.classList.add("fa-play-circle-o")
+                                source.classList.remove("fa-pause-circle-o")
+                              } else {
+                                source.classList.add("fa-pause-circle-o")
+                                source.classList.remove("fa-play-circle-o")
+                              }
+                              //TODO: Change tooltip Text
+                            }
+                          })
+
+                        }})
                     ).render(),
 
                     new Tooltip("project_refresh".localize,

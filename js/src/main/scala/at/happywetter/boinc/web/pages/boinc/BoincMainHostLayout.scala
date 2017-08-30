@@ -53,8 +53,8 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
          tr(td(b("boinc_info_ip".localize)), td(boincData.hostInfo.ipAddr)),
          tr(td(b("boinc_info_ram".localize)), td(BoincFormater.convertSize(boincData.hostInfo.memory))),
          tr(td(b("boinc_info_swap".localize)), td(BoincFormater.convertSize(boincData.hostInfo.swap))),
-         tr(td(b("boinc_disk".localize)), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
-           "boinc_info_content".localize.format(BoincFormater.convertSize(boincData.hostInfo.diskFree), BoincFormater.convertSize(boincData.hostInfo.diskTotal))
+         tr(td(b("boinc_info_disk".localize)), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
+           "boinc_info_disk_content".localize.format(BoincFormater.convertSize(boincData.hostInfo.diskFree), BoincFormater.convertSize(boincData.hostInfo.diskTotal))
          )),
          tr(td(b("boinc_info_platfrom".localize)), td(boincData.platform)),
        )

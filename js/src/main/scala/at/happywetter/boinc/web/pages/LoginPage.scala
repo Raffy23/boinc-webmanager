@@ -89,7 +89,6 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
 
     Some(
     div(
-      div(new Date().getTime(), " -> ", Locale.current),
       div(id := "language-selector-area", style := "position:fixed;top:74px;right:22px",
         new DropdownMenu(
           List(

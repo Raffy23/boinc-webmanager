@@ -21,8 +21,8 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
     client.getGlobalPrefsOverride.foreach(f => {
 
       root.appendChild(
-        div( id := "projects",
-          h2(BoincClientLayout.Style.pageHeader, "Berechnungseinstellungen: (READONLY)"),
+        div( id := "global_prefs",
+          h2(BoincClientLayout.Style.pageHeader, "Berechnungseinstellungen: (TESTING / READONLY)"),
           div(
             h3("Nutzungsbegrenzungen"),
             "Nutze höchstens", input(value := f.maxNCpuPct), "% der Prozessoren", br(),

@@ -2,6 +2,8 @@ package at.happywetter.boinc.web.util
 
 import org.scalajs.dom
 
+import scalatags.JsDom.all.Modifier
+
 /**
   * Created by: 
   *
@@ -20,11 +22,11 @@ object I18N {
 
     def save(lang: String = current): Unit = {
       current = lang
-      dom.window.sessionStorage.setItem("language", lang)
+      dom.window.localStorage.setItem("language", lang)
     }
 
     def load: String = {
-      val sessionLang = dom.window.sessionStorage.getItem("language")
+      val sessionLang = dom.window.localStorage.getItem("language")
       if (sessionLang == null)
         current
       else {
@@ -52,7 +54,6 @@ object I18N {
       } else {
         List(str)
       }
-
   }
 
 }

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.boinc.{BoincGlobalPrefsLayout, BoincMainHostLayout, BoincProjectLayout, BoincTaskLayout}
+import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
@@ -74,6 +74,7 @@ object BoincLayout extends Layout {
           case "projects" => new BoincProjectLayout(params)
           case "tasks"    => new BoincTaskLayout(params)
           case "global_prefs" => new BoincGlobalPrefsLayout(params)
+          case "transfers" => new BoincFileTransferLayout(params)
         }
 
         currentState = view
@@ -87,7 +88,7 @@ object BoincLayout extends Layout {
       case view @ "messages"   => dom.window.alert("Not implemented")
       case view @ "projects"   => updateView(view)
       case view @ "tasks"      => updateView(view)
-      case view @ "transfers"  => dom.window.alert("Not implemented")
+      case view @ "transfers"  => updateView(view)
       case view @ "statistics" => dom.window.alert("Not implemented")
       case view @ "disk"       => dom.window.alert("Not implemented")
       case view @ "global_prefs" => updateView(view)
@@ -106,6 +107,7 @@ object BoincLayout extends Layout {
             case _: BoincProjectLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/projects", absolute = true)
             case _: BoincTaskLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/tasks", absolute = true)
             case _: BoincGlobalPrefsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/global_prefs", absolute = true)
+            case _: BoincFileTransferLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/transfers", absolute = true)
             case _ => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
           }
         }, 100)
