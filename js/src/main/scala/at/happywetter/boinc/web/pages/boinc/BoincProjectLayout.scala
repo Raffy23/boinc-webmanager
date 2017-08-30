@@ -13,6 +13,7 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement, HTMLSelectElement}
 
 import scala.scalajs.js
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -31,7 +32,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
       root.appendChild(
         div( id := "projects",
-          h2(BoincClientLayout.Style.pageHeader, "Projekte: "),
+          h2(BoincClientLayout.Style.pageHeader, "project_header".localize),
           div(style := "position:absolute;top:80px;right:20px;",
             new Tooltip("Neues Projekt hinzufügen",
               a(href := "#add-project", i(`class` := "fa fa-plus-square"), style := "color:#333;text-decoration:none;font-size:30px",
@@ -44,10 +45,10 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                     new SimpleModalDialog(div(
                       table(TableTheme.table,
                         tbody(
-                          tr(td("Projekt", style := "width:125px"),
+                          tr(td("table_project".localize, style := "width:125px"),
                             td(
                               select(LoginPage.Style.input, style := "margin:0", id := "pad-project",
-                                option(disabled, selected := "selected", "Bitte wählen Sie ein Projekt aus ..."),
+                                option(disabled, selected := "selected", "project_new_default_select".localize),
                                 data.map(project => option(value := project._1, project._1)).toList,
                                 onchange := { (event: Event) => {
                                   val element = data(event.target.asInstanceOf[HTMLSelectElement].value)
@@ -60,21 +61,21 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                               )
                             )
                           ),
-                          tr(td("URL: "), td(a(id := "pad-url", onclick := {(event: Event) => {event.preventDefault(); dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"),"_blank")}}))),
-                          tr(td("Bereich:"), td(id := "pad-general_area")),
-                          tr(td("Beschreibung: "), td(id := "pad-description")),
-                          tr(td("Oranisation"), td(id := "pad-home"))
+                          tr(td("project_new_url".localize), td(a(id := "pad-url", onclick := {(event: Event) => {event.preventDefault(); dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"),"_blank")}}))),
+                          tr(td("project_new_general_area".localize), td(id := "pad-general_area")),
+                          tr(td("project_new_desc".localize), td(id := "pad-description")),
+                          tr(td("project_new_home".localize), td(id := "pad-home"))
                         )
                       ),
                       br(),
-                      h4("Benutzerdaten: "),
+                      h4("project_new_userdata".localize),
                       table(style := "width: calc(100% - 20px)",
                         tbody(
-                          tr(td("Username"), td(input(LoginPage.Style.input, placeholder := "example@boinc-user.com", style := "margin:0", id := "pad-username"))),
-                          tr(td("Password"), td(input(LoginPage.Style.input, placeholder := "Passwort", `type` := "password", style := "margin:0", id := "pad-password"))),
+                          tr(td("login_username".localize), td(input(LoginPage.Style.input, placeholder := "example@boinc-user.com", style := "margin:0", id := "pad-username"))),
+                          tr(td("login_password".localize), td(input(LoginPage.Style.input, placeholder := "login_password".localize, `type` := "password", style := "margin:0", id := "pad-password"))),
                         )
                       ), br(), br()),
-                      h2("Projekt hinzufügen"),
+                      h2("project_new_addbtn".localize),
                       (dialog: SimpleModalDialog) => {
                         NProgress.start()
 
@@ -87,8 +88,9 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                           dialog.hide()
                           onRender(client)
 
+                          //TODO: Use better Dialog
                           if(!result)
-                            dom.window.alert("Couldn't attach to Project!")
+                            dom.window.alert("project_new_error_msg".localize)
                         })
                       },
                       (dialog: SimpleModalDialog) => {dialog.hide()}
@@ -104,7 +106,8 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
           table(TableTheme.table, TableTheme.table_lastrowsmall,
             thead(
               tr(
-                th("Projekt"), th("Konto"), th("Team"), th("Credits"), th("Durchnitt"), th()
+                th("table_project".localize), th("table_account".localize), th("table_team".localize),
+                th("table_credits".localize), th("table_avg_credits".localize), th()
               )
             ),
             tbody(
@@ -116,11 +119,11 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                   td(project.userTotalCredit),
                   td(project.hostAvgCredit),
                   td(
-                    new Tooltip(if (project.dontRequestWork) "Neuen Aufgaben zulassen" else "Keine neue Aufgaben" ,
+                    new Tooltip(if (project.dontRequestWork) "project_allow_more_work".localize else "project_dont_allow_more_work".localize ,
                       a(href := "#change-project-state", i(`class` := s"fa fa-${if (project.dontRequestWork) "play" else "pause" }-circle-o"))
                     ).render(),
 
-                    new Tooltip("Aktualisieren",
+                    new Tooltip("project_refresh".localize,
                       a(href := "#refresh-project", i(`class` := "fa fa-fw fa-refresh", style := "font-size:20px"),
                       onclick := {
                         (event: Event) => {
@@ -132,16 +135,17 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
                           boinc.project(project.url, ProjectAction.Update).foreach(result => {
                             NProgress.done(true)
-                            if (!result) dom.window.alert("Project Update was *not* successful!")
+                            if (!result) dom.window.alert("not_succ_action".localize)
                             else {
                               source.classList.remove("fa-spin")
+                              //TODO: Change tooltip Text
                             }
                           })
                         }
-                      })
+                      }), tooltipId = Some("tooltip-"+project.name)
                     ).render(),
 
-                    new Tooltip("Eigenschaften",
+                    new Tooltip("project_properties".localize,
                       a(href := "#project-properties", i(`class` := "fa fa-info-circle"))
                     ).render()
                   )

@@ -11,7 +11,7 @@ import org.scalajs.dom
 object I18N {
 
   object Locale {
-    var current: String = "en"//getDefault
+    var current: String = getDefault
 
     val German = "de"
     val English = "en"
