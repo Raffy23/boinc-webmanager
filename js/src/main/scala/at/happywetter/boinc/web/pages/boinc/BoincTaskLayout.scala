@@ -232,7 +232,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
             if (!inital) {
               val node = dom.document.querySelector(s"div[id='workunits'] > table > tbody > tr[data-wu-id='${result.wuName}'] > td:nth-child(3)").asInstanceOf[HTMLElement]
-              if (node.getAttribute("data-extra-flags").contains("nci")) base = base + "boinc_flags_nci".localize
+              if (node.getAttribute("data-extra-flags").contains("nci")) base = base + " " + "boinc_flags_nci".localize
               if (node.getAttribute("data-extra-flags").contains("cpu")) {
                 base = base + "(" + node.getAttribute("data-cpu") + " CPUs)"
               }
@@ -245,7 +245,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
           case Result.ActiveTaskState.PROCESS_EXITED => "boinc_status_exited".localize
           case Result.ActiveTaskState.PROCESS_UNINITIALIZED => "boinc_status_uninit".localize
           case state => state.toString
-        }).getOrElse("Bereit")
+        }).getOrElse("boinc_state_default".localize)
       case Result.State.Result_Files_Uploaded => "boinc_status_uploaded".localize
       case Result.State.Result_Files_Uploading => "boinc_status_uploading".localize
       case Result.State.Result_File_Downloading => "boinc_status_downloading".localize

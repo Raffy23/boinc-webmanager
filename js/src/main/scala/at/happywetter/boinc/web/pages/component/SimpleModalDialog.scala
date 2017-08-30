@@ -8,6 +8,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.language.postfixOps
 import scalacss.DevDefaults._
 import scalatags.JsDom
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by:
@@ -20,8 +21,8 @@ class SimpleModalDialog(
                          headerElement: JsDom.TypedTag[HTMLElement] = JsDom.tags.span,
                          okAction: (SimpleModalDialog) => Unit,
                          abortAction: (SimpleModalDialog) => Unit,
-                         okLabel: String = "OK",
-                         abortLabel: String = "Abbrechen") {
+                         okLabel: String = "dialog_ok".localize,
+                         abortLabel: String = "dialog_cancel".localize) {
 
   val component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._

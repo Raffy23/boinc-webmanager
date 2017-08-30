@@ -11,6 +11,7 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
 import scalatags.JsDom
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -26,7 +27,7 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
       NProgress.done(true)
     } else {
       import scalatags.JsDom.all._
-      new SimpleModalDialog(div("Please wait ..."), h4("Loading"), (_) => {}, (_) => {}).renderToBody().show()
+      new SimpleModalDialog(div("loading_dialog_content".localize), h4("loading_dialog_header".localize), (_) => {}, (_) => {}).renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {
         root.appendChild(renderView(HostInfoCache.get(boincClientName).get))
@@ -41,20 +42,21 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
     import scalatags.JsDom.all._
 
     div( id := "host-info",
-      h2(Style.pageHeader, "Hostinfo: "),
+      h2(Style.pageHeader, "boinc_info_header".localize),
       table(TableTheme.table, style:="line-height: 1.4567", BoincMainHostLayout.Style.table,
        tbody(
-         tr(td(style:="width:55px;",b("Boinc Version")), td(boincData.boincVersion)),
-         tr(td(b("Domain Name")), td(boincData.hostInfo.domainName)),
-         tr(td(b("Betriebssystem")), td(boincData.hostInfo.osName,br(),small(boincData.hostInfo.osVersion))),
-         tr(td(b("Prozessor")), td(boincData.hostInfo.cpuVendor,br(),small(boincData.hostInfo.cpuModel),br(),small(small(boincData.hostInfo.cpuFeatures.mkString(", "))))),
-         tr(td(b("# CPU Kerne")), td(boincData.hostInfo.cpus)),
-         tr(td(b("IP-Adresse (Lokal)")), td(boincData.hostInfo.ipAddr)),
-         tr(td(b("RAM")), td(BoincFormater.convertSize(boincData.hostInfo.memory))),
-         tr(td(b("Swap")), td(BoincFormater.convertSize(boincData.hostInfo.swap))),
-         tr(td(b("Speicherplatz")), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
-           BoincFormater.convertSize(boincData.hostInfo.diskFree), " frei von ", BoincFormater.convertSize(boincData.hostInfo.diskTotal))),
-         tr(td(b("Platform (BOINC)")), td(boincData.platform)),
+         tr(td(style:="width:55px;",b("boinc_info_version".localize)), td(boincData.boincVersion)),
+         tr(td(b("boinc_info_domain".localize)), td(boincData.hostInfo.domainName)),
+         tr(td(b("boinc_info_os".localize)), td(boincData.hostInfo.osName,br(),small(boincData.hostInfo.osVersion))),
+         tr(td(b("boinc_info_cpu".localize)), td(boincData.hostInfo.cpuVendor,br(),small(boincData.hostInfo.cpuModel),br(),small(small(boincData.hostInfo.cpuFeatures.mkString(", "))))),
+         tr(td(b("boinc_info_#cpu".localize)), td(boincData.hostInfo.cpus)),
+         tr(td(b("boinc_info_ip".localize)), td(boincData.hostInfo.ipAddr)),
+         tr(td(b("boinc_info_ram".localize)), td(BoincFormater.convertSize(boincData.hostInfo.memory))),
+         tr(td(b("boinc_info_swap".localize)), td(BoincFormater.convertSize(boincData.hostInfo.swap))),
+         tr(td(b("boinc_disk".localize)), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
+           "boinc_info_content".localize.format(BoincFormater.convertSize(boincData.hostInfo.diskFree), BoincFormater.convertSize(boincData.hostInfo.diskTotal))
+         )),
+         tr(td(b("boinc_info_platfrom".localize)), td(boincData.platform)),
        )
       )
     ).render

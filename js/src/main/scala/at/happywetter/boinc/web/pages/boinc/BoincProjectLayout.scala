@@ -34,7 +34,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
         div( id := "projects",
           h2(BoincClientLayout.Style.pageHeader, "project_header".localize),
           div(style := "position:absolute;top:80px;right:20px;",
-            new Tooltip("Neues Projekt hinzufügen",
+            new Tooltip("project_new_tooltip".localize,
               a(href := "#add-project", i(`class` := "fa fa-plus-square"), style := "color:#333;text-decoration:none;font-size:30px",
                 onclick := { (event: Event) => {
                   event.preventDefault()

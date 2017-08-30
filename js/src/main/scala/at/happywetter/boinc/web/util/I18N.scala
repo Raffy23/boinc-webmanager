@@ -17,6 +17,22 @@ object I18N {
     val English = "en"
 
     def getDefault: String = dom.window.navigator.language
+
+    def save(lang: String = current): Unit = {
+      current = lang
+      dom.window.sessionStorage.setItem("language", lang)
+    }
+
+    def load: String = {
+      val sessionLang = dom.window.sessionStorage.getItem("language")
+      if (sessionLang == null)
+        current
+      else {
+        current = sessionLang
+        current
+      }
+    }
+
   }
 
 
@@ -28,11 +44,14 @@ object I18N {
     import scalatags.JsDom.all._
 
 
-    def toTags: List[Modifier] = {
-      val data = str.split("\n")
+    def toTags: List[Modifier] =
+      if (str.contains("\n")) {
+        val data = str.split("\n")
 
-      List(data(0),br(),data(1))
-    }
+        List(data(0), br(), data(1))
+      } else {
+        List(str)
+      }
 
   }
 

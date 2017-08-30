@@ -13,6 +13,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -51,14 +52,14 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
       import scalacss.ScalatagsCss._
 
       ul(TopNavigation.nav,
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/boinc", "Boinc", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/messages", "Nachrichten", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/projects", "Projekte", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/tasks", "Aufgaben", data("navigo") := "" )),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/transfers", "Übertragungen", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/statistics", "Statistiken", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/disk", "Festplatte", data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/global_prefs", "Einstellungen", data("navigo") := ""))
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/boinc", "head_menu_boinc".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/messages", "head_menu_messages".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/projects", "head_menu_projects".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/tasks", "head_menu_tasks".localize, data("navigo") := "" )),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/transfers", "head_menu_transfers".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/statistics", "head_menu_statistics".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/disk", "head_menu_disk".localize, data("navigo") := "")),
+        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/global_prefs", "head_menu_prefs".localize, data("navigo") := ""))
       ).render
     })
 

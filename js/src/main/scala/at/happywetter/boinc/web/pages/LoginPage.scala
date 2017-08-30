@@ -108,7 +108,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
                 LanguageDataProvider
                   .loadLanguage(lang_code)
                   .foreach(_ => {
-                    Locale.current = lang_code
+                    Locale.save(lang_code)
 
                     LayoutManager.render(this)
                     NProgress.done(true)
