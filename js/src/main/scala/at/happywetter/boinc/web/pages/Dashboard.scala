@@ -88,7 +88,7 @@ object Dashboard extends Layout {
         div(
           table(TableTheme.table,
             thead(tr(
-              th("table_host".localize), th("table_cpu".localize), th("table_network".localize),
+              th("table_host".localize), th("table_cpu".localize), th("table_network".localize.toTags),
               th("table_computinduration".localize.toTags), th("table_wudeadline".localize), th("table_disk".localize)
             )),
             tbody(

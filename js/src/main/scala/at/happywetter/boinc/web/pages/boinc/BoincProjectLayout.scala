@@ -2,9 +2,9 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
+import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
+import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, Tooltip}
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.routes.NProgress
@@ -89,9 +89,10 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                           dialog.hide()
                           onRender(client)
 
-                          //TODO: Use better Dialog
                           if(!result)
-                            dom.window.alert("project_new_error_msg".localize)
+                            new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
+                              dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                            }).renderToBody().show()
                         })
                       },
                       (dialog: SimpleModalDialog) => {dialog.hide()}
@@ -122,30 +123,41 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                   td(
                     new Tooltip(if (project.dontRequestWork) "project_allow_more_work".localize else "project_dont_allow_more_work".localize ,
                       a(href := "#change-project-state", i(`class` := s"fa fa-${if (project.dontRequestWork) "play" else "pause" }-circle-o"),
-                        onclick := { (event: Event) => {
+                        data("pause-work") := project.dontRequestWork, onclick := { (event: Event) => {
                           event.preventDefault()
                           NProgress.start()
 
-                          val source = event.target.asInstanceOf[HTMLElement]
-                          val state  = source.classList.contains("fa-pause-circle-o")
+                          val source = event.target.asInstanceOf[HTMLElement].parentNode.asInstanceOf[HTMLElement]
+                          val state  = source.getAttribute("data-pause-work").toBoolean
+                          val action = if (!state) ProjectAction.NoMoreWork else  ProjectAction.AllowMoreWork
                           source.classList.add("fa-spin")
 
-                          boinc.project(project.url,if (state) ProjectAction.NoMoreWork else  ProjectAction.AllowMoreWork).foreach(result => {
+                          boinc.project(project.url, action).map(result => {
                             NProgress.done(true)
-                            if (!result) dom.window.alert("not_succ_action".localize)
-                            else {
-                              source.classList.remove("fa-spin")
-                              if (state) {
-                                source.classList.add("fa-play-circle-o")
-                                source.classList.remove("fa-pause-circle-o")
-                              } else {
-                                source.classList.add("fa-pause-circle-o")
-                                source.classList.remove("fa-play-circle-o")
-                              }
-                              //TODO: Change tooltip Text
-                            }
-                          })
+                            source.classList.remove("fa-spin")
 
+                            if (!result)
+                              new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+                                .renderToBody().show()
+                            else {
+                              val tooltip = source.nextSibling
+                              source.setAttribute("data-pause-work", (!state).toString)
+
+                              if (!state) {
+                                source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-play-circle-o")
+                                source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-pause-circle-o")
+                                tooltip.textContent = "project_allow_more_work".localize
+                              } else {
+                                source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-pause-circle-o")
+                                source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-play-circle-o")
+                                tooltip.textContent = "project_dont_allow_more_work".localize
+                              }
+                            }
+                          }).recover {
+                            case _: FetchResponseException =>
+                              new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+                                .renderToBody().show()
+                          }
                         }})
                     ).render(),
 
@@ -159,20 +171,34 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                           val source = event.target.asInstanceOf[HTMLElement]
                           source.classList.add("fa-spin")
 
-                          boinc.project(project.url, ProjectAction.Update).foreach(result => {
+                          boinc.project(project.url, ProjectAction.Update).map(result => {
                             NProgress.done(true)
-                            if (!result) dom.window.alert("not_succ_action".localize)
-                            else {
-                              source.classList.remove("fa-spin")
-                              //TODO: Change tooltip Text
-                            }
-                          })
+                            if (!result)
+                              new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+                                .renderToBody().show()
+
+                            source.classList.remove("fa-spin")
+                          }).recover {
+                            case _: FetchResponseException =>
+                              new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+                                .renderToBody().show()
+                          }
                         }
-                      }), tooltipId = Some("tooltip-"+project.name)
+                      })
                     ).render(),
 
                     new Tooltip("project_properties".localize,
-                      a(href := "#project-properties", i(`class` := "fa fa-info-circle"))
+                      a(href := "#project-properties", i(`class` := "fa fa-info-circle"),
+                        onclick := {
+                        (event: Event) => {
+                          event.preventDefault()
+
+                          //TODO: print some details
+                          new OkDialog("workunit_dialog_properties".localize, List(">Empty<"))
+                            .renderToBody().show()
+
+                        }
+                      })
                     ).render()
                   )
                 )
