@@ -1,10 +1,11 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.shared.Result
-import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager}
+import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import org.scalajs.dom
@@ -61,7 +62,7 @@ object Dashboard extends Layout {
   override def onRender(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-    ClientManager.readClients().foreach(clients => {
+    ClientManager.readClients().map(clients => {
 
       DashboardMenu.removeMenuReferences("boinc-client-entry")
       clients.foreach(client =>
@@ -73,7 +74,12 @@ object Dashboard extends Layout {
 
       AppRouter.router.updatePageLinks()
       NProgress.done(true)
-    })
+    }).recover {
+      case _: FetchResponseException =>
+        import scalatags.JsDom.all._
+        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+          .renderToBody().show()
+    }
   }
 
   private def renderDashboardContent(clients: List[String]): Unit = {
@@ -94,7 +100,7 @@ object Dashboard extends Layout {
             tbody(
               clients.map(c => ClientManager.clients(c)).map(client => {
 
-                client.getState.foreach(state => {
+                client.getState.map(state => {
                   dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
                     s"${
                       state.results
@@ -119,22 +125,25 @@ object Dashboard extends Layout {
                   progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
                   progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
 
-                  progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render
-                  )
+                  progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render)
 
                   ClientCacheHelper.updateCache(client.hostname, state)
-                })
+                }).recover {
+                  case _: FetchResponseException =>
+                    val hField = dom.document.getElementById(s"dashboard-${client.hostname}-hostname").asInstanceOf[HTMLElement]
+                    hField.textContent = client.hostname + " [Offline]"
+                }
 
                 client.getFileTransfer.foreach(transfers => {
-                  var upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-                  var download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+                  val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+                  val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
 
                   dom.document.getElementById(s"dashboard-${client.hostname}-network").textContent =
                     BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
-                })
+                }) // Fail silently ...
 
                 tr(
-                  td(client.hostname),
+                  td(id := s"dashboard-${client.hostname}-hostname", client.hostname),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-network", "-- / --"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-time", "--"),
@@ -145,7 +154,6 @@ object Dashboard extends Layout {
             )
           )
         )
-
       ).render
     )
   }
