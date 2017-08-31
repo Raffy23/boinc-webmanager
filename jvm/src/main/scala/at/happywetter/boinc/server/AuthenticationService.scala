@@ -75,7 +75,7 @@ object AuthenticationService {
 
   val TIMEOUT: Long = 30 //Minutes
 
-  def nonce: String = sha256Hash(Random.alphanumeric.take(64).toString())
+  def nonce: String = sha256Hash(Random.alphanumeric.take(64).toString()+new Date().toString)
 
   def sha256Hash(text: String) : String =
     String.format("%064x",

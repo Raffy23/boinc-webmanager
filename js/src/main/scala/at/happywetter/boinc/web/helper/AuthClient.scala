@@ -53,8 +53,8 @@ object AuthClient {
       .map((buffer) => {
         val hex = StringBuilder.newBuilder
         val view = new DataView(buffer.asInstanceOf[ArrayBuffer])
-        for (i <- 0 until view.byteLength by 4) {
-          hex.append(view.getUint32(i).toLong.toHexString)
+        for (i <- 0 until view.byteLength by 2) {
+          hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
         }
 
         hex.toString()
