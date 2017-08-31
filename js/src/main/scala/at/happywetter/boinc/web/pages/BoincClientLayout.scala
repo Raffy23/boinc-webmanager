@@ -5,15 +5,14 @@ import at.happywetter.boinc.web.css.TopNavigation
 import at.happywetter.boinc.web.pages.boinc.BoincComponent
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, Navigo}
+import at.happywetter.boinc.web.routes.{AppRouter, Hook}
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom
-import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -28,8 +27,8 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
   protected lazy val boinc: BoincClient = ClientManager.clients(clientName)
 
   override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalatags.JsDom.all._
     import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
 
     Some(div(BoincClientLayout.Style.content, id := "client-data"))
   }
@@ -48,18 +47,18 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
     val nav = dom.document.getElementById("navigation")
     if (nav.childNodes.length > 0) nav.removeChild(nav.firstChild)
     nav.appendChild({
-      import scalatags.JsDom.all._
       import scalacss.ScalatagsCss._
+      import scalatags.JsDom.all._
 
       ul(TopNavigation.nav,
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/boinc", "head_menu_boinc".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/messages", "head_menu_messages".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/projects", "head_menu_projects".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/tasks", "head_menu_tasks".localize, data("navigo") := "" )),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/transfers", "head_menu_transfers".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/statistics", "head_menu_statistics".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/disk", "head_menu_disk".localize, data("navigo") := "")),
-        li(a(href := s"${AppRouter.href(DashboardLocation)}/$clientName/global_prefs", "head_menu_prefs".localize, data("navigo") := ""))
+        li(a(href := s"${DashboardLocation.link}/$clientName/boinc", "head_menu_boinc".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/messages", "head_menu_messages".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/projects", "head_menu_projects".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/tasks", "head_menu_tasks".localize, data("navigo") := "" )),
+        li(a(href := s"${DashboardLocation.link}/$clientName/transfers", "head_menu_transfers".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/statistics", "head_menu_statistics".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/disk", "head_menu_disk".localize, data("navigo") := "")),
+        li(a(href := s"${DashboardLocation.link}/$clientName/global_prefs", "head_menu_prefs".localize, data("navigo") := ""))
       ).render
     })
 
@@ -71,9 +70,9 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
 }
 
 object BoincClientLayout {
-  import scalacss.internal.mutable.StyleSheet
-  import scalacss.DevDefaults._
   import scala.language.postfixOps
+  import scalacss.DevDefaults._
+  import scalacss.internal.mutable.StyleSheet
 
   object Style extends StyleSheet.Inline {
     import dsl._
