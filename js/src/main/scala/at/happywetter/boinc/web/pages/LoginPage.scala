@@ -138,7 +138,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
                 case _ =>
                   new OkDialog(
                     "dialog_error_header".localize,
-                    "login_wrong_password_msg".localize,
+                    List("login_wrong_password_msg".localize),
                     (_) => {dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus()}
                   ).renderToBody().show()
 

@@ -1,10 +1,10 @@
 package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.{Result, Workunit}
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper, ClientManager}
+import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
+import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, Tooltip}
 import at.happywetter.boinc.web.routes.{Hook, NProgress}
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, ProjectNameCache, TaskSpecCache}
@@ -91,40 +91,39 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                       NProgress.start()
 
                       val source = event.target.asInstanceOf[HTMLElement].parentNode.asInstanceOf[HTMLElement]
+                      val state = source.getAttribute("data-suspended").toBoolean
+                      val action = if (state) WorkunitAction.Resume else WorkunitAction.Suspend
 
-                      if (source.getAttribute("data-in-process") == "false") {
-                        source.setAttribute("data-in-process", "true")
-                        source.firstChild.asInstanceOf[HTMLElement].classList.remove(s"fa-${ if(result.supsended) "play" else "pause" }-circle-o")
-                        source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-spinner")
-                        source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-spin")
-                        source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-fw")
+                      source.firstChild.asInstanceOf[HTMLElement].classList.remove(s"fa-${ if(state) "play" else "pause" }-circle-o")
+                      source.firstChild.asInstanceOf[HTMLElement].classList.add("fa-spin")
 
-                        val state = source.getAttribute("data-suspended").toBoolean
-                        boinc.workunit(result.project, result.name, if (state) WorkunitAction.Resume else WorkunitAction.Suspend).onComplete(f => f.fold( (e) => e.printStackTrace(),
-                          response => {
-                            if (!response) {
-                              //TODO: Use a better Dialog
-                              dom.window.alert("not_succ_action".localize)
-                            } else {
-                              val tooltip = dom.document.getElementById("tooltip-"+result.name)
-                              tooltip.textContent = if(result.supsended) "state_continue".localize else "state_stop".localize
+                      boinc.workunit(result.project, result.name, action).map(response => {
+                          if (!response) {
+                            new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+                              .renderToBody().show()
 
-                              source.setAttribute("data-in-process", "false")
-                              source.setAttribute("data-suspended", (!state).toString)
-                              source.firstChild.asInstanceOf[HTMLElement].classList.add(s"fa-${if (!state) "play" else "pause"}-circle-o")
-                              source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-spinner")
-                              source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-spin")
-                              source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-fw")
-                              NProgress.done(true)
-                            }
+                          } else {
+                            val tooltip = dom.document.getElementById("tooltip-"+result.name)
+                            tooltip.textContent = if(result.supsended) "state_continue".localize else "state_stop".localize
+
+                            source.setAttribute("data-suspended", (!state).toString)
+                            source.firstChild.asInstanceOf[HTMLElement].classList.add(s"fa-${if (!state) "play" else "pause"}-circle-o")
+                            source.firstChild.asInstanceOf[HTMLElement].classList.remove("fa-spin")
+
+                            dom.document.getElementById("tooltip-"+result.name).textContent =
+                              if(!state) "state_continue".localize else "state_stop".localize
+
+                            NProgress.done(true)
                           }
-                        ))
-                      } else {
-                        NProgress.done(true)
+                        }
+                      ).recover {
+                        case _: FetchResponseException =>
+                          new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+                            .renderToBody().show()
                       }
                     }
                   },
-                  i(`class` := s"fa fa-${ if(result.supsended) "play" else "pause" }-circle-o"), data("suspended") := result.supsended, data("in-process") := "false"),
+                  i(`class` := s"fa fa-${ if(result.supsended) "play" else "pause" }-circle-o"), data("suspended") := result.supsended),
                   tooltipId = Some("tooltip-"+result.name)
                 ).render(),
 
@@ -149,7 +148,16 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                         ),
                         okAction = (dialog: SimpleModalDialog) => {
                           dialog.hide()
-                          boinc.workunit(result.project, result.name, WorkunitAction.Abort)
+                          boinc.workunit(result.project, result.name, WorkunitAction.Abort).map(result => {
+                            if (!result) {
+                              new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+                                .renderToBody().show()
+                            } //TODO: Update Tasks Table
+                          }).recover {
+                            case _: FetchResponseException =>
+                              new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+                                .renderToBody().show()
+                          }
                         },
                         abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
                         headerElement = div(h3("workunit_dialog_cancel_header".localize))
@@ -159,21 +167,16 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                   )
                 ).render(),
 
-                new Tooltip("workunit_dialog_properties".localize,
+                new Tooltip("project_properties".localize,
                   a(href:="#", i(`class` := "fa fa-info-circle"),
                     onclick := {
                       (event: Event) => {
                         event.preventDefault()
 
-                        new SimpleModalDialog(
-                          //TODO: Show some Details ...
-                          bodyElement = div(""),
-                          okAction = (dialog: SimpleModalDialog) => {dialog.hide()},
-                          abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
-                          headerElement = div(h3("workunit_dialog_properties".localize)),
-                          abortLabel = "dialog_close".localize,
-                          okLabel = ""
-                        ).renderToBody().show()
+                        //TODO: print some details
+                        new OkDialog("workunit_dialog_properties".localize, List(">Empty<"))
+                          .renderToBody().show()
+
                       }
                     }
                   )
