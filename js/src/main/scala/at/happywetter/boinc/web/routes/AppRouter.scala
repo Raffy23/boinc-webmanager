@@ -15,7 +15,9 @@ import scala.scalajs.js.Dictionary
   */
 object AppRouter {
 
-  trait Page
+  trait Page {
+    def link: String = AppRouter.href(this)
+  }
   case object LoginPageLocation extends Page
   case object DashboardLocation extends Page
   case object SettingsLocation extends Page

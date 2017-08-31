@@ -64,7 +64,7 @@ object DashboardMenu {
 
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
-        a(href := AppRouter.href(DashboardLocation), "dashboard_menu_home".localize, data("navigo") := "",
+        a(href := DashboardLocation.link, "dashboard_menu_home".localize, data("navigo") := "",
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)

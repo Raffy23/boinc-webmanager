@@ -25,6 +25,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
 
     Fetch.fetch(baseURI + uri, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[List[Result]].fromString(json = data).get)
   }
@@ -32,6 +33,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   def getHostInfo: Future[HostInfo] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetHostInfo, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[HostInfo].fromString(json = data).get)
   }
@@ -39,6 +41,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   def isNetworkAvailable: Future[Boolean] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetNetworkAvailable, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -46,6 +49,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   def getDiskUsage: Future[DiskUsage] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetDiskUsage, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[DiskUsage].fromString(json = data).get)
   }
@@ -53,6 +57,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   override def getProjects: Future[List[Project]] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetProjectStatus, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[List[Project]].fromString(json = data).get)
   }
@@ -60,6 +65,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   override def getState: Future[BoincState] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetState, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[BoincState].fromString(json = data).get)
   }
@@ -67,6 +73,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   override def getFileTransfer: Future[List[FileTransfer]] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetFileTransfer, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[List[FileTransfer]].fromString(json = data).get)
   }
@@ -82,6 +89,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -97,6 +105,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -104,6 +113,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   override def getCCState: Future[CCState] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetCCStatus, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[CCState].fromString(json = data).get)
   }
@@ -119,6 +129,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -134,6 +145,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -149,6 +161,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -156,6 +169,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
   override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = {
     Fetch.fetch(baseURI + BoincRPC.Command.ReadGlobalPrefsOverride, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[GlobalPrefsOverride].fromString(json = data).get)
   }
@@ -173,6 +187,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
@@ -191,6 +206,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         )
       )
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }

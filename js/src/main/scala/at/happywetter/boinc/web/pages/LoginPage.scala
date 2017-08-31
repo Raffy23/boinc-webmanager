@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.pages.LoginPage.Style
 import at.happywetter.boinc.web.pages.component.DropdownMenu
+import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
@@ -135,7 +136,12 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
                   AppRouter.navigate(event, DashboardLocation)
 
                 case _ =>
-                  dom.window.alert("login_wrong_password_msg".localize)
+                  new OkDialog(
+                    "dialog_error_header".localize,
+                    "login_wrong_password_msg".localize,
+                    (_) => {dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus()}
+                  ).renderToBody().show()
+
                   NProgress.done(true)
               }
 

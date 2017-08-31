@@ -3,7 +3,8 @@ package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, SimpleModalDialog}
+import at.happywetter.boinc.web.pages.component.BoincPageLayout
+import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry

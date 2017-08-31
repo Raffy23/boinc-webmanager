@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.helper
 
 import at.happywetter.boinc.shared.User
+import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.hacks.TextEncoder
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
@@ -27,22 +28,22 @@ object AuthClient {
       .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
-        println("TOKEN: " + token)
-
         if (token != null && token.nonEmpty) {
           FetchHelper.setToken(token)
           true
         } else {
           false
         }
-      })
+      }).recover {
+        case _: FetchResponseException => false
+      }
   }
 
   private def requestToken(user: User): Future[String] = {
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
       .toFuture
-      .flatMap(response => if (response.status == 200) response.text().toFuture else Future{""})
-
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
+      .flatMap(response => response.text().toFuture)
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {

@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, NProgress}
+import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
@@ -41,7 +41,7 @@ object Dashboard extends Layout {
 
   override val routerHook: Option[Hook] = Some(new Hook {
     override def already(): Unit = {
-      onRender()
+      LayoutManager.render(Dashboard.this)
     }
 
     override def before(done: js.Function0[Unit]): Unit = {

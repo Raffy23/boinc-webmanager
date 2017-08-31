@@ -4,7 +4,8 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, SimpleModalDialog, Tooltip}
+import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, Tooltip}
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
