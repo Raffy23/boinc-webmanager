@@ -9,6 +9,7 @@ import prickle.Pickle
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
 
 /**
@@ -19,17 +20,21 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
   */
 object AuthClient {
 
+  private val TOKEN_VALID_TIME = 58*60*1000
+  private var refreshTimeoutHandler: Int = -1
+
   def validate(username: String, password: String): Future[Boolean] = {
     var n = ""
 
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
       .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
         if (token != null && token.nonEmpty) {
-          FetchHelper.setToken(token)
+         saveToken(token)
           true
         } else {
           false
@@ -76,4 +81,41 @@ object AuthClient {
       Future { true }
     }
   }
+
+  def refreshToken(): Future[String] = {
+    Fetch.fetch("/auth/refresh", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
+      .flatMap(response => response.text().toFuture)
+      .map(token => {
+        saveToken(token)
+        token
+      })
+  }
+
+  def enableTokenRefresh(): Unit = {
+    if (refreshTimeoutHandler == -1)
+      refreshTimeoutHandler = dom.window.setInterval(() => { refreshToken() }, TOKEN_VALID_TIME)
+  }
+
+  def loadFromLocalStorage(): Boolean = {
+    val tokenDate = dom.window.localStorage.getItem("auth/time")
+    val token     = dom.window.localStorage.getItem("auth/token")
+    if (tokenDate == null || token == null) return false
+
+    if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime())
+      return false
+
+    FetchHelper.setToken(token)
+    true
+  }
+
+  private def saveToken(token: String): Unit = {
+    dom.window.localStorage.setItem("auth/token", token)
+    dom.window.localStorage.setItem("auth/time", new Date().getTime().toString)
+
+    FetchHelper.setToken(token)
+    enableTokenRefresh()
+  }
+
 }

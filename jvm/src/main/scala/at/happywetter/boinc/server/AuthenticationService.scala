@@ -10,7 +10,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import org.http4s.util.CaseInsensitiveString
 import prickle.Unpickle
 
-import scala.util.Random
+import scala.util.{Random, Try}
 import scalaz.concurrent.Task
 import scala.language.implicitConversions
 
@@ -32,6 +32,15 @@ class AuthenticationService(config: Config) {
 
   def authService: HttpService = HttpService {
     case GET -> Root => Ok(AuthenticationService.nonce)
+
+    case request @ GET -> Root / "refresh" =>
+      request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
+
+        if (!validate(header.value)) Forbidden()
+        else Ok(refreshToken(header.value))
+
+      }).getOrElse(Forbidden())
+
     case request @ POST -> Root =>
       request.body
         .map(b => Unpickle[User].fromString(b.decodeUtf8.right.get))
@@ -39,13 +48,7 @@ class AuthenticationService(config: Config) {
           requestBody.toOption.map(user => {
             if ( config.server.username.equals(user.username)
               && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce+config.server.password)))
-              try {
-                Ok(jwtBuilder.withClaim("user", user.username).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm))
-              } catch {
-                case ex: Exception =>
-                  ex.printStackTrace()
-                  InternalServerError()
-              }
+                Ok(buildToken(user.username))
             else
               BadRequest("Username or Password are invalid!")
           }).getOrElse(BadRequest("Missing User POST-Data!"))
@@ -56,18 +59,24 @@ class AuthenticationService(config: Config) {
   def protectedService(service: HttpService): HttpService = Service.lift { req =>
     Task {
       req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-        try {
-          val token = jwtVerifyer.build().verify(header.value)
 
-          if (token.getExpiresAt.before(new Date())) new Response().withBody("Token has expired").withStatus(Forbidden).unsafePerformSync
-          else service(req).unsafePerformSync
-        } catch {
-          case a: Exception =>
-            a.printStackTrace()
-            new Response().withStatus(InternalServerError)
+        if (validate(header.value)) {
+          service(req).unsafePerformSync
+        } else {
+          new Response().withBody("Token has expired").withStatus(Forbidden).unsafePerformSync
         }
+
       }).getOrElse(new Response().withBody("No Header was given!").withStatus(Forbidden).unsafePerformSync)
     }
+  }
+
+  def validate(token: String): Boolean = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())).getOrElse(false)
+  def buildToken(user: String): String = jwtBuilder.withClaim("user", user).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm)
+  def refreshToken(token: String): String = {
+    val jwtToken = jwtVerifyer.build().verify(token)
+    val curUser  = jwtToken.getClaim("user")
+
+    buildToken(curUser.asString())
   }
 }
 

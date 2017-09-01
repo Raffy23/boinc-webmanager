@@ -30,6 +30,7 @@ object Main {
 
     NProgress.start()
     AppCSS.load()
+    AuthClient.loadFromLocalStorage()
     dom.console.log("Early load Locale from SessionStorage: " + Locale.load)
 
     // Load Languages before jumping to UI
