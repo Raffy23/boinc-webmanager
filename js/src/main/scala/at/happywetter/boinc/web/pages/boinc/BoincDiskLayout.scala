@@ -13,6 +13,7 @@ import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom.raw.HTMLCanvasElement
 
 import scala.collection.mutable
+import scala.concurrent.Future
 import scala.scalajs.js
 
 /**
@@ -40,7 +41,7 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
             height := "600px",
             id := "chart-area"
           ),
-          table(TableTheme.table,
+          table(TableTheme.table, style := "margin-top: 20px",
             thead(
               tr(
                 th("table_project".localize), th("table_usage".localize)
@@ -57,38 +58,37 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
         ).render
       )
 
-      usage.diskUsage.keys.foreach( url =>
-        ProjectNameCache.get(url).foreach(o =>
-          o.foreach(name => {
-            projectNames.put(url, name)
-            dom.document.querySelector("#disk_usage table td[data-project-url='"+url+"']").textContent = name
-          })
-        )
-      )
+      Future.sequence(
+        usage.diskUsage.keys.map(url => ProjectNameCache.get(url).map(f => (url, f)))
+      ).map(names => names.foreach { case (url, nameOpt) =>
+        val name = nameOpt.getOrElse(url)
 
-      val context =
-        dom.document.getElementById("chart-area")
-          .asInstanceOf[HTMLCanvasElement]
-          .getContext("2d")
-          .asInstanceOf[CanvasRenderingContext2D]
+        projectNames.put(url, name)
+        dom.document.querySelector("#disk_usage table td[data-project-url='"+url+"']").textContent = name
+      }).foreach(_ => {
+        val context =
+          dom.document.getElementById("chart-area")
+            .asInstanceOf[HTMLCanvasElement]
+            .getContext("2d")
+            .asInstanceOf[CanvasRenderingContext2D]
 
-      import js.JSConverters._
-      new ChartJS(context, new ChartConfig {
-        override val data: ChartData = new ChartData {
-          override val datasets: js.Array[Dataset] = List(new Dataset {
-            override val data: js.Array[js.Any] = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
-            override val label: String = "disk_usage_legend".localize
-          }).toJSArray
+        import js.JSConverters._
+        new ChartJS(context, new ChartConfig {
+          override val data: ChartData = new ChartData {
+            override val datasets: js.Array[Dataset] = List(new Dataset {
+              override val data: js.Array[js.Any] = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
+              override val label: String = "disk_usage_legend".localize
+            }).toJSArray
 
-          override val labels: js.Array[String] = usage.diskUsage.map { case (name, _) => name }.toJSArray
-        }
-        override val `type`: String = "pie"
-        override val options: ChartOptions = new ChartOptions {
-          legend.display = false
-          tooltips.callbacks.label = tooltipLabel
-        }
+            override val labels: js.Array[String] = usage.diskUsage.map { case (name, _) => name }.toJSArray
+          }
+          override val `type`: String = "pie"
+          override val options: ChartOptions = new ChartOptions {
+            legend.display = false
+            tooltips.callbacks.label = tooltipLabel
+          }
+        })
       })
-
 
     }).recover {
       case _: FetchResponseException =>
