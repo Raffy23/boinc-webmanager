@@ -46,7 +46,6 @@ object Main {
       AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
       NProgress.done(true)
     })
-
   }
 
   def initRouter(): Unit = {

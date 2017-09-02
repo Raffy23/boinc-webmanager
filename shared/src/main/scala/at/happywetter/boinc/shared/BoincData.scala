@@ -236,3 +236,6 @@ final case class GlobalPrefsOverride(runOnBatteries: Boolean,
                                     )
 
 final case class TimeSpan(start: Double, end: Double)
+
+final case class Statistics(stats: Map[String, List[DailyStatistic]])
+final case class DailyStatistic(day: Double, userTotal: Double, userAvg: Double, hostTotal: Double, hostAvg: Double)

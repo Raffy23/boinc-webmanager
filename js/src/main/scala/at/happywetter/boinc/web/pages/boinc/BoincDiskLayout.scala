@@ -65,7 +65,7 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
               )
 
             ),
-            div( style := "display:inline-block;width:calc(100% - 405px);padding-right:90px;position:fixed",
+            div( style := "display:inline-block;width:calc(100% - 495px);padding-right:90px;vertical-align: top;",
             canvas(
               width := "100%",
               height := "600px",

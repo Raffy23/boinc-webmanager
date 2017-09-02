@@ -210,4 +210,19 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .flatMap(response => response.text().toFuture)
       .map(data => Unpickle[Boolean].fromString(json = data).get)
   }
+
+  override def getStatistics = {
+    Fetch
+      .fetch(
+        baseURI + BoincRPC.Command.GetStatistics,
+        RequestInit(
+          method = HttpMethod.GET,
+          headers = FetchHelper.header
+        )
+      )
+      .toFuture
+      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
+      .flatMap(response => response.text().toFuture)
+      .map(data => Unpickle[Statistics].fromString(json = data).get)
+  }
 }

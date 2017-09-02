@@ -40,6 +40,7 @@ object BoincApiRoutes {
           case "disk" => Ok(client.getDiskUsage.map(Pickle.intoString(_)))
           case "ccstate" => Ok(client.getCCState.map(Pickle.intoString(_)))
           case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(Pickle.intoString(_)))
+          case "statistics" => Ok(client.getStatistics.map(Pickle.intoString(_)))
 
           case _ => NotAcceptable()
         }
@@ -129,7 +130,6 @@ object BoincApiRoutes {
             .runLast.unsafePerformSync.get
         )
       }).getOrElse(BadRequest())
-
 
     case _ => NotAcceptable()
   }

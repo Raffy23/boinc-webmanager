@@ -13,10 +13,13 @@ object ProjectNameCache extends DatabaseProvider {
 
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   private implicit val objStore: String = "project_name_cache"
-  private implicit val storeNames = js.Array("project_name_cache")
+  private implicit val storeNames: js.Array[String] = js.Array("project_name_cache")
 
   def save(projectUri: String, name: String): Future[Unit] = transaction.map(f => f.add(name, projectUri))
 
   def get(projectUri: String): Future[Option[String]] = transaction.flatMap(f => f.get(projectUri))
+
+  def getAll(urls: List[String]): Future[List[(String, Option[String])]] =
+    Future.sequence(urls.map(url => ProjectNameCache.get(url).map(name => (url, name))))
 
 }

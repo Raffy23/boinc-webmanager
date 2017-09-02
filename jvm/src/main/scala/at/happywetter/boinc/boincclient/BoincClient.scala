@@ -48,6 +48,7 @@ object BoincClient {
     val GetGlobalPrefsOverride = Value("<get_global_prefs_working/>")
     val ReadGlobalPrefsFile = Value("<read_global_prefs_override/>")
     val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
+    val getStatistics = Value("<get_statistics/>")
   }
 
 }
@@ -165,10 +166,7 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = Future {
     logger.trace("Get GlobalPrefsOverride for " + address + ":" + port)
-    val n = execCommand(BoincClient.Command.GetGlobalPrefsOverride)
-    println(n)
-
-    (n \ "global_preferences").toGlobalPrefs
+    (execCommand(BoincClient.Command.GetGlobalPrefsOverride) \ "global_preferences").toGlobalPrefs
   }
 
   override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = Future {
@@ -201,6 +199,11 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
         </project_attach>.toString()
       ) \ "success"
     ).xml_==(<success/>)
+  }
+
+
+  override def getStatistics = Future {
+    execCommand(BoincClient.Command.GetStatistics).toStatistics
   }
 
   def isAuthenticated: Boolean = this.authenticated

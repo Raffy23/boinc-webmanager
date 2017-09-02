@@ -77,6 +77,7 @@ object BoincLayout extends Layout {
           case "global_prefs" => new BoincGlobalPrefsLayout(params)
           case "transfers" => new BoincFileTransferLayout(params)
           case "disk"      => new BoincDiskLayout(params)
+          case "statistics"=> new BoincStatisticsLayout(params)
         }
 
         currentState = view
@@ -91,7 +92,7 @@ object BoincLayout extends Layout {
       case view @ "projects"   => updateView(view)
       case view @ "tasks"      => updateView(view)
       case view @ "transfers"  => updateView(view)
-      case view @ "statistics" => dom.window.alert("not_implemented".localize)
+      case view @ "statistics" => updateView(view)
       case view @ "disk"       => updateView(view)
       case view @ "global_prefs" => updateView(view)
       case _ =>
@@ -111,6 +112,7 @@ object BoincLayout extends Layout {
             case _: BoincGlobalPrefsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/global_prefs", absolute = true)
             case _: BoincFileTransferLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/transfers", absolute = true)
             case _: BoincDiskLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/disk", absolute = true)
+            case _: BoincStatisticsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/statistics", absolute = true)
             case _ => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
           }
         }, 100)

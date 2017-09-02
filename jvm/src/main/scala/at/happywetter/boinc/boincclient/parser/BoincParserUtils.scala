@@ -23,6 +23,7 @@ object BoincParserUtils {
     def toFileTransfers: List[FileTransfer] = FileTransferParser.fromXML(node)
     def toCCState: CCState = CCStateParser.fromXML(node)
     def toGlobalPrefs: GlobalPrefsOverride = GlobalPrefsParser.fromXML(node)
+    def toStatistics: Statistics = ProjectStatsParser.fromXML(node)
 
   }
 
