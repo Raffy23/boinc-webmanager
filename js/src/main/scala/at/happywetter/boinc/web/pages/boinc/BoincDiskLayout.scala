@@ -15,6 +15,7 @@ import org.scalajs.dom.raw.HTMLCanvasElement
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.js
+import scala.scalajs.js.UndefOr
 
 /**
   * Created by: 
@@ -36,24 +37,40 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
       root.appendChild(
         div(id := "disk_usage",
           h3(BoincClientLayout.Style.pageHeader, "disk_usage".localize),
-          canvas(
-            width := "100%",
-            height := "600px",
-            id := "chart-area"
-          ),
-          table(TableTheme.table, style := "margin-top: 20px",
-            thead(
-              tr(
-                th("table_project".localize), th("table_usage".localize)
+          div(
+            div( style := "display:inline-block;width:405px",
+            table(TableTheme.table, style := "width:400px",
+              tbody(
+                tr(td(b("disk_usage_free".localize)), td(BoincFormater.convertSize(usage.free))),
+                tr(td(b("disk_usage_allowed".localize)), td(BoincFormater.convertSize(usage.allowed))),
+                tr(td(b("disk_usage_boinc".localize)), td(BoincFormater.convertSize(usage.boinc))),
+                tr(td(b("disk_usage_total".localize)), td(BoincFormater.convertSize(usage.total)))
               )
             ),
-            tbody(
-              usage.diskUsage.map { case (name, usage) => {
-                tr(
-                  td(data("project-url") := name, name), td(BoincFormater.convertSize(usage))
+
+              table(TableTheme.table, style := "margin-top:20px; width:400px",
+                thead(
+                  tr(
+                    th(), th("table_project".localize), th("table_usage".localize)
+                  )
+                ),
+                tbody(
+                  usage.diskUsage.zip(ChartColors.stream).toList.sortBy(f => -f._1._2).map { case ((name, usage), color) => {
+                    tr(
+                      td(style:="width:32px", div(style := "height:24px;width:24px;background-color:"+color)),
+                      td(data("project-url") := name, name), td(BoincFormater.convertSize(usage))
+                    )
+                  }}.toList
                 )
-              }}.toList
-            )
+              )
+
+            ),
+            div( style := "display:inline-block;width:calc(100% - 405px);padding-right:90px;position:fixed",
+            canvas(
+              width := "100%",
+              height := "600px",
+              id := "chart-area"
+            ))
           )
         ).render
       )
@@ -77,6 +94,7 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
           override val data: ChartData = new ChartData {
             override val datasets: js.Array[Dataset] = List(new Dataset {
               override val data: js.Array[js.Any] = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
+              override val backgroundColor: UndefOr[js.Array[String]] = ChartColors.stream.take(usage.diskUsage.size).toJSArray
               override val label: String = "disk_usage_legend".localize
             }).toJSArray
 

@@ -19,7 +19,7 @@ object LayoutManager {
   rootElement.innerHTML = ""
   rootElement.appendChild(PageLayout.heading.render)
   rootElement.appendChild(JsDom.tags2.main().render)
-  rootElement.appendChild(PageLayout.footer.render)
+  //rootElement.appendChild(PageLayout.footer.render)
 
   def render(page: Layout): Unit = {
     dom.window.console.log(s"LayoutManager: Rendering ${page.getClass.getSimpleName}")

@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared.Result
 import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
@@ -131,7 +131,10 @@ object Dashboard extends Layout {
                 }).recover {
                   case _: FetchResponseException =>
                     val hField = dom.document.getElementById(s"dashboard-${client.hostname}-hostname").asInstanceOf[HTMLElement]
-                    hField.textContent = client.hostname + " [Offline]"
+                    val tooltip = new Tooltip("Offline", i(`class` := "fa fa-exclamation-triangle")).render()
+                    tooltip.style = "float:right;color:#FF8181"
+
+                    hField.appendChild(tooltip)
                 }
 
                 client.getFileTransfer.foreach(transfers => {
