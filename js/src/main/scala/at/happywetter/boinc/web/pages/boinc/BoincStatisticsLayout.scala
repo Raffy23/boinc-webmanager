@@ -34,16 +34,21 @@ object BoincStatisticsLayout {
     val button = style(
       textDecoration := "none",
       outline.`0`,
-      backgroundColor(c"#428bca"),
       width(100 %%),
       border.`0`,
-      padding(12 px),
-      margin(4 px),
-      color(c"#FFFFFF"),
+      padding(14 px),
+      color(c"#333"),
       cursor.pointer,
 
+      borderTop :=! "1px #AAA solid",
+      borderRight :=! "1px #AAA solid",
+      
+      unsafeRoot(".active_stat_btn")(
+        backgroundColor(c"#c3daee")
+      ),
+
       &.hover(
-        backgroundColor(c"#74a9d8")
+        backgroundColor(c"#c3daee")
       )
     )
   }
@@ -88,7 +93,9 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
           div( id := "boinc_statistics",
             h3(BoincClientLayout.Style.pageHeader, "statistics_header".localize),
             div( style := "display:inline-block;width:400px",
-              h4("boinc_statistics_projects".localize),
+              div(style := "padding-bottom:14px;border-bottom:1px #AAA solid;",
+                b("boinc_statistics_projects".localize)
+              ),
               ul(
                 stats.stats.map{ case (project, data) =>
                   li(
@@ -101,25 +108,26 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
               )
             ),
             div( style := "display:inline-block;width:calc(100% - 490px); vertical-align: top;",
-              div( style := "margin-bottom:14px;text-algin:right;",
-                "table_credits".localize,
-                a("user_total_credit".localize, Style.button,
+              div( style := "padding-bottom:14px;text-align:right;border-bottom:1px #AAA solid;",
+                b("table_credits".localize, style := "float:left"),
+                a("user_total_credit".localize, Style.button, style := "border-left: 1px #AAA solid",
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(USER_TOTAL)} } ,
-                  href := "#user_total"),
+                  href := "#user_total", id := "user_total"),
                 a("user_avg_credit".localize, Style.button,
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(USER_AVG)} },
-                  href := "#user_avg"),
+                  href := "#user_avg", id := "user_avg"),
                 a("host_total_credit".localize, Style.button,
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_TOTAL)} },
-                  href := "#host_total"),
+                  href := "#host_total", id := "host_total"),
                 a("host_avg_credit".localize, Style.button,
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_AVG)} },
-                  href := "#host_avg"),
+                  href := "#host_avg", id := "host_avg"),
               ),
               canvas(
                 width := "100%",
                 height := "600px",
-                id := "chart-area"
+                id := "chart-area",
+                style := "margin-top:12px"
               )
             )
           ).render
@@ -141,7 +149,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
           }
         })
 
-
+        toggleActiveBtnClass(currentDataSet)
       })
     }).recover {
       case e: Exception => e.printStackTrace()
@@ -222,11 +230,28 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
   }
 
   private def renderChartData(newState: State): Unit = {
+    toggleActiveBtnClass(newState)
     currentDataSet = newState
-    val minMax = getMinMax()
 
+    val minMax = getMinMax()
     this.chart.data.datasets.foreach(d => reRenderOldDataset(d, minMax._1, minMax._2))
     this.chart.update()
+  }
+
+  private def toggleActiveBtnClass(newState: State): Unit = {
+    currentDataSet match {
+      case USER_TOTAL => dom.document.getElementById("user_total").classList.remove("active_stat_btn")
+      case USER_AVG => dom.document.getElementById("user_avg").classList.remove("active_stat_btn")
+      case HOST_TOTAL => dom.document.getElementById("host_total").classList.remove("active_stat_btn")
+      case HOST_AVG => dom.document.getElementById("host_avg").classList.remove("active_stat_btn")
+    }
+
+    newState match {
+      case USER_TOTAL => dom.document.getElementById("user_total").classList.add("active_stat_btn")
+      case USER_AVG => dom.document.getElementById("user_avg").classList.add("active_stat_btn")
+      case HOST_TOTAL => dom.document.getElementById("host_total").classList.add("active_stat_btn")
+      case HOST_AVG => dom.document.getElementById("host_avg").classList.add("active_stat_btn")
+    }
   }
 
   override val path = "statistics"
