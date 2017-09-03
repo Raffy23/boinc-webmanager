@@ -1,21 +1,23 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.shared.Result
-import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper, ClientManager, FetchResponseException}
+import at.happywetter.boinc.shared.{Result, Workunit}
+import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
+import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom
-import at.happywetter.boinc.web.util.I18N._
-
 /**
   * Created by: 
   *
@@ -83,7 +85,6 @@ object Dashboard extends Layout {
   }
 
   private def renderDashboardContent(clients: List[String]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
@@ -94,57 +95,11 @@ object Dashboard extends Layout {
         div(
           table(TableTheme.table,
             thead(tr(
-              th("table_host".localize), th("table_cpu".localize), th("table_network".localize.toTags),
+              th("table_host".localize, style := "width:220px;"), th("table_cpu".localize), th("table_network".localize.toTags),
               th("table_computinduration".localize.toTags), th("table_wudeadline".localize), th("table_disk".localize)
             )),
             tbody(
               clients.map(c => ClientManager.clients(c)).map(client => {
-
-                client.getState.map(state => {
-                  dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
-                    s"${
-                      state.results
-                        .filter(p => p.activeTask.nonEmpty)
-                        .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
-                        .map(p =>
-                          state.workunits
-                            .find(wu => wu.name == p.wuName)
-                            .map(wu => state.apps(wu.appName))
-                            .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
-                            .getOrElse(0)
-                        ).sum
-                    } / ${state.hostInfo.cpus}"
-
-                  dom.document.getElementById(s"dashboard-${client.hostname}-time").textContent =
-                    BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus)
-
-                  dom.document.getElementById(s"dashboard-${client.hostname}-deadline").textContent =
-                    BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min)
-
-                  val progressBar = dom.document.getElementById(s"dashboard-${client.hostname}-disk")
-                  progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
-                  progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
-
-                  progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render)
-
-                  ClientCacheHelper.updateCache(client.hostname, state)
-                }).recover {
-                  case _: FetchResponseException =>
-                    val hField = dom.document.getElementById(s"dashboard-${client.hostname}-hostname").asInstanceOf[HTMLElement]
-                    val tooltip = new Tooltip("Offline", i(`class` := "fa fa-exclamation-triangle")).render()
-                    tooltip.style = "float:right;color:#FF8181"
-
-                    hField.appendChild(tooltip)
-                }
-
-                client.getFileTransfer.foreach(transfers => {
-                  val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-                  val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-
-                  dom.document.getElementById(s"dashboard-${client.hostname}-network").textContent =
-                    BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
-                }) // Fail silently ...
-
                 tr(
                   td(id := s"dashboard-${client.hostname}-hostname", client.hostname),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),
@@ -155,13 +110,153 @@ object Dashboard extends Layout {
                 )
               })
             )
+          ),
+          h3(BoincClientLayout.Style.pageHeader_small, "dashboard_details".localize),
+          table(TableTheme.table, style := "visibility: hidden;", id := "hidden_data_table",
+            thead(
+              tr( id := "dashbord_project_header",
+                th("table_host".localize, style := "width:220px;")
+              )
+            ),
+            tbody(
+              clients.map(client => {
+                tr( id := s"dashboard_${client}_details",
+                  td(client, id := s"dashboard_${client}_details_hostname")
+                )
+              })
+            )
           )
         )
       ).render
     )
+
+    Future.sequence(
+      clients.map(c => ClientManager.clients(c)).map(client => {
+        loadFileTransferData(client)
+        loadStateData(client)
+      })
+    ).foreach(details => {
+      val tableHeader = dom.document.getElementById("dashbord_project_header")
+      val projects = details.flatMap(d => d.projects.keySet).toSet
+      val clients = details.map(d => d.client)
+
+      println("LOAD DETAILS")
+      ProjectNameCache.getAll(projects.toList)
+        .map( projectNameData => projectNameData.map{ case (url, maybeUrl) => (url, maybeUrl.getOrElse(url)) })
+        .map( projectNameData => projectNameData.toMap)
+        .foreach( projectNames => {
+
+          projects.foreach(project => {
+            tableHeader.appendChild(
+              th(//TableTheme.vertical_table_text,
+                div(
+                  span(
+                    projectNames(project)
+                  )
+                )
+              ).render
+            )
+
+            clients.foreach(client => {
+              val data = details.find(_.client == client).get
+              val rData = data.projects.getOrElse(project, List())
+
+              val active = rData
+                .filter(p => p.activeTask.nonEmpty)
+                .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+                .map(p =>
+                  data.workunits
+                    .find(wu => wu.name == p.wuName)
+                    .map(wu => data.apps(wu.appName))
+                    .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
+                    .getOrElse(0)
+                ).sum
+
+              println(data.projects)
+              dom.document.getElementById(s"dashboard_${client}_details").appendChild(
+                td(
+                  s"$active / ${rData.size}", br(),
+                  small( BoincFormater.convertTime(rData.map(r => r.remainingCPU).sum / active) )
+                ).render
+              )
+            })
+          })
+
+          dom.document.getElementById("hidden_data_table").asInstanceOf[HTMLElement].style = ""
+        })
+    })
+
   }
+
+
+
+
+  private def loadStateData(client: BoincClient): Future[DetailData] = {
+    import scalatags.JsDom.all._
+
+    client.getState.map(state => {
+      dom.document.getElementById(s"dashboard-${client.hostname}-cpu").textContent =
+        s"${
+          state.results
+            .filter(p => p.activeTask.nonEmpty)
+            .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+            .map(p =>
+              state.workunits
+                .find(wu => wu.name == p.wuName)
+                .map(wu => state.apps(wu.appName))
+                .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
+                .getOrElse(0)
+            ).sum
+        } / ${state.hostInfo.cpus}"
+
+      dom.document.getElementById(s"dashboard-${client.hostname}-time").textContent =
+        BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus)
+
+      dom.document.getElementById(s"dashboard-${client.hostname}-deadline").textContent =
+        BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min)
+
+      val progressBar = dom.document.getElementById(s"dashboard-${client.hostname}-disk")
+      progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
+      progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
+
+      progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render)
+
+      ClientCacheHelper.updateCache(client.hostname, state)
+      DetailData(client.hostname, state.results.groupBy(f => f.project), state.workunits, state.apps)
+    }).recover {
+      case _: FetchResponseException =>
+        val hField = dom.document.getElementById(s"dashboard-${client.hostname}-hostname").asInstanceOf[HTMLElement]
+        val dField = dom.document.getElementById(s"dashboard_${client.hostname}_details_hostname").asInstanceOf[HTMLElement]
+
+        val tooltip = new Tooltip("Offline", i(`class` := "fa fa-exclamation-triangle")).render()
+        tooltip.style = "float:right;color:#FF8181"
+
+        val tooltip2 = new Tooltip("Offline", i(`class` := "fa fa-exclamation-triangle")).render()
+        tooltip2.style = "float:right;color:#FF8181"
+
+        hField.appendChild(tooltip)
+        dField.appendChild(tooltip2)
+
+        DetailData(client.hostname)
+      case _ =>  DetailData(client.hostname)
+    }
+  }
+
+  private def loadFileTransferData(client: BoincClient): Unit = {
+    client.getFileTransfer.foreach(transfers => {
+      val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+      val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+
+      dom.document.getElementById(s"dashboard-${client.hostname}-network").textContent =
+        BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
+    }) // Fail silently ...
+  }
+
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
 
   override val path = "dashboard"
+
+  import at.happywetter.boinc.shared.App
+  case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty, workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
 }

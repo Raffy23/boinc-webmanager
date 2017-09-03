@@ -32,10 +32,6 @@ object TopNavigation extends StyleSheet.Inline {
       padding(15 px, 15 px, 17 px, 15 px),
       textDecoration := "none",
 
-      unsafeRoot(".active")(
-        backgroundColor(c"#666666"),
-      ),
-
       &.hover(
         backgroundColor(c"#666666")
       )

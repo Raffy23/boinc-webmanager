@@ -63,7 +63,11 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
 
       ul(TopNavigation.nav, id := "boinc_top_navbar",
         links.map { case (nav, name) =>
-          li(a(href := s"${DashboardLocation.link}/$clientName/$nav", name, data("navigo") := "", `class` := (if (path == nav) "active" else "")))
+          li(
+            a(href := s"${DashboardLocation.link}/$clientName/$nav", name, data("navigo") := "",
+              `class` := (if (path == nav) TopNavigation.active.htmlClass else "")
+            )
+          )
         }
       ).render
     })
@@ -88,6 +92,14 @@ object BoincClientLayout {
       margin(40 px, 20 px, 20 px, auto),
       borderBottom :=! "1px solid #DDD",
       fontSize(28 px),
+      fontWeight._300
+    )
+
+    val pageHeader_small = style(
+      paddingBottom(9 px),
+      margin(40 px, 20 px, 20 px, auto),
+      borderBottom :=! "1px solid #DDD",
+      fontSize(25 px),
       fontWeight._300
     )
 

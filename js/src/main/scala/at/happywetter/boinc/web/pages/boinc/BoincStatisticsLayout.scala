@@ -42,14 +42,14 @@ object BoincStatisticsLayout {
 
       borderTop :=! "1px #AAA solid",
       borderRight :=! "1px #AAA solid",
-      
-      unsafeRoot(".active_stat_btn")(
-        backgroundColor(c"#c3daee")
-      ),
 
       &.hover(
         backgroundColor(c"#c3daee")
       )
+    )
+
+    val active = style(
+      backgroundColor(c"#c3daee")
     )
   }
 }
@@ -119,7 +119,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
                 a("host_total_credit".localize, Style.button,
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_TOTAL)} },
                   href := "#host_total", id := "host_total"),
-                a("host_avg_credit".localize, Style.button,
+                a("host_avg_credit".localize, Style.button, Style.active, 
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_AVG)} },
                   href := "#host_avg", id := "host_avg"),
               ),
@@ -240,17 +240,17 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
 
   private def toggleActiveBtnClass(newState: State): Unit = {
     currentDataSet match {
-      case USER_TOTAL => dom.document.getElementById("user_total").classList.remove("active_stat_btn")
-      case USER_AVG => dom.document.getElementById("user_avg").classList.remove("active_stat_btn")
-      case HOST_TOTAL => dom.document.getElementById("host_total").classList.remove("active_stat_btn")
-      case HOST_AVG => dom.document.getElementById("host_avg").classList.remove("active_stat_btn")
+      case USER_TOTAL => dom.document.getElementById("user_total").classList.remove(Style.active.htmlClass)
+      case USER_AVG => dom.document.getElementById("user_avg").classList.remove(Style.active.htmlClass)
+      case HOST_TOTAL => dom.document.getElementById("host_total").classList.remove(Style.active.htmlClass)
+      case HOST_AVG => dom.document.getElementById("host_avg").classList.remove(Style.active.htmlClass)
     }
 
     newState match {
-      case USER_TOTAL => dom.document.getElementById("user_total").classList.add("active_stat_btn")
-      case USER_AVG => dom.document.getElementById("user_avg").classList.add("active_stat_btn")
-      case HOST_TOTAL => dom.document.getElementById("host_total").classList.add("active_stat_btn")
-      case HOST_AVG => dom.document.getElementById("host_avg").classList.add("active_stat_btn")
+      case USER_TOTAL => dom.document.getElementById("user_total").classList.add(Style.active.htmlClass)
+      case USER_AVG => dom.document.getElementById("user_avg").classList.add(Style.active.htmlClass)
+      case HOST_TOTAL => dom.document.getElementById("host_total").classList.add(Style.active.htmlClass)
+      case HOST_AVG => dom.document.getElementById("host_avg").classList.add(Style.active.htmlClass)
     }
   }
 

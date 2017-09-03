@@ -73,4 +73,18 @@ object TableTheme extends StyleSheet.Inline {
 
   val table_lastrowsmall = style(unsafeChild("tbody>tr>td:last-of-type")(width(6 em)))
 
+  val vertical_table_text = style(
+    unsafeChild("div")(
+      transform := "rotate(325deg)",
+      width(2 px),
+      marginBottom(-7 px),
+      marginLeft(100 %%),
+
+      unsafeChild("span")(
+        borderBottom :=! "1px solid #CCC",
+        padding(5 px, 10 px)
+      )
+    )
+  )
+
 }

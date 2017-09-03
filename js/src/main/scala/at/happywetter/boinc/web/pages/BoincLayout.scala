@@ -4,13 +4,13 @@ import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
-import scala.scalajs.js.{Dictionary, JSON}
+import scala.scalajs.js.Dictionary
 import scalatags.JsDom
-import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
