@@ -88,7 +88,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
           div( id := "boinc_statistics",
             h3(BoincClientLayout.Style.pageHeader, "statistics_header".localize),
             div( style := "display:inline-block;width:400px",
-              h4("table_project".localize),
+              h4("boinc_statistics_projects".localize),
               ul(
                 stats.stats.map{ case (project, data) =>
                   li(
@@ -101,7 +101,8 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
               )
             ),
             div( style := "display:inline-block;width:calc(100% - 490px); vertical-align: top;",
-              div( style := "margin-bottom:14px",
+              div( style := "margin-bottom:14px;text-algin:right;",
+                "table_credits".localize,
                 a("user_total_credit".localize, Style.button,
                   onclick := { (event: Event) => { event.preventDefault(); renderChartData(USER_TOTAL)} } ,
                   href := "#user_total"),
