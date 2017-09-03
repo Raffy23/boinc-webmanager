@@ -75,7 +75,6 @@ object Dashboard extends Layout {
         renderDashboardContent(clients)
 
       AppRouter.router.updatePageLinks()
-      NProgress.done(true)
     }).recover {
       case _: FetchResponseException =>
         import scalatags.JsDom.all._
@@ -111,11 +110,11 @@ object Dashboard extends Layout {
               })
             )
           ),
-          h3(BoincClientLayout.Style.pageHeader_small, "dashboard_details".localize),
-          table(TableTheme.table, style := "visibility: hidden;", id := "hidden_data_table",
+          h3(BoincClientLayout.Style.pageHeader_small, "dashboard_workunit_details".localize, style := "margin-bottom:65px"),
+          table(TableTheme.table, TableTheme.no_border, style := "visibility:hidden;", id := "hidden_data_table",
             thead(
               tr( id := "dashbord_project_header",
-                th("table_host".localize, style := "width:220px;")
+                th("table_host".localize, style := "width:220px;border:1px #DDD solid;border-bottom:2px #DDD solid")
               )
             ),
             tbody(
@@ -132,6 +131,7 @@ object Dashboard extends Layout {
 
     Future.sequence(
       clients.map(c => ClientManager.clients(c)).map(client => {
+        NProgress.start()
         loadFileTransferData(client)
         loadStateData(client)
       })
@@ -140,7 +140,6 @@ object Dashboard extends Layout {
       val projects = details.flatMap(d => d.projects.keySet).toSet
       val clients = details.map(d => d.client)
 
-      println("LOAD DETAILS")
       ProjectNameCache.getAll(projects.toList)
         .map( projectNameData => projectNameData.map{ case (url, maybeUrl) => (url, maybeUrl.getOrElse(url)) })
         .map( projectNameData => projectNameData.toMap)
@@ -148,7 +147,7 @@ object Dashboard extends Layout {
 
           projects.foreach(project => {
             tableHeader.appendChild(
-              th(//TableTheme.vertical_table_text,
+              th(TableTheme.vertical_table_text,
                 div(
                   span(
                     projectNames(project)
@@ -162,27 +161,25 @@ object Dashboard extends Layout {
               val rData = data.projects.getOrElse(project, List())
 
               val active = rData
-                .filter(p => p.activeTask.nonEmpty)
-                .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
-                .map(p =>
-                  data.workunits
-                    .find(wu => wu.name == p.wuName)
-                    .map(wu => data.apps(wu.appName))
-                    .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
-                    .getOrElse(0)
-                ).sum
+                  .filter(p => p.activeTask.nonEmpty)
+                  .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
 
               println(data.projects)
               dom.document.getElementById(s"dashboard_${client}_details").appendChild(
-                td(
-                  s"$active / ${rData.size}", br(),
-                  small( BoincFormater.convertTime(rData.map(r => r.remainingCPU).sum / active) )
-                ).render
+                if (rData.nonEmpty)
+                  td(
+                    span(s"$active / ${rData.size}"), br(),
+                    small(BoincFormater.convertTime(rData.map(r => r.remainingCPU).sum / active))
+                  ).render
+                else
+                  td().render
               )
             })
           })
 
+          tableHeader.appendChild(th().render)
           dom.document.getElementById("hidden_data_table").asInstanceOf[HTMLElement].style = ""
+          NProgress.done(true)
         })
     })
 
