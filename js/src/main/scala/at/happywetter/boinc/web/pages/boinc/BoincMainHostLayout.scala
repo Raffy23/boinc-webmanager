@@ -63,10 +63,11 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
     ).render
   }
 
+  override val path = "boinc"
 }
 
 object BoincMainHostLayout {
-  import scalacss.DevDefaults._
+  import scalacss.ProdDefaults._
   import scala.language.postfixOps
 
   object Style extends StyleSheet.Inline {

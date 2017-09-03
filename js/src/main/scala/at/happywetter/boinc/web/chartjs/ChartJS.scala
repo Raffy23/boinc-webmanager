@@ -16,9 +16,25 @@ import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
 @JSGlobal("Chart")
 object ChartJS extends js.Object {
 
-  val defaults: ChartOptions = js.native
+  val defaults: GlobalChartOptions = js.native
 
 }
+
+@js.native
+trait GlobalChartOptions extends js.Object {
+
+  val bar: js.Any = js.native
+  val buuble: js.Any = js.native
+  val doughnut: js.Any = js.native
+  val global: ChartOptions = js.native
+  val line: js.Any = js.native
+  val pie: js.Any = js.native
+  val radar: js.Any = js.native
+  val scale: js.Any = js.native
+  val scatter: js.Any = js.native
+
+}
+
 
 @js.native
 @JSGlobal("Chart")
@@ -45,18 +61,19 @@ class ChartJS(ctx: CanvasRenderingContext2D, config: ChartConfig) extends js.Obj
 
 @ScalaJSDefined
 abstract class ChartData extends js.Object {
-  val labels: js.Array[String]
+  var labels: js.Array[String] = new js.Array(0)
   val datasets: js.Array[Dataset]
 
 }
 
 @ScalaJSDefined
 abstract class Dataset extends js.Object {
-  val label: String
-  val data: js.Array[js.Any]
-  val backgroundColor: js.UndefOr[js.Array[String]] = js.undefined
-  val borderColor: js.UndefOr[js.Array[String]] = js.undefined
+  var label: String = ""
+  var data: js.Array[js.Any] = js.Array(0)
+  var backgroundColor: js.UndefOr[js.Array[String]] = js.undefined
+  var borderColor: js.UndefOr[js.Array[String]] = js.undefined
   var borderWidth: Double = 1D
+  var fill: String = "origin"
 }
 
 @ScalaJSDefined
@@ -76,7 +93,7 @@ abstract class ChartOptions extends js.Object {
 
   @ScalaJSDefined
   trait TooltipCallbacks extends js.Object {
-    var label: js.UndefOr[js.Function2[TooltipItem, ChartData, String]]
+    var label: js.Function2[TooltipItem, ChartData, String]
   }
 
   val legend: Legend = new Legend {
@@ -86,7 +103,7 @@ abstract class ChartOptions extends js.Object {
   val tooltips: Tooltips = new Tooltips {
     override var display: Boolean = true
     override val callbacks = new TooltipCallbacks {
-      override var label: UndefOr[js.Function2[TooltipItem, ChartData, String]] = js.undefined
+      override var label: js.Function2[TooltipItem, ChartData, String] = ChartJS.defaults.global.tooltips.callbacks.label
     }
   }
 

@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.css
 
 import scala.language.postfixOps
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 
 /**
   * Created by: 

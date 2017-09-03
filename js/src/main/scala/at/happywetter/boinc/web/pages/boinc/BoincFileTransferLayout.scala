@@ -55,4 +55,5 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
     }
   }
 
+  override val path = "transfers"
 }

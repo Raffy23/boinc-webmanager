@@ -71,7 +71,7 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
 
 object BoincClientLayout {
   import scala.language.postfixOps
-  import scalacss.DevDefaults._
+  import scalacss.ProdDefaults._
   import scalacss.internal.mutable.StyleSheet
 
   object Style extends StyleSheet.Inline {

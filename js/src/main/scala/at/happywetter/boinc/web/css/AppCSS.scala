@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.css
 
-import at.happywetter.boinc.web.pages.boinc.BoincMainHostLayout
+import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincStatisticsLayout}
 import at.happywetter.boinc.web.pages.component._
 import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage, PageLayout}
@@ -14,7 +14,7 @@ import scalacss.internal.mutable.GlobalRegistry
   * @version 23.07.2017
   */
 object AppCSS {
-  import scalacss.DevDefaults._
+  import scalacss.ProdDefaults._
 
   def load(): Unit = {
     GlobalRegistry.register(
@@ -29,7 +29,8 @@ object AppCSS {
       Tooltip.Style,
       BasicModalDialog.Style,
       BoincMainHostLayout.Style,
-      DropdownMenu.Style
+      DropdownMenu.Style,
+      BoincStatisticsLayout.Style
     )
 
     GlobalRegistry.addToDocumentOnRegistration()

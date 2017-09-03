@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.pages.LoginPage.Style
 import at.happywetter.boinc.web.pages.component.DropdownMenu
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
+import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.LanguageDataProvider
@@ -15,8 +15,8 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.scalajs.js.{Date, Dictionary}
-import scalacss.DevDefaults._
+import scala.scalajs.js.Dictionary
+import scalacss.ProdDefaults._
 import scalatags.JsDom
 
 /**
@@ -182,5 +182,5 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
       dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value = ""
     }
   })
-
+  override val path = "login"
 }

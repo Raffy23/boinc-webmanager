@@ -4,7 +4,7 @@ import at.happywetter.boinc.web.pages.component.DropdownMenu.Style
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.language.postfixOps
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 import scalatags.JsDom
 
 /**

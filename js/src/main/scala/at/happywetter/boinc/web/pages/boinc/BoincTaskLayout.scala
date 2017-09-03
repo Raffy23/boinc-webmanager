@@ -407,4 +407,6 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
       syncTaskViewWithServer()
     }
   })
+
+  override val path = "tasks"
 }

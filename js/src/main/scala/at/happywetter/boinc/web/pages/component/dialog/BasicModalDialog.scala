@@ -1,12 +1,11 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
 import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog.Style
-import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
+import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 import scalatags.JsDom
-import scalacss.DevDefaults._
 
 
 /**

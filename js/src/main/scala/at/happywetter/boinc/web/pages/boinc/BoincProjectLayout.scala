@@ -217,4 +217,5 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     project.name
   }
 
+  override val path = "projects"
 }

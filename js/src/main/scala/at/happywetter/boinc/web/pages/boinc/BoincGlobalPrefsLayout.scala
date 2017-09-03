@@ -47,4 +47,6 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
       )
     })
   }
+
+  override val path = "global_prefs"
 }

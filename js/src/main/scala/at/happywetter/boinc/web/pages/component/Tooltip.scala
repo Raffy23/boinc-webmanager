@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.pages.component
 import at.happywetter.boinc.web.pages.component.Tooltip.Style
 import org.scalajs.dom.raw.HTMLElement
 
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 import scala.language.postfixOps
 import scalatags.JsDom
 

@@ -8,7 +8,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.scalajs.js
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 import scalatags.JsDom
 
 /**

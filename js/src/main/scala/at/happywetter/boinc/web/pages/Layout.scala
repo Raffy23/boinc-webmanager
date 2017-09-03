@@ -14,6 +14,8 @@ import scalatags.JsDom
   */
 trait Layout {
 
+  val path: String
+
   def render: Option[JsDom.TypedTag[HTMLElement]] = { None }
   val staticComponent: Option[JsDom.TypedTag[HTMLElement]]
 

@@ -9,7 +9,7 @@ import scala.language.postfixOps
   * @author Raphael
   * @version 01.08.2017
   */
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 object TableTheme extends StyleSheet.Inline {
   import dsl._
 

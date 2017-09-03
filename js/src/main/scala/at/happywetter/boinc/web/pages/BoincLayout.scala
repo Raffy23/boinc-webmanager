@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
+import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
@@ -25,8 +25,9 @@ object BoincLayout extends Layout {
   var child: BoincPageLayout = _
   private var currentState: String = "NONE"
 
+  override val path: String = "/view/dashboard"
   override val requestedParent = Some("main #client-container")
-  override def requestParentLayout() = { Some(Dashboard) }
+  override def requestParentLayout(): Some[Dashboard.type] = { Some(Dashboard) }
 
   override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] =  {
     import scalacss.ScalatagsCss._
@@ -36,7 +37,13 @@ object BoincLayout extends Layout {
   }
 
   override val routerHook: Option[Hook] = Some(new Hook {
-    override def already(): Unit = child.routerHook.foreach(p => p.already())
+    override def already(): Unit = {
+      child.routerHook.foreach(p => p.already())
+
+      // Refresh Boinc page even it router hook is not set in client
+      if (child.routerHook.isEmpty)
+        LayoutManager.render(child)
+    }
 
     override def before(done: js.Function0[Unit]): Unit = {
       import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -63,38 +70,15 @@ object BoincLayout extends Layout {
   override def beforeRender(params: Dictionary[String]): Unit = {
     val oldChild = child
 
-    def updateView(implicit view: String): Unit = {
-      if (view == currentState) {
-        child.routerHook.foreach(p => p.already())
-      } else {
-        if (child != null)
-          child.routerHook.foreach(p => p.leave())
-
-        val nChild = view match {
-          case "boinc"    => new BoincMainHostLayout(params)
-          case "projects" => new BoincProjectLayout(params)
-          case "tasks"    => new BoincTaskLayout(params)
-          case "global_prefs" => new BoincGlobalPrefsLayout(params)
-          case "transfers" => new BoincFileTransferLayout(params)
-          case "disk"      => new BoincDiskLayout(params)
-          case "statistics"=> new BoincStatisticsLayout(params)
-        }
-
-        currentState = view
-        nChild.routerHook.foreach(p => p.before(() => {}))
-        child = nChild
-      }
-    }
-
     params.getOrElse("action","_DEFAULT_ACTION_") match {
-      case view @ "boinc"      => updateView(view)
+      case view @ "boinc"      => generateChild(view, new BoincMainHostLayout(params))
       case view @ "messages"   => dom.window.alert("not_implemented".localize)
-      case view @ "projects"   => updateView(view)
-      case view @ "tasks"      => updateView(view)
-      case view @ "transfers"  => updateView(view)
-      case view @ "statistics" => updateView(view)
-      case view @ "disk"       => updateView(view)
-      case view @ "global_prefs" => updateView(view)
+      case view @ "projects"   => generateChild(view, new BoincProjectLayout(params))
+      case view @ "tasks"      => generateChild(view, new BoincTaskLayout(params))
+      case view @ "transfers"  => generateChild(view, new BoincFileTransferLayout(params))
+      case view @ "statistics" => generateChild(view, new BoincStatisticsLayout(params))
+      case view @ "disk"       => generateChild(view, new BoincDiskLayout(params))
+      case view @ "global_prefs" => generateChild(view, new BoincGlobalPrefsLayout(params))
       case _ =>
         if (child != null)
           child.routerHook.foreach(p => p.leave())
@@ -105,23 +89,30 @@ object BoincLayout extends Layout {
         // Delay navigation, maybe we are currently in one ...
         dom.window.setTimeout(() => {
           oldChild match {
-            case null => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
-            case _: BoincMainHostLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/boinc", absolute = true)
-            case _: BoincProjectLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/projects", absolute = true)
-            case _: BoincTaskLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/tasks", absolute = true)
-            case _: BoincGlobalPrefsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/global_prefs", absolute = true)
-            case _: BoincFileTransferLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/transfers", absolute = true)
-            case _: BoincDiskLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/disk", absolute = true)
-            case _: BoincStatisticsLayout => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/statistics", absolute = true)
-            case _ => AppRouter.router.navigate("/view/dashboard/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
+            case null => AppRouter.router.navigate(DashboardLocation.link + "/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
+            case _ => AppRouter.router.navigate(DashboardLocation.link + "/" + params.get("client").get + "/" + oldChild.path, absolute = true)
           }
         }, 100)
     }
 
   }
 
+  private[this] def generateChild(view: String, boincPageLayout: BoincPageLayout): Unit = {
+    if (view == currentState) {
+      child.routerHook.foreach(p => p.already())
+    } else {
+      if (child != null)
+        child.routerHook.foreach(p => p.leave())
+
+      currentState = view
+      boincPageLayout.routerHook.foreach(p => p.before(() => {}))
+      child = boincPageLayout
+    }
+  }
+
   override def onRender(): Unit = {
     println(dom.window.location.pathname)
     if (child != null) LayoutManager.render(child)
   }
+
 }

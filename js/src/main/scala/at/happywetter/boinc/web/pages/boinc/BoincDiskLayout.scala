@@ -15,7 +15,6 @@ import org.scalajs.dom.raw.HTMLCanvasElement
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
 
 /**
   * Created by: 
@@ -93,12 +92,12 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
         new ChartJS(context, new ChartConfig {
           override val data: ChartData = new ChartData {
             override val datasets: js.Array[Dataset] = List(new Dataset {
-              override val data: js.Array[js.Any] = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
-              override val backgroundColor: UndefOr[js.Array[String]] = ChartColors.stream.take(usage.diskUsage.size).toJSArray
-              override val label: String = "disk_usage_legend".localize
+              data = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
+              backgroundColor = ChartColors.stream.take(usage.diskUsage.size).toJSArray
+              label = "disk_usage_legend".localize
             }).toJSArray
 
-            override val labels: js.Array[String] = usage.diskUsage.map { case (name, _) => name }.toJSArray
+            labels = usage.diskUsage.map { case (name, _) => name }.toJSArray
           }
           override val `type`: String = "pie"
           override val options: ChartOptions = new ChartOptions {
@@ -118,5 +117,5 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
   private val tooltipLabel: js.Function2[TooltipItem, ChartData, String] = (tooltipItem, data) => {
     s"${projectNames(data.labels(tooltipItem.index.intValue()))}: ${BoincFormater.convertSize(data.datasets(tooltipItem.datasetIndex.intValue()).data(tooltipItem.index.intValue()).asInstanceOf[Double])}"
   }
-
+  override val path = "disk"
 }

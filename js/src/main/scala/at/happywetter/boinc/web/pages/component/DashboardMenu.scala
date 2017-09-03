@@ -7,7 +7,7 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.language.postfixOps
-import scalacss.DevDefaults._
+import scalacss.ProdDefaults._
 import scalatags.JsDom
 import at.happywetter.boinc.web.util.I18N._
 

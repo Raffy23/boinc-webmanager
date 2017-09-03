@@ -24,7 +24,7 @@ import at.happywetter.boinc.web.util.I18N._
   */
 object Dashboard extends Layout {
 
-  import scalacss.DevDefaults._
+  import scalacss.ProdDefaults._
   object Style extends StyleSheet.Inline {
   }
 
@@ -162,4 +162,6 @@ object Dashboard extends Layout {
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
+
+  override val path = "dashboard"
 }
