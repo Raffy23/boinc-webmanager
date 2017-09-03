@@ -23,7 +23,7 @@ import scalatags.JsDom
 
 abstract class BoincClientLayout(clientName: String) extends Layout  with BoincComponent {
 
-  protected implicit val boincClientName: String = clientName
+  implicit val boincClientName: String = clientName
   protected lazy val boinc: BoincClient = ClientManager.clients(clientName)
 
   override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
@@ -40,6 +40,17 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
 
   def root: Element = dom.document.getElementById("client-data")
 
+  private val links = List(
+    ("boinc", "head_menu_boinc".localize),
+    ("messages", "head_menu_messages".localize),
+    ("projects", "head_menu_projects".localize),
+    ("tasks", "head_menu_tasks".localize),
+    ("transfers", "head_menu_transfers".localize),
+    ("statistics", "head_menu_statistics".localize),
+    ("disk", "head_menu_disk".localize),
+    ("global_prefs", "head_menu_prefs".localize)
+  )
+
   override def onRender(): Unit = {
     DashboardMenu.selectMenuItemByContent(clientName)
 
@@ -50,15 +61,10 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
       import scalacss.ScalatagsCss._
       import scalatags.JsDom.all._
 
-      ul(TopNavigation.nav,
-        li(a(href := s"${DashboardLocation.link}/$clientName/boinc", "head_menu_boinc".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/messages", "head_menu_messages".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/projects", "head_menu_projects".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/tasks", "head_menu_tasks".localize, data("navigo") := "" )),
-        li(a(href := s"${DashboardLocation.link}/$clientName/transfers", "head_menu_transfers".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/statistics", "head_menu_statistics".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/disk", "head_menu_disk".localize, data("navigo") := "")),
-        li(a(href := s"${DashboardLocation.link}/$clientName/global_prefs", "head_menu_prefs".localize, data("navigo") := ""))
+      ul(TopNavigation.nav, id := "boinc_top_navbar",
+        links.map { case (nav, name) =>
+          li(a(href := s"${DashboardLocation.link}/$clientName/$nav", name, data("navigo") := "", `class` := (if (path == nav) "active" else "")))
+        }
       ).render
     })
 

@@ -29,13 +29,17 @@ object TopNavigation extends StyleSheet.Inline {
       display.block,
       color.white,
       textAlign.center,
-      padding(15 px, 15 px, 16 px, 16 px),
+      padding(15 px, 15 px, 17 px, 15 px),
       textDecoration := "none",
+
+      unsafeRoot(".active")(
+        backgroundColor(c"#666666"),
+      ),
 
       &.hover(
         backgroundColor(c"#666666")
       )
-    )
+    ),
   )
 
   val active = style(
