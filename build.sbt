@@ -1,10 +1,13 @@
 // (5) shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
-import sbtcrossproject.{crossProject, CrossType}
+import sbtbuildinfo.BuildInfoPlugin.autoImport.buildInfoPackage
+import sbtcrossproject.{CrossType, crossProject}
 
 enablePlugins(ScalaJSPlugin)
+enablePlugins(GitVersioning)
 
 name := "Boinc-Webmanager"
 version := "0.1b"
+
 scalaVersion in ThisBuild := "2.12.2"
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
 
@@ -25,8 +28,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .in(file("."))
   .settings(
-    name := "Boinc-Webmanager",
-    version := "0.1b-SNAPSHOT"
+    name := "Boinc-Webmanager"
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
@@ -57,7 +59,13 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val shared = project in file("shared")
+lazy val shared = (project in file("shared")).enablePlugins(BuildInfoPlugin).settings(
+  buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion),
+  buildInfoPackage := "at.happywetter.boinc"
+)
 
-lazy val serverJVM = manager.jvm.dependsOn(shared).settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
-lazy val clientJS = manager.js.dependsOn(shared).settings(mainClass := Some("at.happywetter.boinc.web.Main"))
+lazy val serverJVM = manager.jvm.dependsOn(shared)
+  .settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
+
+lazy val clientJS = manager.js.dependsOn(shared)
+  .settings(mainClass := Some("at.happywetter.boinc.web.Main"))

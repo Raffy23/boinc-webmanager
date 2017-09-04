@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web
 
+import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.{BoincLayout, Dashboard, LoginPage}
@@ -27,6 +28,7 @@ object Main {
   @JSExport
   def main(): Unit = {
     dom.console.log("Booting Application ...")
+    dom.console.log("Current Version: " + BuildInfo.version)
 
     NProgress.start()
     AppCSS.load()

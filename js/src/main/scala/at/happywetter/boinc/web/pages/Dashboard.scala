@@ -144,7 +144,7 @@ object Dashboard extends Layout {
             table(TableTheme.table, TableTheme.no_border, style := "display:none", id := "dashboard_workunits_table",
               thead(
                 tr( id := "dashbord_project_header",
-                  th("table_host".localize, style := "width:220px;border:1px #DDD solid;border-bottom:2px #DDD solid")
+                  th("table_host".localize, style := "width:220px;text-align:left")
                 )
               ),
               tbody(
