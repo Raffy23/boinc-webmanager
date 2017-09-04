@@ -4,6 +4,7 @@ import at.happywetter.boinc.shared.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
@@ -11,6 +12,7 @@ import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgres
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
+import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.concurrent.Future
@@ -28,6 +30,10 @@ object Dashboard extends Layout {
 
   import scalacss.ProdDefaults._
   object Style extends StyleSheet.Inline {
+
+    val button = BoincStatisticsLayout.Style.button
+    val active = BoincStatisticsLayout.Style.active
+
   }
 
   lazy val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
@@ -86,13 +92,37 @@ object Dashboard extends Layout {
   private def renderDashboardContent(clients: List[String]): Unit = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
+    import at.happywetter.boinc.web.hacks.NodeListConverter._
 
     val container = dom.document.getElementById("client-container")
     container.appendChild(
       div(
+        div(style := "float:right;margin-top:12px;margin-right:20px",
+          a("dashboard_home".localize, Style.button, Style.active, style :="border-left:1px #AAA solid",
+            onclick := { (event: Event) => {
+              event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
+                node.asInstanceOf[HTMLElement].classList.remove(Style.active.htmlClass)
+              })
+              event.target.asInstanceOf[HTMLElement].classList.add(Style.active.htmlClass)
+
+              dom.window.document.getElementById("dashboard_home_table").asInstanceOf[HTMLElement].style=""
+              dom.window.document.getElementById("dashboard_workunits_table").asInstanceOf[HTMLElement].style="display:none"
+            }}),
+          a("dashboard_workunits".localize, Style.button , onclick := { (event: Event) => {
+            event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
+              node.asInstanceOf[HTMLElement].classList.remove(Style.active.htmlClass)
+            })
+            event.target.asInstanceOf[HTMLElement].classList.add(Style.active.htmlClass)
+
+            dom.window.document.getElementById("dashboard_home_table").asInstanceOf[HTMLElement].style="display:none"
+            dom.window.document.getElementById("dashboard_workunits_table").asInstanceOf[HTMLElement].style=""
+
+            calculateOffsetOfWoruntsTable()
+          }})
+        ),
         h2(BoincClientLayout.Style.pageHeader, "dashboard_overview".localize),
         div(
-          table(TableTheme.table,
+          table(TableTheme.table, id := "dashboard_home_table",
             thead(tr(
               th("table_host".localize, style := "width:220px;"), th("table_cpu".localize), th("table_network".localize.toTags),
               th("table_computinduration".localize.toTags), th("table_wudeadline".localize), th("table_disk".localize)
@@ -110,19 +140,20 @@ object Dashboard extends Layout {
               })
             )
           ),
-          h3(BoincClientLayout.Style.pageHeader_small, "dashboard_workunit_details".localize, style := "margin-bottom:65px"),
-          table(TableTheme.table, TableTheme.no_border, style := "visibility:hidden;", id := "hidden_data_table",
-            thead(
-              tr( id := "dashbord_project_header",
-                th("table_host".localize, style := "width:220px;border:1px #DDD solid;border-bottom:2px #DDD solid")
-              )
-            ),
-            tbody(
-              clients.map(client => {
-                tr( id := s"dashboard_${client}_details",
-                  td(client, id := s"dashboard_${client}_details_hostname")
+          div( id := "workunits_table_container",
+            table(TableTheme.table, TableTheme.no_border, style := "display:none", id := "dashboard_workunits_table",
+              thead(
+                tr( id := "dashbord_project_header",
+                  th("table_host".localize, style := "width:220px;border:1px #DDD solid;border-bottom:2px #DDD solid")
                 )
-              })
+              ),
+              tbody(
+                clients.map(client => {
+                  tr( id := s"dashboard_${client}_details",
+                    td(client, id := s"dashboard_${client}_details_hostname")
+                  )
+                })
+              )
             )
           )
         )
@@ -164,7 +195,6 @@ object Dashboard extends Layout {
                   .filter(p => p.activeTask.nonEmpty)
                   .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
 
-              println(data.projects)
               dom.document.getElementById(s"dashboard_${client}_details").appendChild(
                 if (rData.nonEmpty)
                   td(
@@ -178,15 +208,24 @@ object Dashboard extends Layout {
           })
 
           tableHeader.appendChild(th().render)
-          dom.document.getElementById("hidden_data_table").asInstanceOf[HTMLElement].style = ""
           NProgress.done(true)
         })
     })
 
   }
 
+  private def calculateOffsetOfWoruntsTable(): Unit = {
+    import at.happywetter.boinc.web.hacks.NodeListConverter._
 
+    var max = 0D
+    dom.document.querySelectorAll("#workunits_table_container > table > thead > tr span").forEach((node, _, _) => {
+      val result = node.asInstanceOf[HTMLElement].offsetWidth * Math.cos(4.10152) * -1
+      if (max < result)
+        max = result
+    })
 
+    dom.document.getElementById("workunits_table_container").asInstanceOf[HTMLElement].style="margin-top:"+max+"px"
+  }
 
   private def loadStateData(client: BoincClient): Future[DetailData] = {
     import scalatags.JsDom.all._
