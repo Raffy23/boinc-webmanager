@@ -1,8 +1,11 @@
 package at.happywetter.boinc.web.pages
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.language.postfixOps
+import scala.scalajs.js
 import scalacss.ProdDefaults._
 import scalatags.JsDom
 
@@ -65,18 +68,32 @@ object PageLayout {
 
   }
 
+  val hamburgerMenuAction: js.Function1[Event,Unit] = (event) => {
+    val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
+    val content = dom.document.getElementById("client-container").asInstanceOf[HTMLElement]
+
+    if (menu.style.display == "none") {
+      menu.style.display = "block"
+      content.style.marginLeft = "218px"
+    } else {
+      menu.style.display = "none"
+      content.style.marginLeft = "20px"
+    }
+
+  }
 
   val heading: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
     JsDom.all.header(Style.heading,
-      h1(Style.headerText,"Boinc Webmanager"),
+      h1(Style.headerText,
+        i(`class` := "fa fa-bars", style := "margin-right:13px", onclick := hamburgerMenuAction)
+        , "Boinc Webmanager"),
       span(Style.versionField,small(small("(v0.1-dev)"))),
       div(Style.navigation, id:="navigation")
     )
   }
-
 
   val footer: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
