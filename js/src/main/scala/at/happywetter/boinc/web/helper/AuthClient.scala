@@ -20,7 +20,7 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
   */
 object AuthClient {
 
-  private val TOKEN_VALID_TIME = 58*60*1000
+  private val TOKEN_VALID_TIME = 58*1000
   private var refreshTimeoutHandler: Int = -1
 
   def validate(username: String, password: String): Future[Boolean] = {
