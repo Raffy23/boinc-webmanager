@@ -6,7 +6,6 @@ enablePlugins(ScalaJSPlugin)
 enablePlugins(GitVersioning)
 
 name := "Boinc-Webmanager"
-version := "0.1b"
 
 scalaVersion in ThisBuild := "2.12.2"
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
@@ -60,7 +59,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   )
 
 lazy val shared = (project in file("shared")).enablePlugins(BuildInfoPlugin).settings(
-  buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion),
+  buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
   buildInfoPackage := "at.happywetter.boinc"
 )
 
