@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
+import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, SettingsLocation}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -10,6 +10,8 @@ import scala.language.postfixOps
 import scalacss.ProdDefaults._
 import scalatags.JsDom
 import at.happywetter.boinc.web.util.I18N._
+
+import scala.util.Try
 
 /**
   * Created by: 
@@ -72,11 +74,11 @@ object DashboardMenu {
       ),
 
       li(Style.elem,
-        a(href :="#settings", "dashboard_menu_settings".localize,
-        onclick := { (event: Event) => {
-          dom.document.getElementById("navigation").innerHTML = ""
-          onMenuItemClick(event)
-        }})
+        a(href := Try(SettingsLocation.link).getOrElse("/view/settings"), "dashboard_menu_settings".localize,
+          data("navigo") := "", onclick := { (event: Event) => {
+            dom.document.getElementById("navigation").innerHTML = ""
+            onMenuItemClick(event)
+          }})
       ),
 
       li(Style.elem, h2(style :="padding-left: 5px", "Computer"))

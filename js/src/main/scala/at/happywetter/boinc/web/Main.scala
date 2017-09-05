@@ -3,8 +3,8 @@ package at.happywetter.boinc.web
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.{BoincLayout, Dashboard, LoginPage}
-import at.happywetter.boinc.web.routes.AppRouter.{BoincHomeLocation, DashboardLocation, LoginPageLocation}
+import at.happywetter.boinc.web.pages.{BoincLayout, Dashboard, LoginPage, SettingsPage}
+import at.happywetter.boinc.web.routes.AppRouter.{BoincHomeLocation, DashboardLocation, LoginPageLocation, SettingsLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.Locale
 import at.happywetter.boinc.web.util.LanguageDataProvider
@@ -53,6 +53,7 @@ object Main {
   def initRouter(): Unit = {
     AppRouter.addRoute(LoginPageLocation, "/view/login", new LoginPage(AuthClient.validate))
     AppRouter.addRoute(DashboardLocation, "/view/dashboard", Dashboard)
+    AppRouter.addRoute(SettingsLocation, "/view/settings", SettingsPage)
     AppRouter.addRoute(BoincHomeLocation, "/view/dashboard/:client", BoincLayout)
     AppRouter.addRoute(BoincHomeLocation, "/view/dashboard/:client/:action", BoincLayout)
 
