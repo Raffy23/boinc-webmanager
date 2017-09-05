@@ -23,7 +23,7 @@ import scala.util.Try
 object ClientManager {
 
   private val baseURI = "/api/boinc"
-  private val cacheTimeout = 30 * 1000
+  private val cacheTimeout = 60 * 60 * 1000
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   Unpickle[List[String]]

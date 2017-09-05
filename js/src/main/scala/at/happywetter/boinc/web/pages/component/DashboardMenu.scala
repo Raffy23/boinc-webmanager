@@ -60,7 +60,7 @@ object DashboardMenu {
   }
 
 
-  lazy val component: JsDom.TypedTag[HTMLElement] = {
+  def component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 

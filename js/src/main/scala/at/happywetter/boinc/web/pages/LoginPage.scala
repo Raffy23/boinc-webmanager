@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.pages.LoginPage.Style
-import at.happywetter.boinc.web.pages.component.DropdownMenu
+import at.happywetter.boinc.web.pages.component.{DropdownMenu, LanguageChooser}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
@@ -80,7 +80,7 @@ object LoginPage {
     )
   }
 }
-class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Layout {
+class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layout {
 
   val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = None
 
@@ -91,32 +91,19 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean] ) extends Lay
     Some(
     div(
       div(id := "language-selector-area", style := "position:fixed;top:74px;right:22px",
-        new DropdownMenu(
-          List(
-            "login_lang_chooser".localize,
-            LanguageDataProvider.available
-              .find{ case (c,_,_) => c == Locale.current}
-              .map{ case (lang_code, lang_name, lang_icon) => img(src := s"/files/images/$lang_icon", alt := lang_name, style := "height:2em;vertical-align:middle;margin-left:6px")}
-              .get),
-          LanguageDataProvider.available.map{ case (lang_code, lang_name, icon) => {
-            a(href := "#change-language",
-              img(src := s"/files/images/$icon", alt := lang_name, style := "height:2em;vertical-align:middle;margin-right:6px"), lang_name,
-              onclick := { (event: Event) =>
-                event.preventDefault()
+        new LanguageChooser((event, lang_code) => {
+            event.preventDefault()
 
-                NProgress.start()
-                LanguageDataProvider
-                  .loadLanguage(lang_code)
-                  .foreach(_ => {
-                    Locale.save(lang_code)
+            NProgress.start()
+            LanguageDataProvider
+              .loadLanguage(lang_code)
+              .foreach(_ => {
+                Locale.save(lang_code)
 
-                    LayoutManager.render(this)
-                    NProgress.done(true)
-                  })
-              }
-            )
-          }}.toList
-        ).render()
+                LayoutManager.render(this)
+                NProgress.done(true)
+              })
+        }, -35).component.render()
       ),
       div(
         form(Style.content, id := "login-form",

@@ -60,7 +60,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
 
 lazy val shared = (project in file("shared")).enablePlugins(BuildInfoPlugin).settings(
   buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
-  buildInfoPackage := "at.happywetter.boinc"
+  buildInfoPackage := "at.happywetter.boinc",
+  buildInfoOptions += BuildInfoOption.BuildTime
 )
 
 lazy val serverJVM = manager.jvm.dependsOn(shared)
@@ -71,5 +72,6 @@ lazy val clientJS = manager.js.dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
-    buildInfoPackage := "at.happywetter.boinc"
+    buildInfoPackage := "at.happywetter.boinc",
+    buildInfoOptions += BuildInfoOption.BuildTime
   )
