@@ -23,7 +23,7 @@ import scala.util.Try
 object ClientManager {
 
   private val baseURI = "/api/boinc"
-  private val cacheTimeout = 30 * 60* 1000
+  private val cacheTimeout = 60 * 60 * 1000
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   Unpickle[List[String]]
@@ -52,7 +52,7 @@ object ClientManager {
     )
   }
 
-  def readClients(): Future[List[String]] = {
+  private def readClientsFromServer(): Future[List[String]] = {
     import prickle._
 
     val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
@@ -60,6 +60,9 @@ object ClientManager {
     timestamp.map(date => {
       val current = new Date()
       if (current.getTime()-date.getTime() > cacheTimeout) {
+        println(current.getTime())
+        println(date.getTime())
+        println("TIMEOUT: " + (current.getTime()-date.getTime()) + " > " + cacheTimeout)
         Fetch.fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
           .toFuture
           .flatMap(response => response.text().toFuture)
@@ -74,9 +77,16 @@ object ClientManager {
     }).get
   }
 
+  def readClients(): Future[List[String]] = {
+    readClientsFromServer().map(data => {
+      persistClientsIntoStorage(data)
+      data
+    })
+  }
+
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
     println("bootstrap")
-    readClients().map(clientList => {
+    readClientsFromServer().map(clientList => {
       clientList.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
       println(clientList)
       persistClientsIntoStorage(clientList)

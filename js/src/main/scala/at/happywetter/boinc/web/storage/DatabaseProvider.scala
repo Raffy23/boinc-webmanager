@@ -46,4 +46,12 @@ trait DatabaseProvider {
     request.onsuccess = (_) => resolve(request.result.asInstanceOf[js.UndefOr[A]].toOption)
     request.onerror = reject
   }).toFuture
+
+
+  def deleteDatabase(): Future[Boolean] = new Promise[Boolean]((resolve, reject) => {
+    val result = dom.window.indexedDB.deleteDatabase("BoincCache")
+    result.onerror = reject
+    result.onsuccess = (_) => resolve(result.result == js.undefined)
+  }).toFuture
+
 }

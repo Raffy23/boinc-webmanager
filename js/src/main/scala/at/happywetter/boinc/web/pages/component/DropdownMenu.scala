@@ -45,7 +45,7 @@ object DropdownMenu {
       display.none,
       position.absolute,
       backgroundColor(c"#f9f9f9"),
-      left(-35 px),
+      //left(-35 px),
       minWidth(160 px),
       boxShadow := "0px 8px 16px 0px rgba(0,0,0,0.32)",
       zIndex(1),
@@ -66,7 +66,7 @@ object DropdownMenu {
   }
 }
 
-class DropdownMenu(text: List[scalatags.JsDom.Modifier], elements: List[JsDom.TypedTag[HTMLElement]]) {
+class DropdownMenu(text: List[scalatags.JsDom.Modifier], elements: List[JsDom.TypedTag[HTMLElement]], dropdownStyle: String = "") {
 
   val component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
@@ -74,7 +74,7 @@ class DropdownMenu(text: List[scalatags.JsDom.Modifier], elements: List[JsDom.Ty
 
     div(Style.dropdown,
       a(Style.button, text),
-      div(Style.dropdownContent, elements)
+      div(Style.dropdownContent, style := dropdownStyle, elements)
     )
   }
 
