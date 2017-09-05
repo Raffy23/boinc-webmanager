@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages
 
+import at.happywetter.boinc.BuildInfo
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -90,7 +91,6 @@ object PageLayout {
       h1(Style.headerText,
         i(`class` := "fa fa-bars", style := "margin-right:13px", onclick := hamburgerMenuAction)
         , "Boinc Webmanager"),
-      span(Style.versionField,small(small("(v0.1-dev)"))),
       div(Style.navigation, id:="navigation")
     )
   }

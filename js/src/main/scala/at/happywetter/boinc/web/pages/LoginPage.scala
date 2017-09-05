@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages
 
+import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.pages.LoginPage.Style
 import at.happywetter.boinc.web.pages.component.{DropdownMenu, LanguageChooser}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
@@ -136,6 +137,9 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
             }
           }, "login_btn".localize)
         )
+      ),
+      span( style := "position:fixed;bottom:0",
+        small(b("Version: "),s"${BuildInfo.version}")
       )
     )
     )
