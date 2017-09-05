@@ -1,6 +1,10 @@
 # Hide IntelliJ Files:
 *.idea
 
+# sbt stuff
+project/target
+project/project
+
 # Don't push Scala build directories
 js/target
 jvm/target
