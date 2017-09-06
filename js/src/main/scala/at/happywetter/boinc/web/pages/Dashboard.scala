@@ -124,14 +124,16 @@ object Dashboard extends Layout {
         div(
           table(TableTheme.table, id := "dashboard_home_table",
             thead(tr(
-              th("table_host".localize, style := "width:220px;"), th("table_cpu".localize), th("table_network".localize.toTags),
-              th("table_computinduration".localize.toTags), th("table_wudeadline".localize), th("table_disk".localize)
+              th("table_host".localize, style := "width:220px;"), th("table_cpu".localize), th("table_memory".localize),
+              th("table_network".localize.toTags), th("table_computinduration".localize.toTags),
+              th("table_wudeadline".localize), th("table_disk".localize)
             )),
             tbody(
               clients.map(c => ClientManager.clients(c)).map(client => {
                 tr(
                   td(id := s"dashboard-${client.hostname}-hostname", client.hostname),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-cpu", "-- / --"),
+                  td(style := "text-align:center;", id := s"dashboard-${client.hostname}-memory", "--"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-network", "-- / --"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-time", "--"),
                   td(style := "text-align:center;", id := s"dashboard-${client.hostname}-deadline", "--"),
@@ -244,6 +246,15 @@ object Dashboard extends Layout {
                 .getOrElse(0)
             ).sum
         } / ${state.hostInfo.cpus}"
+
+      dom.document.getElementById(s"dashboard-${client.hostname}-memory").textContent = s"" +
+        s"${BoincFormater.convertSize(
+          state.results
+            .filter(_.activeTask.nonEmpty)
+            .map(_.activeTask.get)
+            .map(_.workingSet)
+            .sum)} / ${BoincFormater.convertSize(state.hostInfo.memory)}"
+
 
       dom.document.getElementById(s"dashboard-${client.hostname}-time").textContent =
         BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus)
