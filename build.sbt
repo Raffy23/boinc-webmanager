@@ -58,14 +58,15 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val shared = (project in file("shared")).enablePlugins(BuildInfoPlugin).settings(
-  buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
-  buildInfoPackage := "at.happywetter.boinc",
-  buildInfoOptions += BuildInfoOption.BuildTime
-)
-
+lazy val shared = project in file("shared")
 lazy val serverJVM = manager.jvm.dependsOn(shared)
   .settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
+    buildInfoPackage := "at.happywetter.boinc",
+    buildInfoOptions += BuildInfoOption.BuildTime
+  )
 
 lazy val clientJS = manager.js.dependsOn(shared)
   .settings(mainClass := Some("at.happywetter.boinc.web.Main"))
@@ -73,5 +74,6 @@ lazy val clientJS = manager.js.dependsOn(shared)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
-    buildInfoOptions += BuildInfoOption.BuildTime
+    buildInfoOptions += BuildInfoOption.BuildTime,
+    resourceDirectory in Compile := baseDirectory.value / "resources"
   )

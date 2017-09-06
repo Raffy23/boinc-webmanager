@@ -7,7 +7,6 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
 import scala.scalajs.js
-import scala.scalajs.js.Dictionary
 
 /**
   * Created by: 
@@ -66,6 +65,10 @@ object AppRouter {
 
 
   def href(page: Page): String = routes(page)._1
+
+  def openExternalLink(link: String): Unit = {
+    dom.window.open(link, "_blank")
+  }
 
   val openExternal: js.Function1[Event, Unit] = (event: Event) => {
     event.preventDefault()

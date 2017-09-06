@@ -125,20 +125,25 @@ final case class FileXfer(bytesXfered: Double,xferSpeed: Double,url: String)
 final case class NetworkStatus(isNetworkAvailable: Boolean)
 
 final case class Project(name: String
-                   , url: String
-                   , userName: String
-                   , teamName: String
-                   , cpid: String
-                   , userTotalCredit: Double
-                   , userAvgCredit: Double
-                   , userID: String // javascript long bug ? (must be long!)
-                   , teamID: String
-                   , hostID: String
-                   , hostTotalCredit: Double
-                   , hostAvgCredit: Double
-                   , dontRequestWork: Boolean
-                   , trickles: Boolean
-                   ,guiURLs: List[ProjectGuiURL]) //<-- Bug NullPointerException
+                         , url: String
+                         , userName: String
+                         , teamName: String
+                         , cpid: String
+                         , userTotalCredit: Double
+                         , userAvgCredit: Double
+                         , userID: String // javascript long bug ? (must be long!)
+                         , teamID: String
+                         , hostID: String
+                         , hostTotalCredit: Double
+                         , hostAvgCredit: Double
+                         , dontRequestWork: Boolean
+                         , trickles: Boolean
+                         , resourceShare: Double
+                         , desiredDiskUsage: Double
+                         , durationCorrection: Double
+                         , jobSucc: Int
+                         , jobErrors: Int
+                         , guiURLs: List[ProjectGuiURL])
 
 final case class ProjectGuiURL(name: String,desc: String,url: String)
 

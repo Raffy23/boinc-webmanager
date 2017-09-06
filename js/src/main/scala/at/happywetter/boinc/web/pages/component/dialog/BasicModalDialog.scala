@@ -38,8 +38,8 @@ object BasicModalDialog {
       backgroundColor(c"#FFF"),
       margin.auto,
       padding.`0`,
-      minWidth(200 px),
-      maxWidth(40 %%),
+      minWidth(300 px),
+      maxWidth(60 %%),
     )
 
     val modalBody = style(

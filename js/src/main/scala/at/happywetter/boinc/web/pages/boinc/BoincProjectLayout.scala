@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout.Style
@@ -11,6 +11,7 @@ import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, T
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.StatisticPlatforms
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.{Event, MouseEvent}
@@ -179,9 +180,54 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                           event.preventDefault()
 
                           //TODO: print some details
-                          new OkDialog("workunit_dialog_properties".localize, List(">Empty<"))
-                            .renderToBody().show()
-
+                          new OkDialog("workunit_dialog_properties".localize + " " + project.name,
+                            List(
+                              h4("project_dialog_general_header".localize, BoincClientLayout.Style.h4),
+                              table(TableTheme.table,
+                                tbody(
+                                  tr(
+                                    td(b("project_dialog_url".localize)),
+                                    td(a(project.url, href := project.url, onclick := AppRouter.openExternal, Style.link))
+                                  ),
+                                  tr(td(b("login_username".localize)), td(project.userName)),
+                                  tr(td(b("project_dialog_teamname".localize)), td(project.teamName)),
+                                  tr(td(b("resource_share".localize)), td(project.resourceShare)),
+                                  tr(td(b("disk_usage".localize)), td(BoincFormater.convertSize(project.desiredDiskUsage))),
+                                  tr(td(b("project_dialog_cpid".localize)), td(project.cpid)),
+                                  tr(td(b("project_dialog_host_id".localize)), td(project.hostID,
+                                    span(style := "float: right",
+                                      a(img(src := "/files/images/freedc_icon.png", alt := "freecd_icon"),
+                                        href := StatisticPlatforms.freedc(project.cpid),
+                                        onclick := { (event: Event) => {
+                                          event.preventDefault()
+                                          AppRouter.openExternalLink(StatisticPlatforms.freedc(project.cpid))
+                                        }}
+                                      ),
+                                      a(img(src := "/files/images/boincstats_icon.png", alt := "boincstats_icon"),
+                                        href := StatisticPlatforms.boincStats(project.cpid),
+                                        onclick := { (event: Event) => {
+                                          event.preventDefault()
+                                          AppRouter.openExternalLink(StatisticPlatforms.boincStats(project.cpid))
+                                        }}
+                                      )
+                                    ))
+                                  ),
+                                  tr(td(b("project_dialog_paused".localize)), td(project.dontRequestWork.localize)),
+                                  tr(td(b("project_dialog_jobs_succ".localize)), td(project.jobSucc)),
+                                  tr(td(b("project_dialog_jobs_err".localize)), td(project.jobErrors)),
+                                )
+                              ),
+                              h4("project_dialog_credits_header".localize, BoincClientLayout.Style.h4),
+                              table(TableTheme.table,
+                                tbody(
+                                  tr(td(b("project_dialog_credits_user".localize)), td(project.userTotalCredit)),
+                                  tr(td(b("project_dialog_credits_uavg".localize)), td(project.userAvgCredit)),
+                                  tr(td(b("project_dialog_credits_host".localize)), td(project.hostTotalCredit)),
+                                  tr(td(b("project_dialog_credits_havg".localize)), td(project.hostAvgCredit)),
+                                )
+                              )
+                            )
+                          ).renderToBody().show()
                         }
                       })
                     ).render()

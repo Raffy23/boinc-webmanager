@@ -42,6 +42,10 @@ object I18N {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
   }
 
+  implicit class TranslatableBoolean(bool: Boolean) {
+    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(bool.toString, bool.toString)
+  }
+
   implicit class HtmlString(str: String) {
     import scalatags.JsDom.all._
 
