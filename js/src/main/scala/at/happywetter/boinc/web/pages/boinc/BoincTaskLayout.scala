@@ -173,9 +173,38 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
                       (event: Event) => {
                         event.preventDefault()
 
-                        //TODO: print some details
-                        new OkDialog("workunit_dialog_properties".localize, List(">Empty<"))
-                          .renderToBody().show()
+                        AppSettingsStorage.get(boincClientName, result.wuName).foreach(wu => {
+                          val appName: String = wu.map(_.appName).getOrElse("database_error".localize)
+
+                          TaskSpecCache.get(boincClientName, wu.get.appName).foreach(app => {
+
+                            new OkDialog("workunit_dialog_properties".localize + " " + result.name, List(
+                              table(TableTheme.table,
+                                tbody(
+                                  tr(td(b("wu_dialog_appname".localize)), td(app.get.userFriendlyName)),
+                                  tr(td(b("wu_dialog_xml_appname".localize)), td(appName)),
+                                  tr(td(b("wu_dialog_name".localize)), td(result.name)),
+                                  tr(td(b("wu_dialog_status".localize)), td(prettyPrintStatus(result, inital = false))),
+                                  tr(td(b("wu_dialog_deadline".localize)), td(BoincFormater.convertDate(result.reportDeadline))),
+                                  result.activeTask.map(task => {
+                                    List(
+                                      tr(td(b("wu_dialog_checkpoint_time".localize)), td(BoincFormater.convertTime(task.checkpoint))),
+                                      tr(td(b("wu_dialog_cpu_time".localize)), td(BoincFormater.convertTime(task.cpuTime))),
+                                      tr(td(b("wu_dialog_run_time".localize)), td(BoincFormater.convertTime(task.time))),
+                                      tr(td(b("wu_dialog_progress".localize)), td((task.done*100).formatted("%.4f %%"))),
+                                      tr(td(b("wu_dialog_used_ram".localize)), td(BoincFormater.convertSize(task.workingSet))),
+                                      tr(td(b("wu_dialog_used_disk".localize)), td(BoincFormater.convertSize(task.swapSize))),
+                                      tr(td(b("wu_dialog_slot".localize)), td(task.slot)),
+                                      tr(td(b("wu_dialog_pid".localize)), td(task.pid)),
+                                      tr(td(b("wu_dialog_version".localize)), td(task.appVersionNum)),
+                                    )
+                                  }),
+                                  tr(td(b("wu_dialog_plan_class".localize)), td(result.plan))
+                                )
+                              )
+                            )).renderToBody().show()
+                          })
+                        })
 
                       }
                     }

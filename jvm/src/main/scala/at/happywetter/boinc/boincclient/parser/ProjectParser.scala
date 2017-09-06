@@ -14,7 +14,7 @@ object ProjectParser {
 
   private def getText(node: NodeSeq): String = if( node.text == null ) "<empty>" else node.text
 
-  def fromXML(node: NodeSeq): List[Project] = ( for( p <- node \ "project" ) yield fromNodeXML(p) ).toList
+  def fromXML(node: NodeSeq): List[Project] = (node \ "project").theSeq.map(fromNodeXML).toList
   def fromNodeXML(node: NodeSeq) = Project(
     getText(node \ "project_name"),
     getText(node \ "master_url"),
