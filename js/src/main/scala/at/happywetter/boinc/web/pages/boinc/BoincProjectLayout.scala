@@ -4,20 +4,20 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
+import at.happywetter.boinc.web.pages.BoincClientLayout
+import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, Tooltip}
-import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement, HTMLSelectElement}
+import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
-import at.happywetter.boinc.web.util.I18N._
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 02.08.2017
@@ -43,60 +43,19 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
                   //TODO: Use some cache ...
                   ClientManager.queryCompleteProjectList().foreach(data => {
-                    new SimpleModalDialog(div(
-                      table(TableTheme.table,
-                        tbody(
-                          tr(td("table_project".localize, style := "width:125px"),
-                            td(
-                              select(LoginPage.Style.input, style := "margin:0", id := "pad-project",
-                                option(disabled, selected := "selected", "project_new_default_select".localize),
-                                data.map(project => option(value := project._1, project._1)).toList,
-                                onchange := { (event: Event) => {
-                                  val element = data(event.target.asInstanceOf[HTMLSelectElement].value)
-                                  dom.document.getElementById("pad-url").textContent = element.url
-                                  dom.document.getElementById("pad-url").setAttribute("href", element.url)
-                                  dom.document.getElementById("pad-general_area").textContent = element.general_area
-                                  dom.document.getElementById("pad-description").textContent = element.description
-                                  dom.document.getElementById("pad-home").textContent = element.home
-                                }}
-                              )
-                            )
-                          ),
-                          tr(td("project_new_url".localize), td(a(id := "pad-url", onclick := {(event: Event) => {event.preventDefault(); dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"),"_blank")}}))),
-                          tr(td("project_new_general_area".localize), td(id := "pad-general_area")),
-                          tr(td("project_new_desc".localize), td(id := "pad-description")),
-                          tr(td("project_new_home".localize), td(id := "pad-home"))
-                        )
-                      ),
-                      br(),
-                      h4("project_new_userdata".localize),
-                      table(style := "width: calc(100% - 20px)",
-                        tbody(
-                          tr(td("login_username".localize), td(input(LoginPage.Style.input, placeholder := "example@boinc-user.com", style := "margin:0", id := "pad-username"))),
-                          tr(td("login_password".localize), td(input(LoginPage.Style.input, placeholder := "login_password".localize, `type` := "password", style := "margin:0", id := "pad-password"))),
-                        )
-                      ), br(), br()),
-                      h2("project_new_addbtn".localize),
-                      (dialog: SimpleModalDialog) => {
-                        NProgress.start()
+                    new ProjectAddDialog(data, (url, username, password, name) => {
+                      client.attachProject(url, username, password, name).map(result => {
+                        NProgress.done(true)
+                        onRender(client)
 
-                        val select = dom.document.getElementById("pad-project").asInstanceOf[HTMLSelectElement]
-                        val element = data(select.value)
-                        val username = dom.document.getElementById("pad-username").asInstanceOf[HTMLInputElement].value
-                        val password = dom.document.getElementById("pad-password").asInstanceOf[HTMLInputElement].value
-                        client.attachProject(element.url, username, password, element.name).foreach(result => {
-                          NProgress.done(true)
-                          dialog.hide()
-                          onRender(client)
+                        if(!result)
+                          new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
+                            dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                          }).renderToBody().show()
 
-                          if(!result)
-                            new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
-                              dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
-                            }).renderToBody().show()
-                        })
-                      },
-                      (dialog: SimpleModalDialog) => {dialog.hide()}
-                    ).renderToBody().show()
+                        result
+                      })
+                    }).renderToBody().show()
 
                     NProgress.done(true)
                   })

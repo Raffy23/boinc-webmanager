@@ -14,9 +14,9 @@ import scalatags.JsDom.all._
   * @author Raphael
   * @version 31.08.2017
   */
-class OkDialog(title: String, content: List[Modifier], action: (OkDialog) => Unit = (_) => {}) extends Dialog("modal-dialog") {
+class OkDialog(title: String, content: List[Modifier], action: (OkDialog) => Unit = (_) => {}) extends Dialog("modal-dialog-type1") {
 
-  private val dialog = new BasicModalDialog("modal-dialog",
+  private val dialog = new BasicModalDialog("modal-dialog-type1",
     List(h3(title)),
     List(content),
     List(

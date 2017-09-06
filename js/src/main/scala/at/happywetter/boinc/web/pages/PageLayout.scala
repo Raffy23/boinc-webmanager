@@ -89,7 +89,8 @@ object PageLayout {
 
     JsDom.all.header(Style.heading,
       h1(Style.headerText,
-        i(`class` := "fa fa-bars", style := "margin-right:13px", onclick := hamburgerMenuAction)
+        i(`class` := "fa fa-bars", style := "margin-right:13px;cursor:pointer;",
+          onclick := hamburgerMenuAction)
         , "Boinc Webmanager"),
       div(Style.navigation, id:="navigation")
     )
