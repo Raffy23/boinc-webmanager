@@ -1,8 +1,9 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.pages.component.ContextMenu.Style
+import at.happywetter.boinc.web.pages.component.dialog.Dialog
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, MouseEvent}
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable.ListBuffer
@@ -71,6 +72,8 @@ class ContextMenu(contextMenuId: String) {
     )
   }
 
+  def display(event: MouseEvent): Unit = display(event.clientX.toInt, event.clientY.toInt)
+
   def display(x: Int,y: Int): Unit = {
     val me = dom.document.getElementById(contextMenuId).asInstanceOf[HTMLElement]
 
@@ -79,11 +82,16 @@ class ContextMenu(contextMenuId: String) {
       "top:"+y+"px;" +
       "left:"+x+"px;"
 
-    dom.document.body.removeEventListener("click", hideListener)
     dom.window.setTimeout(() => { dom.document.body.addEventListener("click", hideListener) }, 500)
+    dom.window.setTimeout(() => { dom.document.body.addEventListener("contextmenu", hideListener) }, 500)
   }
 
-  private val hideListener: js.Function1[Event, Unit] = (_) => hide()
+  private val hideListener: js.Function1[Event, Unit] = (_) => {
+    dom.document.body.removeEventListener("click", hideListener)
+    dom.document.body.removeEventListener("contextmenu", hideListener)
+
+    hide()
+  }
 
   def hide(): Unit = {
     val me = dom.document.getElementById(contextMenuId).asInstanceOf[HTMLElement]
@@ -113,7 +121,7 @@ class ContextMenu(contextMenuId: String) {
       li(Style.elem,
         a(href := linkUrl,
           elementName,
-          reference.map(r => data("menu-id") := r), data("navigo") := "",
+          reference.map(r => data("menu-id") := r), if (linkUrl.startsWith("/")) data("navigo") := "" else data("external-url") := "",
           onclick := { (event: Event) => { menuAction(event); event.preventDefault() }}
         )
       )
@@ -121,6 +129,15 @@ class ContextMenu(contextMenuId: String) {
 
     elements += newElement
     if (contextMenu != null) contextMenu.appendChild(newElement.render)
+  }
+
+  def renderToBody(): ContextMenu = {
+    val existingElement = dom.document.getElementById(contextMenuId)
+    if (existingElement != null)
+      dom.document.body.removeChild(existingElement)
+
+    dom.document.body.appendChild(component.render)
+    this
   }
 
 }

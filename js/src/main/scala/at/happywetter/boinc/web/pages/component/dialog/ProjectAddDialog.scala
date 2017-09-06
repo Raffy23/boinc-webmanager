@@ -3,12 +3,10 @@ package at.happywetter.boinc.web.pages.component.dialog
 import at.happywetter.boinc.shared.BoincProjectMetaData
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.LoginPage
-import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement, HTMLSelectElement}
-
-
 import at.happywetter.boinc.web.util.I18N._
 
 import scala.concurrent.Future
@@ -46,11 +44,7 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
               )
             )
           ),
-          tr(td("project_new_url".localize), td(a(id := "pad-url", onclick := { (event: Event) => {
-            event.preventDefault()
-            dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
-          }
-          }))
+          tr(td("project_new_url".localize), td(a(id := "pad-url", onclick := AppRouter.openExternal))
           ),
           tr(td("project_new_general_area".localize), td(id := "pad-general_area")),
           tr(td("project_new_desc".localize), td(id := "pad-description")),

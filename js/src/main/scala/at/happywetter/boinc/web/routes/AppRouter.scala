@@ -1,7 +1,9 @@
 package at.happywetter.boinc.web.routes
 
 import at.happywetter.boinc.web.pages.Layout
+import org.scalajs.dom
 import org.scalajs.dom.Event
+import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -64,4 +66,10 @@ object AppRouter {
 
 
   def href(page: Page): String = routes(page)._1
+
+  val openExternal: js.Function1[Event, Unit] = (event: Event) => {
+    event.preventDefault()
+    dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
+  }
+
 }

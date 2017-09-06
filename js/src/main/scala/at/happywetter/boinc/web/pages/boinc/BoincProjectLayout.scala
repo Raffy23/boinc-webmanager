@@ -6,12 +6,12 @@ import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchRe
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, Tooltip}
-import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, DropdownMenu, Tooltip}
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, MouseEvent}
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
@@ -73,7 +73,15 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
             ),
             tbody(
               results.map(project => {
-                tr(data("project-uri") := project.url,
+                tr(data("project-uri") := project.url, oncontextmenu := { (event: Event) => {
+                  val contextMenu = new ContextMenu("project-"+results.indexOf(project)+"-context-menu")
+                  project.guiURLs.foreach( url => {
+                    contextMenu.addMenu(url.url, url.name, AppRouter.openExternal)
+                  })
+
+                  event.preventDefault()
+                  contextMenu.renderToBody().display(event.asInstanceOf[MouseEvent])
+                }},
                   td(updateCache(project), style := "max-width: 100px;"),
                   td(project.userName),
                   td(project.teamName),
