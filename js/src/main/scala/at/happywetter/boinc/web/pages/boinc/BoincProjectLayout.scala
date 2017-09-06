@@ -5,16 +5,19 @@ import at.happywetter.boinc.shared.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
+import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, DropdownMenu, Tooltip}
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, Tooltip}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.{Event, MouseEvent}
 import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.{Event, MouseEvent}
 
 import scala.scalajs.js
+import scalacss.internal.mutable.StyleSheet
+import scalacss.ProdDefaults._
 
 /**
   * Created by:
@@ -22,6 +25,21 @@ import scala.scalajs.js
   * @author Raphael
   * @version 02.08.2017
   */
+object BoincProjectLayout {
+
+  object Style extends StyleSheet.Inline {
+    import dsl._
+
+    val link = style(
+      cursor.pointer,
+      textDecoration := "none",
+      color(c"#333")
+    )
+
+  }
+
+}
+
 class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
 
   override def onRender(client: BoincClient): Unit = {
@@ -82,7 +100,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                   event.preventDefault()
                   contextMenu.renderToBody().display(event.asInstanceOf[MouseEvent])
                 }},
-                  td(updateCache(project), style := "max-width: 100px;"),
+                  td(a(updateCache(project), href := project.url, onclick := AppRouter.openExternal, Style.link), style := "max-width: 100px;"),
                   td(project.userName),
                   td(project.teamName),
                   td(project.userTotalCredit),

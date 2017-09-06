@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.css
 
-import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincStatisticsLayout}
+import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincProjectLayout, BoincStatisticsLayout}
 import at.happywetter.boinc.web.pages.component._
 import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage, PageLayout}
@@ -30,7 +30,8 @@ object AppCSS {
       BasicModalDialog.Style,
       BoincMainHostLayout.Style,
       DropdownMenu.Style,
-      BoincStatisticsLayout.Style
+      BoincStatisticsLayout.Style,
+      BoincProjectLayout.Style
     )
 
     GlobalRegistry.addToDocumentOnRegistration()
