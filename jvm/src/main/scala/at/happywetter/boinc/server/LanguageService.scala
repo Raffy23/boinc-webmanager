@@ -1,9 +1,7 @@
 package at.happywetter.boinc.server
 
-import java.util
-import java.util.Properties
-
 import at.happywetter.boinc.util.ResourceWalker
+import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.io.Source
 import scala.util.Try
@@ -19,11 +17,11 @@ object LanguageService {
   val languages: List[(String, String, String)] =
     ResourceWalker
       .listFiles("/lang")
-      .filter(_.endsWith(".properties"))
+      .filter(_.endsWith(".conf"))
       .map(_.split("\\.")(0))
       .map(language => {
-        val prop = loadProp(language)
-        (language, prop.getProperty("language_name"), prop.getProperty("language_icon"))
+        val lang = load(language)
+        (language, lang("language_name"), lang("language_icon"))
       })
 
   import org.http4s._
@@ -42,18 +40,15 @@ object LanguageService {
 
   }
 
-
-  private def loadProp(lang: String): Properties = {
-    val content = new Properties()
-    val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.properties"
+  private def load(lang: String): Map[String, String] = {
+    val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
     val ins  = ResourceWalker.getStream(path)
 
-    content.load(ins)
-    content
+    val confString: String = Source.fromInputStream(ins).getLines().mkString("\n")
+    val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
+
+    import pureconfig._
+    loadConfigOrThrow[Map[String, String]](hocon)
   }
 
-  private def load(lang: String): Map[String, String] = {
-    import scala.collection.JavaConverters._
-    loadProp(lang).asScala.toMap
-  }
 }
