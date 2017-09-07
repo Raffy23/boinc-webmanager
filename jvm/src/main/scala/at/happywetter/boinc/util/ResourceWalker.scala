@@ -1,6 +1,7 @@
 package at.happywetter.boinc.util
 
-import java.net.URI
+import java.io.InputStream
+import java.net.{URI, URL}
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.Collections
 
@@ -14,25 +15,29 @@ import scala.collection.JavaConverters._
   */
 object ResourceWalker {
 
-  val RESOURCE_ROOT = "/"
-  lazy val resourceURI: URI = ResourceWalker.getClass.getResource(RESOURCE_ROOT).toURI
+  val RESOURCE_ROOT = "/resources"
+  lazy val resource: URL = ResourceWalker.getClass.getResource(RESOURCE_ROOT)
+  lazy val resourceURI: URI = resource.toURI
 
 
   def listFiles(path: String): List[String] = {
-    val fileWalkerPath =
-      if (resourceURI.getScheme == "jar") pathFromJar
-      else Paths.get(resourceURI)
+    println("PATH: " + path)
+    println("URI: " + resourceURI)
 
+    val targetPath = resourceURI.getScheme match {
+      case "jar" => FileSystems.newFileSystem(resourceURI, Collections.emptyMap[String, Any]).getPath(RESOURCE_ROOT + path)
+      case _ => Paths.get(Paths.get(resourceURI).toString+path)
+    }
+
+    println(targetPath)
     Files
-      .walk(Paths.get(fileWalkerPath.toString+path), 1)
+      .walk(targetPath, 1)
       .iterator()
       .asScala
       .toList
       .map(p => p.getFileName.toString)
   }
 
-  private def pathFromJar: Path =
-    FileSystems.newFileSystem(resourceURI, Collections.emptyMap[String, Any]).getPath(RESOURCE_ROOT)
-
+  def getStream(file: String): InputStream = ResourceWalker.getClass.getResourceAsStream(file)
 
 }

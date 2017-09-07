@@ -45,8 +45,10 @@ object LanguageService {
 
   private def loadProp(lang: String): Properties = {
     val content = new Properties()
-    content.load(Thread.currentThread().getContextClassLoader.getResourceAsStream("lang/" +  lang + ".properties"))
+    val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.properties"
+    val ins  = ResourceWalker.getStream(path)
 
+    content.load(ins)
     content
   }
 

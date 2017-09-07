@@ -58,14 +58,22 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val shared = project in file("shared")
+lazy val shared = (project in file("shared"))
+  .settings(
+    aggregate in assembly := false
+  ).disablePlugins(AssemblyPlugin)
+
 lazy val serverJVM = manager.jvm.dependsOn(shared)
   .settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
   .enablePlugins(BuildInfoPlugin)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
-    buildInfoOptions += BuildInfoOption.BuildTime
+    buildInfoOptions += BuildInfoOption.BuildTime,
+    assemblyMergeStrategy in assembly := {
+      case PathList("at", "happywetter", "boinc", "shared", xs @ _*) => MergeStrategy.first
+      case x => (assemblyMergeStrategy in assembly).value(x)
+    }
   )
 
 lazy val clientJS = manager.js.dependsOn(shared)
