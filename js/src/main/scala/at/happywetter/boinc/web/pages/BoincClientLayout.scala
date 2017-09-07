@@ -111,6 +111,13 @@ object BoincClientLayout {
       fontWeight._300
     )
 
+    val h4_without_line = style(
+      paddingBottom(9 px),
+      margin(10 px, 20 px, 5 px, auto),
+      fontSize(19 px),
+      fontWeight._300
+    )
+
     val content = style(
       paddingLeft(8 px)
     )

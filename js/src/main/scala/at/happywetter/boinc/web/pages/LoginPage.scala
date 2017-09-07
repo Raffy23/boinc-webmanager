@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.pages.LoginPage.Style
-import at.happywetter.boinc.web.pages.component.{DropdownMenu, LanguageChooser}
+import at.happywetter.boinc.web.pages.component.LanguageChooser
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
