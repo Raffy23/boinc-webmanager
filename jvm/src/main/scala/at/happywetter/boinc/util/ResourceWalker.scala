@@ -21,15 +21,11 @@ object ResourceWalker {
 
 
   def listFiles(path: String): List[String] = {
-    println("PATH: " + path)
-    println("URI: " + resourceURI)
-
     val targetPath = resourceURI.getScheme match {
       case "jar" => FileSystems.newFileSystem(resourceURI, Collections.emptyMap[String, Any]).getPath(RESOURCE_ROOT + path)
       case _ => Paths.get(Paths.get(resourceURI).toString+path)
     }
 
-    println(targetPath)
     Files
       .walk(targetPath, 1)
       .iterator()
