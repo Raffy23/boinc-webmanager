@@ -19,7 +19,9 @@ to the Boinc core client and is able to view Tasks and directly control the clie
    - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
 4. Copy the Fat-Jar to any location where the Application has read / write access
 5. Create a `application.conf` file with the Settings (See Configuration Section for more information)
-8. Run it with `java -jar Boinc-Webmanager-assembly-XXXX-SNAPSHOT.jar`
+6. Create a SSL Certificate with `"%JAVA_HOME%\keytool" -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass <password> -validity 365 -keysize 4096`
+7. Run it with `java -jar Boinc-Webmanager-assembly-XXXX.jar`
+
 
 After these Steps you should be able to view the Client at the following URL http://127.0.0.1:8080 
 you did not change anything from the sample configuration file below
@@ -49,6 +51,12 @@ server {
   
   # The Path where the Files are served (Only needed in development mode)
   #webroot: "./web/"
+  
+  # Certificate settings:
+  ssl {
+     keystore: "./keystore.jks"
+     password: "<keystore-and-certificate-password>"
+   }
 }
 
 # Settings about the Boinc hosts
@@ -71,14 +79,3 @@ boinc.projects {
   }
 }
 ````
-
-## Security Notice
-The Webmanager does transfer all Data with HTTP, which means anyone can steal the JWT-Token and pose
-as the logged in User. In Production the Server should be configured to be behind a HTTPs-Proxy.
-
-
-
-Generate SSL Certificate: 
-```
-"%JAVA_HOME%\keytool" -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass <password> -validity 365 -keysize 4096``
- 
