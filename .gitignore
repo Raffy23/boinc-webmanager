@@ -19,3 +19,4 @@ all_projects_list.xml
 # Ignore .gtm folder
 /.gtm/
 
+*.jks

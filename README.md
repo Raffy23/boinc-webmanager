@@ -45,7 +45,7 @@ server {
   password: "password"
   
   # Secret is used to sign and encrypt session tokens 
-  secret: "8831cae805746a6b0dcad897c28175c25c48535357219f0a20dca867ddce0a8a"
+  secret: "<some-long-secret>"
   
   # The Path where the Files are served (Only needed in development mode)
   #webroot: "./web/"
@@ -74,4 +74,11 @@ boinc.projects {
 
 ## Security Notice
 The Webmanager does transfer all Data with HTTP, which means anyone can steal the JWT-Token and pose
-as the logged in User. In Production the Server should be configured to be behind a HTTPs-Proxy. 
+as the logged in User. In Production the Server should be configured to be behind a HTTPs-Proxy.
+
+
+
+Generate SSL Certificate: 
+```
+"%JAVA_HOME%\keytool" -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass <password> -validity 365 -keysize 4096``
+ 

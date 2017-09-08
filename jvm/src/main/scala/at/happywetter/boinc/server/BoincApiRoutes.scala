@@ -52,10 +52,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[WorkunitRequestBody].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[WorkunitRequestBody].fromString(_))
             .map(requestBody => client.workunit(requestBody.get.project, task, WorkunitAction.fromValue(requestBody.get.action).get))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -64,13 +66,15 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[AddProjectBody].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[AddProjectBody].fromString(_))
             .map(requestBody => {
               WebRPC
                 .lookupAccount(requestBody.get.projectUrl, requestBody.get.user, Some(requestBody.get.password))
                 .map{ case (_, auth) => auth.map(accKey => client.attachProject(requestBody.get.projectUrl, accKey, requestBody.get.projectName))}
                 .map( result => result.getOrElse(Future{false}).map(s => Pickle.intoString(s)))
-            }).runLast.unsafePerformSync.get
+            }).unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -78,10 +82,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[ProjectRequestBody].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[ProjectRequestBody].fromString(_))
             .map(requestBody => client.project(requestBody.get.project, ProjectAction.fromValue(requestBody.get.action).get))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -91,10 +97,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[BoincModeChange].fromString(_))
             .map(requestBody => client.setRun(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -102,10 +110,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[BoincModeChange].fromString(_))
             .map(requestBody => client.setCpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -113,10 +123,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[BoincModeChange].fromString(_))
             .map(requestBody => client.setGpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 
@@ -124,10 +136,12 @@ object BoincApiRoutes {
       hostManager.get(name).map(client => {
         Ok(
           request.body
-            .map(b => Unpickle[BoincModeChange].fromString(b.decodeUtf8.right.get))
+            .map(_.toChar).runLog
+            .map(_.mkString)
+            .map(Unpickle[BoincModeChange].fromString(_))
             .map(requestBody => client.setNetwork(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .runLast.unsafePerformSync.get
+            .unsafeRun()
         )
       }).getOrElse(BadRequest())
 

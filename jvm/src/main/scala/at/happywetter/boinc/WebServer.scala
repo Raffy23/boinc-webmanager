@@ -5,9 +5,11 @@ import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.server._
+import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.server.middleware.HSTS
 
-import scala.io.{Source, StdIn}
+import scala.io.StdIn
 
 /**
   * @author Raphael
@@ -15,6 +17,8 @@ import scala.io.{Source, StdIn}
   */
 object WebServer extends App  {
   println("Current Version: " + BuildInfo.version)
+
+
 
   private implicit val scheduler: ScheduledExecutorService =
     Executors.newScheduledThreadPool(Runtime.getRuntime.availableProcessors())
@@ -55,14 +59,17 @@ object WebServer extends App  {
 
   private val builder =
     BlazeBuilder
-    .bindHttp(config.server.port, config.server.address)
-    .mountService(JsonMiddleware(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
-    .mountService(WebResourcesRoute(config), "/")
-    .mountService(authService.authService, "/auth")
-    .mountService(JsonMiddleware(LanguageService.apply()), "/language")
+      .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
+      .bindHttp(config.server.port, config.server.address)
+      .mountService(HSTS(JsonMiddleware(authService.protectedService(BoincApiRoutes(hostManager, projects)))), "/api")
+      .mountService(HSTS(WebResourcesRoute(config)), "/")
+      .mountService(HSTS(authService.authService), "/auth")
+      .mountService(HSTS(JsonMiddleware(LanguageService.apply())), "/language")
+
+
 
   private val server = builder.run
-  println(s"Server online at http://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
+  println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
   StdIn.readLine()               // let it run until user presses return
 
 

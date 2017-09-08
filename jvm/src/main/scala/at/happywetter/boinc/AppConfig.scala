@@ -13,11 +13,12 @@ import scala.io.Source
 object AppConfig {
 
   case class Config(server: Server, boinc: Boinc, development: Option[Boolean] = Some(false))
-  case class Server(address: String, port: Short, username: String, password: String, webroot: String = "", secret: String)
+  case class Server(address: String, port: Short, username: String, password: String, webroot: String = "", secret: String, ssl: SSLConfig)
   case class Host(address: String, port: Short, password: String)
   case class Boinc(hosts: Map[String, Host], projects: Projects)
   case class Projects(xmlSource: String, customProjects: Map[String, ProjectEntry])
   case class ProjectEntry(url: String, generalArea: String)
+  case class SSLConfig(keystore: String, password: String)
 
   val conf: Config = {
     val confString: String = Source.fromFile("./application.conf").getLines().mkString("\n")

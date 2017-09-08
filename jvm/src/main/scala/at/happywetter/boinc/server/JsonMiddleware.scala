@@ -1,6 +1,5 @@
 package at.happywetter.boinc.server
 
-import org.http4s.{Header, HttpService, Service}
 
 /**
   * Created by: 
@@ -10,9 +9,12 @@ import org.http4s.{Header, HttpService, Service}
   */
 object JsonMiddleware {
 
+  import org.http4s._
+
   def apply(service: HttpService): HttpService = Service.lift { req =>
-    service(req).map { response =>
-      response.putHeaders(Header("Content-Type","application/json"))
+    service(req).map {
+      case Status.Successful(response) => response.putHeaders(Header("Content-Type","application/json"))
+      case response => response
     }
   }
 

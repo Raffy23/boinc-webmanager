@@ -2,7 +2,8 @@ package at.happywetter.boinc.server
 
 import at.happywetter.boinc.AppConfig.Config
 
-import scalaz.concurrent.Task
+import fs2.Task
+import fs2.interop.cats._
 
 /**
   * Created by: 
@@ -72,12 +73,12 @@ object WebResourcesRoute {
 
 
   private def fromResource(file: String, request: Request) =
-    StaticFile.fromResource("/web-root/" + file, Some(request)).map(Task.now)
+    StaticFile.fromResource("/web-root/" + file, Some(request))
 
   private def fromFile(file: String, request: Request)(implicit config: Config) =
-    StaticFile.fromString(config.server.webroot + file, Some(request)).map(Task.now)
+    StaticFile.fromString(config.server.webroot + file, Some(request))
 
-  private def completeWithGipFile(file: String, request: Request)(implicit config: Config): Task[Response] = {
+  private def completeWithGipFile(file: String, request: Request)(implicit config: Config) = {
     lazy val zipFile =
       if (config.development.getOrElse(false)) fromFile(file + ".gz", request)
       else fromResource(file + ".gz", request)
@@ -89,14 +90,15 @@ object WebResourcesRoute {
 
     val cType = contentTypes.get(file.substring(file.lastIndexOf("."), file.length))
 
-    if( zipFile.isEmpty ) normalFile.getOrElse(NotFound())
-    else
-      zipFile
-        .get
-        .putHeaders(
-          Header("Content-Encoding","gzip"),
-          cType.map(x => Header("Content-Type", x)).getOrElse(Header("",""))
+    zipFile
+      .map(
+        _.putHeaders(
+          Header("Content-Encoding", "gzip"),
+          cType.map(x => Header("Content-Type", x)).getOrElse(Header("", ""))
         )
+      ).getOrElseF(
+        normalFile.getOrElseF(NotFound())
+      )
   }
 
 }

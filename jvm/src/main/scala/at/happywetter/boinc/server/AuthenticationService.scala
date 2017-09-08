@@ -7,11 +7,11 @@ import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.User
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import fs2.Task
 import org.http4s.util.CaseInsensitiveString
 import prickle.Unpickle
 
 import scala.util.{Random, Try}
-import scalaz.concurrent.Task
 import scala.language.implicitConversions
 
 /**
@@ -43,7 +43,9 @@ class AuthenticationService(config: Config) {
 
     case request @ POST -> Root =>
       request.body
-        .map(b => Unpickle[User].fromString(b.decodeUtf8.right.get))
+        .map(_.toChar).runLog
+        .map(_.mkString)
+        .map(Unpickle[User].fromString(_))
         .map(requestBody =>
           requestBody.toOption.map(user => {
             if ( config.server.username.equals(user.username)
@@ -52,22 +54,19 @@ class AuthenticationService(config: Config) {
             else
               BadRequest("Username or Password are invalid!")
           }).getOrElse(BadRequest("Missing User POST-Data!"))
-        )
-        .runLast.unsafePerformSync.get
+        ).unsafeRun()
   }
 
   def protectedService(service: HttpService): HttpService = Service.lift { req =>
-    Task {
-      req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
+    req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
 
-        if (validate(header.value)) {
-          service(req).unsafePerformSync
-        } else {
-          new Response().withBody("Token has expired").withStatus(Forbidden).unsafePerformSync
-        }
+      if (validate(header.value)) {
+        service(req)
+      } else {
+        new Response().withBody("Token has expired").withStatus(Forbidden)
+      }
 
-      }).getOrElse(new Response().withBody("No Header was given!").withStatus(Forbidden).unsafePerformSync)
-    }
+    }).getOrElse(new Response().withBody("No Header was given!").withStatus(Forbidden))
   }
 
   def validate(token: String): Boolean = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())).getOrElse(false)

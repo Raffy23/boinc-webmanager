@@ -25,11 +25,13 @@ object AuthClient {
 
   def validate(username: String, password: String): Future[Boolean] = {
     var n = ""
+    println("validate (username, password)")
 
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
       .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
       .flatMap(response => response.text().toFuture)
+      .map(d => {println("D==>"+d);d})
       .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
@@ -41,10 +43,15 @@ object AuthClient {
         }
       }).recover {
         case _: FetchResponseException => false
+        case e: Exception =>
+          e.printStackTrace()
+          false
       }
   }
 
   private def requestToken(user: User): Future[String] = {
+    println("requesting token ....")
+
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
       .toFuture
       .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
@@ -52,6 +59,8 @@ object AuthClient {
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {
+    println("Hashing password ....")
+
     dom.crypto.crypto.subtle
       .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
       .toFuture
@@ -62,6 +71,7 @@ object AuthClient {
           hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
         }
 
+        dom.console.log("PW: " + hex.toString())
         hex.toString()
       })
   }
