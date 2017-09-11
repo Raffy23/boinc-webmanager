@@ -17,7 +17,8 @@ follow theses steps:
 
  - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
  - Copy `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
- - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
+ - *(Optional) gzip the `*.js` Files to lower the amount of bytes which are transferred*
+ - Run sbt in Project folder and execute `managerJVM/assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
 
 ## Installation
 1. Extract the .zip or .tar.gz File to any Directory which is writable for the Application
@@ -36,7 +37,7 @@ Sample application.conf:
 boinc-default-port: 31416
 
 # True if the WebServer should run in development mode
-development: false 
+# development: false 
 
 # Basic Settings of the Server
 server {
@@ -52,7 +53,7 @@ server {
   secret: "<some-long-secret>"
   
   # The Path where the Files are served (Only needed in development mode)
-  #webroot: "./web/"
+  # webroot: "./web/"
   
   # Certificate settings:
   ssl {

@@ -35,7 +35,7 @@ object WebResourcesRoute {
         link( rel := "stylesheet", `type` := "text/css", href := "/files/css/font-awesome.min.css"),
         link( rel := "stylesheet", `type` := "text/css", href := "/files/css/nprogress.css"),
 
-        script( `type` := "text/javascript", src := "/files/boinc-webmanager-jsdeps.js")
+        script( `type` := "text/javascript", src := "/files/app-jsdeps.js")
       ),
 
       body(
@@ -43,7 +43,7 @@ object WebResourcesRoute {
           p("Boinc Webmanager is loading ...")
         ),
 
-        script( `type` := "text/javascript", src := "/files/boinc-webmanager-fastopt.js"),
+        script( `type` := "text/javascript", src := "/files/app.js"),
         script( `type` := "text/javascript", "Main.launch()" )
       )
     ).render
@@ -61,6 +61,10 @@ object WebResourcesRoute {
     // Normal index Page which is served
     case GET -> Root => indexPage
 
+    case request@GET -> Root / "files" / "app.js" => completeWithGipFile(appJS, request)
+
+    case request@GET -> Root / "files" / "app-jsdeps.js" => completeWithGipFile(appDeptJS, request)
+
     // Static File content from Web root
     case request@GET -> "files" /: file => completeWithGipFile(file.toList.mkString("/"), request)
 
@@ -71,6 +75,13 @@ object WebResourcesRoute {
     case _ => NotFound(/* TODO: Implement Default 404-Page */)
   }
 
+  private def appJS(implicit config: Config): String =
+    if (config.development.getOrElse(false)) "boinc-webmanager-fastopt.js"
+    else "boinc-webmanager-opt.js"
+
+  private def appDeptJS(implicit config: Config): String =
+    if (config.development.getOrElse(false)) "boinc-webmanager-jsdeps.js"
+    else "boinc-webmanager-jsdeps.min.js"
 
   private def fromResource(file: String, request: Request) =
     StaticFile.fromResource("/web-root/" + file, Some(request))
