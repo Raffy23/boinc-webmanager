@@ -10,24 +10,26 @@ to the Boinc core client and is able to view Tasks and directly control the clie
 * Show Projects / Workunits and Boinc Information from each Client
 * Limited control over Workunits and Projects (suspend, delete, ...)
 
+## Building
+The Boinc Webmanager currently needs scala >= **2.12.2** and sbt >= **0.13.15** which must be installed 
+before the Project can be build. All other Dependencies are managed by SBT. To build the Project
+follow theses steps: 
+
+ - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
+ - Copy `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
+ - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
 
 ## Installation
-1. Clone the Project from Github with `git clone`
-2. Download and Install `sbt` and `scala`
-3. - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
-   - Copy `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
-   - Run sbt in Project folder and execute `assembly`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
-4. Copy the Fat-Jar to any location where the Application has read / write access
-5. Create a `application.conf` file with the Settings (See Configuration Section for more information)
-6. Create a SSL Certificate with `"%JAVA_HOME%\keytool" -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass <password> -validity 365 -keysize 4096`
-7. Run it with `java -jar Boinc-Webmanager-assembly-XXXX.jar`
+1. Extract the .zip or .tar.gz File to any Directory which is writable for the Application
+2. Create a `application.conf` file with the Settings *(See [Configuration](#Configuration) Section for more information)*
+3. Create the SSL Certificate with the Java Keytool
+4. Run it with `java -jar Boinc-Webmanager-assembly-XXXX.jar`
 
-
-After these Steps you should be able to view the Client at the following URL http://127.0.0.1:8080 
+After these Steps you should be able to view the Client at the following URL `https://127.0.0.1:8080` 
 you did not change anything from the sample configuration file below
 
 ## Configuration
-Sample application.conf: 
+Sample application.conf:  
 ````hocon
 
 # Default Boinc port
@@ -79,3 +81,18 @@ boinc.projects {
   }
 }
 ````
+
+### SSL-Certificate
+The Webmanager does need a Certificate to provide a Secure Connection over https. The keystore is build
+with the keytool from Java which should be present at any Java installation. Navigate to your Java Path
+or use the `JAVA_HOME` Environment variable to launch the keytool over cmd or your terminal:
+
+```bash
+$ keytool -genkey -keyalg RSA -alias selfsigned -keystore keystore.jks -storepass <password> -validity 365 -keysize 4096
+```
+
+*Please not that the store password and the certificate password must be the same otherwise the Server
+would hang*
+
+## Server - API
+A short overview of the Server API is documented [here](doc/Server-API.md)
