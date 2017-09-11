@@ -21,7 +21,7 @@ follow theses steps:
 
 ## Installation
 1. Extract the .zip or .tar.gz File to any Directory which is writable for the Application
-2. Create a `application.conf` file with the Settings *(See [Configuration](#Configuration) Section for more information)*
+2. Create a `application.conf` file with the Settings *(See [Configuration](#configuration) Section for more information)*
 3. Create the SSL Certificate with the Java Keytool
 4. Run it with `java -jar Boinc-Webmanager-assembly-XXXX.jar`
 
