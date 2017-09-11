@@ -11,9 +11,6 @@ scalaVersion in ThisBuild := "2.12.2"
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
 
 //scalaJSUseMainModuleInitializer := true
-
-val akkaVersion = "2.4.19"
-val akkHttpVersion = "10.0.9"
 val http4sVersion = "0.17.0"
 
 lazy val root = project.in(file(".")).

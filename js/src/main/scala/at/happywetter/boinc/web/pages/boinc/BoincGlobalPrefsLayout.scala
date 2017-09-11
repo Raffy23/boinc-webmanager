@@ -60,7 +60,7 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
         div( id := "global_prefs", Style.root_pane,
           h2(BoincClientLayout.Style.pageHeader, "global_prefs".localize),
 
-          h4(BoincClientLayout.Style.h4_without_line, "global_prefs_computing"),
+          h4(BoincClientLayout.Style.h4_without_line, "global_prefs_computing".localize),
           label("global_prefs_cpu_cores".localize, `for` := "NcpuPct"),
           input(Style.input, id := "NcpuPct", value := f.maxNCpuPct), br(),
 
@@ -71,9 +71,9 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
           input(Style.input, value := f.cpuSchedulingPeriodMinutes, id := "shedPeriod"),
 
           h4(Style.h4, "global_prefs_pause".localize),
-          label(input(`type` := "checkbox", checked := (if(f.runOnBatteries) "true" else "false")), "global_prefs_on_batteries".localize), br(),
-          label(input(`type` := "checkbox", checked := (if(f.runIfUserActive) "true" else "false")), "global_prefs_cpu_active".localize), br(),
-          label(input(`type` := "checkbox", checked := (if(f.runGPUIfUserActive) "true" else "false")), "global_prefs_gpu_active".localize), br(),
+          label(input(`type` := "checkbox", checked := (if(!f.runOnBatteries) "true" else "false")), "global_prefs_on_batteries".localize), br(),
+          label(input(`type` := "checkbox", checked := (if(!f.runIfUserActive) "true" else "false")), "global_prefs_cpu_active".localize), br(),
+          label(input(`type` := "checkbox", checked := (if(!f.runGPUIfUserActive) "true" else "false")), "global_prefs_gpu_active".localize), br(),
 
           h4(Style.h4, "global_prefs_save_time".localize),
           label("global_prefs_workbuffer_days".localize, `for` := "workBufferDays"),
