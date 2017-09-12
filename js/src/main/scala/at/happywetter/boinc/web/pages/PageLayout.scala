@@ -32,7 +32,11 @@ object PageLayout {
       backgroundColor(c"#222"),
       color(c"#F2F2F2"),
       boxShadow := "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
-      zIndex :=! "2"
+      zIndex :=! "2",
+
+      media.maxWidth(690 px)(
+        height(100 px)
+      )
     )
 
     val headerText = style(
@@ -60,12 +64,18 @@ object PageLayout {
       fontSize.smaller
     )
 
+    /*
     val navigation = style(
       position.fixed,
       right(15 px),
       top(30 px),
-      display.flex
+      //display.flex
+
+      media.maxWidth(690 px)(
+        top(60 px)
+      )
     )
+    */
 
   }
 
@@ -75,10 +85,14 @@ object PageLayout {
 
     if (menu.style.display == "none") {
       menu.style.display = "block"
-      content.style.marginLeft = "218px"
+
+      if (dom.window.outerWidth > 690)
+        content.style.marginLeft = "218px"
     } else {
       menu.style.display = "none"
-      content.style.marginLeft = "20px"
+
+      if (dom.window.outerWidth > 690) content.style.marginLeft = "20px"
+      else content.style.marginLeft = "5px"
     }
 
   }
@@ -92,7 +106,7 @@ object PageLayout {
         i(`class` := "fa fa-bars", style := "margin-right:13px;cursor:pointer;",
           onclick := hamburgerMenuAction)
         , "Boinc Webmanager"),
-      div(Style.navigation, id:="navigation")
+      div(id:="navigation")
     )
   }
 

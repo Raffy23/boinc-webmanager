@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TopNavigation
+import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.boinc.BoincComponent
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
@@ -41,14 +42,14 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
   def root: Element = dom.document.getElementById("client-data")
 
   private val links = List(
-    ("boinc", "head_menu_boinc".localize),
-    ("messages", "head_menu_messages".localize),
-    ("projects", "head_menu_projects".localize),
-    ("tasks", "head_menu_tasks".localize),
-    ("transfers", "head_menu_transfers".localize),
-    ("statistics", "head_menu_statistics".localize),
-    ("disk", "head_menu_disk".localize),
-    ("global_prefs", "head_menu_prefs".localize)
+    ("boinc", "head_menu_boinc".localize, "fa fa-id-card-o"),
+    ("messages", "head_menu_messages".localize, "fa fa-envelope-o"),
+    ("projects", "head_menu_projects".localize, "fa fa-tag"),
+    ("tasks", "head_menu_tasks".localize, "fa fa-tasks"),
+    ("transfers", "head_menu_transfers".localize, "fa fa-exchange"),
+    ("statistics", "head_menu_statistics".localize, "fa fa-area-chart"),
+    ("disk", "head_menu_disk".localize, "fa fa-pie-chart"),
+    ("global_prefs", "head_menu_prefs".localize, "fa fa-cogs")
   )
 
   override def onRender(): Unit = {
@@ -62,9 +63,12 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
       import scalatags.JsDom.all._
 
       ul(TopNavigation.nav, id := "boinc_top_navbar",
-        links.map { case (nav, name) =>
-          li(
-            a(href := s"${DashboardLocation.link}/$clientName/$nav", name, data("navigo") := "",
+        links.map { case (nav, name, icon) =>
+          li(Style.in_text_icon,
+            a(
+              href := s"${DashboardLocation.link}/$clientName/$nav",
+              i(`class` := icon), span(TopNavigation.invisible_on_small_screen, name),
+              data("navigo") := "",
               `class` := (if (path == nav) TopNavigation.active.htmlClass else "")
             )
           )

@@ -52,7 +52,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
       root.appendChild(
         div( id := "projects",
-          h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-area-tag"), "project_header".localize),
+          h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-tag"), "project_header".localize),
           div(style := "position:absolute;top:80px;right:20px;",
             new Tooltip("project_new_tooltip".localize,
               a(href := "#add-project", i(`class` := "fa fa-plus-square"), style := "color:#333;text-decoration:none;font-size:30px",

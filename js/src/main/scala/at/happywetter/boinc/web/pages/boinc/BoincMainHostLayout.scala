@@ -68,7 +68,7 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
     div( id := "host-info", Style.in_text_icon,
       h2(Style.pageHeader, i(`class` := "fa fa-id-card-o"), "boinc_info_header".localize),
       div( id := "boinc_cc_state",
-        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize),
+        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize, "(READONLY)"),
         table(TableTheme.table,  TableTheme.no_border, style := "width:auto!important",
           thead(
             tr(

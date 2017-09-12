@@ -21,6 +21,10 @@ object TopNavigation extends StyleSheet.Inline {
     top(1 px),
     right(5 px),
 
+    media.maxWidth(690 px)(
+      top(51 px)
+    ),
+
     unsafeChild("li")(
       float.left
     ),
@@ -36,6 +40,12 @@ object TopNavigation extends StyleSheet.Inline {
         backgroundColor(c"#666666")
       )
     ),
+  )
+
+  val invisible_on_small_screen = style(
+    media.maxWidth(1220 px)(
+      display.none
+    )
   )
 
   val active = style(

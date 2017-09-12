@@ -30,6 +30,8 @@ object WebResourcesRoute {
     html(
       head(
         meta(charset := "UTF-8"),
+        meta(name := "viewport", content := "width=device-width, initial-scale=1"),
+
         scalatags.Text.tags2.title("BOINC Webmanager"),
 
         link( rel := "stylesheet", `type` := "text/css", href := "/files/css/font-awesome.min.css"),

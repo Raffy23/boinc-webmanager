@@ -34,7 +34,11 @@ object GlobalPageStyle extends StyleSheet.Inline {
     unsafeRoot("main")(
       marginTop(80 px),
       height(100 %%),
-      marginBottom(30 px)
+      marginBottom(30 px),
+
+      media.maxWidth(690 px)(
+        marginTop(130 px)
+      )
     )
   )
 
