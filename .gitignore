@@ -20,3 +20,9 @@ all_projects_list.xml
 /.gtm/
 
 *.jks
+
+# Deployment Files
+/jvm/src/main/resources/web-root/boinc-webmanager-jsdeps.min.js.gz
+/jvm/src/main/resources/web-root/boinc-webmanager-opt.js.gz
+/jvm/src/main/resources/web-root/boinc-webmanager-jsdeps.min.js
+/jvm/src/main/resources/web-root/boinc-webmanager-opt.js
