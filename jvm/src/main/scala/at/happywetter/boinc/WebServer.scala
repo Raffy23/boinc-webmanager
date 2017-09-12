@@ -3,7 +3,6 @@ package at.happywetter.boinc
 import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
-import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.server._
 import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
@@ -18,14 +17,12 @@ import scala.io.StdIn
 object WebServer extends App  {
   println("Current Version: " + BuildInfo.version)
 
-
-
   private implicit val scheduler: ScheduledExecutorService =
     Executors.newScheduledThreadPool(Runtime.getRuntime.availableProcessors())
 
-  private lazy val hostManager = new BoincManager()
   private lazy val config = AppConfig.conf
   private lazy val projects = new XMLProjectStore(config.boinc.projects.xmlSource)
+  private lazy val hostManager = new BoincManager(config.boinc.connectionPool)
 
   if (config.development.getOrElse(false)) {
     println("WebServer was launched with development options!")
@@ -50,9 +47,7 @@ object WebServer extends App  {
   }
 
   // Populate Host Manager with clients
-  config.boinc.hosts.foreach { case (name, host) =>
-    hostManager.add(name, new BoincClient(address = host.address, port = host.port, password = host.password))
-  }
+  config.boinc.hosts.foreach(hostManager.add)
 
   private val authService = new AuthenticationService(config)
   projects.importFrom(config)

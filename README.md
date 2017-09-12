@@ -62,6 +62,9 @@ server {
    }
 }
 
+# How many concurrent Requests are send to the Core Client 
+boinc.connection-pool: 1
+
 # Settings about the Boinc hosts
 boinc.hosts {
   "PC1": {address: "localhost", port: ${boinc-default-port}, password: "password" }
