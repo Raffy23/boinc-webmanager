@@ -50,99 +50,93 @@ object BoincApiRoutes {
     // Modification of Tasks and Projects
     case request @ POST -> Root / "boinc" / name / "tasks" / task =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[WorkunitRequestBody].fromString(_))
-            .map(requestBody => client.workunit(requestBody.get.project, task, WorkunitAction.fromValue(requestBody.get.action).get))
+        request.decode[String] { body =>
+          Unpickle[WorkunitRequestBody]
+            .fromString(body)
+            .map(requestBody => client.workunit(requestBody.project, task, WorkunitAction.fromValue(requestBody.action).get))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
 
     case request @ POST -> Root / "boinc" / name / "project" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[AddProjectBody].fromString(_))
+        request.decode[String] { body =>
+          Unpickle[AddProjectBody]
+            .fromString(body)
             .map(requestBody => {
               WebRPC
-                .lookupAccount(requestBody.get.projectUrl, requestBody.get.user, Some(requestBody.get.password))
-                .map{ case (_, auth) => auth.map(accKey => client.attachProject(requestBody.get.projectUrl, accKey, requestBody.get.projectName))}
-                .map( result => result.getOrElse(Future{false}).map(s => Pickle.intoString(s)))
-            }).unsafeRun()
-        )
+                .lookupAccount(requestBody.projectUrl, requestBody.user, Some(requestBody.password))
+                .map { case (_, auth) => auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName)) }
+                .flatMap(result => result.getOrElse(Future {false}).map(s => Pickle.intoString(s)))
+            })
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "projects" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[ProjectRequestBody].fromString(_))
-            .map(requestBody => client.project(requestBody.get.project, ProjectAction.fromValue(requestBody.get.action).get))
+        request.decode[String] { body =>
+          Unpickle[ProjectRequestBody]
+            .fromString(body)
+            .map(requestBody => client.project(requestBody.project, ProjectAction.fromValue(requestBody.action).get))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
 
     // Change run modes
     case request @ POST -> Root / "boinc" / name / "run_mode" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[BoincModeChange].fromString(_))
-            .map(requestBody => client.setRun(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+        request.decode[String] { body =>
+          Unpickle[BoincModeChange]
+            .fromString(body)
+            .map(requestBody => client.setRun(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "cpu" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[BoincModeChange].fromString(_))
-            .map(requestBody => client.setCpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+        request.decode[String] { body =>
+          Unpickle[BoincModeChange]
+            .fromString(body)
+            .map(requestBody => client.setCpu(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "gpu" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[BoincModeChange].fromString(_))
-            .map(requestBody => client.setGpu(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+        request.decode[String] { body =>
+          Unpickle[BoincModeChange]
+            .fromString(body)
+            .map(requestBody => client.setGpu(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "network" =>
       hostManager.get(name).map(client => {
-        Ok(
-          request.body
-            .map(_.toChar).runLog
-            .map(_.mkString)
-            .map(Unpickle[BoincModeChange].fromString(_))
-            .map(requestBody => client.setNetwork(BoincRPC.Modes.fromValue(requestBody.get.mode).get, requestBody.get.duration))
+        request.decode[String] { body =>
+          Unpickle[BoincModeChange]
+            .fromString(body)
+            .map(requestBody => client.setNetwork(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
             .map(f => f.map(response => Pickle.intoString(response)))
-            .unsafeRun()
-        )
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
       }).getOrElse(BadRequest())
 
     case _ => NotAcceptable()

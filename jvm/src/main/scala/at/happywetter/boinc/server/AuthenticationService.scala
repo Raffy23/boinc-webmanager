@@ -42,27 +42,21 @@ class AuthenticationService(config: Config) {
       }).getOrElse(Forbidden())
 
     case request @ POST -> Root =>
-      request.body
-        .map(c => { print(c); c})
-        .map(_.toChar).runLog
-        .map(a => { println(a); a } )
-        .map(_.mkString)
-        .map(Unpickle[User].fromString(_))
-        .map(requestBody =>
-          requestBody.toOption.map(user => {
-            println(user)
-
-            if ( config.server.username.equals(user.username)
-              && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce+config.server.password)))
-                Ok(buildToken(user.username))
-            else
-              BadRequest("Username or Password are invalid!")
-          }).getOrElse(BadRequest("Missing User POST-Data!"))
-        ).unsafeRun()
+      request.decode[String] { body =>
+        Unpickle[User].fromString(body).toOption.map(user => {
+          if (config.server.username.equals(user.username)
+            && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
+            Ok(buildToken(user.username))
+          else
+            BadRequest("Username or Password are invalid!")
+        }).getOrElse(BadRequest("Post Data is invalid!"))
+      }
   }
 
   def protectedService(service: HttpService): HttpService = Service.lift { req =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
+      println("got token: " + header.value)
+
 
       if (validate(header.value)) {
         service(req)
