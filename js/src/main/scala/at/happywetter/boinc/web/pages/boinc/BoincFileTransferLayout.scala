@@ -25,7 +25,7 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
     client.getFileTransfer.map(transfers => {
       root.appendChild(
         div(id := "file_transfer",
-          h3(BoincClientLayout.Style.pageHeader, "file_transfer_header".localize),
+          h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-exchange"), "file_transfer_header".localize),
           table(TableTheme.table,
             thead(
               tr(

@@ -43,11 +43,15 @@ class AuthenticationService(config: Config) {
 
     case request @ POST -> Root =>
       request.body
+        .map(c => { print(c); c})
         .map(_.toChar).runLog
+        .map(a => { println(a); a } )
         .map(_.mkString)
         .map(Unpickle[User].fromString(_))
         .map(requestBody =>
           requestBody.toOption.map(user => {
+            println(user)
+
             if ( config.server.username.equals(user.username)
               && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce+config.server.password)))
                 Ok(buildToken(user.username))

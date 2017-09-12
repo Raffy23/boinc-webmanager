@@ -161,7 +161,7 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def getCCState: Future[CCState] = Future {
     logger.trace("Get CCState for " + address + ":" + port)
-    execCommand(BoincClient.Command.GetCCStatus).toCCState
+    (execCommand(BoincClient.Command.GetCCStatus) \ "cc_status").toCCState
   }
 
   override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = Future {

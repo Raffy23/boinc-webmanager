@@ -58,7 +58,7 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
 
       root.appendChild(
         div( id := "global_prefs", Style.root_pane,
-          h2(BoincClientLayout.Style.pageHeader, "global_prefs".localize),
+          h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-cogs"),  "global_prefs".localize),
 
           h4(BoincClientLayout.Style.h4_without_line, "global_prefs_computing".localize),
           label("global_prefs_cpu_cores".localize, `for` := "NcpuPct"),

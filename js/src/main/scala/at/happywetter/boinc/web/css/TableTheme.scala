@@ -82,8 +82,8 @@ object TableTheme extends StyleSheet.Inline {
     unsafeChild("div")(
       transform := "rotate(325deg)",
       width(2 px),
-      marginBottom(-17 px),
-      marginLeft(100 %%),
+      marginBottom(-15 px),
+      marginLeft :=! "calc(100% + 1px)",
 
       unsafeChild("span")(
         borderBottom :=! "1px solid #CCC",

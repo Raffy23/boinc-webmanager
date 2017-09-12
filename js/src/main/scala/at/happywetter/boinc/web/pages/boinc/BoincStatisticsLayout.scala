@@ -91,7 +91,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
 
         root.appendChild(
           div( id := "boinc_statistics",
-            h3(BoincClientLayout.Style.pageHeader, "statistics_header".localize),
+            h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-area-chart"), "statistics_header".localize),
             div( style := "display:inline-block;width:400px",
               div(style := "padding-bottom:14px;border-bottom:1px #AAA solid;",
                 b("boinc_statistics_projects".localize)

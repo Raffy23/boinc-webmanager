@@ -8,11 +8,13 @@ import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry
-import org.scalajs.dom.raw.HTMLElement
+import at.happywetter.boinc.web.util.I18N._
+import org.scalajs.dom
+import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scalatags.JsDom
-import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -24,26 +26,78 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
   override def onRender(client: BoincClient): Unit = {
     val data = HostInfoCache.get(boincClientName)
     if (data.isDefined) {
-      root.appendChild(renderView(data.get))
+      buildUI(data.get, client)
       NProgress.done(true)
     } else {
       import scalatags.JsDom.all._
       new SimpleModalDialog(div("loading_dialog_content".localize), h4("loading_dialog_header".localize), (_) => {}, (_) => {}).renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {
-        root.appendChild(renderView(HostInfoCache.get(boincClientName).get))
+        buildUI(HostInfoCache.get(boincClientName).get, client)
         SimpleModalDialog.remove()
         NProgress.done(true)
       })
     }
   }
 
+  private def buildUI(boincData: CacheEntry, boincClient: BoincClient): Unit = {
+    root.appendChild(renderView(boincData))
+    boincClient.getCCState.map(state => {
+      state.gpuMode match {
+        case 1 => dom.document.getElementById("gm-al").asInstanceOf[HTMLInputElement].checked = true
+        case 2 => dom.document.getElementById("gm-au").asInstanceOf[HTMLInputElement].checked = true
+        case 3 => dom.document.getElementById("gm-n").asInstanceOf[HTMLInputElement].checked = true
+      }
+      state.taskMode match {
+        case 1 => dom.document.getElementById("rm-al").asInstanceOf[HTMLInputElement].checked = true
+        case 2 => dom.document.getElementById("rm-au").asInstanceOf[HTMLInputElement].checked = true
+        case 3 => dom.document.getElementById("rm-n").asInstanceOf[HTMLInputElement].checked = true
+      }
+      state.networkMode match {
+        case 1 => dom.document.getElementById("nm-al").asInstanceOf[HTMLInputElement].checked = true
+        case 2 => dom.document.getElementById("nm-au").asInstanceOf[HTMLInputElement].checked = true
+        case 3 => dom.document.getElementById("nm-n").asInstanceOf[HTMLInputElement].checked = true
+      }
+    })
+  }
+
   private def renderView(boincData: CacheEntry): HTMLElement = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    div( id := "host-info",
-      h2(Style.pageHeader, "boinc_info_header".localize),
+    div( id := "host-info", Style.in_text_icon,
+      h2(Style.pageHeader, i(`class` := "fa fa-id-card-o"), "boinc_info_header".localize),
+      div( id := "boinc_cc_state",
+        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize),
+        table(TableTheme.table,  TableTheme.no_border, style := "width:auto!important",
+          thead(
+            tr(
+              th(),
+              th(TableTheme.vertical_table_text, div(span("always".localize), style := "margin-bottom:-8px"), style := "width:24px"),
+              th(TableTheme.vertical_table_text, div(span("auto".localize), style := "margin-bottom:-8px"), style := "width:24px"),
+              th(TableTheme.vertical_table_text, div(span("never".localize), style := "margin-bottom:-8px"), style := "width:24px"),
+            )
+          ),
+          tbody(
+            tr(
+              td(i(`class` := "fa fa-tasks"), "boinc_info_run_mode".localize),
+              td(input(`type` := "radio", name := "run_mode", value := "always", id:="rm-al")),
+              td(input(`type` := "radio", name := "run_mode", value := "auto", id:="rm-au")),
+              td(input(`type` := "radio", name := "run_mode", value := "never", id:="rm-n"))
+            ),
+            tr(td(i(`class` := "fa fa-television"), "boinc_info_gpu_mode".localize),
+              td(input(`type` := "radio", name := "gpu_mode", value := "always", id:="gm-al")),
+              td(input(`type` := "radio", name := "gpu_mode", value := "auto", id:="gm-au")),
+              td(input(`type` := "radio", name := "gpu_mode", value := "never", id:="gm-n"))
+            ),
+            tr(td(i(`class` := "fa fa-exchange"), "boinc_info_network_mode".localize),
+              td(input(`type` := "radio", name := "network_mode", value := "always", id:="nm-al")),
+              td(input(`type` := "radio", name := "network_mode", value := "auto", id:="nm-au")),
+              td(input(`type` := "radio", name := "network_mode", value := "never", id:="nm-n"))
+            )
+          )
+        )
+      ),
       table(TableTheme.table, style:="line-height: 1.4567", BoincMainHostLayout.Style.table,
        tbody(
          tr(td(style:="width:55px;",b("boinc_info_version".localize)), td(boincData.boincVersion)),
@@ -67,8 +121,8 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
 }
 
 object BoincMainHostLayout {
-  import scalacss.ProdDefaults._
   import scala.language.postfixOps
+  import scalacss.ProdDefaults._
 
   object Style extends StyleSheet.Inline {
     import dsl._

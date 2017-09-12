@@ -20,7 +20,7 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
   */
 object AuthClient {
 
-  private val TOKEN_VALID_TIME = 58*1000
+  private val TOKEN_VALID_TIME = 58*60*1000
   private var refreshTimeoutHandler: Int = -1
 
   def validate(username: String, password: String): Future[Boolean] = {
@@ -50,8 +50,6 @@ object AuthClient {
   }
 
   private def requestToken(user: User): Future[String] = {
-    println("requesting token ....")
-
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
       .toFuture
       .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
@@ -59,8 +57,6 @@ object AuthClient {
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {
-    println("Hashing password ....")
-
     dom.crypto.crypto.subtle
       .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
       .toFuture
@@ -71,7 +67,6 @@ object AuthClient {
           hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
         }
 
-        dom.console.log("PW: " + hex.toString())
         hex.toString()
       })
   }
@@ -113,9 +108,11 @@ object AuthClient {
     val token     = dom.window.localStorage.getItem("auth/token")
     if (tokenDate == null || token == null) return false
 
+    println(tokenDate.toDouble + TOKEN_VALID_TIME + " < " + new Date().getTime())
     if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime())
       return false
 
+    println("Take token from local storage, valid until: " + new Date(tokenDate.toDouble + TOKEN_VALID_TIME))
     FetchHelper.setToken(token)
     true
   }

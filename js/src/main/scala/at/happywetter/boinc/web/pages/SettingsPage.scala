@@ -37,10 +37,10 @@ object SettingsPage extends Layout {
         div(id := "client-container", style := "margin-left:218px",
           div( id := "settings",
 
-            h2(BoincClientLayout.Style.pageHeader, "settings_header".localize),
+            h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-cog"), "settings_header".localize),
 
             div(
-              h3(BoincClientLayout.Style.pageHeader_small, "settings_version_group".localize),
+              h3(BoincClientLayout.Style.h4_without_line, "settings_version_group".localize),
               table(TableTheme.table,
                 tbody(
                   tr(td(b("verion".localize)), td(BuildInfo.version)),
@@ -51,7 +51,7 @@ object SettingsPage extends Layout {
               )
             ),
 
-            h3(BoincClientLayout.Style.pageHeader_small, "settings_language_group".localize),
+            h3(BoincClientLayout.Style.h4_without_line, "settings_language_group".localize),
             div( style := "margin-top: 25px",
               new LanguageChooser((event, lang_code) => {
                 event.preventDefault()

@@ -35,7 +35,7 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
       root.appendChild(
         div(id := "disk_usage",
-          h3(BoincClientLayout.Style.pageHeader, "disk_usage".localize),
+          h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-pie-chart"), "disk_usage".localize),
           div(
             div( style := "display:inline-block;width:405px",
             table(TableTheme.table, style := "width:400px",

@@ -53,7 +53,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     import scalatags.JsDom.all._
 
     div( id := "workunits",
-      h2(BoincClientLayout.Style.pageHeader, "workunit_header".localize),
+      h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-tasks"), "workunit_header".localize),
       table(TableTheme.table, TableTheme.table_lastrowsmall,
         thead(
           tr(

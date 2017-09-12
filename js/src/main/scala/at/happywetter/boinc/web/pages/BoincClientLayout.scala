@@ -92,7 +92,11 @@ object BoincClientLayout {
       margin(40 px, 20 px, 20 px, auto),
       borderBottom :=! "1px solid #DDD",
       fontSize(28 px),
-      fontWeight._300
+      fontWeight._300,
+
+      unsafeChild("i")(
+        marginRight(10 px)
+      )
     )
 
     val pageHeader_small = style(
@@ -120,6 +124,12 @@ object BoincClientLayout {
 
     val content = style(
       paddingLeft(8 px)
+    )
+
+    val in_text_icon = style(
+      unsafeChild("i")(
+        marginRight(10 px)
+      )
     )
 
     val progressBar = style(

@@ -32,7 +32,7 @@ object BoincRPC {
     val GetActiveResults = Value("tasks")
     val GetMessages   = Value("messages")
     val RunBenchmarks = Value("run_benchmarks")
-    val GetCCStatus   = Value("state")
+    val GetCCStatus   = Value("ccstate")
     val GetNetworkAvailable = Value("network_available")
     val GetProjectStatus = Value("projects")
     val GetFileTransfer = Value("filetransfers")

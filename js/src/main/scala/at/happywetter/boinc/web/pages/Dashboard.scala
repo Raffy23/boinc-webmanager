@@ -120,7 +120,7 @@ object Dashboard extends Layout {
             calculateOffsetOfWoruntsTable()
           }})
         ),
-        h2(BoincClientLayout.Style.pageHeader, "dashboard_overview".localize),
+        h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-tachometer"), "dashboard_overview".localize),
         div(
           table(TableTheme.table, id := "dashboard_home_table",
             thead(tr(

@@ -11,6 +11,7 @@ import scalacss.ProdDefaults._
 import scalatags.JsDom
 import at.happywetter.boinc.web.util.I18N._
 
+import scala.scalajs.js
 import scala.util.Try
 
 /**
@@ -50,13 +51,17 @@ object DashboardMenu {
         &.hover(
           backgroundColor(c"#74a9d8"),
           color.white
+        ),
+
+        unsafeChild("i")(
+          marginRight(10 px)
         )
       )
     )
 
     val active = style(
       backgroundColor(c"#428bca"),
-      color :=! "white !important",
+      color :=! "white !important"
     )
   }
 
@@ -67,7 +72,7 @@ object DashboardMenu {
 
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
-        a(href := DashboardLocation.link, "dashboard_menu_home".localize, data("navigo") := "",
+        a(href := DashboardLocation.link, i(`class` := "fa fa-tachometer"), "dashboard_menu_home".localize, data("navigo") := "",
         onclick := { (event: Event) => {
           dom.document.getElementById("navigation").innerHTML = ""
           onMenuItemClick(event)
@@ -75,14 +80,14 @@ object DashboardMenu {
       ),
 
       li(Style.elem,
-        a(href := Try(SettingsLocation.link).getOrElse("/view/settings"), "dashboard_menu_settings".localize,
+        a(href := Try(SettingsLocation.link).getOrElse("/view/settings"), i(`class` := "fa fa-cog"), "dashboard_menu_settings".localize,
           data("navigo") := "", onclick := { (event: Event) => {
             dom.document.getElementById("navigation").innerHTML = ""
             onMenuItemClick(event)
           }})
       ),
 
-      li(Style.elem, h2(style :="padding-left: 5px", "Computer"))
+      li(Style.elem, h2(style :="padding-left: 5px", i(`class` := "fa fa-cubes", style:="margin-right:8px"), "dashboard_menu_computers".localize))
     )
 
   }
@@ -108,16 +113,16 @@ object DashboardMenu {
     }
   }
 
-  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None): Unit = {
+  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
     val newElement: JsDom.TypedTag[HTMLElement] = {
       import scalacss.ScalatagsCss._
       import scalatags.JsDom.all._
 
       li(Style.elem,
         a(href := linkUrl,
-          elementName,
+          icon.map(n => i(`class` := s"fa fa-$n")), elementName,
           reference.map(r => data("menu-id") := r), data("navigo") := "",
-          onclick := { (event: Event) => { onMenuItemClick(event) }}
+          onclick := selectionListener
         )
       )
     }
@@ -128,6 +133,7 @@ object DashboardMenu {
     }
   }
 
+  private val selectionListener: js.Function1[Event, Unit] = (event) => onMenuItemClick(event)
 
   private var selected: String = _
   def selectMenuItemByContent(content: String): Unit = {
