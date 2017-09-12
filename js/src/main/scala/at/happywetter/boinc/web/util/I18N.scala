@@ -1,5 +1,7 @@
 package at.happywetter.boinc.web.util
 
+import at.happywetter.boinc.shared.ApplicationError
+import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom
 
 import scalatags.JsDom.all.Modifier
@@ -58,6 +60,14 @@ object I18N {
       } else {
         List(str)
       }
+  }
+
+  implicit class TranslatableAppError(e: ApplicationError) {
+    def localize: String = e.reason.localize
+  }
+
+  implicit class TranslatableFetchException(ex: FetchResponseException) {
+    def localize: String = s"${ex.statusCode}: ${ex.reason.localize}"
   }
 
 }

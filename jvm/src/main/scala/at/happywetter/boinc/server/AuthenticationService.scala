@@ -4,12 +4,12 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.User
+import at.happywetter.boinc.shared.{ApplicationError, User}
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import fs2.Task
 import org.http4s.util.CaseInsensitiveString
-import prickle.Unpickle
+import prickle.{Pickle, Unpickle}
 
 import scala.util.{Random, Try}
 import scala.language.implicitConversions
@@ -36,10 +36,20 @@ class AuthenticationService(config: Config) {
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
 
-        if (!validate(header.value)) Forbidden()
-        else Ok(refreshToken(header.value))
+        if (!validate(header.value)) {
+          new Response()
+            .withBody(Pickle.intoString(ApplicationError("error_invalid_token")))
+            .withStatus(Unauthorized)
 
-      }).getOrElse(Forbidden())
+        } else {
+          Ok(refreshToken(header.value))
+        }
+
+      }).getOrElse(
+        new Response()
+          .withBody(Pickle.intoString(ApplicationError("error_no_token")))
+          .withStatus(Unauthorized)
+      )
 
     case request @ POST -> Root =>
       request.decode[String] { body =>
@@ -48,23 +58,21 @@ class AuthenticationService(config: Config) {
             && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
             Ok(buildToken(user.username))
           else
-            BadRequest("Username or Password are invalid!")
-        }).getOrElse(BadRequest("Post Data is invalid!"))
+            BadRequest(Pickle.intoString(ApplicationError("error_invalid_credentials")))
+        }).getOrElse(BadRequest(Pickle.intoString(ApplicationError("error_invalid_request"))))
       }
   }
 
   def protectedService(service: HttpService): HttpService = Service.lift { req =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-      println("got token: " + header.value)
-
 
       if (validate(header.value)) {
         service(req)
       } else {
-        new Response().withBody("Token has expired").withStatus(Forbidden)
+        new Response().withBody(Pickle.intoString(ApplicationError("error_invalid_token"))).withStatus(Unauthorized)
       }
 
-    }).getOrElse(new Response().withBody("No Header was given!").withStatus(Forbidden))
+    }).getOrElse(new Response().withBody(Pickle.intoString(ApplicationError("error_no_token"))).withStatus(Unauthorized))
   }
 
   def validate(token: String): Boolean = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())).getOrElse(false)

@@ -11,6 +11,8 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
+import ResponseHelper.ErrorResponseFeature
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -25,13 +27,10 @@ object AuthClient {
 
   def validate(username: String, password: String): Future[Boolean] = {
     var n = ""
-    println("validate (username, password)")
 
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
-      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
-      .flatMap(response => response.text().toFuture)
-      .map(d => {println("D==>"+d);d})
+      .flatMap(_.tryGet)
       .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
@@ -42,7 +41,10 @@ object AuthClient {
           false
         }
       }).recover {
-        case _: FetchResponseException => false
+        case e: FetchResponseException =>
+          dom.console.error(e.localize)
+          false
+
         case e: Exception =>
           e.printStackTrace()
           false
@@ -52,8 +54,7 @@ object AuthClient {
   private def requestToken(user: User): Future[String] = {
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
       .toFuture
-      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
-      .flatMap(response => response.text().toFuture)
+      .flatMap(_.tryGet)
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {
@@ -90,8 +91,7 @@ object AuthClient {
   def refreshToken(): Future[String] = {
     Fetch.fetch("/auth/refresh", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
-      .map(response => if (response.status == 200) response else throw FetchResponseException(response.status))
-      .flatMap(response => response.text().toFuture)
+      .flatMap(_.tryGet)
       .map(token => {
         saveToken(token)
         token
@@ -108,11 +108,9 @@ object AuthClient {
     val token     = dom.window.localStorage.getItem("auth/token")
     if (tokenDate == null || token == null) return false
 
-    println(tokenDate.toDouble + TOKEN_VALID_TIME + " < " + new Date().getTime())
     if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime())
       return false
 
-    println("Take token from local storage, valid until: " + new Date(tokenDate.toDouble + TOKEN_VALID_TIME))
     FetchHelper.setToken(token)
     true
   }
