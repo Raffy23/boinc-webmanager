@@ -39,7 +39,7 @@ class XMLProjectStore(path: String) {
       projects += (
         (name,
           BoincProjectMetaData(
-            name, project.url, project.generalArea, "", "", "", List()
+            name, project.url, project.generalArea, "", project.description, project.organization, List()
           )
         )
       )

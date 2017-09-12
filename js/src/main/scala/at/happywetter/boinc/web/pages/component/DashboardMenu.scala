@@ -26,7 +26,8 @@ object DashboardMenu {
 
     val menu = style(
       position.fixed,
-      height(100 %%),
+      overflowX.auto,
+      bottom.`0`,
       top(50 px),
       listStyleType := "none",
       margin.`0`,

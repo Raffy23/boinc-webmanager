@@ -74,13 +74,19 @@ boinc.hosts {
 # Settings for the projects which can be added to the Clients: 
 boinc.projects {
   # This File can be copied from a regular Boinc installation, which is used to lookup the projects
-  xml-source: "./all_projects_list.xml",
+  xml-source: "./all_projects_list.xml"
   
   # If the Project is not in the List above other projects can be added here
   custom-projects: {
     "WuProp@Home": {
-      url: "http://wuprop.boinc-af.org/",
-      general-area: "Datacollection of Workunits",
+      url: "http://wuprop.boinc-af.org/"
+      organization: ""
+      general-area: ""
+      description: """
+        WUProp@home is a non-intensive project that uses Internet-connected computers to collect workunits
+        properties of BOINC projects such as computation time, memory requirements, checkpointing interval
+        or report limit. You can participate by downloading and running a free program on your computer.
+        """
     }
   }
 }
