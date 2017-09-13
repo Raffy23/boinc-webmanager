@@ -64,6 +64,7 @@ object AppRouter {
   }
 
   def navigate(page: Page): Unit = router.navigate(routes(page)._1, absolute = true)
+  def navigate(page: String): Unit = router.navigate(page, absolute = true)
 
   def navigate(e: Event, page: Page): Unit = {
     this.navigate(page)
@@ -71,7 +72,7 @@ object AppRouter {
   }
 
 
-  def href(page: Page): String = routes(page)._1
+  def href(page: Page): String = routes(page)._1.replaceAll("\\/:\\w*[$]?","")
 
   def openExternalLink(link: String): Unit = {
     dom.window.open(link, "_blank")
@@ -81,5 +82,9 @@ object AppRouter {
     event.preventDefault()
     dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
   }
+
+  def current: String = dom.window.location.pathname
+
+  def isOn(page: Page): Boolean = current == page.link
 
 }

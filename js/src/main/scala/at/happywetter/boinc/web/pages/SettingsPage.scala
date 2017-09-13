@@ -34,7 +34,7 @@ object SettingsPage extends Layout {
     Some(
       div(
         DashboardMenu.component.render,
-        div(id := "client-container", style := "margin-left:218px",
+        div(id := "client-container", PageLayout.Style.clientContainer,
           div( id := "settings",
 
             h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-cog"), "settings_header".localize),

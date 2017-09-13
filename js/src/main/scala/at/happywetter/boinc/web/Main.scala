@@ -3,8 +3,8 @@ package at.happywetter.boinc.web
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.{BoincLayout, Dashboard, LoginPage, SettingsPage}
-import at.happywetter.boinc.web.routes.AppRouter.{BoincHomeLocation, DashboardLocation, LoginPageLocation, SettingsLocation}
+import at.happywetter.boinc.web.pages._
+import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.Locale
 import at.happywetter.boinc.web.util.LanguageDataProvider
@@ -56,6 +56,8 @@ object Main {
     AppRouter.addRoute(SettingsLocation, "/view/settings", SettingsPage)
     AppRouter.addRoute(BoincHomeLocation, "/view/dashboard/:client", BoincLayout)
     AppRouter.addRoute(BoincHomeLocation, "/view/dashboard/:client/:action", BoincLayout)
+    AppRouter.addRoute(SwarmControlLocation, "/view/swarm", SwarmControlPage)
+    AppRouter.addRoute(SwarmControlLocation, "/view/swarm/:action", SwarmControlPage)
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((param) => {

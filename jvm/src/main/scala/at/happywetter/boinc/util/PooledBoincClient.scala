@@ -37,6 +37,7 @@ class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, passw
 
   def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
   def closeAll(): Unit = all.foreach(_.close())
+  def hasOpenConnections: Boolean = all.exists(_.isAuthenticated)
 
   override def getTasks(active: Boolean): Future[List[Result]] = connection(_.getTasks(active))
 

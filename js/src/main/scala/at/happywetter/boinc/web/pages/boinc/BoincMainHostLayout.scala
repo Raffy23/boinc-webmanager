@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import at.happywetter.boinc.shared.BoincRPC
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
@@ -10,6 +11,7 @@ import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
+import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -68,7 +70,7 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
     div( id := "host-info", Style.in_text_icon,
       h2(Style.pageHeader, i(`class` := "fa fa-id-card-o"), "boinc_info_header".localize),
       div( id := "boinc_cc_state",
-        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize, "(READONLY)"),
+        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize),
         table(TableTheme.table,  TableTheme.no_border, style := "width:auto!important",
           thead(
             tr(
@@ -81,19 +83,110 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
           tbody(
             tr(
               td(i(`class` := "fa fa-tasks"), "boinc_info_run_mode".localize),
-              td(input(`type` := "radio", name := "run_mode", value := "always", id:="rm-al")),
-              td(input(`type` := "radio", name := "run_mode", value := "auto", id:="rm-au")),
-              td(input(`type` := "radio", name := "run_mode", value := "never", id:="rm-n"))
+              td(input(`type` := "radio", name := "run_mode", value := "always", id:="rm-al",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setRun(BoincRPC.Modes.Always).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }}
+              )),
+              td(input(`type` := "radio", name := "run_mode", value := "auto", id:="rm-au",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setRun(BoincRPC.Modes.Auto).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }})),
+              td(input(`type` := "radio", name := "run_mode", value := "never", id:="rm-n",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setRun(BoincRPC.Modes.Never).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }}))
             ),
             tr(td(i(`class` := "fa fa-television"), "boinc_info_gpu_mode".localize),
-              td(input(`type` := "radio", name := "gpu_mode", value := "always", id:="gm-al")),
-              td(input(`type` := "radio", name := "gpu_mode", value := "auto", id:="gm-au")),
-              td(input(`type` := "radio", name := "gpu_mode", value := "never", id:="gm-n"))
+              td(input(`type` := "radio", name := "gpu_mode", value := "always", id:="gm-al",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setGpu(BoincRPC.Modes.Always).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }})),
+              td(input(`type` := "radio", name := "gpu_mode", value := "auto", id:="gm-au",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setGpu(BoincRPC.Modes.Auto).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }})),
+              td(input(`type` := "radio", name := "gpu_mode", value := "never", id:="gm-n",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setGpu(BoincRPC.Modes.Never).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }}))
             ),
             tr(td(i(`class` := "fa fa-exchange"), "boinc_info_network_mode".localize),
-              td(input(`type` := "radio", name := "network_mode", value := "always", id:="nm-al")),
-              td(input(`type` := "radio", name := "network_mode", value := "auto", id:="nm-au")),
-              td(input(`type` := "radio", name := "network_mode", value := "never", id:="nm-n"))
+              td(input(`type` := "radio", name := "network_mode", value := "always", id:="nm-al",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setNetwork(BoincRPC.Modes.Always).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }})),
+              td(input(`type` := "radio", name := "network_mode", value := "auto", id:="nm-au",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setNetwork(BoincRPC.Modes.Auto).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }})),
+              td(input(`type` := "radio", name := "network_mode", value := "never", id:="nm-n",
+                onclick := { (event: Event) => {
+                  event.preventDefault()
+                  NProgress.start()
+
+                  boinc.setNetwork(BoincRPC.Modes.Never).foreach(result => {
+                    NProgress.done(true)
+                    if (result)
+                      event.target.asInstanceOf[HTMLInputElement].checked = true
+                  })
+                }}))
             )
           )
         )

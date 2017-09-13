@@ -113,9 +113,7 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   override def getTasks(active: Boolean = true): Future[List[Result]] = Future {
     logger.trace("Get Tasks from" + address + ":" + port)
 
-    val tasks: mutable.MutableList[Result] = new mutable.MutableList()
     val xml = execCommand(if (active) BoincClient.Command.GetActiveResults else BoincClient.Command.GetResults)
-
     (for (task <- xml \ "results" \ "result") yield task.toResult).toList
   }
 
@@ -175,19 +173,19 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   }
 
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double) = Future {
-    (this.execAction(s"<set_run_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_run_mode>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<set_run_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_run_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setCpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
-    (this.execAction(s"<set_cpu_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_cpu_mode>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<set_cpu_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_cpu_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setGpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
-    (this.execAction(s"<set_gpu_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_gpu_mode>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<set_gpu_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_gpu_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double) = Future {
-    (this.execAction(s"<set_network_mode>${mode.toString}${if(duration>0) s"<duration>${duration.toFloat}</duration>"}</set_network_mode>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<set_network_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_network_mode>") \ "success").xml_==(<success/>)
   }
 
   override def attachProject(url: String, authenticator: String, name: String) = Future {
@@ -209,7 +207,11 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   def isAuthenticated: Boolean = this.authenticated
 
   def close(): Unit = {
-    if (socket != null && socket.isConnected) socket.close()
+    if (socket != null && socket.isConnected) {
+      logger.trace("Closing Socket for " + address + ":" + port)
+      socket.close()
+    }
+
     authenticated = false
   }
 }

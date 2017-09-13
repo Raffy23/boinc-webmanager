@@ -1,6 +1,5 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.BuildInfo
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -77,6 +76,13 @@ object PageLayout {
     )
     */
 
+    val clientContainer = style(
+      marginLeft(218 px),
+
+      media.maxWidth(690 px)(
+        marginLeft(5 px)
+      )
+    )
   }
 
   val hamburgerMenuAction: js.Function1[Event,Unit] = (event) => {

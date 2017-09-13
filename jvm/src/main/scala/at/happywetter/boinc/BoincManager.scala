@@ -28,7 +28,7 @@ class BoincManager(poolSize: Int)(implicit val scheduler: ScheduledExecutorServi
     val curTime = System.currentTimeMillis() - timeout.toMillis
 
     lastUsed.foreach { case (name, time) => {
-      if (time < curTime) {
+      if (time < curTime && boincClients(name).hasOpenConnections) {
         BoincManager.logger.debug("Close Socket Connection from " + name)
         boincClients(name).closeOpen()
       }
@@ -40,7 +40,6 @@ class BoincManager(poolSize: Int)(implicit val scheduler: ScheduledExecutorServi
     if (lastUsed.get(name).nonEmpty )
       lastUsed(name) = System.currentTimeMillis()
 
-    boincClients.get(name).map(b => b.getCCState)
     boincClients.get(name)
   }
 

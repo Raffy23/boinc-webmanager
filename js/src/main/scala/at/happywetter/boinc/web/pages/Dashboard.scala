@@ -38,12 +38,12 @@ object Dashboard extends Layout {
 
   lazy val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
     import scalatags.JsDom.all._
+    import scalacss.ScalatagsCss._
 
     Some(
     div(
       DashboardMenu.component.render,
-      div(id := "client-container", style := "margin-left:218px"
-      )
+      div(id := "client-container", PageLayout.Style.clientContainer)
     )
     )
   }
