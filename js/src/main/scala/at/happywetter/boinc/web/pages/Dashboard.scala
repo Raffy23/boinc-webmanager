@@ -77,8 +77,10 @@ object Dashboard extends Layout {
         DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
       )
 
-      if (dom.window.location.pathname == DashboardLocation.link)
+      if (dom.window.location.pathname == DashboardLocation.link) {
         renderDashboardContent(clients)
+        DashboardMenu.selectByReference("dashboard")
+      }
 
       AppRouter.router.updatePageLinks()
     }).recover {

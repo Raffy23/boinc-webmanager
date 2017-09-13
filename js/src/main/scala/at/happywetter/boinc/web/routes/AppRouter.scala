@@ -7,6 +7,7 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
 import scala.scalajs.js
+import scala.util.Try
 
 /**
   * Created by: 
@@ -21,8 +22,14 @@ object AppRouter {
   }
   case object LoginPageLocation extends Page
   case object DashboardLocation extends Page
-  case object SettingsLocation extends Page
   case object BoincHomeLocation extends Page
+
+  case object SettingsLocation extends Page {
+    override def link: String = Try(super.link).getOrElse("/view/settings")
+  }
+  case object SwarmControlLocation extends Page {
+    override def link: String = Try(super.link).getOrElse("/view/swarm")
+  }
 
 
   val defaultPageHook = new Hook {

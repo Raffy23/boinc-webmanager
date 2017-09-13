@@ -1,18 +1,15 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, SettingsLocation}
+import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, SettingsLocation, SwarmControlLocation}
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.language.postfixOps
+import scala.scalajs.js
 import scalacss.ProdDefaults._
 import scalatags.JsDom
-import at.happywetter.boinc.web.util.I18N._
-
-import scala.scalajs.js
-import scala.util.Try
 
 /**
   * Created by: 
@@ -76,19 +73,30 @@ object DashboardMenu {
 
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
-        a(href := DashboardLocation.link, i(`class` := "fa fa-tachometer"), "dashboard_menu_home".localize, data("navigo") := "",
-        onclick := { (event: Event) => {
-          dom.document.getElementById("navigation").innerHTML = ""
-          onMenuItemClick(event)
-        }})
+        a(
+          href := DashboardLocation.link,
+          i(`class` := "fa fa-tachometer"), "dashboard_menu_home".localize,
+          data("navigo") := "", data("menu-id") := "dashboard",
+          onclick := masterSelectionListener
+        )
       ),
 
       li(Style.elem,
-        a(href := Try(SettingsLocation.link).getOrElse("/view/settings"), i(`class` := "fa fa-cog"), "dashboard_menu_settings".localize,
-          data("navigo") := "", onclick := { (event: Event) => {
-            dom.document.getElementById("navigation").innerHTML = ""
-            onMenuItemClick(event)
-          }})
+        a(
+          href := SwarmControlLocation.link,
+          i(`class` := "fa fa-industry"), "dashboard_swarm_control".localize,
+          data("navigo") := "", data("menu-id") := "swarm_control",
+          onclick := masterSelectionListener
+        )
+      ),
+
+      li(Style.elem,
+        a(
+          href := SettingsLocation.link,
+          i(`class` := "fa fa-cog"), "dashboard_menu_settings".localize,
+          data("navigo") := "", data("menu-id") := "settings",
+          onclick := masterSelectionListener
+        )
       ),
 
       li(Style.elem, h2(style :="padding-left: 5px", i(`class` := "fa fa-cubes", style:="margin-right:8px"), "dashboard_menu_computers".localize))
@@ -102,7 +110,18 @@ object DashboardMenu {
       element.setAttribute("class", "")
 
     val me = event.target.asInstanceOf[HTMLElement]
-    me.setAttribute("class",Style.active.htmlClass)
+    me.setAttribute("class", Style.active.htmlClass)
+  }
+
+  def selectByReference(reference: String): Unit = {
+    val element = dom.document.querySelector(s"ul[id='dashboard-menu'] a[class='${Style.active.htmlClass}']")
+    if( element != null)
+      element.setAttribute("class", "")
+
+    dom.document
+      .querySelector("ul[id='dashboard-menu'] a[data-menu-id='"+reference+"']")
+      .asInstanceOf[HTMLElement]
+      .classList.add(Style.active.htmlClass)
   }
 
   def removeMenuReferences(reference: String): Unit = {
@@ -110,8 +129,6 @@ object DashboardMenu {
     val elements = dom.document.querySelectorAll("ul[id='dashboard-menu'] a[data-menu-id='"+reference+"']")
 
     if(elements != null) {
-      println(elements)
-
       import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
       elements.forEach((node, _, _) => menuNode.removeChild(node.parentNode))
     }
@@ -138,6 +155,10 @@ object DashboardMenu {
   }
 
   private val selectionListener: js.Function1[Event, Unit] = (event) => onMenuItemClick(event)
+  private val masterSelectionListener: js.Function1[Event, Unit] = (event) => {
+    dom.document.getElementById("navigation").innerHTML = ""
+    onMenuItemClick(event)
+  }
 
   private var selected: String = _
   def selectMenuItemByContent(content: String): Unit = {

@@ -110,4 +110,8 @@ object SettingsPage extends Layout {
           .renderToBody().show()
     }
   }
+
+  override def onRender(): Unit = {
+    DashboardMenu.selectByReference("settings")
+  }
 }
