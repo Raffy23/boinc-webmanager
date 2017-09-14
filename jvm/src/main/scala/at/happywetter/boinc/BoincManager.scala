@@ -7,6 +7,7 @@ import at.happywetter.boinc.util.PooledBoincClient
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.concurrent.TrieMap
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -56,6 +57,16 @@ class BoincManager(poolSize: Int)(implicit val scheduler: ScheduledExecutorServi
   def getAllHostNames: Seq[String] = lastUsed.keys.toSeq
 
   def destroy(): Unit = boincClients.foreach { case (_, client) => client.closeAll() }
+
+  def queryDeathCounter: Map[String, Int] =
+    boincClients.map { case (name, client) => (name, client.deathCounter.get()) }.toMap
+
+  def checkHealth: Future[Map[String, Boolean]] =
+    Future.sequence(
+      boincClients
+        .map{ case(name, client) => client.checkConnection().map(state => (name, state))}
+        .toList
+    ).map(_.toMap)
 
 }
 object BoincManager {

@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
@@ -38,15 +39,18 @@ object Main {
     // Load Languages before jumping to UI
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
     LanguageDataProvider.bootstrap.foreach(_ => {
-      initRouter()
-      LayoutManager.init()
-
-      dom.console.log("Finished, navigating to Path")
       dom.console.log("Setting current language to: " + Locale.current)
       dom.console.log("Language Name: " + "language_name".localize)
 
-      AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
-      NProgress.done(true)
+      initRouter()
+      LayoutManager.init()
+
+      ClientManager.bootstrapClients().foreach(_ => {
+        dom.console.log("Finished, navigating to Path")
+
+        AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
+        NProgress.done(true)
+      })
     })
   }
 

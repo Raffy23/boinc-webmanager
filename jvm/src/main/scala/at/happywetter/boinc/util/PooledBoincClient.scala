@@ -1,6 +1,7 @@
 package at.happywetter.boinc.util
 
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
@@ -19,6 +20,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, password: String) extends BoincCoreClient {
 
+  val deathCounter = new AtomicInteger(0)
+
   private val all  = new ListBuffer[BoincClient]()
   private val pool = new LinkedBlockingQueue[BoincClient]
   (0 to poolSize).foreach(_ => {
@@ -28,12 +31,20 @@ class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, passw
     all += client
   })
 
-
   private def connection[R](extractor: (BoincClient) => Future[R]): Future[R] =
     Future { pool.take() }
       .map(client => (client, extractor(client)))
       .flatMap{ case (client, result) => pool.offer(client); result }
+      .recover{ case e: Exception => deathCounter.incrementAndGet(); throw e }
 
+
+  def checkConnection(): Future[Boolean] =
+    connection(_.getCCState)
+      .map(_ => true)
+      .recover{ case _: Exception =>
+        deathCounter.incrementAndGet();
+        false
+      }
 
   def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
   def closeAll(): Unit = all.foreach(_.close())

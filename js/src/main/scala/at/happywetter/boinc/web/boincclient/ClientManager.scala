@@ -1,7 +1,5 @@
 package at.happywetter.boinc.web.boincclient
 
-
-
 import at.happywetter.boinc.shared.{BoincProjectMetaData, BoincRPC, WorkunitRequestBody}
 import at.happywetter.boinc.web.helper.FetchHelper
 import org.scalajs.dom
@@ -13,6 +11,7 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
+import at.happywetter.boinc.web.helper.ResponseHelper._
 
 /**
   * Created by: 
@@ -26,6 +25,8 @@ object ClientManager {
   private val cacheTimeout = 60 * 60 * 1000
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
+  val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
+
   Unpickle[List[String]]
     .fromString(dom.window.localStorage.getItem("clientmanager/clients"))
     .getOrElse(List())
@@ -60,9 +61,6 @@ object ClientManager {
     timestamp.map(date => {
       val current = new Date()
       if (current.getTime()-date.getTime() > cacheTimeout) {
-        println(current.getTime())
-        println(date.getTime())
-        println("TIMEOUT: " + (current.getTime()-date.getTime()) + " > " + cacheTimeout)
         Fetch.fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
           .toFuture
           .flatMap(response => response.text().toFuture)
@@ -85,13 +83,23 @@ object ClientManager {
   }
 
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
-    println("bootstrap")
     readClientsFromServer().map(clientList => {
       clientList.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
       println(clientList)
       persistClientsIntoStorage(clientList)
       clients.toMap
     })
+  }
+
+  def queryClientHealth(): Future[Map[String, Boolean]] =  {
+    Fetch
+      .fetch(
+        baseURI + "/health",
+        RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
+      )
+      .toFuture
+      .flatMap(_.tryGet)
+      .map(data => Unpickle[Map[String, Boolean]].fromString(json = data).get)
   }
 
   def queryCompleteProjectList(): Future[Map[String,BoincProjectMetaData]] = {
