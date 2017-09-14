@@ -5,7 +5,7 @@ import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, SwarmSubPage}
+import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage, SwarmSubPage}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation, SwarmControlLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import at.happywetter.boinc.web.util.I18N._
@@ -108,6 +108,7 @@ object SwarmControlPage extends Layout {
 
           AppRouter.current.split("/").last match {
             case "boinc" => renderSubPage(BoincSwarmPage)
+            case "projects" => renderSubPage(ProjectSwarmPage)
             case _ => renderSubPage(BoincSwarmPage)
           }
 

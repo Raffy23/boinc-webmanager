@@ -45,12 +45,18 @@ object Main {
       initRouter()
       LayoutManager.init()
 
-      ClientManager.bootstrapClients().foreach(_ => {
+      ClientManager.bootstrapClients().map(_ => {
+        dom.console.log("Finished, navigating to Path")
+        dom.console.log("Cached Clients into Memory ...")
+
+        AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
+        NProgress.done(true)
+      }).recover{ case _:Exception => {
         dom.console.log("Finished, navigating to Path")
 
         AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
         NProgress.done(true)
-      })
+      }}
     })
   }
 

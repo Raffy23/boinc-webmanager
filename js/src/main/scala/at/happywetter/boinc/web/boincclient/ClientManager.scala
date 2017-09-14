@@ -82,6 +82,8 @@ object ClientManager {
     })
   }
 
+  def getClients: Future[List[BoincClient]] = readClients().map(_.map(new BoincClient(_)))
+
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
     readClientsFromServer().map(clientList => {
       clientList.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
