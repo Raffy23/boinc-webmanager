@@ -4,9 +4,10 @@ import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import at.happywetter.boinc.server._
+import org.http4s.HttpService
 import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
-import org.http4s.server.middleware.HSTS
+import org.http4s.server.middleware.{GZip, HSTS}
 
 import scala.io.StdIn
 
@@ -54,23 +55,24 @@ object WebServer extends App  {
 
   private val builder =
     BlazeBuilder
+      .enableHttp2(true) // Doesn't work properly in 0.18
       .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
       .bindHttp(config.server.port, config.server.address)
-      .mountService(HSTS(JsonMiddleware(authService.protectedService(BoincApiRoutes(hostManager, projects)))), "/api")
+      .mountService(service(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
       .mountService(HSTS(WebResourcesRoute(config)), "/")
       .mountService(HSTS(authService.authService), "/auth")
-      .mountService(HSTS(JsonMiddleware(LanguageService.apply())), "/language")
-
-
+      .mountService(service(LanguageService()), "/language")
 
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
   StdIn.readLine()               // let it run until user presses return
 
-
   // Cleanup
   hostManager.destroy()
   scheduler.shutdownNow()
   server.shutdownNow()
+
+
+  def service(service: HttpService): HttpService = GZip(HSTS(JsonMiddleware(service)))
 
 }

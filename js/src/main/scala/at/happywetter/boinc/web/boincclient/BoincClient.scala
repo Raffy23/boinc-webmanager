@@ -209,4 +209,18 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .flatMap(_.tryGet)
       .map(data => Unpickle[Statistics].fromString(json = data).get)
   }
+
+  override def getAllMessages: Future[List[Message]] = {
+    Fetch
+      .fetch(
+        baseURI + BoincRPC.Command.GetMessages,
+        RequestInit(
+          method = HttpMethod.GET,
+          headers = FetchHelper.header
+        )
+      )
+      .toFuture
+      .flatMap(_.tryGet)
+      .map(data => Unpickle[List[Message]].fromString(json = data).get)
+  }
 }

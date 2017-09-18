@@ -24,6 +24,7 @@ trait BoincCoreClient {
   def getFileTransfer: Future[List[FileTransfer]]
   def getCCState: Future[CCState]
   def getStatistics: Future[Statistics]
+  def getAllMessages: Future[List[Message]]
 
   def getGlobalPrefsOverride: Future[GlobalPrefsOverride]
   def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean]

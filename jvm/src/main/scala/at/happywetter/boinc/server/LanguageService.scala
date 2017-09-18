@@ -3,7 +3,7 @@ package at.happywetter.boinc.server
 import at.happywetter.boinc.util.ResourceWalker
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
-import scala.io.Source
+import scala.io.{Codec, Source}
 import scala.util.Try
 
 /**
@@ -44,7 +44,7 @@ object LanguageService {
     val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
     val ins  = ResourceWalker.getStream(path)
 
-    val confString: String = Source.fromInputStream(ins).getLines().mkString("\n")
+    val confString: String = Source.fromInputStream(ins)(Codec.UTF8).getLines().mkString("\n")
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._

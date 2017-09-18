@@ -1,6 +1,7 @@
 package at.happywetter.boinc.boincclient.parser
 
 import at.happywetter.boinc.shared._
+import org.jsoup.nodes.Document
 
 import scala.xml.NodeSeq
 
@@ -30,6 +31,12 @@ object BoincParserUtils {
   implicit class RichGlobalPrefs(val globalPrefsOverride: GlobalPrefsOverride) {
 
     def toXML: NodeSeq = GlobalPrefsParser.toXML(globalPrefsOverride)
+
+  }
+
+  implicit class BoincHtmlDocument(val document: Document) {
+
+    def toMessages: List[Message] = MessageParser.fromDocument(document)
 
   }
 

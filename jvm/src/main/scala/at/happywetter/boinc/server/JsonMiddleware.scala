@@ -13,7 +13,7 @@ object JsonMiddleware {
 
   def apply(service: HttpService): HttpService = Service.lift { req =>
     service(req).map {
-      case Status.Successful(response) => response.putHeaders(Header("Content-Type","application/json"))
+      case Status.Successful(response) => response.putHeaders(Header("Content-Type","application/json; charset=utf-8"))
       case response => response
     }
   }

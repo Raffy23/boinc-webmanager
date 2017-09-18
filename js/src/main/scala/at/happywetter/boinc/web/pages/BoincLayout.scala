@@ -72,13 +72,14 @@ object BoincLayout extends Layout {
 
     params.getOrElse("action","_DEFAULT_ACTION_") match {
       case view @ "boinc"      => generateChild(view, new BoincMainHostLayout(params))
-      case view @ "messages"   => dom.window.alert("not_implemented".localize)
+      case view @ "messages"   => generateChild(view, new BoincMessageLayout(params))
       case view @ "projects"   => generateChild(view, new BoincProjectLayout(params))
       case view @ "tasks"      => generateChild(view, new BoincTaskLayout(params))
       case view @ "transfers"  => generateChild(view, new BoincFileTransferLayout(params))
       case view @ "statistics" => generateChild(view, new BoincStatisticsLayout(params))
       case view @ "disk"       => generateChild(view, new BoincDiskLayout(params))
       case view @ "global_prefs" => generateChild(view, new BoincGlobalPrefsLayout(params))
+
       case _ =>
         if (child != null)
           child.routerHook.foreach(p => p.leave())
@@ -111,7 +112,6 @@ object BoincLayout extends Layout {
   }
 
   override def onRender(): Unit = {
-    println(dom.window.location.pathname)
     if (child != null) LayoutManager.render(child)
   }
 

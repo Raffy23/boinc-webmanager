@@ -244,3 +244,17 @@ final case class TimeSpan(start: Double, end: Double)
 
 final case class Statistics(stats: Map[String, List[DailyStatistic]])
 final case class DailyStatistic(day: Double, userTotal: Double, userAvg: Double, hostTotal: Double, hostAvg: Double)
+
+final case class Message(project: String, priority: Int, seqno: Long, time: Long, msg: String)
+object Message {
+
+  object Priority extends Enumeration {
+
+    val Info: Priority.Value = Value(1)
+    val UserAlert: Priority.Value = Value(2)
+    val InternalError: Priority.Value = Value(3)
+    val SchedulerAlert: Priority.Value = Value(4)
+
+  }
+
+}

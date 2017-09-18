@@ -46,18 +46,17 @@ object Main {
       LayoutManager.init()
 
       ClientManager.bootstrapClients().map(_ => {
-        dom.console.log("Finished, navigating to Path")
         dom.console.log("Cached Clients into Memory ...")
-
-        AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
-        NProgress.done(true)
-      }).recover{ case _:Exception => {
-        dom.console.log("Finished, navigating to Path")
-
-        AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
-        NProgress.done(true)
-      }}
+        navigate()
+      }).recover{ case _:Exception => navigate() }
     })
+  }
+
+  def navigate(): Unit = {
+    dom.console.log("Finished, navigating to Path")
+
+    AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
+    NProgress.done(true)
   }
 
   def initRouter(): Unit = {
@@ -71,7 +70,6 @@ object Main {
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((param) => {
-      dom.console.log(param)
       dom.window.alert("page_not_found".localize)
       AppRouter.navigate(DashboardLocation)
     })

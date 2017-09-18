@@ -42,7 +42,7 @@ class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, passw
     connection(_.getCCState)
       .map(_ => true)
       .recover{ case _: Exception =>
-        deathCounter.incrementAndGet();
+        deathCounter.incrementAndGet()
         false
       }
 
@@ -94,4 +94,5 @@ class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, passw
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
     connection(_.setRun(mode, duration))
 
+  override def getAllMessages: Future[List[Message]] = connection(_.getAllMessages)
 }

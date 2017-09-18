@@ -99,8 +99,6 @@ object SwarmControlPage extends Layout {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    println(AppRouter.current)
-
     Some(
       div(
         DashboardMenu.component.render,
@@ -109,9 +107,10 @@ object SwarmControlPage extends Layout {
           AppRouter.current.split("/").last match {
             case "boinc" => renderSubPage(BoincSwarmPage)
             case "projects" => renderSubPage(ProjectSwarmPage)
-            case _ => renderSubPage(BoincSwarmPage)
+            case _ => div(
+              h4(BoincClientLayout.Style.pageHeader, "not_found".localize)
+            )
           }
-
         )
       )
     )

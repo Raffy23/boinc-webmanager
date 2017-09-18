@@ -15,6 +15,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.{NodeSeq, XML}
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+
+import scala.util.Try
 
 /**
   * Basic Class for the BOINC Communication
@@ -67,6 +71,7 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   private def sendData(data: String): Unit = this.socket.getOutputStream.write(("<boinc_gui_rpc_request>\n" + data + "\n</boinc_gui_rpc_request>\n\u0003").getBytes)
 
   private def readXML(): NodeSeq = XML.loadString(readStringFromSocket())
+  private def readHMTL(): Document = Jsoup.parse(readStringFromSocket())
 
   private def readStringFromSocket(): String = Stream.continually(read).takeWhile(_ != '\u0003').mkString
 
@@ -77,11 +82,18 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
     c.toChar
   }
 
-  private def rpc(data: String): NodeSeq = {
+  private def xmlRpc(data: String): NodeSeq = {
     this.handleSocketConnection()
 
     sendData(data)
     readXML()
+  }
+
+  private def htmlRpc(data: String): Document = {
+    this.handleSocketConnection()
+
+    sendData(data)
+    readHMTL()
   }
 
   private def handleSocketConnection(): Unit = {
@@ -92,8 +104,8 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   def authenticate(): Boolean = {
     logger.trace("Sending auth Challenge to " + address + ":" + port)
-    val nonce = (this.rpc("<auth1>") \ "nonce").text
-    val result = this.rpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
+    val nonce = (this.xmlRpc("<auth1>") \ "nonce").text
+    val result = this.xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
     authenticated = (result \ "_").xml_==(<authorized/>)
     logger.trace("Client connection is " + (if(authenticated) "" else " *NOT* authenticated!"))
@@ -102,11 +114,21 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   }
 
   def execCommand(cmd: BoincClient.Command.Value): NodeSeq = execAction(cmd.toString)
+  def execHtmlCommand(cmd: BoincClient.Command.Value): Document = execHTMLAction(cmd.toString)
+
+  private def execAction(action: NodeSeq): NodeSeq = execAction(action.toString())
 
   private def execAction(action: String): NodeSeq = {
     this.synchronized {
       if (!this.authenticated) this.authenticate()
-      rpc(action)
+      xmlRpc(action)
+    }
+  }
+
+  private def execHTMLAction(action: String): Document = {
+    this.synchronized {
+      if (!this.authenticated) this.authenticate()
+      htmlRpc(action)
     }
   }
 
@@ -188,13 +210,17 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
     (this.execAction(s"<set_network_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_network_mode>") \ "success").xml_==(<success/>)
   }
 
+  override def getAllMessages = Future {
+    this.execHtmlCommand(BoincClient.Command.GetMessages).toMessages
+  }
+
   override def attachProject(url: String, authenticator: String, name: String) = Future {
     (this.execAction(
         <project_attach>
           <project_url>${url}</project_url>
           <authenticator>${authenticator}</authenticator>
           <project_name>${name}</project_name>
-        </project_attach>.toString()
+        </project_attach>
       ) \ "success"
     ).xml_==(<success/>)
   }
