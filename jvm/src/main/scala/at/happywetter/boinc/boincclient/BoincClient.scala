@@ -44,6 +44,7 @@ object BoincClient {
     val GetResults    = Value("<get_results></get_results>")
     val GetActiveResults = Value("<get_results><active_only>1</active_only></get_results>")
     val GetMessages   = Value("<get_messages><seqno>0</seqno></get_messages>")
+    val GetNotices   = Value("<get_notices><seqno>0</seqno></get_notices>")
     val RunBenchmarks = Value("<run_benchmarks/>")
     val GetCCStatus   = Value("<get_cc_status/>")
     val GetNetworkAvailable = Value("<network_available/>")
@@ -212,6 +213,10 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
 
   override def getAllMessages = Future {
     this.execHtmlCommand(BoincClient.Command.GetMessages).toMessages
+  }
+
+  override def getAllNotices = Future {
+    this.execHtmlCommand(BoincClient.Command.GetNotices).toNotices
   }
 
   override def attachProject(url: String, authenticator: String, name: String) = Future {

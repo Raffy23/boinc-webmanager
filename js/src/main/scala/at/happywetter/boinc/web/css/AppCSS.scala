@@ -36,7 +36,8 @@ object AppCSS {
       BoincGlobalPrefsLayout.Style,
       BoincSwarmPage.Style,
       ProjectSwarmPage.Style,
-      BoincMessageLayout.Style
+      BoincMessageLayout.Style,
+      FloatingMenu
     )
 
     GlobalRegistry.addToDocumentOnRegistration()

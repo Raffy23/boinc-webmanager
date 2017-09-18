@@ -37,6 +37,7 @@ object BoincParserUtils {
   implicit class BoincHtmlDocument(val document: Document) {
 
     def toMessages: List[Message] = MessageParser.fromDocument(document)
+    def toNotices: List[Notice] = NoticeParser.fromDocument(document)
 
   }
 

@@ -258,3 +258,13 @@ object Message {
   }
 
 }
+
+final case class Notice(title: String,
+                        description: String,
+                        createTime: Double,
+                        arrivalTime: Double,
+                        isPrivate: Boolean,
+                        project: String,
+                        category: String,
+                        link: String,
+                        seqno: Int)

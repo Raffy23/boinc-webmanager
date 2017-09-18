@@ -95,4 +95,6 @@ class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, passw
     connection(_.setRun(mode, duration))
 
   override def getAllMessages: Future[List[Message]] = connection(_.getAllMessages)
+
+  override def getAllNotices: Future[List[Notice]] = connection(_.getAllNotices)
 }

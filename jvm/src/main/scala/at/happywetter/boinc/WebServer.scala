@@ -63,6 +63,9 @@ object WebServer extends App  {
       .mountService(HSTS(authService.authService), "/auth")
       .mountService(service(LanguageService()), "/language")
 
+  hostManager.get("Blackangle").get.getAllNotices
+
+
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
   StdIn.readLine()               // let it run until user presses return

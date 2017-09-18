@@ -43,6 +43,7 @@ object BoincApiRoutes {
           case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(Pickle.intoString(_)))
           case "statistics" => Ok(client.getStatistics.map(Pickle.intoString(_)))
           case "messages" => Ok(client.getAllMessages.map(Pickle.intoString(_)))
+          case "notices" => Ok(client.getAllNotices.map(Pickle.intoString(_)))
 
           case _ => NotAcceptable()
         }

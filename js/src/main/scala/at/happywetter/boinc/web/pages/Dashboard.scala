@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.shared.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
@@ -27,14 +27,6 @@ import scalatags.JsDom
   * @version 24.07.2017
   */
 object Dashboard extends Layout {
-
-  import scalacss.ProdDefaults._
-  object Style extends StyleSheet.Inline {
-
-    val button = BoincStatisticsLayout.Style.button
-    val active = BoincStatisticsLayout.Style.active
-
-  }
 
   lazy val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
     import scalatags.JsDom.all._
@@ -99,22 +91,22 @@ object Dashboard extends Layout {
     val container = dom.document.getElementById("client-container")
     container.appendChild(
       div(
-        div(style := "float:right;margin-top:12px;margin-right:20px",
-          a("dashboard_home".localize, Style.button, Style.active, style :="border-left:1px #AAA solid",
+        div(FloatingMenu.root,
+          a("dashboard_home".localize, FloatingMenu.active,
             onclick := { (event: Event) => {
               event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-                node.asInstanceOf[HTMLElement].classList.remove(Style.active.htmlClass)
+                node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
               })
-              event.target.asInstanceOf[HTMLElement].classList.add(Style.active.htmlClass)
+              event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 
               dom.window.document.getElementById("dashboard_home_table").asInstanceOf[HTMLElement].style=""
               dom.window.document.getElementById("dashboard_workunits_table").asInstanceOf[HTMLElement].style="display:none"
             }}),
-          a("dashboard_workunits".localize, Style.button , onclick := { (event: Event) => {
+          a("dashboard_workunits".localize, onclick := { (event: Event) => {
             event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-              node.asInstanceOf[HTMLElement].classList.remove(Style.active.htmlClass)
+              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
             })
-            event.target.asInstanceOf[HTMLElement].classList.add(Style.active.htmlClass)
+            event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 
             dom.window.document.getElementById("dashboard_home_table").asInstanceOf[HTMLElement].style="display:none"
             dom.window.document.getElementById("dashboard_workunits_table").asInstanceOf[HTMLElement].style=""
