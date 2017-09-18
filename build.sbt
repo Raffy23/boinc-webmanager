@@ -69,6 +69,7 @@ lazy val serverJVM = manager.jvm.dependsOn(shared)
     buildInfoOptions += BuildInfoOption.BuildTime,
     assemblyMergeStrategy in assembly := {
       case PathList("at", "happywetter", "boinc", "shared", xs @ _*) => MergeStrategy.first
+      case PathList("at", "happywetter", "boinc", "BuildInfo$.class") => MergeStrategy.first
       case x => (assemblyMergeStrategy in assembly).value(x)
     }
   )
