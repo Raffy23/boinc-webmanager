@@ -5,7 +5,7 @@ import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincMessageLayout.Style
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.routes.AppRouter
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -83,6 +83,7 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
   override def onRender(client: BoincClient): Unit = {
     import at.happywetter.boinc.web.hacks.NodeListConverter._
+    NProgress.start()
 
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
@@ -117,6 +118,7 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
     renderNotices(client)
     renderMessages(client)
+    NProgress.done(true)
   }
 
   private def renderNotices(client: BoincClient): Unit = {

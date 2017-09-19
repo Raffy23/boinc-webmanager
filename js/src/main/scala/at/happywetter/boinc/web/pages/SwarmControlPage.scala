@@ -48,6 +48,8 @@ object SwarmControlPage extends Layout {
   private val subPages = List(
     ("boinc", "head_menu_boinc".localize, "fa fa-id-card-o"),
     ("projects", "head_menu_projects".localize, "fa fa-tag"),
+
+    //TODO: Implement Pages:
     //("tasks", "head_menu_tasks".localize, "fa fa-tasks"),
     //("transfers", "head_menu_transfers".localize, "fa fa-exchange"),
     //("statistics", "head_menu_statistics".localize, "fa fa-area-chart"),
