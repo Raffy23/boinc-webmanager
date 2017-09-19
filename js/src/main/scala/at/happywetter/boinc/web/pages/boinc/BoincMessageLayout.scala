@@ -10,12 +10,14 @@ import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.html.Element
+import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 
 import scala.scalajs.js
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.Try
 
 /**
   * Created by: 
@@ -127,8 +129,15 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
         ul(Style.noticeList,
           notices.reverse.map(notice => {
             //TODO: Changes this, since it can render malicious code, server & core client must be trusted fully
-            val content = dom.document.createElement("p")
-            content.innerHTML = notice.description
+            //val content = dom.document.createElement("p")
+            //content.innerHTML = notice.description
+
+            Try(
+              println(convertContent(notice.description))
+            ).recover{
+              case x: Exception => x.printStackTrace()
+            }
+
 
             li(
               div(
@@ -137,7 +146,7 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                 else
                   h4(notice.title)
                 ,
-                content,
+                p(convertContent(notice.description)),
                 small(BoincFormater.convertDate(notice.createTime),
                   if (notice.link.nonEmpty)
                     a("read_more_link".localize, onclick := AppRouter.openExternal, href := notice.link)
@@ -187,6 +196,30 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
   override val path: String = "messages"
 
+  private def convertContent(content: String) = {
+    import at.happywetter.boinc.web.hacks.NodeListConverter._
+
+    // Parse HTML Input
+    val root = new DOMParser().parseFromString(
+      s"<div id='root'>${content.replace("\n","<br/>")}</div>",
+      "text/html"
+    )
+
+    // Blacklist Filter for non-truested Stuff:
+    root.getElementsByName("script").forEach((node, _, _) => root.removeChild(node))
+    root.querySelectorAll("[onclick]").forEach((node, _, _) =>
+      node.asInstanceOf[HTMLElement].removeAttribute("onclick")
+    )
+
+    // Cleanup for display
+    val ret = root.getElementById("root")
+    ret.removeAttribute("id")
+
+    ret
+  }
+
+
+  /* Not used anymore
   def priToStr(pri: Int): String = Message.Priority(pri) match {
     case Message.Priority.Info => "msg_type_info".localize
     case Message.Priority.InternalError => "msg_type_error".localize
@@ -194,5 +227,6 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     case Message.Priority.UserAlert => "msg_type_user_alert".localize
     case x => x.toString
   }
+  */
 
 }

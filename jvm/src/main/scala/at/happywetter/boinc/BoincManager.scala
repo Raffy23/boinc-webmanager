@@ -1,14 +1,13 @@
 package at.happywetter.boinc
 
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
+import java.util.concurrent.{ScheduledExecutorService, TimeUnit}
 
-import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.util.PooledBoincClient
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -19,7 +18,7 @@ import scala.language.postfixOps
   * @version 19.07.2017
   */
 
-class BoincManager(poolSize: Int)(implicit val scheduler: ScheduledExecutorService) {
+class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) {
 
   private val timeout      = 5 minutes
   private val lastUsed     = new TrieMap[String, Long]()
@@ -51,7 +50,7 @@ class BoincManager(poolSize: Int)(implicit val scheduler: ScheduledExecutorServi
   }
 
   def add(name: String, host: AppConfig.Host): Unit =
-    add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password))
+    add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding))
 
   def add(config: (String,AppConfig.Host)): Unit = add(config._1, config._2)
 

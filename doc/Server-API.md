@@ -31,6 +31,7 @@ seconds. The Server will not open a new Connection to the Core Client!*
 
 * **GET** `/`: This call will return a List of Clients
 * **GET** `/project_list`: A list of Projects (url and name) which can be added to a Client
+* **GET** `/health`: A Map for all clients which indicates if the client has Connection problems or not
 * **GET** `/:client/:action`
   * Values for the `:action` Parameter:
   * `tasks`: A list of active Tasks
@@ -44,6 +45,8 @@ seconds. The Server will not open a new Connection to the Core Client!*
   * `ccstate`: Current Control State of the Core Client (run-modes, ...)
   * `global_prefs_override`: Settings of the Core Client (Same Data which is displayed by the BOINC Manager under Settings)
   * `statistics`: Statistics Object which contains all Projects
+  * `messages`: List of Log Message from the Core Client
+  * `notices`: Notices from Projects and the Core Client
 
 * **POST** `/:client/:action`
   * Values for the `:action` Parameter:

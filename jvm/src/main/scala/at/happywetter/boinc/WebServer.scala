@@ -23,7 +23,7 @@ object WebServer extends App  {
 
   private lazy val config = AppConfig.conf
   private lazy val projects = new XMLProjectStore(config.boinc.projects.xmlSource)
-  private lazy val hostManager = new BoincManager(config.boinc.connectionPool)
+  private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
 
   if (config.development.getOrElse(false)) {
     println("WebServer was launched with development options!")
@@ -62,9 +62,6 @@ object WebServer extends App  {
       .mountService(HSTS(WebResourcesRoute(config)), "/")
       .mountService(HSTS(authService.authService), "/auth")
       .mountService(service(LanguageService()), "/language")
-
-  hostManager.get("Blackangle").get.getAllNotices
-
 
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")

@@ -57,7 +57,7 @@ object BoincClient {
   }
 
 }
-class BoincClient(address: String, port: Int = 31416, password: String) extends BoincCoreClient {
+class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8") extends BoincCoreClient {
   var socket: Socket = _
   var reader: InputStream = _
   var authenticated = false
@@ -72,7 +72,8 @@ class BoincClient(address: String, port: Int = 31416, password: String) extends 
   private def sendData(data: String): Unit = this.socket.getOutputStream.write(("<boinc_gui_rpc_request>\n" + data + "\n</boinc_gui_rpc_request>\n\u0003").getBytes)
 
   private def readXML(): NodeSeq = XML.loadString(readStringFromSocket())
-  private def readHMTL(): Document = Jsoup.parse(readStringFromSocket())
+  private def readHMTL(): Document =
+    Jsoup.parse(new String(readStringFromSocket().getBytes(encoding), "UTF-8"))
 
   private def readStringFromSocket(): String = Stream.continually(read).takeWhile(_ != '\u0003').mkString
 

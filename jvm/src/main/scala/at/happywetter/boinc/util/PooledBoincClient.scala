@@ -18,14 +18,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @author Raphael
   * @version 12.09.2017
   */
-class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, password: String) extends BoincCoreClient {
+class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
 
   val deathCounter = new AtomicInteger(0)
 
   private val all  = new ListBuffer[BoincClient]()
   private val pool = new LinkedBlockingQueue[BoincClient]
   (0 to poolSize).foreach(_ => {
-    val client = new BoincClient(address, port, password)
+    val client = new BoincClient(address, port, password, encoding)
 
     pool.offer(client)
     all += client

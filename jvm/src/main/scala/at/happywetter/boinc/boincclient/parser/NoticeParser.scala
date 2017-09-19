@@ -4,7 +4,6 @@ import at.happywetter.boinc.shared.Notice
 import org.jsoup.nodes.{Document, Element}
 
 import scala.collection.JavaConverters._
-import scala.util.Try
 /**
   * Created by: 
   *

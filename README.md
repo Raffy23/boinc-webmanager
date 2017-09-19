@@ -65,6 +65,9 @@ server {
 # How many concurrent Requests are send to the Core Client 
 boinc.connection-pool: 1
 
+# Set the Text Encoding of the Core Client
+boinc.encoding: "iso-8859-1"
+
 # Settings about the Boinc hosts
 boinc.hosts {
   "PC1": {address: "localhost", port: ${boinc-default-port}, password: "password" }
