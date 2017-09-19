@@ -1,6 +1,5 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.Message
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.pages.BoincClientLayout
@@ -10,14 +9,12 @@ import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.html.Element
 import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.Try
 
 /**
   * Created by: 
@@ -28,8 +25,9 @@ import scala.util.Try
 object BoincMessageLayout {
 
   object Style extends StyleSheet.Inline {
+  import dsl._
+
   import scala.language.postfixOps
-    import dsl._
 
     val dateCol = style(
       whiteSpace.nowrap
@@ -84,9 +82,10 @@ object BoincMessageLayout {
 class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
 
   override def onRender(client: BoincClient): Unit = {
+    import at.happywetter.boinc.web.hacks.NodeListConverter._
+
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
 
     root.appendChild(
       div(id := "messages",
@@ -127,18 +126,7 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     client.getAllNotices.map(notices => {
       dom.document.getElementById("client-notices").appendChild(
         ul(Style.noticeList,
-          notices.reverse.map(notice => {
-            //TODO: Changes this, since it can render malicious code, server & core client must be trusted fully
-            //val content = dom.document.createElement("p")
-            //content.innerHTML = notice.description
-
-            Try(
-              println(convertContent(notice.description))
-            ).recover{
-              case x: Exception => x.printStackTrace()
-            }
-
-
+          notices.reverse.map(notice =>
             li(
               div(
                 if (notice.category == "client")
@@ -154,7 +142,7 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                 )
               )
             )
-          })
+          )
         ).render
       )
     })
@@ -217,16 +205,4 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
     ret
   }
-
-
-  /* Not used anymore
-  def priToStr(pri: Int): String = Message.Priority(pri) match {
-    case Message.Priority.Info => "msg_type_info".localize
-    case Message.Priority.InternalError => "msg_type_error".localize
-    case Message.Priority.SchedulerAlert => "msg_type_alert".localize
-    case Message.Priority.UserAlert => "msg_type_user_alert".localize
-    case x => x.toString
-  }
-  */
-
 }
