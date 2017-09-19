@@ -1,16 +1,23 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.web.boincclient.BoincClient
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
+import at.happywetter.boinc.web.css.FloatingMenu
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincGlobalPrefsLayout.Style
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
+import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLElement
 
 import scala.language.postfixOps
 import scala.scalajs.js
 import scalacss.internal.mutable.StyleSheet
 import scalacss.ProdDefaults._
+import scalatags.JsDom.TypedTag
+import scalatags.JsDom.all.{`type`, checked, input}
+import scalatags.generic.{Attr, AttrPair}
 
 /**
   * Created by: 
@@ -58,6 +65,9 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
 
       root.appendChild(
         div( id := "global_prefs", Style.root_pane,
+          div(FloatingMenu.root, BoincClientLayout.Style.in_text_icon,
+            a(BoincSwarmPage.Style.button, i(`class` := "fa fa-check"), "submit".localize)
+          ),
           h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-cogs"),  "global_prefs".localize),
 
           h4(BoincClientLayout.Style.h4_without_line, "global_prefs_computing".localize),
@@ -71,9 +81,9 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
           input(Style.input, value := f.cpuSchedulingPeriodMinutes, id := "shedPeriod"),
 
           h4(Style.h4, "global_prefs_pause".localize),
-          label(input(`type` := "checkbox", checked := (if(!f.runOnBatteries) "true" else "false")), "global_prefs_on_batteries".localize), br(),
-          label(input(`type` := "checkbox", checked := (if(!f.runIfUserActive) "true" else "false")), "global_prefs_cpu_active".localize), br(),
-          label(input(`type` := "checkbox", checked := (if(!f.runGPUIfUserActive) "true" else "false")), "global_prefs_gpu_active".localize), br(),
+          label(checkbox(!f.runOnBatteries), "global_prefs_on_batteries".localize), br(),
+          label(checkbox(!f.runIfUserActive), "global_prefs_cpu_active".localize), br(),
+          label(checkbox(!f.runGPUIfUserActive), "global_prefs_gpu_active".localize), br(),
 
           h4(Style.h4, "global_prefs_save_time".localize),
           label("global_prefs_workbuffer_days".localize, `for` := "workBufferDays"),
@@ -87,10 +97,10 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
 
           h4(Style.h4, "global_prefs_network".localize),
           label("global_prefs_max_bytes_down".localize, `for` := "maxBytesDown"),
-          input(Style.input, value := f.maxBytesSecDownload, id := "maxBytesDown"), br(),
+          input(Style.input, value := BoincFormater.convertSpeedValue(f.maxBytesSecDownload, 1), id := "maxBytesDown"), br(),
 
           label("global_prefs_max_bytes_up".localize, `for` := "maxBytesUp"),
-          input(Style.input, value := f.maxBytesSecUpload, id := "maxBytesUp"), br(),
+          input(Style.input, value := BoincFormater.convertSpeedValue(f.maxBytesSecUpload, 1), id := "maxBytesUp"), br(),
 
           label("global_prefs_max_bytes".localize, `for` := "maxBytes"),
           input(Style.input, value := f.dailyXFerLimitMB, id := "maxBytes"), br(),
@@ -98,7 +108,7 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
           label("global_prefs_max_bytes_period".localize, `for` := "maxBytesPeriod"),
           input(Style.input, value := f.dailyXFerPeriodDays, id := "maxBytesPeriod"), br(),
 
-          label(input(`type` := "checkbox", checked := (if(f.dontVerifyImages) "true" else "false")), "global_prefs_dont_verify_images".localize), br(),
+          label(checkbox(f.dontVerifyImages), "global_prefs_dont_verify_images".localize), br(),
 
           h4(Style.h4, "global_prefs_disk".localize),
           label("global_prefs_min_disk_free".localize, `for` := "min_disk_free"),
@@ -118,13 +128,20 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
           label("global_prefs_ram_used_idle".localize, `for` := "ram_used_idle"),
           input(Style.input, value := f.ramUsedIdlePct, id := "ram_used_idle"), br(),
 
-          label(input(`type` := "checkbox", checked := (if(f.leaveAppsInMemory) "true" else "false")), "global_prefs_leave_apps_in_memory".localize), br(),
+          label(checkbox(f.leaveAppsInMemory), "global_prefs_leave_apps_in_memory".localize)
         ).render
       )
 
-      new OkDialog("__read_only__", List("__formular_data_is_read_only__")).renderToBody().show()
+      import at.happywetter.boinc.web.hacks.NodeListConverter._
+      dom.document.querySelectorAll("input").forEach((node, _, _) => node.asInstanceOf[HTMLElement].setAttribute("disabled",""))
     })
   }
 
   override val path = "global_prefs"
+
+  private def checkbox(checkStatus: Boolean): TypedTag[dom.html.Input] = {
+    import scalatags.JsDom.all._
+    if (checkStatus) input(`type` := "checkbox", checked)
+    else input(`type` := "checkbox")
+  }
 }

@@ -289,7 +289,7 @@ object Dashboard extends Layout {
       val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
 
       dom.document.getElementById(s"dashboard-${client.hostname}-network").textContent =
-        BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
+        BoincFormater.convertSpeed(upload) + " / " + BoincFormater.convertSpeed(download)
     }) // Fail silently ...
   }
 

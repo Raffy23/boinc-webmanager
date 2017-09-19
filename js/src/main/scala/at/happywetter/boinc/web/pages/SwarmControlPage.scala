@@ -48,11 +48,11 @@ object SwarmControlPage extends Layout {
   private val subPages = List(
     ("boinc", "head_menu_boinc".localize, "fa fa-id-card-o"),
     ("projects", "head_menu_projects".localize, "fa fa-tag"),
-    ("tasks", "head_menu_tasks".localize, "fa fa-tasks"),
-    ("transfers", "head_menu_transfers".localize, "fa fa-exchange"),
-    ("statistics", "head_menu_statistics".localize, "fa fa-area-chart"),
-    ("disk", "head_menu_disk".localize, "fa fa-pie-chart"),
-    ("global_prefs", "head_menu_prefs".localize, "fa fa-cogs")
+    //("tasks", "head_menu_tasks".localize, "fa fa-tasks"),
+    //("transfers", "head_menu_transfers".localize, "fa fa-exchange"),
+    //("statistics", "head_menu_statistics".localize, "fa fa-area-chart"),
+    //("disk", "head_menu_disk".localize, "fa fa-pie-chart"),
+    //("global_prefs", "head_menu_prefs".localize, "fa fa-cogs")
   )
 
   override def beforeRender(params: Dictionary[String]): Unit = {

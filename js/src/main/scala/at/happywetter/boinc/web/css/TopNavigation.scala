@@ -17,9 +17,9 @@ object TopNavigation extends StyleSheet.Inline {
     margin.`0`,
     padding.`0`,
     overflow.hidden,
-    position.fixed,
+    position.absolute,
     top(1 px),
-    right(5 px),
+    right(15 px),
 
     media.maxWidth(690 px)(
       top(51 px)

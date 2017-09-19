@@ -53,4 +53,23 @@ object BoincFormater {
     s"${value.formatted("%.1f")} ${labels(cnt)}"
   }
 
+  def convertSpeed(size: Double): String = {
+    var value = size
+    var cnt   = 0
+
+    while ((value/1024) >= 1) {
+      value = value / 1024
+      cnt = cnt + 1
+    }
+
+    s"${value.formatted("%.1f")} ${labels(cnt)}/s"
+  }
+
+  def convertSpeedValue(size: Double, step: Int): Double = {
+    var value = size
+
+    (0 until step).foreach(_ => value = value/1024)
+    value
+  }
+
 }
