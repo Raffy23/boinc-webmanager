@@ -28,8 +28,10 @@ follow theses steps:
 3. Create the SSL Certificate with the Java Keytool
 4. Run it with `java -jar Boinc-Webmanager-assembly-XXXX.jar`
 
-After these Steps you should be able to view the Client at the following URL `https://127.0.0.1:8080` 
-you did not change anything from the sample configuration file below
+After these Steps the Web UI should be reachable under `https://127.0.0.1:8080` or the specified address
+in the configuration file.
+
+*Note: The BOINC Core Client does need additional [configuration](doc/Configuration.md#boinc_core_client_configuration)!*
 
 ### SSL-Certificate
 The Webmanager does need a Certificate to provide a Secure Connection over https. The keystore is build

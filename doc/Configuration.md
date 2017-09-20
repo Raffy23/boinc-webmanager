@@ -1,6 +1,9 @@
 Configuration
 ==============
+This file contains some sample Configuration files with additional comments how the
+Boinc Webmanager and the Core Client must be configured to function properly
 
+# Boinc Webmanager
 Sample **application.conf**:   
 ````hocon
 
@@ -86,3 +89,17 @@ auto-discovery {
   ]
 }
 ````
+
+# BOINC Core Client Configuration
+The Boinc Webmanager can only connect to a Core Client which does allow Remote Connections.
+To allow such connections the `cc_config.xml` File of the Core Client must be modified buy setting
+the property `allow_remote_gui_rpc`to `1`:
+
+*Sample cc_config.xml File:*
+```xml
+<cc_config>
+  <options>
+    <allow_remote_gui_rpc>1</allow_remote_gui_rpc>
+  </options>
+</cc_config>    
+```
