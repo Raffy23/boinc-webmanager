@@ -1,7 +1,11 @@
 package at.happywetter.boinc
 
+import java.util.concurrent.TimeUnit
+
+import at.happywetter.boinc.shared.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
+import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
 /**
@@ -28,5 +32,10 @@ object AppConfig {
     import pureconfig._
     loadConfigOrThrow[Config](hocon)
   }
+
+  lazy val sharedConf = ServerSharedConfig(
+    if (conf.autoDiscovery.enabled) FiniteDuration(conf.autoDiscovery.scanTimeout, TimeUnit.MINUTES).toMillis
+    else FiniteDuration(12, TimeUnit.HOURS).toMillis
+  )
 
 }

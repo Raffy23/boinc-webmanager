@@ -30,6 +30,7 @@ Requests. This leads sometimes to the issue that some Requests are stalled a cou
 seconds. The Server will not open a new Connection to the Core Client!* 
 
 * **GET** `/`: This call will return a List of Clients
+* **GET** `/config`: Some Settings from the `application.conf` 
 * **GET** `/project_list`: A list of Projects (url and name) which can be added to a Client
 * **GET** `/health`: A Map for all clients which indicates if the client has Connection problems or not
 * **GET** `/:client/:action`

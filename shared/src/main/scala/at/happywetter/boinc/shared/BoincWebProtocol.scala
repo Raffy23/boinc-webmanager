@@ -11,4 +11,7 @@ final case class ProjectRequestBody(project: String, action: String)
 final case class User(username: String, passwordHash: String, nonce: String)
 final case class BoincModeChange(mode: String, duration: Double)
 final case class AddProjectBody(projectUrl: String, projectName: String, user: String, password: String)
+
 final case class ApplicationError(reason: String)
+
+final case class ServerSharedConfig(hostNameCacheTimeout: Long)

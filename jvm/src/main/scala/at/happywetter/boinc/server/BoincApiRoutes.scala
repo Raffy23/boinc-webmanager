@@ -1,6 +1,6 @@
 package at.happywetter.boinc.server
 
-import at.happywetter.boinc.BoincManager
+import at.happywetter.boinc.{AppConfig, BoincManager}
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.shared.BoincRPC.{ProjectAction, WorkunitAction}
 import at.happywetter.boinc.shared._
@@ -25,6 +25,7 @@ object BoincApiRoutes {
     // Basic Meta States
     case GET -> Root / "boinc" => Ok(Pickle.intoString(hostManager.getAllHostNames))
     case GET -> Root / "health" => Ok(hostManager.checkHealth.map(Pickle.intoString(_)))
+    case GET -> Root / "config" => Ok(Pickle.intoString(AppConfig.sharedConf))
     case GET -> Root / "boinc" / "project_list" => Ok(Pickle.intoString(projects.getProjects))
 
     // Main route for Boinc Data

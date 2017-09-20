@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.boincclient
 
 import at.happywetter.boinc.shared.{BoincProjectMetaData, BoincRPC, WorkunitRequestBody}
-import at.happywetter.boinc.web.helper.FetchHelper
+import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
 import prickle.{Pickle, Unpickle}
@@ -22,7 +22,7 @@ import at.happywetter.boinc.web.helper.ResponseHelper._
 object ClientManager {
 
   private val baseURI = "/api/boinc"
-  private val cacheTimeout = 60 * 60 * 1000
+  private def cacheTimeout = ServerConfig.get.map(_.hostNameCacheTimeout)
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
@@ -35,22 +35,24 @@ object ClientManager {
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
     import prickle._
 
-    val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
-    timestamp.fold(
-      ex => {
-        dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-        dom.window.localStorage.setItem("clientmanager/clients", Pickle.intoString(clients))
-        dom.console.log("Clientmanager: Could not read timestamp, persist current Clientlist")
-      },
-      date => {
-        val current = new Date()
-        if (current.getTime()-date.getTime() > cacheTimeout) {
+    cacheTimeout.foreach(cacheTimeout => {
+      val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
+      timestamp.fold(
+        ex => {
           dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
           dom.window.localStorage.setItem("clientmanager/clients", Pickle.intoString(clients))
-          dom.console.log("Clientmanager: Updated Clientlist")
+          dom.console.log("Clientmanager: Could not read timestamp, persist current Clientlist")
+        },
+        date => {
+          val current = new Date()
+          if (current.getTime() - date.getTime() > cacheTimeout) {
+            dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
+            dom.window.localStorage.setItem("clientmanager/clients", Pickle.intoString(clients))
+            dom.console.log("Clientmanager: Updated Clientlist")
+          }
         }
-      }
-    )
+      )
+    })
   }
 
   private def readClientsFromServer(): Future[List[String]] = {
@@ -58,25 +60,28 @@ object ClientManager {
 
     val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
 
-    timestamp.map(date => {
-      val current = new Date()
-      if (current.getTime()-date.getTime() > cacheTimeout) {
-        Fetch.fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-          .toFuture
-          .flatMap(response => response.text().toFuture)
-          .map(data => Unpickle[List[String]].fromString(json = data).get)
-      } else {
-        Future {
-          val clients = Unpickle[List[String]].fromString(dom.window.localStorage.getItem("clientmanager/clients"))
-          //TODO: Make fallback if cache is corrupted
-          clients.get
+    cacheTimeout.flatMap(cacheTimeout => {
+      timestamp.map(date => {
+        val current = new Date()
+        if (current.getTime() - date.getTime() > cacheTimeout) {
+          Fetch.fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+            .toFuture
+            .flatMap(response => response.text().toFuture)
+            .map(data => Unpickle[List[String]].fromString(json = data).get)
+        } else {
+          Future {
+            val clients = Unpickle[List[String]].fromString(dom.window.localStorage.getItem("clientmanager/clients"))
+            //TODO: Make fallback if cache is corrupted
+            clients.get
+          }
         }
-      }
-    }).get
+      }).get
+    })
   }
 
   def readClients(): Future[List[String]] = {
     readClientsFromServer().map(data => {
+      data.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
       persistClientsIntoStorage(data)
       data
     })
@@ -87,7 +92,6 @@ object ClientManager {
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
     readClientsFromServer().map(clientList => {
       clientList.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
-      println(clientList)
       persistClientsIntoStorage(clientList)
       clients.toMap
     })

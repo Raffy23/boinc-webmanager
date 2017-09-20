@@ -4,11 +4,11 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.{BoincRPC, _}
 import at.happywetter.boinc.web.helper.FetchHelper
-import org.scalajs.dom.experimental.{Fetch, Headers, HttpMethod, RequestInit}
+import at.happywetter.boinc.web.helper.ResponseHelper.ErrorResponseFeature
+import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import at.happywetter.boinc.web.helper.ResponseHelper.ErrorResponseFeature
 
 /**
   * Created by: 

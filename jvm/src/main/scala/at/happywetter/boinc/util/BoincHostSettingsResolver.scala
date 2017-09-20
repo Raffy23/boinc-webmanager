@@ -29,6 +29,7 @@ class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(impl
   private def discoveryCompleted(data: Future[List[IP]]): Unit = {
     data.foreach{ hosts =>
       logger.debug("Completed Discovery: " + hosts)
+      logger.debug("Following Hosts can be added: " + hosts.diff(getUsedIPs))
 
       hosts.diff(getUsedIPs).foreach( ip => {
         Future {

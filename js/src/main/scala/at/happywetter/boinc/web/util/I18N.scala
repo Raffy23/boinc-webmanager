@@ -20,7 +20,7 @@ object I18N {
     val German = "de"
     val English = "en"
 
-    def getDefault: String = dom.window.navigator.language
+    def getDefault: String = dom.window.navigator.language.substring(0,2) // IE: gives xx-XX
 
     def save(lang: String = current): Unit = {
       current = lang

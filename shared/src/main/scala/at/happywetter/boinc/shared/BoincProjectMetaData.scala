@@ -8,3 +8,4 @@ package at.happywetter.boinc.shared
   */
 case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
 
+

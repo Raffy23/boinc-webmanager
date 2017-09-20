@@ -14,6 +14,8 @@ import org.scalajs.dom
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import at.happywetter.boinc.web.util.I18N._
 
+import scala.util.Try
+
 /**
   * Created by: 
   *
@@ -44,11 +46,7 @@ object Main {
 
       initRouter()
       LayoutManager.init()
-
-      ClientManager.bootstrapClients().map(_ => {
-        dom.console.log("Cached Clients into Memory ...")
-        navigate()
-      }).recover{ case _:Exception => navigate() }
+      navigate()
     })
   }
 
