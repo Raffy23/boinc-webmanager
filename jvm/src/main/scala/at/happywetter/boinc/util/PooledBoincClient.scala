@@ -8,6 +8,7 @@ import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared._
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,17 +23,23 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
 
   val deathCounter = new AtomicInteger(0)
 
-  private val all  = new ListBuffer[BoincClient]()
+  private def all = lastUsed.keys.toList
+  private val lastUsed = new TrieMap[BoincClient, Long]()
   private val pool = new LinkedBlockingQueue[BoincClient]
   (0 to poolSize).foreach(_ => {
     val client = new BoincClient(address, port, password, encoding)
 
     pool.offer(client)
-    all += client
+    lastUsed += (client -> 0)
   })
 
   private def connection[R](extractor: (BoincClient) => Future[R]): Future[R] =
-    Future { pool.take() }
+    Future {
+      val con = pool.take()
+      lastUsed(con) = System.currentTimeMillis()
+
+      con
+    }
       .map(client => (client, extractor(client)))
       .flatMap{ case (client, result) => pool.offer(client); result }
       .recover{ case e: Exception => deathCounter.incrementAndGet(); throw e }
@@ -46,8 +53,16 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
         false
       }
 
-  def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
   def closeAll(): Unit = all.foreach(_.close())
+  def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
+  def closeOpen(timeout: Long): Unit = {
+    val current = System.currentTimeMillis()
+
+    lastUsed.foreach{
+      case (client, timestamp) if timestamp+timeout < current => client.close()
+    }
+  }
+
   def hasOpenConnections: Boolean = all.exists(_.isAuthenticated)
 
   override def getTasks(active: Boolean): Future[List[Result]] = connection(_.getTasks(active))

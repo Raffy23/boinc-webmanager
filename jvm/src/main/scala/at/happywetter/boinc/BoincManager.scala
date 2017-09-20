@@ -28,12 +28,12 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   scheduler.scheduleWithFixedDelay(() => {
     val curTime = System.currentTimeMillis() - timeout.toMillis
 
-    lastUsed.foreach { case (name, time) => {
+    lastUsed.foreach { case (name, time) =>
       if (time < curTime && boincClients(name).hasOpenConnections) {
         BoincManager.logger.debug("Close Socket Connection from " + name)
-        boincClients(name).closeOpen()
+        boincClients(name).closeOpen(timeout.toMillis)
       }
-    }}
+    }
   }, timeout.toMinutes, timeout.toMinutes, TimeUnit.MINUTES )
 
   def get(name: String): Option[PooledBoincClient] = {
