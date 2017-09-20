@@ -63,7 +63,7 @@ server {
 }
 
 # How many concurrent Requests are send to the Core Client 
-boinc.connection-pool: 1
+boinc.connection-pool: 3
 
 # Set the Text Encoding of the Core Client
 boinc.encoding: "iso-8859-1"
@@ -92,6 +92,28 @@ boinc.projects {
         """
     }
   }
+}
+
+# Settings for the Auto Discovery Service
+auto-discovery {
+  enabled: true
+
+  # IP Range & Port which should be scanned
+  start-ip: "192.168.1.100"
+  end-ip: "192.168.1.125"
+  port: ${boinc-default-port}
+
+  # Socket Timeout
+  timeout: 500
+
+  # Timeout in Minutes in which intervall the Network should be scanned
+  scan-timeout: 30
+
+  # A List of Passwords which should be used for a Connection to the Core Client
+  password: [
+    "password1", "password2", "password3"
+  ]
+
 }
 ````
 
