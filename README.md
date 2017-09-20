@@ -3,7 +3,8 @@ Boinc Webmanager
 
 The Boinc Webmanager provides a simple Web UI for multiple Boinc Clients, similar to any other 
 Account Management Website like BAM. In contrast to these Websites the Server needs direct access
-to the Boinc core client and is able to view Tasks and directly control the client
+to the BOINC core client and is able to view Tasks and has directly control over the client. The
+Boinc Webmanager is compatible with most **7.x.x** BOINC Versions
 
 ## Features
 * Display multiple Clients in a simple Dashboard View
@@ -12,7 +13,7 @@ to the Boinc core client and is able to view Tasks and directly control the clie
 * Auto Discovery for BOINC Clients 
 
 ## Building
-The Boinc Webmanager currently needs scala >= **2.12.2** and sbt >= **0.13.15** which must be installed 
+The Boinc Webmanager currently needs scala >= **2.12.2** and sbt >= **0.13.16** which must be installed 
 before the Project can be build. All other Dependencies are managed by SBT. To build the Project
 follow theses steps: 
 
@@ -46,4 +47,5 @@ would hang*
 A short overview of the Server API is documented [here](doc/Server-API.md)
 
 ## Issues
-The Boinc Webmanager Client does not work in Internet Explorer or Microsoft Edge
+* Does not work in Internet Explorer or Microsoft Edge
+* Page broken on Mobile Devices
