@@ -12,10 +12,6 @@ import scala.xml.NodeSeq
   */
 object GlobalPrefsParser {
 
-  private implicit class BoincBoolean(val node: NodeSeq) {
-    def toScalaBoolean: Boolean = if (node.text.nonEmpty) node.text.toInt==1 else false
-    def toScalaDouble: Double = if(node.text.nonEmpty) node.text.toDouble else 0D
-  }
   private implicit class ScalaBoolean(val b: Boolean) {
     def toBoincString: String = if(b) "1" else "0"
   }
@@ -45,7 +41,7 @@ object GlobalPrefsParser {
     (node \ "cpu_usage_limit").text.toDouble,
     (node \ "daily_xfer_limit_mb").text.toDouble,
     (node \ "daily_xfer_period_days").text.toInt,
-    (node \ "network_wifi_only").text.toInt==1,
+    (node \ "network_wifi_only").tryToInt==1,
     (node \ "start_hour").theSeq.zip(node \ "end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
     (node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
   )
@@ -87,7 +83,7 @@ object GlobalPrefsParser {
                 <net_start_hour>${net_start}</net_start_hour>
                 <net_end_hour>${net_end}</net_end_hour>
               </day_of_week>
-          }.toList
+          }
         }
       </day_prefs>
     </global_preferences>

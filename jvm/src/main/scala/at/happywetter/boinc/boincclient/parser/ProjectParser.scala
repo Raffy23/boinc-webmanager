@@ -29,10 +29,10 @@ object ProjectParser {
     (node \ "dont_request_more_work").xml_==(<dont_request_more_work/>),
     (node \ "trickle_up_pending").xml_==(<trickle_up_pending/>),
     (node \ "resource_share").text.toDouble,
-    tryGetDouble(node \ "desired_disk_usage"),
+    (node \ "desired_disk_usage").tryToDouble,
     (node \ "duration_correction_factor").text.toDouble,
-    tryGetInt(node \ "njobs_success"),
-    tryGetInt(node \ "njobs_error"),
+    (node \ "njobs_success").tryToInt,
+    (node \ "njobs_error").tryToInt,
     readGUIUrls(node \ "gui_urls")
     )
 
@@ -43,13 +43,5 @@ object ProjectParser {
     ).toList
 
   private def getText(node: NodeSeq): String = if( node.text == null ) "<empty>" else node.text
-
-  private def tryGetDouble(node: NodeSeq): Double =
-    if (node == null || node.text == null || node.text.isEmpty) Double.NaN
-    else node.text.toDouble
-
-  private def tryGetInt(node: NodeSeq): Int =
-    if (node == null || node.text == null || node.text.isEmpty) 0
-    else node.text.toInt
 
 }

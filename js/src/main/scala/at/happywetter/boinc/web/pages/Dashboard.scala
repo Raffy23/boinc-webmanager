@@ -279,7 +279,9 @@ object Dashboard extends Layout {
         dField.appendChild(tooltip2)
 
         DetailData(client.hostname)
-      case _ =>  DetailData(client.hostname)
+      case e: Exception =>
+        e.printStackTrace()
+        DetailData(client.hostname)
     }
   }
 

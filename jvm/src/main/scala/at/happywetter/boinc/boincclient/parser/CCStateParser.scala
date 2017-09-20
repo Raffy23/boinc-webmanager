@@ -29,7 +29,7 @@ object CCStateParser {
       (node \ "network_mode_delay").text.toDouble,
       (node \ "disallow_attach").text.toInt == 1,
       (node \ "simple_gui_only").text.toInt == 1,
-      (node \ "max_event_log_lines").text.toInt
+      (node \ "max_event_log_lines").tryToInt
     )
 
 }
