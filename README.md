@@ -31,7 +31,7 @@ follow theses steps:
 After these Steps the Web UI should be reachable under `https://127.0.0.1:8080` or the specified address
 in the configuration file.
 
-*Note: The BOINC Core Client does need additional [configuration](doc/Configuration.md#boinc_core_client_configuration)!*
+*Note: The BOINC Core Client does need additional [configuration](doc/Configuration.md#boinc-core-client-configuration)!*
 
 ### SSL-Certificate
 The Webmanager does need a Certificate to provide a Secure Connection over https. The keystore is build
