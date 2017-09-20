@@ -1,9 +1,12 @@
 package at.happywetter.boinc.util
 
-import java.net.{InetSocketAddress, Socket, SocketAddress}
+import java.net.{InetSocketAddress, Socket}
+import java.util.concurrent.{ScheduledExecutorService, TimeUnit}
 
-import scala.concurrent.Future
+import at.happywetter.boinc.AppConfig.AutoDiscovery
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * Created by: 
@@ -11,21 +14,30 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @author Raphael
   * @version 19.09.2017
   */
-class BoincDiscoveryService(start: IP, end: IP) {
+class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: (Future[List[IP]]) => Unit)(implicit val scheduler: ScheduledExecutorService) {
 
-  def search(found: (IP) => Unit = (_) => Unit): Future[List[IP]] =
-    Future.sequence(
-      (start to end).map(ip => {
-        Future {
-          val socket = new Socket()
-          socket.connect(new InetSocketAddress(ip.toString, 31416), 500)
-          socket.close()
-          found(ip)
-          (ip, true)
-        }.recover {
-          case _: Exception => (ip, false)
-        }
-      }).toList
-    ).map(_.filter { case (_, found) => found }).map(_.map { case (ip, _) => ip })
+  private val start = IP(config.startIp)
+  private val end   = IP(config.endIp)
+
+  if (config.enabled)
+    scheduler.scheduleWithFixedDelay(() => autoScanCallback( search ), config.scanTimeout, config.scanTimeout, TimeUnit.MINUTES)
+
+  def search: Future[List[IP]] =
+    Future
+      .sequence( propeRange(config.port) )
+      .map(_.filter { case (_, found) => found })
+      .map(_.map { case (ip, _) => ip })
+
+  private def propeRange(port: Int) = (start to end).map(ip => { propeSocket(ip, port) }).toList
+
+  private def propeSocket(ip: IP, port: Int) = Future {
+    val socket = new Socket()
+    socket.connect(new InetSocketAddress(ip.toString, port), config.timeout)
+    socket.close()
+
+    (ip, true)
+  }.recover {
+    case _: Exception => (ip, false)
+  }
 
 }

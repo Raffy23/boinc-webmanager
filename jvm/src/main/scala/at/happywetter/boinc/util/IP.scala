@@ -27,6 +27,9 @@ object IP {
 
   def apply(str: String): IP = str match {
     case Pattern(a, b, c, d) => IP((a.toInt << 24) + (b.toInt << 16) + (c.toInt << 8) + d.toInt)
+    case _ => IP(-1)
   }
+
+  val empty = IP(-1)
 
 }

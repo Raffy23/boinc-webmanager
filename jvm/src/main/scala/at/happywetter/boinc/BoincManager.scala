@@ -45,8 +45,10 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   }
 
   def add(name: String, client: PooledBoincClient): Unit = {
-    lastUsed += (name -> System.currentTimeMillis())
-    boincClients += (name -> client)
+    if (!boincClients.keys.exists(_ == name)) {
+      lastUsed += (name -> System.currentTimeMillis())
+      boincClients += (name -> client)
+    }
   }
 
   def add(name: String, host: AppConfig.Host): Unit =
@@ -67,6 +69,8 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
         .map{ case(name, client) => client.checkConnection().map(state => (name, state))}
         .toList
     ).map(_.toMap)
+
+  def getAddresses: List[(String, Int)] = boincClients.values.map(client => (client.address, client.port)).toList
 
 }
 object BoincManager {

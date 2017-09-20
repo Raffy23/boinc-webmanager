@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.util.{BoincDiscoveryService, IP, PooledBoincClient}
+import at.happywetter.boinc.util.BoincHostSettingsResolver
 import org.http4s.HttpService
 import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
@@ -25,6 +25,7 @@ object WebServer extends App  {
   private lazy val config = AppConfig.conf
   private lazy val projects = new XMLProjectStore(config.boinc.projects.xmlSource)
   private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
+  private val autoDiscovery = new BoincHostSettingsResolver(config, hostManager)
 
   if (config.development.getOrElse(false)) {
     println("WebServer was launched with development options!")
@@ -50,6 +51,7 @@ object WebServer extends App  {
 
   // Populate Host Manager with clients
   config.boinc.hosts.foreach(hostManager.add)
+  autoDiscovery.beginSearch()
 
   private val authService = new AuthenticationService(config)
   projects.importFrom(config)
@@ -63,20 +65,6 @@ object WebServer extends App  {
       .mountService(HSTS(WebResourcesRoute(config)), "/")
       .mountService(HSTS(authService.authService), "/auth")
       .mountService(service(LanguageService()), "/language")
-
-  //Autodiscovery test, uses standard password "boinc" for all clients
-  import scala.concurrent.ExecutionContext.Implicits.global
-  val aDisc = new BoincDiscoveryService(IP(config.autoDiscovery.startIp), IP(config.autoDiscovery.endIp))
-  aDisc.search().foreach(found => {
-    println("Finished searching ...")
-
-    found.foreach(ip =>
-      hostManager.add(
-        ip.toString,
-        new PooledBoincClient(config.boinc.connectionPool, ip.toString, port = 31416, "boinc", config.boinc.encoding)
-      )
-    )
-  })
 
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")

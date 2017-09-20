@@ -19,7 +19,7 @@ object AppConfig {
   case class Projects(xmlSource: String, customProjects: Map[String, ProjectEntry])
   case class ProjectEntry(url: String, generalArea: String, description: String, organization: String)
   case class SSLConfig(keystore: String, password: String)
-  case class AutoDiscovery(startIp: String, endIp: String)
+  case class AutoDiscovery(startIp: String, endIp: String, timeout: Int, port: Int, enabled: Boolean, scanTimeout: Int, password: List[String])
 
   val conf: Config = {
     val confString: String = Source.fromFile("./application.conf").getLines().mkString("\n")

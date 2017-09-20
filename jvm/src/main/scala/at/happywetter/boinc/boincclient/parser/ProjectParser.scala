@@ -12,8 +12,6 @@ import scala.xml.NodeSeq
   */
 object ProjectParser {
 
-  private def getText(node: NodeSeq): String = if( node.text == null ) "<empty>" else node.text
-
   def fromXML(node: NodeSeq): List[Project] = (node \ "project").theSeq.map(fromNodeXML).toList
   def fromNodeXML(node: NodeSeq) = Project(
     getText(node \ "project_name"),
@@ -31,10 +29,10 @@ object ProjectParser {
     (node \ "dont_request_more_work").xml_==(<dont_request_more_work/>),
     (node \ "trickle_up_pending").xml_==(<trickle_up_pending/>),
     (node \ "resource_share").text.toDouble,
-    (node \ "desired_disk_usage").text.toDouble,
+    tryGetDouble(node \ "desired_disk_usage"),
     (node \ "duration_correction_factor").text.toDouble,
-    (node \ "njobs_success").text.toInt,
-    (node \ "njobs_error").text.toInt,
+    tryGetInt(node \ "njobs_success"),
+    tryGetInt(node \ "njobs_error"),
     readGUIUrls(node \ "gui_urls")
     )
 
@@ -43,5 +41,15 @@ object ProjectParser {
       , getText(guiurl \ "description")
       , (guiurl \ "url").text)
     ).toList
+
+  private def getText(node: NodeSeq): String = if( node.text == null ) "<empty>" else node.text
+
+  private def tryGetDouble(node: NodeSeq): Double =
+    if (node == null || node.text == null || node.text.isEmpty) Double.NaN
+    else node.text.toDouble
+
+  private def tryGetInt(node: NodeSeq): Int =
+    if (node == null || node.text == null || node.text.isEmpty) 0
+    else node.text.toInt
 
 }

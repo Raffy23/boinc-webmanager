@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @author Raphael
   * @version 12.09.2017
   */
-class PooledBoincClient(poolSize: Int, address: String, port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
+class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
 
   val deathCounter = new AtomicInteger(0)
 
