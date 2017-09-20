@@ -12,18 +12,18 @@ import scala.xml.NodeSeq
   */
 object FileTransferParser {
 
-  def fromXML(node: NodeSeq): List[FileTransfer] =
-    ( for( ft <- node \ "file_transfer" ) yield fromNode(ft) ).toList
+  def fromXML(node: NodeSeq): List[FileTransfer] = (node \ "file_transfer").map(fromNode(_)).toList
 
   private def fromNode(node: NodeSeq): FileTransfer = {
     FileTransfer(
-      (node \ "project_url").text
-      ,(node \ "project_name").text
-      ,(node \ "name").text
-      ,(node \ "nbytes").text.toDouble
-      ,(node \ "status").text.toInt
-      ,fromPxferNode(node \ "persistent_file_xfer")
-      ,fromXFerNode(node \ "file_xfer")
+      (node \ "project_url").text,
+      (node \ "project_name").text,
+      (node \ "name").text,
+      (node \ "nbytes").text.toDouble,
+      (node \ "status").text.toInt,
+      fromPxferNode(node \ "persistent_file_xfer"),
+      fromXFerNode(node \ "file_xfer"),
+      (node \ "project_backoff").tryToDouble
     )
   }
 

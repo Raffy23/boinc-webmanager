@@ -1,13 +1,15 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import at.happywetter.boinc.shared.FileTransfer
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, FetchResponseException}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
+import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.js
-import at.happywetter.boinc.web.util.I18N._
+import scala.util.Try
 
 /**
   * Created by: 
@@ -41,7 +43,7 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
                   td(BoincFormater.convertSize(transfer.fileXfer.bytesXfered)),
                   td(BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"),
                   td(BoincFormater.convertTime(transfer.xfer.timeSoFar)),
-                  td(transfer.status)
+                  td(buildStatusField(transfer))
                 )
               })
             )
@@ -56,4 +58,33 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
   }
 
   override val path = "transfers"
+
+  def buildStatusField(transfer: FileTransfer): String = {
+    val builder = new StringBuilder()
+
+    if (transfer.xfer.isUpload) builder.append("upload".localize)
+    else builder.append("download".localize)
+
+    if (transfer.projectBackoff > 0) {
+      builder.append(", ")
+      builder.append("retry_at".localize.format(BoincFormater.convertDate(transfer.xfer.nextRequest)))
+    }
+
+    Try(
+      builder.append(
+        FileTransfer.Status(transfer.status) match {
+          case FileTransfer.Status.GiveUpDownload => s", ${"failed".localize}"
+          case FileTransfer.Status.GiveUpUpload => s", ${"failed".localize}"
+          case _ => ""
+        }
+      )
+    ).recover{
+      case e: Exception =>
+        e.printStackTrace()
+        builder.append(", Status: " + transfer.status)
+    }
+
+    builder.toString()
+  }
+
 }

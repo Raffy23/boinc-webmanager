@@ -1,5 +1,7 @@
 package at.happywetter.boinc.shared
 
+import at.happywetter.boinc.shared.FileTransfer.Status
+
 
 /**
   * Created by: 
@@ -111,7 +113,15 @@ final case class FileTransfer(projectUrl: String
                              ,byte: Double
                              ,status: Int
                              ,xfer: PersistentFileXfer
-                             ,fileXfer: FileXfer)
+                             ,fileXfer: FileXfer
+                             ,projectBackoff: Double)
+object FileTransfer {
+  object Status extends Enumeration {
+    val GiveUpDownload: Status.Value = Value(-114)
+    val GiveUpUpload: Status.Value = Value(-115)
+    val Normal: Status.Value = Value(1)
+  }
+}
 
 final case class PersistentFileXfer(retries: Int
                                     ,firstRequest: Double
@@ -131,9 +141,9 @@ final case class Project(name: String
                          , cpid: String
                          , userTotalCredit: Double
                          , userAvgCredit: Double
-                         , userID: String // javascript long bug ? (must be long!)
-                         , teamID: String
-                         , hostID: String
+                         , userID: Long
+                         , teamID: Long
+                         , hostID: Long
                          , hostTotalCredit: Double
                          , hostAvgCredit: Double
                          , dontRequestWork: Boolean
