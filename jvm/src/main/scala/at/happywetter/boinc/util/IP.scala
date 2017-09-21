@@ -1,5 +1,7 @@
 package at.happywetter.boinc.util
 
+import java.net.InetAddress
+
 /**
   * Created by: 
   *
@@ -15,6 +17,9 @@ case class IP(value : Int) {
 
   override def toString = s"$a.$b.$c.$d"
 
+  def toInetAddress: InetAddress =
+    InetAddress.getByAddress(Array(a.toByte, b.toByte, c.toByte, d.toByte))
+
   def increment = IP(value + 1)
 
   def to(ip: IP): Iterable[IP] = (value to ip.value).map(itr => IP(itr))
@@ -24,12 +29,16 @@ case class IP(value : Int) {
 object IP {
 
   private val Pattern = """^(\d{1,3}).(\d{1,3}).(\d{1,3}).(\d{1,3})$""".r
+  val empty = IP(-1)
 
   def apply(str: String): IP = str match {
     case Pattern(a, b, c, d) => IP((a.toInt << 24) + (b.toInt << 16) + (c.toInt << 8) + d.toInt)
     case _ => IP(-1)
   }
 
-  val empty = IP(-1)
+  def apply(inetAddr: InetAddress): IP = {
+    val addr = inetAddr.getAddress
 
+    IP((addr(0).toInt << 24) + (addr(1).toInt << 16) + (addr(2).toInt << 8) + addr(3).toInt)
+  }
 }

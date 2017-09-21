@@ -1,20 +1,16 @@
 package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
-import at.happywetter.boinc.web.util.I18N.Locale
+import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
-import at.happywetter.boinc.web.util.I18N._
-
-import scala.util.Try
 
 /**
   * Created by: 

@@ -64,6 +64,10 @@ object DashboardMenu {
       backgroundColor(c"#428bca"),
       color :=! "white !important"
     )
+
+    val clickable = style(
+      cursor.pointer
+    )
   }
 
 
@@ -135,20 +139,31 @@ object DashboardMenu {
   }
 
   def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
-    val newElement: JsDom.TypedTag[HTMLElement] = {
-      import scalacss.ScalatagsCss._
-      import scalatags.JsDom.all._
-
-      li(Style.elem,
-        a(href := linkUrl,
-          icon.map(n => i(`class` := s"fa fa-$n")), elementName,
-          reference.map(r => data("menu-id") := r), data("navigo") := "",
-          onclick := selectionListener
-        )
-      )
-    }
+    val newElement = buildMenuItem(linkUrl, elementName, reference, icon)
 
     dom.document.getElementById("dashboard-menu").appendChild(newElement.render)
+    if (selected != null) {
+      selectMenuItemByContent(selected)
+    }
+  }
+
+  def addSubMenu(elementName: String,  reference: String, icon: Option[String] = Some("caret-down")): Unit = {
+    import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
+
+    val subMenu = li(Style.elem, Style.clickable,
+      a(icon.map(n => i(`class` := s"fa fa-$n")), elementName, data("menu-ref") := reference), onclick := subMenuListener,
+      ul(data("submenu-id") := reference, style := "display:none"
+      )
+    ).render
+
+    dom.document.getElementById("dashboard-menu").appendChild(subMenu)
+  }
+
+  def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
+    val newElement = buildMenuItem(linkUrl, elementName, reference, icon)
+
+    dom.document.querySelector(s"#dashboard-menu ul[data-submenu-id='$submenu'").appendChild(newElement.render)
     if (selected != null) {
       selectMenuItemByContent(selected)
     }
@@ -158,6 +173,14 @@ object DashboardMenu {
   private val masterSelectionListener: js.Function1[Event, Unit] = (event) => {
     dom.document.getElementById("navigation").innerHTML = ""
     onMenuItemClick(event)
+  }
+
+  private val subMenuListener: js.Function1[Event, Unit] = (event) => {
+    val target = event.target.asInstanceOf[HTMLElement].getAttribute("data-menu-ref")
+    val element = dom.document.querySelector(s"#dashboard-menu ul[data-submenu-id='$target']").asInstanceOf[HTMLElement]
+
+    if (element.style.display == "") element.style.display = "none"
+    else element.style.display = ""
   }
 
   private var selected: String = _
@@ -175,6 +198,19 @@ object DashboardMenu {
 
     if (!marked) selected = content
     else selected = null
+  }
+
+  private def buildMenuItem(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None) = {
+    import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
+
+    li(Style.elem,
+      a(href := linkUrl,
+        icon.map(n => i(`class` := s"fa fa-$n")), elementName,
+        reference.map(r => data("menu-id") := r), data("navigo") := "",
+        onclick := selectionListener
+      )
+    )
   }
 
 }

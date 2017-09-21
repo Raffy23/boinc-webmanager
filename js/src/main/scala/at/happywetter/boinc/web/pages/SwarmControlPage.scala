@@ -8,6 +8,7 @@ import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage, SwarmSubPage}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation, SwarmControlLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
@@ -82,10 +83,7 @@ object SwarmControlPage extends Layout {
 
   override def onRender(): Unit = {
     ClientManager.readClients().map(clients => {
-      DashboardMenu.removeMenuReferences("boinc-client-entry")
-      clients.foreach(client =>
-        DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
-      )
+      DashboardMenuBuilder.renderClients(clients)
 
       DashboardMenu.selectByReference("swarm_control")
       AppRouter.router.updatePageLinks()

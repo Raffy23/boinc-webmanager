@@ -8,7 +8,7 @@ import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, LanguageDataProvider}
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
@@ -97,10 +97,7 @@ object SettingsPage extends Layout {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
     ClientManager.readClients().map(clients => {
-      DashboardMenu.removeMenuReferences("boinc-client-entry")
-      clients.foreach(client =>
-        DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
-      )
+      DashboardMenuBuilder.renderClients(clients)
 
       AppRouter.router.updatePageLinks()
     }).recover {

@@ -1,17 +1,17 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.{BoincProjectMetaData, BoincRPC, WorkunitRequestBody}
+import at.happywetter.boinc.shared.BoincProjectMetaData
+import at.happywetter.boinc.web.helper.ResponseHelper._
 import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
-import prickle.{Pickle, Unpickle}
+import prickle.Unpickle
 
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
-import at.happywetter.boinc.web.helper.ResponseHelper._
 
 /**
   * Created by: 
@@ -56,27 +56,20 @@ object ClientManager {
   }
 
   private def readClientsFromServer(): Future[List[String]] = {
-    import prickle._
-
     val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
 
     cacheTimeout.flatMap(cacheTimeout => {
       timestamp.map(date => {
         val current = new Date()
+
         if (current.getTime() - date.getTime() > cacheTimeout) {
-          Fetch.fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-            .toFuture
-            .flatMap(response => response.text().toFuture)
-            .map(data => Unpickle[List[String]].fromString(json = data).get)
+          queryClientsFromServer()
         } else {
-          Future {
-            val clients = Unpickle[List[String]].fromString(dom.window.localStorage.getItem("clientmanager/clients"))
-            //TODO: Make fallback if cache is corrupted
-            clients.get
-          }
+          queryClientsFromCache()
         }
-      }).get
-    })
+
+      }).recover{ case _: Exception => queryClientsFromServer() }.get
+    }).map(_.sortWith(_ < _))
   }
 
   def readClients(): Future[List[String]] = {
@@ -89,6 +82,14 @@ object ClientManager {
 
   def getClients: Future[List[BoincClient]] = readClients().map(_.map(new BoincClient(_)))
 
+  //TODO: Implement some kind of Cache:
+  def getGroups: Future[Map[String, List[String]]] =
+    Fetch
+      .fetch("/api/groups", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .mapData(data => Unpickle[Map[String, List[String]]].fromString(json = data).get)
+
+
+  /*
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
     readClientsFromServer().map(clientList => {
       clientList.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
@@ -96,6 +97,7 @@ object ClientManager {
       clients.toMap
     })
   }
+  */
 
   def queryClientHealth(): Future[Map[String, Boolean]] =  {
     Fetch
@@ -103,9 +105,7 @@ object ClientManager {
         baseURI + "/health",
         RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
       )
-      .toFuture
-      .flatMap(_.tryGet)
-      .map(data => Unpickle[Map[String, Boolean]].fromString(json = data).get)
+      .mapData(data => Unpickle[Map[String, Boolean]].fromString(json = data).get)
   }
 
   def queryCompleteProjectList(): Future[Map[String,BoincProjectMetaData]] = {
@@ -114,8 +114,20 @@ object ClientManager {
         baseURI + "/project_list",
         RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
       )
-      .toFuture
-      .flatMap(response => response.text().toFuture)
-      .map(data => Unpickle[Map[String,BoincProjectMetaData]].fromString(json = data).get)
+      .mapData(data => Unpickle[Map[String,BoincProjectMetaData]].fromString(json = data).get)
+  }
+
+
+
+
+  private def queryClientsFromServer(): Future[List[String]] =
+    Fetch
+      .fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .mapData(data => Unpickle[List[String]].fromString(json = data).get)
+
+  private def queryClientsFromCache(): Future[List[String]] = Future {
+    val clients = Unpickle[List[String]].fromString(dom.window.localStorage.getItem("clientmanager/clients"))
+    //TODO: Make fallback if cache is corrupted
+    clients.get
   }
 }

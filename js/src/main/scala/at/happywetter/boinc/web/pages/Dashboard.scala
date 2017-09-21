@@ -10,6 +10,7 @@ import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -63,11 +64,7 @@ object Dashboard extends Layout {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
     ClientManager.readClients().map(clients => {
-
-      DashboardMenu.removeMenuReferences("boinc-client-entry")
-      clients.foreach(client =>
-        DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
-      )
+      DashboardMenuBuilder.renderClients(clients)
 
       if (dom.window.location.pathname == DashboardLocation.link) {
         renderDashboardContent(clients)

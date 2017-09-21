@@ -7,6 +7,8 @@ import prickle.Unpickle
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.Promise
 
 /**
   * Created by: 
@@ -45,5 +47,11 @@ object ResponseHelper {
     }
   }
 
+
+  implicit class RichPromise(promise: js.Promise[Response]) {
+
+    def mapData[T]( mapper: (String) => T ): Future[T] =
+      promise.toFuture.flatMap(_.tryGet).map(mapper)
+  }
 
 }

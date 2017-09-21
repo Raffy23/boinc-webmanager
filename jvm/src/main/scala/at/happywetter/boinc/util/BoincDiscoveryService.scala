@@ -32,7 +32,7 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: (Future[Lis
 
   private def propeSocket(ip: IP, port: Int) = Future {
     val socket = new Socket()
-    socket.connect(new InetSocketAddress(ip.toString, port), config.timeout)
+    socket.connect(new InetSocketAddress(ip.toInetAddress, port), config.timeout)
     socket.close()
 
     (ip, true)

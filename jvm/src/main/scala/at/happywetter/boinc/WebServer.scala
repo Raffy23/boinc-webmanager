@@ -51,6 +51,8 @@ object WebServer extends App  {
 
   // Populate Host Manager with clients
   config.boinc.hosts.foreach(hostManager.add)
+  config.hostGroups.foreach{ case (group, hosts) => hostManager.addGroup(group, hosts)}
+
   autoDiscovery.beginSearch()
 
   private val authService = new AuthenticationService(config)

@@ -26,6 +26,7 @@ object BoincApiRoutes {
     case GET -> Root / "boinc" => Ok(Pickle.intoString(hostManager.getAllHostNames))
     case GET -> Root / "health" => Ok(hostManager.checkHealth.map(Pickle.intoString(_)))
     case GET -> Root / "config" => Ok(Pickle.intoString(AppConfig.sharedConf))
+    case GET -> Root / "groups" => Ok(Pickle.intoString(hostManager.getSerializableGroups))
     case GET -> Root / "boinc" / "project_list" => Ok(Pickle.intoString(projects.getProjects))
 
     // Main route for Boinc Data

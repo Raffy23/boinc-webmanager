@@ -6,6 +6,7 @@ import at.happywetter.boinc.util.PooledBoincClient
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.concurrent.TrieMap
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -23,6 +24,7 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   private val timeout      = 5 minutes
   private val lastUsed     = new TrieMap[String, Long]()
   private val boincClients = new TrieMap[String, PooledBoincClient]()
+  private val clientGroups = new TrieMap[String, ListBuffer[String]]()
 
   // Close connections periodically
   scheduler.scheduleWithFixedDelay(() => {
@@ -71,6 +73,16 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
     ).map(_.toMap)
 
   def getAddresses: List[(String, Int)] = boincClients.values.map(client => (client.address, client.port)).toList
+
+  def getGroups: TrieMap[String, ListBuffer[String]] = clientGroups
+
+  def getSerializableGroups: Map[String, List[String]] = getGroups.map{ case (key, value) => (key, value.toList)}.toMap
+
+  def addGroup(group: String, hostname: String): Unit =
+    clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) += hostname
+
+  def addGroup(group: String, hosts: List[String]): Unit =
+    clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) ++= hosts
 
 }
 object BoincManager {
