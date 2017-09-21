@@ -46,7 +46,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
   override def onRender(client: BoincClient): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-    client.getProjects.foreach(results => {
+    client.getProjects.map(results => {
       import scalacss.ScalatagsCss._
       import scalatags.JsDom.all._
 
@@ -238,7 +238,12 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
           )
         ).render
       )
-    })
+    }).recover {
+      case _: FetchResponseException =>
+        import scalatags.JsDom.all._
+        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+          .renderToBody().show()
+    }
 
     NProgress.done(true)
   }

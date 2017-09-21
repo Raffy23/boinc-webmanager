@@ -5,7 +5,7 @@ import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientC
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.pages.component.dialog.SimpleModalDialog
+import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry
@@ -32,7 +32,8 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
       NProgress.done(true)
     } else {
       import scalatags.JsDom.all._
-      new SimpleModalDialog(div("loading_dialog_content".localize), h4("loading_dialog_header".localize), (_) => {}, (_) => {}).renderToBody().show()
+      new OkDialog("loading_dialog_content".localize, List(div("loading_dialog_content".localize)))
+        .renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {
         buildUI(HostInfoCache.get(boincClientName).get, client)

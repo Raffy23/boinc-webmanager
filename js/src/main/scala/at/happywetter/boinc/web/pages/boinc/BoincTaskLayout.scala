@@ -39,13 +39,18 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
   private def onViewRender(renderAction: (TypedTag[dom.html.Div]) => Unit): Unit = {
     val projectUris = new mutable.TreeSet[String]()
 
-    boinc.getTasks(active = false).foreach(results => {
+    boinc.getTasks(active = false).map(results => {
       val sortedResults = results.sortBy(f => f.activeTask.map(t => -t.done).getOrElse(0D))
       renderAction(renderView(projectUris, sortedResults))
 
       updateProjectNames(projectUris)
       updateWUNames()
-    })
+    }).recover {
+      case _: FetchResponseException =>
+        import scalatags.JsDom.all._
+        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+          .renderToBody().show()
+    }
   }
 
   private def renderView(projectUris: mutable.Set[String], results: List[Result]): TypedTag[dom.html.Div] = {

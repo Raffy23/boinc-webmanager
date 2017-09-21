@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
-import at.happywetter.boinc.web.boincclient.BoincClient
+import at.happywetter.boinc.web.boincclient.{BoincClient, FetchResponseException}
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout.Style
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
+import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
@@ -152,7 +153,10 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
         toggleActiveBtnClass(currentDataSet)
       })
     }).recover {
-      case e: Exception => e.printStackTrace()
+      case _: FetchResponseException =>
+        import scalatags.JsDom.all._
+        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+          .renderToBody().show()
     }
   }
 
