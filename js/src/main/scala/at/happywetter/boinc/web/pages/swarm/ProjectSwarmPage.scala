@@ -229,6 +229,8 @@ object ProjectSwarmPage extends SwarmSubPage {
                        onclick := {
                          (event: Event) => {
                            event.preventDefault()
+                           new OkDialog("dialog_properties_header".localize, List("not_implemented".localize))
+                             .renderToBody().show()
                          }
                        }
                      ), textOrientation = Tooltip.Style.leftText
