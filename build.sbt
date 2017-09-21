@@ -10,6 +10,11 @@ name := "Boinc-Webmanager"
 scalaVersion in ThisBuild := "2.12.2"
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-feature")
 
+git.gitTagToVersionNumber := { tag: String =>
+  if(tag matches "[0-9]+\\..*") Some(tag)
+  else None
+}
+
 //scalaJSUseMainModuleInitializer := true
 val http4sVersion = "0.17.0"
 
