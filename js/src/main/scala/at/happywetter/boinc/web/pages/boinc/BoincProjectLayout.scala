@@ -11,7 +11,7 @@ import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, T
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.StatisticPlatforms
+import at.happywetter.boinc.web.util.{ErrorDialogUtil, StatisticPlatforms}
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.{Event, MouseEvent}
@@ -49,7 +49,7 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     client.getProjects.map(results => {
       import scalacss.ScalatagsCss._
       import scalatags.JsDom.all._
-
+      
       root.appendChild(
         div( id := "projects",
           h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-tag"), "project_header".localize),
@@ -238,14 +238,9 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
           )
         ).render
       )
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
 
-    NProgress.done(true)
+      NProgress.done(true)
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   private[this] def updateCache(project: Project): String = {

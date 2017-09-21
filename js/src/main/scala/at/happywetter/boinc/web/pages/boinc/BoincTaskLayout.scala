@@ -5,11 +5,13 @@ import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, ContextMenu, Tooltip}
+import at.happywetter.boinc.web.pages.component.{BoincPageLayout, Tooltip}
 import at.happywetter.boinc.web.routes.{Hook, NProgress}
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, ProjectNameCache, TaskSpecCache}
+import at.happywetter.boinc.web.util.ErrorDialogUtil
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.{Event, MouseEvent}
+import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
@@ -19,7 +21,6 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scalatags.JsDom
 import scalatags.JsDom.TypedTag
-import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -45,12 +46,7 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
 
       updateProjectNames(projectUris)
       updateWUNames()
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   private def renderView(projectUris: mutable.Set[String], results: List[Result]): TypedTag[dom.html.Div] = {

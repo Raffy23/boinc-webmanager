@@ -6,6 +6,7 @@ import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
+import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.js
@@ -50,11 +51,7 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
           )
         ).render
       )
-    }).recover {
-      case _: FetchResponseException =>
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   override val path = "transfers"

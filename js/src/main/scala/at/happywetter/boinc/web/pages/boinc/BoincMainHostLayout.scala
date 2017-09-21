@@ -32,12 +32,12 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
       NProgress.done(true)
     } else {
       import scalatags.JsDom.all._
-      new OkDialog("loading_dialog_content".localize, List(div("loading_dialog_content".localize)))
-        .renderToBody().show()
+      val dialog = new OkDialog("loading_dialog_content".localize, List(div("loading_dialog_content".localize)))
+      dialog.renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {
         buildUI(HostInfoCache.get(boincClientName).get, client)
-        SimpleModalDialog.remove()
+        dialog.hide()
         NProgress.done(true)
       })
     }

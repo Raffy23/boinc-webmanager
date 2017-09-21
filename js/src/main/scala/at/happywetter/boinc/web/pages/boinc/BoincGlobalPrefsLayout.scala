@@ -7,6 +7,7 @@ import at.happywetter.boinc.web.pages.boinc.BoincGlobalPrefsLayout.Style
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
+import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
@@ -134,12 +135,7 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
 
       import at.happywetter.boinc.web.hacks.NodeListConverter._
       dom.document.querySelectorAll("input").forEach((node, _, _) => node.asInstanceOf[HTMLElement].setAttribute("disabled",""))
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   override val path = "global_prefs"

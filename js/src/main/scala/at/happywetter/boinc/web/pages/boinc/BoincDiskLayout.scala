@@ -7,6 +7,7 @@ import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.CanvasRenderingContext2D
@@ -107,11 +108,7 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
         })
       })
 
-    }).recover {
-      case _: FetchResponseException =>
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   private val tooltipLabel: js.Function2[TooltipItem, ChartData, String] = (tooltipItem, data) => {
