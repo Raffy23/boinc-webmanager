@@ -61,7 +61,7 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    client.getGlobalPrefsOverride.foreach(f => {
+    client.getGlobalPrefsOverride.map(f => {
 
       root.appendChild(
         div( id := "global_prefs", Style.root_pane,
