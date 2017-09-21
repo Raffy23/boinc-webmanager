@@ -19,7 +19,8 @@ object DashboardMenuBuilder {
     DashboardMenu.removeMenuReferences("boinc-client-entry")
 
     ClientManager.getGroups.foreach( groups => {
-      val ungroupedClients = clients.diff(groups.flatMap(_._2).toSeq)
+      val clientsInGroup   = groups.flatMap(_._2).toSeq
+      val ungroupedClients = clients.diff(clientsInGroup)
       ungroupedClients.foreach(client =>
         DashboardMenu.addMenu(s"${AppRouter.href(DashboardLocation)}/$client",client, Some("boinc-client-entry"))
       )
@@ -27,7 +28,8 @@ object DashboardMenuBuilder {
       groups.keys.foreach( groupHeader => {
         DashboardMenu.addSubMenu(groupHeader, s"group-$groupHeader")
         groups(groupHeader).foreach(client =>
-          DashboardMenu.addSubMenuItem(s"${AppRouter.href(DashboardLocation)}/$client", client, s"group-$groupHeader", Some("boinc-client-entry"))
+          if (clients.contains(client))
+            DashboardMenu.addSubMenuItem(s"${AppRouter.href(DashboardLocation)}/$client", client, s"group-$groupHeader", Some("boinc-client-entry"))
         )
       })
 
