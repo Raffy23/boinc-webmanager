@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.boincclient
 
 import at.happywetter.boinc.shared.BoincProjectMetaData
+import at.happywetter.boinc.web.boincclient.ClientManager.queryGroups
 import at.happywetter.boinc.web.helper.ResponseHelper._
 import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
 import org.scalajs.dom
@@ -27,6 +28,7 @@ object ClientManager {
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
+  private var groups: Map[String, List[String]] = null
   Unpickle[List[String]]
     .fromString(dom.window.localStorage.getItem("clientmanager/clients"))
     .getOrElse(List())
@@ -63,9 +65,15 @@ object ClientManager {
         val current = new Date()
 
         if (current.getTime() - date.getTime() > cacheTimeout) {
-          queryClientsFromServer()
+          queryGroups.flatMap(data => {
+            groups = data
+            queryClientsFromServer()
+          })
         } else {
-          queryClientsFromCache()
+          queryGroups.flatMap(data => {
+            groups = data
+            queryClientsFromCache()
+          })
         }
 
       }).recover{ case _: Exception => queryClientsFromServer() }.get
@@ -82,12 +90,9 @@ object ClientManager {
 
   def getClients: Future[List[BoincClient]] = readClients().map(_.map(new BoincClient(_)))
 
-  //TODO: Implement some kind of Cache:
   def getGroups: Future[Map[String, List[String]]] =
-    Fetch
-      .fetch("/api/groups", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[Map[String, List[String]]].fromString(json = data).get)
-
+    if (groups == null) readClientsFromServer().map(_ => groups)
+    else Future { groups }
 
   /*
   def bootstrapClients(): Future[Map[String, BoincClient]] = {
@@ -118,7 +123,10 @@ object ClientManager {
   }
 
 
-
+  private def queryGroups: Future[Map[String, List[String]]] =
+    Fetch
+      .fetch("/api/groups", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
+      .mapData(data => Unpickle[Map[String, List[String]]].fromString(json = data).get)
 
   private def queryClientsFromServer(): Future[List[String]] =
     Fetch

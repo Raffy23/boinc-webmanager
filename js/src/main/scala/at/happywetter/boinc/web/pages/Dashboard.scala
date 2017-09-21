@@ -20,6 +20,7 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
+import scala.util.Try
 import scalatags.JsDom
 /**
   * Created by: 
@@ -77,6 +78,13 @@ object Dashboard extends Layout {
         import scalatags.JsDom.all._
         new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
           .renderToBody().show()
+
+      case e: Exception =>
+        import scalatags.JsDom.all._
+        new OkDialog("dialog_error_header".localize, List("ups_something_bad_happend".localize))
+          .renderToBody().show()
+
+        e.printStackTrace()
     }
   }
 

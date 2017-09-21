@@ -134,7 +134,9 @@ object DashboardMenu {
 
     if(elements != null) {
       import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
-      elements.forEach((node, _, _) => menuNode.removeChild(node.parentNode))
+      elements.forEach((node, _, _) => {
+        menuNode.removeChild(node.parentNode)
+      })
     }
   }
 
@@ -147,13 +149,13 @@ object DashboardMenu {
     }
   }
 
-  def addSubMenu(elementName: String,  reference: String, icon: Option[String] = Some("caret-down")): Unit = {
+  def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None, icon: Option[String] = Some("caret-down")): Unit = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
     val subMenu = li(Style.elem, Style.clickable,
-      a(icon.map(n => i(`class` := s"fa fa-$n")), elementName, data("menu-ref") := reference), onclick := subMenuListener,
-      ul(data("submenu-id") := reference, style := "display:none"
+      a(icon.map(n => i(`class` := s"fa fa-$n")), elementName, reference.map(r => data("menu-id") := r), data("menu-ref") := menuReference), onclick := subMenuListener,
+      ul(data("submenu-id") := menuReference, style := "display:none"
       )
     ).render
 
