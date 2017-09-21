@@ -65,7 +65,8 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
   val dialog = new SimpleModalDialog(
     dialogContent, {
       import scalatags.JsDom.all._
-      h2("project_new_addbtn".localize)
+      import scalacss.ScalatagsCss._
+      h2("project_new_addbtn".localize, Dialog.Style.header)
     },
     (dialog: SimpleModalDialog) => {
       NProgress.start()

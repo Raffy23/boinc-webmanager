@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.css
 
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component._
-import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog
+import at.happywetter.boinc.web.pages.component.dialog.{BasicModalDialog, Dialog}
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
 import at.happywetter.boinc.web.pages.{BoincClientLayout, LoginPage, PageLayout}
 
@@ -37,7 +37,8 @@ object AppCSS {
       BoincSwarmPage.Style,
       ProjectSwarmPage.Style,
       BoincMessageLayout.Style,
-      FloatingMenu
+      FloatingMenu,
+      Dialog.Style
     )
 
     GlobalRegistry.addToDocumentOnRegistration()

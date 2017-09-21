@@ -1,7 +1,11 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
+import at.happywetter.boinc.web.pages.BoincClientLayout
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
+
+import scalacss.StyleSheet
+import scalacss.ProdDefaults._
 
 /**
   * Created by: 
@@ -9,6 +13,18 @@ import org.scalajs.dom.raw.HTMLElement
   * @author Raphael
   * @version 31.08.2017
   */
+object Dialog {
+  object Style  extends StyleSheet.Inline {
+    import dsl._
+    import scala.language.postfixOps
+
+    val header = style(
+      BoincClientLayout.Style.pageHeader_small,
+      marginTop(15 px)
+    )
+  }
+}
+
 abstract class Dialog(dialogID: String) {
 
   def render(): HTMLElement

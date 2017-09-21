@@ -42,6 +42,9 @@ class SimpleModalDialog(bodyElement: JsDom.TypedTag[HTMLElement],
       )
 
   override def render(): HTMLElement = dialog.render()
+
+  def close(): Unit = SimpleModalDialog.remove()
+
 }
 
 object SimpleModalDialog {

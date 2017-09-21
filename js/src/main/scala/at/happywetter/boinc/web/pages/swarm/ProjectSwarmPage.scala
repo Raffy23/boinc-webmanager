@@ -20,6 +20,7 @@ import scalacss.internal.mutable.StyleSheet
 import scalatags.JsDom
 import scalacss.ProdDefaults._
 import BoincRPC.ProjectAction.ProjectAction
+import at.happywetter.boinc.web.pages.component.dialog._
 
 import scala.collection.mutable.ListBuffer
 
@@ -51,9 +52,7 @@ object ProjectSwarmPage extends SwarmSubPage {
   }
 
 
-  private case class Account(userName: String, teamName: String, credits: Double) {
-    override def equals(obj: scala.Any): Boolean = canEqual(obj) && obj.asInstanceOf[Account].userName == userName
-  }
+  private case class Account(userName: String, teamName: String, credits: Double)
 
   override def header: String = "project_header".localize
 
@@ -68,11 +67,20 @@ object ProjectSwarmPage extends SwarmSubPage {
             Style.top_nav_action,
             onclick := { (event: Event) => {
               event.preventDefault()
-              NProgress.start()
 
-              applyToAllSelected(BoincRPC.ProjectAction.Resume).foreach(_ => {
-                NProgress.done(true)
-              })
+              new SimpleModalDialog(
+                p("project_resume_dialog_content".localize),
+                h4(Dialog.Style.header, "are_you_sure".localize),
+                (dialog) => {
+                  dialog.close()
+                  NProgress.start()
+                  applyToAllSelected(BoincRPC.ProjectAction.Resume).foreach(_ => {
+                    NProgress.done(true)
+                  })
+                },
+                (dialog) => {dialog.close()}
+              ).renderToBody().show()
+
             }},
           ),
           textOrientation = Tooltip.Style.topText
@@ -82,11 +90,20 @@ object ProjectSwarmPage extends SwarmSubPage {
             Style.top_nav_action,
             onclick := { (event: Event) => {
               event.preventDefault()
-              NProgress.start()
 
-              applyToAllSelected(BoincRPC.ProjectAction.Suspend).foreach(_ => {
-                NProgress.done(true)
-              })
+              new SimpleModalDialog(
+                p("project_suspend_dialog_content".localize),
+                h4(Dialog.Style.header, "are_you_sure".localize),
+                (dialog) => {
+                  dialog.close()
+                  NProgress.start()
+                  applyToAllSelected(BoincRPC.ProjectAction.Suspend).foreach(_ => {
+                    NProgress.done(true)
+                  })
+                },
+                (dialog) => {dialog.close()}
+              ).renderToBody().show()
+
             }},
           ),
           textOrientation = Tooltip.Style.topText
@@ -110,14 +127,19 @@ object ProjectSwarmPage extends SwarmSubPage {
             Style.top_nav_action,
             onclick := { (event: Event) => {
               event.preventDefault()
-              NProgress.start()
 
-              dom.window.alert("project_removal_blocked".localize)
-              NProgress.done(true)
-              /*
-              applyToAllSelected(BoincRPC.ProjectAction.Remove).foreach(_ => {
-                NProgress.done(true)
-              })*/
+              new SimpleModalDialog(
+                p("project_remove_dialog_content".localize),
+                h4(Dialog.Style.header, "are_you_sure".localize),
+                (dialog) => {
+                  dialog.close()
+                  NProgress.start()
+                  applyToAllSelected(BoincRPC.ProjectAction.Remove).foreach(_ => {
+                    NProgress.done(true)
+                  })
+                },
+                (dialog) => {dialog.close()}
+              ).renderToBody().show()
             }},
           ),
           textOrientation = Tooltip.Style.topText
@@ -127,11 +149,34 @@ object ProjectSwarmPage extends SwarmSubPage {
             style := "color:#333;text-decoration:none;font-size:30px",
             onclick := { (event: Event) => {
               event.preventDefault()
-              NProgress.start()
 
-              //TODO: Implement stuff ...
-              dom.window.alert("not_implemented".localize)
-              NProgress.done(true)
+              //TODO: Use some cache ...
+              ClientManager.queryCompleteProjectList().foreach(data => {
+                new ProjectAddDialog(data, (url, username, password, name) => {
+                  NProgress.start()
+
+                  ClientManager
+                    .getClients
+                    .map(_.map(
+                      _.attachProject(url, username, password, name).recover { case _: Exception => false })
+                    ).flatMap(
+                      Future
+                        .sequence(_)
+                        .map(_.count(_.unary_!))
+                        .map(failures => {
+                          if (failures > 0) {
+                            new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
+                              dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                            }).renderToBody().show()
+                          }
+
+                          NProgress.done(true)
+                          failures == 0
+                        })
+                    )
+
+                }).renderToBody().show()
+              })
             }},
           ),
           textOrientation = Tooltip.Style.topText
@@ -158,7 +203,7 @@ object ProjectSwarmPage extends SwarmSubPage {
            thead(
              tr(BoincClientLayout.Style.in_text_icon,
                th(a(Style.masterCheckbox, i(`class` := "fa fa-check-square-o"), href := "#select-all", onclick := selectAllListener),
-                 "table_project".localize),
+                 "table_project".localize), th("table_hosts".localize),
                th("table_account".localize),
                th("table_team".localize),
                th("table_credits".localize),
@@ -168,14 +213,16 @@ object ProjectSwarmPage extends SwarmSubPage {
            tbody(
              projects.map{ case(url, data) => {
                val project = data.head._2
-               val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit)}.distinct
+               val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit) }
+               val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
 
                tr(
                  td(input(Style.checkbox, `type` := "checkbox", value := url),
                    a(updateCache(project), href := project.url, onclick := AppRouter.openExternal, Style.link), style := "max-width: 100px;"),
-                 td(accounts.flatMap(t => List(span(t.userName), br()))),
+                 td(data.size, style := "text-align:center"),
+                 td(accounts.map(t => t.userName).distinct.map(t => List(span(t), br()))),
                  td(accounts.map(t => t.teamName).distinct.map(t => List(span(t), br()))),
-                 td(accounts.flatMap(t => List(span(t.credits), br()))),
+                 td(creditsRange._1 + " - " + creditsRange._2),
                  td(
                    new Tooltip("project_properties".localize,
                      a(href := "#project-properties", i(`class` := "fa fa-info-circle"),
