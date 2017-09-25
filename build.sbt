@@ -40,7 +40,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "com.github.pureconfig" %% "pureconfig" % "0.7.2",
       "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
       "com.auth0" % "java-jwt" % "3.2.0",
-      "com.lihaoyi" %% "scalatags" % "0.6.5",
+      "com.lihaoyi" %% "scalatags" % "0.6.7",
       "org.scalaj" %% "scalaj-http" % "2.3.0",
       "org.jsoup" % "jsoup" % "1.10.3"
     )
@@ -51,7 +51,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "com.github.benhutchison" %%% "prickle" % "1.1.13",
       "com.github.japgolly.scalacss" %%% "core" % "0.5.3",
       "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
-      "com.lihaoyi" %%% "scalatags" % "0.6.5"
+      "com.lihaoyi" %%% "scalatags" % "0.6.7",
+      "com.lihaoyi" %%% "scalarx" % "0.3.2"
     ),
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(

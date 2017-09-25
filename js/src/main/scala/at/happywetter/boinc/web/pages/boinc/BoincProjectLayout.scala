@@ -73,7 +73,9 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
                           }).renderToBody().show()
 
                         result
-                      })
+                      }).recover{
+                        case e => ErrorDialogUtil.showDialog(e); false
+                      }
                     }).renderToBody().show()
 
                     NProgress.done(true)

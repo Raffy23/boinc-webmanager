@@ -262,10 +262,10 @@ object Dashboard extends Layout {
         BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min)
 
       val progressBar = dom.document.getElementById(s"dashboard-${client.hostname}-disk")
-      progressBar.setAttribute("value", state.hostInfo.diskFree.toString)
+      progressBar.setAttribute("value", (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString)
       progressBar.setAttribute("max", state.hostInfo.diskTotal.toString)
 
-      progressBar.parentNode.appendChild(s"%.1f %%".format(state.hostInfo.diskFree/state.hostInfo.diskTotal*100).render)
+      progressBar.parentNode.appendChild(s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100).render)
 
       ClientCacheHelper.updateCache(client.hostname, state)
       DetailData(client.hostname, state.results.groupBy(f => f.project), state.workunits, state.apps)

@@ -25,7 +25,7 @@ import scalatags.JsDom
 abstract class BoincClientLayout(clientName: String) extends Layout  with BoincComponent {
 
   implicit val boincClientName: String = clientName
-  protected lazy val boinc: BoincClient = ClientManager.clients(clientName)
+  protected implicit lazy val boinc: BoincClient = ClientManager.clients(clientName)
 
   override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
     import scalacss.ScalatagsCss._
