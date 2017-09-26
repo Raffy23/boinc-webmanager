@@ -31,7 +31,7 @@ object DataTable {
     lazy val htmlRow: HTMLElement = {
       val root = dom.document.createElement("tr").asInstanceOf[HTMLElement]
 
-      root.addEventListener("contetmenu", contextMenuHandler)
+      root.addEventListener("contextmenu", contextMenuHandler)
       transform(columns).foreach(root.appendChild)
 
       root

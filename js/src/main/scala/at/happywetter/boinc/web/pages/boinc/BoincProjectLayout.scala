@@ -8,7 +8,7 @@ import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
 import at.happywetter.boinc.web.pages.component.{BoincPageLayout, DataTable, Tooltip}
-import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.routes.{Hook, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
@@ -51,6 +51,24 @@ object BoincProjectLayout {
 class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
 
   private var dataTable: DataTable[ProjectTableRow] = _
+
+
+  override val routerHook = Some(new Hook() {
+    override def before(done: js.Function0[Unit]): Unit = {
+      NProgress.start()
+      done()
+    }
+
+    override def after(): Unit = {}
+
+    override def leave(): Unit = {
+      dataTable.dispose()
+    }
+
+    override def already(): Unit = {
+      dataTable.dispose()
+    }
+  })
 
   override def onRender(client: BoincClient): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -110,11 +128,6 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
       NProgress.done(true)
     }).recover(ErrorDialogUtil.showDialog)
-  }
-
-  private[this] def updateCache(project: Project): String = {
-    ProjectNameCache.save(project.url, project.name)
-    project.name
   }
 
   override val path = "projects"
