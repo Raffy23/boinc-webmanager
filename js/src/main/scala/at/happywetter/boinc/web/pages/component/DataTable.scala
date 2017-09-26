@@ -1,13 +1,14 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import org.scalajs.dom
-import org.scalajs.dom.raw.{Element, HTMLElement}
+import org.scalajs.dom.raw.{Element, Event, HTMLElement}
 import rx._
 
+import scala.scalajs.js
 import scalacss.internal.StyleA
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -16,6 +17,12 @@ import scalatags.JsDom
   * @version 25.09.2017
   */
 object DataTable {
+  import scalatags.JsDom.all._
+
+  abstract class TableColumn(val content: Rx[scalatags.JsDom.Modifier], val datasource: TableRow) extends Ordered[TableColumn] {}
+  class StringColumn(val source: Rx[String])(implicit ctx: Ctx.Owner) extends TableColumn(content = Rx { source() }, null) {
+    override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
+  }
 
   abstract class TableRow(implicit ctx: Ctx.Owner) {
     lazy val htmlRow: HTMLElement = {
@@ -25,26 +32,25 @@ object DataTable {
       root
     }
 
-    val columns: List[Rx[JsDom.TypedTag[HTMLElement]]]
+    val columns: List[TableColumn]
 
-    private def transform(raw: List[Rx[JsDom.TypedTag[HTMLElement]]]): List[Element] = {
+    private def transform(raw: List[TableColumn]): List[Element] = {
       raw.map(data => {
         val column = dom.document.createElement("td")
-        column.appendChild(data.now.render)
+        data.content.now.applyTo(column)
 
-        data.foreach( colData => {
+        data.content.foreach(colData => {
           column.innerHTML = ""
-          column.appendChild(colData.render)
+          colData.applyTo(column)
         })
 
         column
       })
     }
   }
-
 }
 
-class DataTable[T <: TableRow](headers: List[String],val tableData: List[T], tableStyle: Option[StyleA] = None) {
+class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: List[T], tableStyle: Option[StyleA] = None) {
 
   val reactiveData: Var[List[T]] = Var(tableData)
   private val tBody = dom.document.createElement("tbody")
@@ -56,7 +62,13 @@ class DataTable[T <: TableRow](headers: List[String],val tableData: List[T], tab
     val root = table(TableTheme.table, tableStyle,
       thead(
         tr(
-          headers.map { x => th(x) }
+          headers.zipWithIndex.map { case ((header, sortable), idx) =>
+            if (sortable)
+              th(BoincClientLayout.Style.in_text_icon, style := "cursor:pointer",
+                i(`class` := "fa fa-sort", data("sort-icon") := ""),
+                header, onclick := tableSortFunction(idx))
+            else th(header)
+          }
         )
       )
     ).render
@@ -71,6 +83,29 @@ class DataTable[T <: TableRow](headers: List[String],val tableData: List[T], tab
 
     root
   }.now
+
+  private def tableSortFunction(idx: Int): js.Function1[Event,Unit] = (event) => {
+    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+
+    var target = event.target.asInstanceOf[HTMLElement]
+    while (target.nodeName != "TH") {
+      target = target.parentNode.asInstanceOf[HTMLElement]
+    }
+
+    val icon = target.querySelector("i[data-sort-icon]")
+    val sortState = icon.getAttribute("class")
+
+    val allIcons = target.parentNode.asInstanceOf[HTMLElement].querySelectorAll("i[data-sort-icon]")
+    allIcons.forEach((node, _, _ ) => node.asInstanceOf[HTMLElement].setAttribute("class","fa fa-sort"))
+
+    if (sortState == "fa fa-sort" || sortState == "fa fa-sort-desc") {
+      reactiveData() = reactiveData.now.sortBy(_.columns(idx))
+      icon.setAttribute("class","fa fa-sort-asc")
+    } else {
+      reactiveData() = reactiveData.now.sortBy(_.columns(idx)).reverse
+      icon.setAttribute("class","fa fa-sort-desc")
+    }
+  }
 
 }
 

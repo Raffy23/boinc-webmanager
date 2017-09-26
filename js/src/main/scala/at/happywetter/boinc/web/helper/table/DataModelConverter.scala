@@ -1,4 +1,4 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.helper.table
 
 import at.happywetter.boinc.shared.Result
 import at.happywetter.boinc.web.boincclient.BoincClient
