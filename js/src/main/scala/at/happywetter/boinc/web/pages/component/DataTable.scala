@@ -23,16 +23,23 @@ object DataTable {
   class StringColumn(val source: Rx[String])(implicit ctx: Ctx.Owner) extends TableColumn(content = Rx { source() }, null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
+  class DoubleColumn(val source: Rx[Double])(implicit ctx: Ctx.Owner) extends TableColumn(content = Rx { source() }, null) {
+    override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
+  }
 
   abstract class TableRow(implicit ctx: Ctx.Owner) {
     lazy val htmlRow: HTMLElement = {
       val root = dom.document.createElement("tr").asInstanceOf[HTMLElement]
+
+      root.addEventListener("contetmenu", contextMenuHandler)
       transform(columns).foreach(root.appendChild)
 
       root
     }
 
     val columns: List[TableColumn]
+
+    val contextMenuHandler: js.Function1[Event,Unit] = (_) => {}
 
     private def transform(raw: List[TableColumn]): List[Element] = {
       raw.map(data => {
@@ -55,7 +62,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
   val reactiveData: Var[List[T]] = Var(tableData)
   private val tBody = dom.document.createElement("tbody")
 
-  lazy val component: HTMLElement = Rx.unsafe {
+  private val internalRX = Rx.unsafe {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
@@ -82,7 +89,9 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
     root.appendChild(tBody)
 
     root
-  }.now
+  }
+
+  lazy val component: HTMLElement = internalRX.now
 
   private def tableSortFunction(idx: Int): js.Function1[Event,Unit] = (event) => {
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
@@ -105,6 +114,10 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
       reactiveData() = reactiveData.now.sortBy(_.columns(idx)).reverse
       icon.setAttribute("class","fa fa-sort-desc")
     }
+  }
+
+  def dispose(): Unit = {
+    internalRX.kill()
   }
 
 }

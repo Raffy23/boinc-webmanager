@@ -104,11 +104,13 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     }
 
     override def leave(): Unit = {
+      dataTable.dispose()
       dom.window.clearInterval(refreshHandle)
       dom.window.clearInterval(fullSyncHandle)
     }
 
     override def already(): Unit = {
+      dataTable.dispose()
       syncTaskViewWithServer()
     }
   })

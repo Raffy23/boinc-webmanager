@@ -39,7 +39,6 @@ object ErrorDialogUtil {
   }
 
 
-
-
+  def apply(): PartialFunction[Throwable, Unit] = ErrorDialogUtil.showDialog
 
 }
