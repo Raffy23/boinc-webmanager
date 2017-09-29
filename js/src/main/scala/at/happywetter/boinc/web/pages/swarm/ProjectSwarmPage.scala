@@ -49,9 +49,12 @@ object ProjectSwarmPage extends SwarmSubPage {
       marginRight(5 px)
     )
 
+    val last_row_small = style(
+      width(1.5 em)
+    )
   }
 
-
+  private var dataset: Map[String, List[(BoincClient, Project)]] = _
   private case class Account(userName: String, teamName: String, credits: Double)
 
   override def header: String = "project_header".localize
@@ -196,6 +199,7 @@ object ProjectSwarmPage extends SwarmSubPage {
       ).map(_.flatten.groupBy(_._2.url))
        .map(projects => {
          val parent = dom.document.getElementById("swarm-project-content")
+          dataset = projects
          //val hasEveryClient = projects.map { case (name, data) => (name, data.size == clients.size) }
 
          parent.appendChild(
@@ -207,7 +211,7 @@ object ProjectSwarmPage extends SwarmSubPage {
                th("table_account".localize),
                th("table_team".localize),
                th("table_credits".localize),
-               th(style := "width:1.5em")
+               th(Style.last_row_small)
              )
            ),
            tbody(
@@ -256,7 +260,7 @@ object ProjectSwarmPage extends SwarmSubPage {
     )
 
   private def applyToAll(project: String, action: ProjectAction): Future[List[Boolean]] =
-    ClientManager.getClients.flatMap(cl => applyAction(cl, project, action))
+    applyAction(dataset(project).map(_._1), project, action)
 
   private def applyToAllSelected(action: ProjectAction): Future[List[List[Boolean]]] =
     Future.sequence(
