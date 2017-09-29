@@ -31,6 +31,7 @@ object WebResourcesRoute {
       head(
         meta(charset := "UTF-8"),
         meta(name := "viewport", content := "width=device-width, initial-scale=1"),
+        link(rel := "shortcut icon", href := "/favicon.ico"),
 
         scalatags.Text.tags2.title("BOINC Webmanager"),
 
@@ -66,6 +67,8 @@ object WebResourcesRoute {
     case request@GET -> Root / "files" / "app.js" => completeWithGipFile(appJS, request)
 
     case request@GET -> Root / "files" / "app-jsdeps.js" => completeWithGipFile(appDeptJS, request)
+
+    case request@GET -> Root / "favicon.ico" => completeWithGipFile("favicon.ico", request)
 
     // Static File content from Web root
     case request@GET -> "files" /: file => completeWithGipFile(file.toList.mkString("/"), request)
