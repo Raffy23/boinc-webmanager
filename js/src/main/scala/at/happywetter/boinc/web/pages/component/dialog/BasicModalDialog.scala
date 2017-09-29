@@ -40,6 +40,8 @@ object BasicModalDialog {
       padding.`0`,
       minWidth(300 px),
       maxWidth(60 %%),
+      maxHeight :=! "calc(100% - 200px)",
+      overflow.auto
     )
 
     val modalBody = style(
