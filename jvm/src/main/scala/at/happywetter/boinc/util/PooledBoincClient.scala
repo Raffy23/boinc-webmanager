@@ -109,7 +109,9 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
     connection(_.setRun(mode, duration))
 
-  override def getAllMessages: Future[List[Message]] = connection(_.getAllMessages)
+  override def getMessages(seqno: Int): Future[List[Message]] = connection(_.getMessages(seqno))
 
-  override def getAllNotices: Future[List[Notice]] = connection(_.getAllNotices)
+  override def getNotices(seqno: Int): Future[List[Notice]] = connection(_.getNotices(seqno))
+
+  override def readGlobalPrefsOverride: Future[Boolean] = connection(_.readGlobalPrefsOverride)
 }

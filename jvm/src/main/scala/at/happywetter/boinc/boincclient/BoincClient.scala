@@ -119,6 +119,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   def execHtmlCommand(cmd: BoincClient.Command.Value): Document = execHTMLAction(cmd.toString)
 
   private def execAction(action: NodeSeq): NodeSeq = execAction(action.toString())
+  private def execHTMLAction(action: NodeSeq): Document = execHTMLAction(action.toString())
 
   private def execAction(action: String): NodeSeq = {
     this.synchronized {
@@ -172,17 +173,17 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   }
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] = Future {
-    logger.trace("Set Workunit state for" + address + ":" + port)
+    logger.trace("Set Workunit state at" + address + ":" + port)
     (this.execAction(s"<${action.toString}><project_url>$project</project_url><name>$name</name></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
   override def project(name: String, action: ProjectAction): Future[Boolean] = Future {
-    logger.trace("Set Project state for " + address + ":" + port)
+    logger.trace("Set Project state at " + address + ":" + port)
     (this.execAction(s"<${action.toString}><project_url>$name</project_url></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
   override def getCCState: Future[CCState] = Future {
-    logger.trace("Get CCState for " + address + ":" + port)
+    logger.trace("Get CCState from " + address + ":" + port)
     (execCommand(BoincClient.Command.GetCCStatus) \ "cc_status").toCCState
   }
 
@@ -192,48 +193,73 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   }
 
   override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = Future {
-    logger.trace("Setting GlobalPrefsOverride for " + address + ":" + port)
-    (this.execAction(s"<set_global_prefs_override>${globalPrefsOverride.toXML}</set_global_prefs_override>") \ "success").xml_==(<success/>)
+    logger.trace("Setting GlobalPrefsOverride at " + address + ":" + port)
+    println(s"<set_global_prefs_override>${globalPrefsOverride.toXML}</set_global_prefs_override>")
+
+    val res = this.execAction(s"<set_global_prefs_override>\n${globalPrefsOverride.toXML}\n</set_global_prefs_override>")
+    println(res)
+
+    (res \ "success").xml_==(<success/>)
   }
 
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    logger.trace("Setting RunMode at " + address + ":" + port + " to " + mode)
     (this.execAction(s"<set_run_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_run_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setCpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    logger.trace("Setting CPU at " + address + ":" + port + " to " + mode)
     (this.execAction(s"<set_cpu_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_cpu_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setGpu(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    logger.trace("Setting GPU at " + address + ":" + port + " to " + mode)
     (this.execAction(s"<set_gpu_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_gpu_mode>") \ "success").xml_==(<success/>)
   }
 
   override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double) = Future {
+    logger.trace("Setting Network at " + address + ":" + port + " to " + mode)
     (this.execAction(s"<set_network_mode><${mode.toString}/><duration>${duration.toFloat}</duration></set_network_mode>") \ "success").xml_==(<success/>)
   }
 
-  override def getAllMessages = Future {
-    this.execHtmlCommand(BoincClient.Command.GetMessages).toMessages
-  }
-
-  override def getAllNotices = Future {
-    this.execHtmlCommand(BoincClient.Command.GetNotices).toNotices
-  }
-
   override def attachProject(url: String, authenticator: String, name: String) = Future {
+    logger.trace("Attach Project (" + url + ") at " + address + ":" + port)
     (this.execAction(
         <project_attach>
-          <project_url>${url}</project_url>
-          <authenticator>${authenticator}</authenticator>
-          <project_name>${name}</project_name>
+          <project_url>{url}</project_url>
+          <authenticator>{authenticator}</authenticator>
+          <project_name>{name}</project_name>
         </project_attach>
       ) \ "success"
     ).xml_==(<success/>)
   }
 
+  override def getMessages(seqno: Int) = Future {
+    logger.trace("Getting Messages (" + seqno + ") from " + address + ":" + port)
+    this.execHTMLAction(
+      <get_messages>
+        <seqno>{seqno}</seqno>
+      </get_messages>
+    ).toMessages
+  }
+
+  override def getNotices(seqno: Int) = Future {
+    logger.trace("Getting Notices (" + seqno + ") from " + address + ":" + port)
+    this.execHTMLAction(
+      <get_notices>
+        <seqno>{seqno}</seqno>
+      </get_notices>
+    ).toNotices
+  }
 
   override def getStatistics = Future {
+    logger.trace("Getting Statistics from " + address + ":" + port)
     execCommand(BoincClient.Command.GetStatistics).toStatistics
+  }
+
+
+  override def readGlobalPrefsOverride = Future {
+    (this.execCommand(BoincClient.Command.ReadGlobalPrefsFile) \ "success").xml_==(<success/>)
   }
 
   def isAuthenticated: Boolean = this.authenticated

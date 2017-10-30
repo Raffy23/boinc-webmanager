@@ -134,7 +134,18 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .mapData(data => Unpickle[GlobalPrefsOverride].fromString(json = data).get)
   }
 
-  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride) = ???
+  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean] = {
+    Fetch
+      .fetch(
+        baseURI + BoincRPC.Command.ReadGlobalPrefsOverride,
+        RequestInit(
+          method = HttpMethod.POST,
+          headers = FetchHelper.header,
+          body = Pickle.intoString(globalPrefsOverride)
+        )
+      )
+      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+  }
 
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
     Fetch
@@ -177,10 +188,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .mapData(data => Unpickle[Statistics].fromString(json = data).get)
   }
 
-  override def getAllMessages: Future[List[Message]] = {
+  override def getMessages(seqno: Int): Future[List[Message]] = {
     Fetch
       .fetch(
-        baseURI + BoincRPC.Command.GetMessages,
+        baseURI + BoincRPC.Command.GetMessages + "?seqno=" + seqno,
         RequestInit(
           method = HttpMethod.GET,
           headers = FetchHelper.header
@@ -189,10 +200,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .mapData(data => Unpickle[List[Message]].fromString(json = data).get)
   }
 
-  override def getAllNotices: Future[List[Notice]] = {
+  override def getNotices(seqno: Int): Future[List[Notice]] = {
     Fetch
       .fetch(
-        baseURI + BoincRPC.Command.GetNoiices,
+        baseURI + BoincRPC.Command.GetNotices + "?seqno=" + seqno,
         RequestInit(
           method = HttpMethod.GET,
           headers = FetchHelper.header
@@ -201,4 +212,8 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       .mapData(data => Unpickle[List[Notice]].fromString(json = data).get)
   }
 
+  override def readGlobalPrefsOverride: Future[Boolean] = {
+    Fetch.fetch(baseURI + BoincRPC.Command.ReadGlobalPrefsOverride, RequestInit(method = HttpMethod.PATCH, headers = FetchHelper.header))
+      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+  }
 }

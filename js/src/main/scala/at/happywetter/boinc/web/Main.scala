@@ -63,7 +63,7 @@ object Main {
     AppRouter.addRoute(SwarmControlLocation, "/view/swarm/:action", SwarmControlPage)
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
-    AppRouter.router.notFound((param) => {
+    AppRouter.router.notFound((_) => {
       dom.window.alert("page_not_found".localize)
       AppRouter.navigate(DashboardLocation)
     })

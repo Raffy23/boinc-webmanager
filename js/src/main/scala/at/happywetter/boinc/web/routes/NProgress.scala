@@ -15,7 +15,7 @@ object NProgress extends js.Object {
 
   def start(): Unit = js.native
 
-  def stop(): Unit = js.native
+  //def stop(): Unit = js.native
 
   def remove(): Unit = js.native
 

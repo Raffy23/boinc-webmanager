@@ -127,7 +127,8 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    client.getAllNotices.map(notices => {
+    //TODO: save seqno and notices into app-cache
+    client.getNotices().map(notices => {
       dom.document.getElementById("client-notices").appendChild(
         ul(Style.noticeList,
           notices.reverse.map(notice =>
@@ -162,7 +163,8 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
-    client.getAllMessages.map(messages => {
+    //TODO: save seqno and messages to app-cache
+    client.getMessages().map(messages => {
       dom.document.getElementById("client-messages").appendChild(
           div(
             table(TableTheme.table,

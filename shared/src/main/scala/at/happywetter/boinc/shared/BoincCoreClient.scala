@@ -24,11 +24,12 @@ trait BoincCoreClient {
   def getFileTransfer: Future[List[FileTransfer]]
   def getCCState: Future[CCState]
   def getStatistics: Future[Statistics]
-  def getAllMessages: Future[List[Message]]
-  def getAllNotices: Future[List[Notice]]
+  def getMessages(seqno: Int = 0): Future[List[Message]]
+  def getNotices(seqno: Int = 0): Future[List[Notice]]
 
   def getGlobalPrefsOverride: Future[GlobalPrefsOverride]
   def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean]
+  def readGlobalPrefsOverride: Future[Boolean]
 
   // Change Boinc workunits / projects
   def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean]

@@ -7,6 +7,7 @@ import at.happywetter.boinc.shared._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * Created by: 
@@ -20,6 +21,11 @@ object BoincApiRoutes {
   import org.http4s.dsl._
   import prickle._
 
+  private def getIntParameter(name: String)(implicit params: Map[String,Seq[String]]): Int =
+    Try {
+      params(name).head.toInt
+    }.toOption.getOrElse(0)
+
   def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpService = HttpService {
 
     // Basic Meta States
@@ -30,8 +36,10 @@ object BoincApiRoutes {
     case GET -> Root / "boinc" / "project_list" => Ok(Pickle.intoString(projects.getProjects))
 
     // Main route for Boinc Data
-    case GET -> Root / "boinc" / name / action =>
+    case GET -> Root / "boinc" / name / action :? requestParams =>
       hostManager.get(name).map(client => {
+        implicit val params = requestParams
+
         action match {
           case "tasks" => Ok(client.getTasks().map(Pickle.intoString(_)))
           case "all_tasks" => Ok(client.getTasks(active = false).map(Pickle.intoString(_)))
@@ -44,8 +52,8 @@ object BoincApiRoutes {
           case "ccstate" => Ok(client.getCCState.map(Pickle.intoString(_)))
           case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(Pickle.intoString(_)))
           case "statistics" => Ok(client.getStatistics.map(Pickle.intoString(_)))
-          case "messages" => Ok(client.getAllMessages.map(Pickle.intoString(_)))
-          case "notices" => Ok(client.getAllNotices.map(Pickle.intoString(_)))
+          case "messages" => Ok(client.getMessages(getIntParameter("seqno")).map(Pickle.intoString(_)))
+          case "notices" => Ok(client.getNotices(getIntParameter("seqno")).map(Pickle.intoString(_)))
 
           case _ => NotAcceptable()
         }
@@ -142,6 +150,24 @@ object BoincApiRoutes {
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
+      }).getOrElse(BadRequest())
+
+    case request @ POST -> Root / "boinc" / name / "global_prefs_override" =>
+      hostManager.get(name).map(client => {
+        request.decode[String] { body =>
+          Unpickle[GlobalPrefsOverride]
+            .fromString(body)
+            .map(requestBody => client.setGlobalPrefsOverride(requestBody))
+            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(content => Ok(content))
+            .getOrElse(InternalServerError())
+        }
+      }).getOrElse(BadRequest())
+
+
+    case PATCH -> Root / "boinc" / name / "global_prefs_override" =>
+      hostManager.get(name).map(client => {
+        Ok(client.readGlobalPrefsOverride.map(Pickle.intoString(_)))
       }).getOrElse(BadRequest())
 
     case _ => NotAcceptable()
