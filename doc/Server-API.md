@@ -57,8 +57,11 @@ seconds. The Server will not open a new Connection to the Core Client!*
   * `cpu`: Change the mode of the CPU 
   * `gpu`: Change the mode of the GPU
   * `network`: Change the mode of the Network usage
+  * `global_prefs_override`: Sets the Settings of the Core Client _(Core Client will not automatically apply it!)_
   
 * **POST** `/:client/tasks/:task`: Change the state of the given Task
+
+* **PATCH** `/:client/global_prefs_override`: Let's the client reload the Settings file
   
 ### BOINC WebRPC
 *This is currently not exported by the Webserver!*
