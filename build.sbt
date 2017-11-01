@@ -51,14 +51,18 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "com.github.benhutchison" %%% "prickle" % "1.1.13",
       "com.github.japgolly.scalacss" %%% "core" % "0.5.3",
       "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
-      "com.lihaoyi" %%% "scalatags" % "0.6.7",
+      "com.lihaoyi" %%% "scalatags" % "0.6.7", // needs a *very* old scala-js version
       "com.lihaoyi" %%% "scalarx" % "0.3.2"
     ),
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(
       "org.webjars.npm" % "navigo" % "5.3.1" / "navigo.js" commonJSName "Navigo" minified "navigo.min.js",
       "org.webjars.bower" % "nprogress" % "0.2.0" / "nprogress.js" commonJSName "NProgress",
-      "org.webjars.bower" % "chart.js" % "2.6.0" / "Chart.js" commonJSName "ChartJS" minified "Chart.min.js"
+      "org.webjars.bower" % "chart.js" % "2.6.0" / "Chart.js" commonJSName "ChartJS" minified "Chart.min.js",
+
+      // Polyfill Dependencies needed for IE / Edge to be able to run it
+      "org.webjars.npm" % "text-encoding" % "0.6.4" / "encoding.js",
+      ProvidedJS / "polyfill-nodelist.js"
     )
   )
 
@@ -87,6 +91,6 @@ lazy val clientJS = manager.js.dependsOn(shared)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
-    buildInfoOptions += BuildInfoOption.BuildTime,
-    resourceDirectory in Compile := baseDirectory.value / "resources"
+    buildInfoOptions += BuildInfoOption.BuildTime
+    //resourceDirectory in Compile := baseDirectory.value / "resources"
   )
