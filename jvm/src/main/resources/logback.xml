@@ -8,7 +8,7 @@
     </encoder>
   </appender>
 
-  <logger name="org.http4s.blaze" level="INFO"/>
+  <logger name="org.http4s.blaze" level="ERROR"/>
 
   <root level="DEBUG">
     <appender-ref ref="STDOUT" />

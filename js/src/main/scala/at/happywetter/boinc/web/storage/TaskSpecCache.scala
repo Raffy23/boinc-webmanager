@@ -3,6 +3,7 @@ package at.happywetter.boinc.web.storage
 import scala.concurrent.Future
 import scala.scalajs.js
 import at.happywetter.boinc.shared.App
+import at.happywetter.boinc.web.helper.CompatibilityTester
 import org.scalajs.dom
 import org.scalajs.dom.raw.IDBRequest
 
@@ -23,10 +24,16 @@ object TaskSpecCache extends DatabaseProvider {
   import prickle._
 
   def save(boincName: String, appName: String, app: App): Future[Unit] =
-    transaction.map(f => f.add(Pickle.intoString(app), boincName+"/"+appName))
+    if (CompatibilityTester.isFirefox)
+      firefoxTransaction(_.add(Pickle.intoString(app), boincName+"/"+appName))
+    else
+      transaction.map(f => f.add(Pickle.intoString(app), boincName+"/"+appName))
 
   def get(boincName: String, appName: String): Future[Option[App]] =
-    transaction.flatMap(f => unpack(f.get(boincName + "/" + appName)))
+    if (CompatibilityTester.isFirefox)
+      firefoxTransactionAsync(f => unpack(f.get(boincName + "/" + appName)))
+    else
+      transaction.flatMap(f => unpack(f.get(boincName + "/" + appName)))
 
   def updateCacheTimeStamp(boincName: String): Unit = {
     dom.window.localStorage.setItem("TaskSpecCache/"+boincName, new Date().toJSON())

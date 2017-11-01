@@ -149,11 +149,11 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
     NProgress.start()
     boinc.setGlobalPrefsOverride(
       GlobalPrefsOverride(
-        dom.document.getElementById("run_on_batteries").asInstanceOf[HTMLInputElement].checked,
+        !dom.document.getElementById("run_on_batteries").asInstanceOf[HTMLInputElement].checked,
         globalPrefsOverride.batteryChargeMinPct,
         globalPrefsOverride.batteryMaxTemperature,
-        dom.document.getElementById("run_if_active").asInstanceOf[HTMLInputElement].checked,
-        dom.document.getElementById("run_gpu_if_active").asInstanceOf[HTMLInputElement].checked,
+        !dom.document.getElementById("run_if_active").asInstanceOf[HTMLInputElement].checked,
+        !dom.document.getElementById("run_gpu_if_active").asInstanceOf[HTMLInputElement].checked,
         globalPrefsOverride.idleTimeToRun,
         globalPrefsOverride.suspendCpuUsage,
         dom.document.getElementById("leave_apps_in_memory").asInstanceOf[HTMLInputElement].checked,

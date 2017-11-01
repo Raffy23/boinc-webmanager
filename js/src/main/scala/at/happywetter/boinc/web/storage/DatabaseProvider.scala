@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.storage
 
 import org.scalajs.dom
-import org.scalajs.dom.raw._
+import org.scalajs.dom.raw.{IDBTransaction, _}
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -38,9 +38,25 @@ trait DatabaseProvider {
     }
   }).toFuture
 
+  // Bug: Firefox *hates* Promises so this does not work in FireFox
   protected def transaction(implicit storeNames: js.Array[String], objStore: String): Future[IDBObjectStore] =
     database.map(r => r.transaction(storeNames, "readwrite").objectStore(objStore))
 
+  protected def firefoxTransaction[A](firefoxCallback: (IDBObjectStore) => A)(implicit storeNames: js.Array[String], objStore: String): Future[A] =
+    database.map(r => {
+      val ffTransaction = r.transaction(storeNames, "readwrite")
+      val objStorage   = ffTransaction.objectStore(objStore)
+
+      firefoxCallback(objStorage)
+    })
+
+  protected def firefoxTransactionAsync[A](firefoxCallback: (IDBObjectStore) => Future[A])(implicit storeNames: js.Array[String], objStore: String): Future[A] =
+    database.flatMap(r => {
+      val ffTransaction = r.transaction(storeNames, "readwrite")
+      val objStorage   = ffTransaction.objectStore(objStore)
+
+      firefoxCallback(objStorage)
+    })
 
   protected implicit def IDBRequestToFuture[A](request: IDBRequest): Future[Option[A]] = new Promise[Option[A]]((resolve, reject) => {
     request.onsuccess = (_) => resolve(request.result.asInstanceOf[js.UndefOr[A]].toOption)
@@ -53,5 +69,11 @@ trait DatabaseProvider {
     result.onerror = reject
     result.onsuccess = (_) => resolve(result.result == js.undefined)
   }).toFuture
+
+  implicit class IDBRequestStringFuture(request: IDBRequest) {
+
+    def getData: Future[Option[String]] = IDBRequestToFuture[String](request)
+
+  }
 
 }
