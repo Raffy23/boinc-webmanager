@@ -88,6 +88,12 @@ auto-discovery {
     "password1", "password2", "password3"
   ]
 }
+
+# For Host grouping, leave this empty if you don't want groups
+host-groups {
+ "Group Red": ["PC1", "PC2"]
+ "Group Blue": ["PC4"]
+}
 ````
 
 # BOINC Core Client Configuration

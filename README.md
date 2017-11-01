@@ -49,6 +49,6 @@ would hang*
 A short overview of the Server API is documented [here](doc/Server-API.md)
 
 ## Issues
-* Does not work in Internet Explorer or Microsoft Edge
+* ~~Does not work in Internet Explorer or Microsoft Edge~~
 * Page broken on Mobile Devices
 * Self-Signed Certificate causes Unsafe Error in Chrome / Firefox / ...
