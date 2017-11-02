@@ -3,6 +3,7 @@ package at.happywetter.boinc
 import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
+import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
 import at.happywetter.boinc.util.BoincHostSettingsResolver
 import org.http4s.HttpService
@@ -58,6 +59,9 @@ object WebServer extends App  {
   private val authService = new AuthenticationService(config)
   projects.importFrom(config)
 
+  // TODO: get from Config
+  private val hwStatusService = new HWStatusService("I:\\Program Files\\Git\\usr\\bin\\cat.exe", 10000)
+
   private val builder =
     BlazeBuilder
       .enableHttp2(true) // Doesn't work properly in 0.18
@@ -67,6 +71,7 @@ object WebServer extends App  {
       .mountService(HSTS(WebResourcesRoute(config)), "/")
       .mountService(HSTS(authService.authService), "/auth")
       .mountService(service(LanguageService()), "/language")
+      .mountService(HSTS(HardwareAPIRoutes(hostManager, hwStatusService)), "/hardware")
 
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
