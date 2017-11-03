@@ -20,7 +20,8 @@ object AppConfig {
                     boinc: Boinc,
                     development: Option[Boolean] = Some(false),
                     autoDiscovery: AutoDiscovery,
-                    hostGroups: Map[String, List[String]])
+                    hostGroups: Map[String, List[String]],
+                    hardware: Hardware)
 
   case class Server(address: String,
                     port: Short,
@@ -47,6 +48,12 @@ object AppConfig {
                            scanTimeout: Int,
                            password: List[String])
 
+  case class Hardware(enabled: Boolean,
+                      hosts: List[String],
+                      binary: String,
+                      cacheTimeout: Long
+  )
+
   val conf: Config = {
     val confString: String = Source.fromFile("./application.conf").getLines().mkString("\n")
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
@@ -57,7 +64,8 @@ object AppConfig {
 
   lazy val sharedConf = ServerSharedConfig(
     if (conf.autoDiscovery.enabled) FiniteDuration(conf.autoDiscovery.scanTimeout, TimeUnit.MINUTES).toMillis
-    else FiniteDuration(12, TimeUnit.HOURS).toMillis
+    else FiniteDuration(12, TimeUnit.HOURS).toMillis,
+    conf.hardware.enabled
   )
 
 }

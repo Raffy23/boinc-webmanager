@@ -1,8 +1,9 @@
 package at.happywetter.boinc.extensions.linux
 
-import at.happywetter.boinc.extensions.linux.SensorsOutputParser.SensorsData
-import scala.concurrent.ExecutionContext.Implicits.global
+import at.happywetter.boinc.shared.HardwareData.SensorsData
+
 import scala.collection.concurrent.TrieMap
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.XML
 

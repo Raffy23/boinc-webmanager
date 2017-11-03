@@ -1,6 +1,8 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, SettingsLocation, SwarmControlLocation}
+import at.happywetter.boinc.shared.ServerSharedConfig
+import at.happywetter.boinc.web.helper.ServerConfig
+import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, HardwareLocation, SettingsLocation, SwarmControlLocation}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -10,6 +12,7 @@ import scala.language.postfixOps
 import scala.scalajs.js
 import scalacss.ProdDefaults._
 import scalatags.JsDom
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by: 
@@ -18,7 +21,6 @@ import scalatags.JsDom
   * @version 25.07.2017
   */
 object DashboardMenu {
-
   object Style extends StyleSheet.Inline {
     import dsl._
 
@@ -70,11 +72,11 @@ object DashboardMenu {
     )
   }
 
-
   def component: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
+    computedMenuEntries()
     ul(Style.menu, id := "dashboard-menu",
       li(Style.elem,
         a(
@@ -94,6 +96,8 @@ object DashboardMenu {
         )
       ),
 
+      span(id := "hw-menu-entry-placeholder"),
+
       li(Style.elem,
         a(
           href := SettingsLocation.link,
@@ -106,6 +110,26 @@ object DashboardMenu {
       li(Style.elem, h2(style :="padding-left: 5px", i(`class` := "fa fa-cubes", style:="margin-right:8px"), "dashboard_menu_computers".localize))
     )
 
+  }
+
+  def computedMenuEntries(): Unit = {
+    import scalacss.ScalatagsCss._
+    import scalatags.JsDom.all._
+
+    ServerConfig.get.foreach(config => {
+      if (config.hardware) {
+        dom.document.getElementById("hw-menu-entry-placeholder").appendChild(
+          li(Style.elem,
+            a(
+              href := HardwareLocation.link,
+              i(`class` := "fa fa-microchip"), "dashboard_hardware".localize,
+              data("navigo") := "", data("menu-id") := "hardware",
+              onclick := masterSelectionListener
+            )
+          ).render
+        )
+      }
+    })
   }
 
   def onMenuItemClick(event: Event): Unit = {

@@ -14,4 +14,4 @@ final case class AddProjectBody(projectUrl: String, projectName: String, user: S
 
 final case class ApplicationError(reason: String)
 
-final case class ServerSharedConfig(hostNameCacheTimeout: Long)
+final case class ServerSharedConfig(hostNameCacheTimeout: Long, hardware: Boolean)

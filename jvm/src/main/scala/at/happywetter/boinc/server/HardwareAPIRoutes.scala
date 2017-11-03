@@ -16,18 +16,17 @@ object HardwareAPIRoutes {
   import org.http4s.dsl._
   import prickle._
 
-  def apply(hostManager: BoincManager, hwStatusService: HWStatusService): HttpService = HttpService {
+  def apply(hosts: Set[String], hwStatusService: HWStatusService): HttpService = HttpService {
 
-    // TODO: Use only Hosts which care allowed
-    case GET -> Root => Ok(Pickle.intoString(hostManager.getAllHostNames))
+    case GET -> Root => Ok(Pickle.intoString(hosts.toList))
 
     case GET -> Root / name / "cpufrequency" =>
-      hostManager.get(name).map(_ => {
+      hosts.find(_ == name).map(_ => {
         Ok(hwStatusService.query(name).map(_._1).map(Pickle.intoString(_)))
       }).getOrElse(BadRequest())
 
     case GET -> Root / name / "sensors" =>
-      hostManager.get(name).map(_ => {
+      hosts.find(_ == name).map(_ => {
         Ok(hwStatusService.query(name).map(_._2.toMap).map(Pickle.intoString(_)))
       }).getOrElse(BadRequest())
   }

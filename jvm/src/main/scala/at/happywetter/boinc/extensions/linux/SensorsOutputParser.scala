@@ -1,5 +1,7 @@
 package at.happywetter.boinc.extensions.linux
 
+import at.happywetter.boinc.shared.HardwareData.{SensorsData, SensorsRow}
+
 /**
   * Utility which can parse the Output of the Sensors program under linux
   *
@@ -7,17 +9,13 @@ package at.happywetter.boinc.extensions.linux
   * @version 02.11.2017
   */
 object SensorsOutputParser {
-
-  case class SensorsRow(value: Double, unit: String, arguments: List[(String, String)], flags: String)
-  type SensorsData = Map[String, SensorsRow]
-
   private val Pattern = """(.*):\s+([+\-.0-9]+)([\w\s°]+)\s*\((.*)\)\s*(.*)""".r
   private val NumberPattern = """([+\-.0-9]+)([\w\s°]+)""".r
 
   def parse(output: String): SensorsData = {
     output.split("\n").filter(_.contains(":")).map {
       case Pattern(identifier, value, unit, arguments, flags) =>
-        (identifier,
+        (identifier.trim,
           SensorsRow(value.toDouble, unit, arguments.split(",").map { pair =>
             val data = pair.split("=")
             (data(0).trim, data(1).trim)
@@ -42,7 +40,8 @@ object SensorsOutputParser {
             case NumberPattern(num, unit) => (num, unit)
           }
 
-          (data(0),
+          println(data(0))
+          (data(0).trim,
             SensorsRow(
               nV._1.toDouble,
               nV._2,
@@ -52,7 +51,7 @@ object SensorsOutputParser {
           )
 
         }
-    }.toMap
+    }.toMap.filter(_._1.nonEmpty)
   }
 
 }

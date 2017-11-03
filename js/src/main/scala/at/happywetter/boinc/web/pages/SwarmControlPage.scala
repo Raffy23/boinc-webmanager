@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage, SwarmSubPage}
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation, SwarmControlLocation}
+import at.happywetter.boinc.web.routes.AppRouter.{LoginPageLocation, SwarmControlLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import at.happywetter.boinc.web.util.I18N._

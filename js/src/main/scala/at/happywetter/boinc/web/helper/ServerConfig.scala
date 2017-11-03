@@ -17,7 +17,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 object ServerConfig {
 
   private var populated = false
-  private var serverConfig = ServerSharedConfig(12 * 60 * 60 * 1000)
+  private var serverConfig = ServerSharedConfig(12 * 60 * 60 * 1000, hardware = false)
 
   def get: Future[ServerSharedConfig] =
     if (!populated)

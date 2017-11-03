@@ -61,6 +61,7 @@ object Main {
     AppRouter.addRoute(BoincHomeLocation, "/view/dashboard/:client/:action", BoincLayout)
     AppRouter.addRoute(SwarmControlLocation, "/view/swarm", SwarmControlPage)
     AppRouter.addRoute(SwarmControlLocation, "/view/swarm/:action", SwarmControlPage)
+    AppRouter.addRoute(HardwareLocation, "/view/hardware", HardwarePage)
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {

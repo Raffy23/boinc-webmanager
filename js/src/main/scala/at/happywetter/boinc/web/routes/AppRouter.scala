@@ -30,6 +30,9 @@ object AppRouter {
   case object SwarmControlLocation extends Page {
     override def link: String = Try(super.link).getOrElse("/view/swarm")
   }
+  case object HardwareLocation extends Page {
+    override def link: String = Try(super.link).getOrElse("/view/hardware")
+  }
 
 
   val defaultPageHook = new Hook {

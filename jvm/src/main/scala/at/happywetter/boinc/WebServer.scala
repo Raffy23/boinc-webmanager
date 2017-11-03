@@ -1,11 +1,10 @@
 package at.happywetter.boinc
 
-import java.io.File
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.util.BoincHostSettingsResolver
+import at.happywetter.boinc.util.{BoincHostSettingsResolver, ConfigurationChecker}
 import org.http4s.HttpService
 import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
@@ -28,27 +27,7 @@ object WebServer extends App  {
   private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
   private val autoDiscovery = new BoincHostSettingsResolver(config, hostManager)
 
-  if (config.development.getOrElse(false)) {
-    println("WebServer was launched with development options!")
-    println("All resources will be served from: " + config.server.webroot)
-  }
-
-  // Check environment
-  if (!new File("./application.conf").exists()) {
-    System.err.println("Unable to read ./application.conf!")
-    System.exit(1)
-  }
-
-  // Check if XML-Source is available
-  if (!new File(config.boinc.projects.xmlSource).exists()) {
-    System.err.println("Unable to read Boinc XML Project definition!")
-    System.exit(1)
-  }
-
-  if (config.development.getOrElse(false) && !new File(config.server.webroot).exists()) {
-    System.err.println("Webroot is not a valid Directory!")
-    System.exit(1)
-  }
+  ConfigurationChecker.checkConfiguration(config)
 
   // Populate Host Manager with clients
   config.boinc.hosts.foreach(hostManager.add)
@@ -59,19 +38,26 @@ object WebServer extends App  {
   private val authService = new AuthenticationService(config)
   projects.importFrom(config)
 
-  // TODO: get from Config
-  private val hwStatusService = new HWStatusService("I:\\Program Files\\Git\\usr\\bin\\cat.exe", 10000)
-
-  private val builder =
+  private var builder =
     BlazeBuilder
-      .enableHttp2(true) // Doesn't work properly in 0.18
+      .enableHttp2(true) // Doesn't work properly in 0.17
       .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
       .bindHttp(config.server.port, config.server.address)
       .mountService(service(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
       .mountService(HSTS(WebResourcesRoute(config)), "/")
       .mountService(HSTS(authService.authService), "/auth")
       .mountService(service(LanguageService()), "/language")
-      .mountService(HSTS(HardwareAPIRoutes(hostManager, hwStatusService)), "/hardware")
+
+  // Only enable /hardware routing if enabled in config
+  if (config.hardware.enabled) {
+    val hwStatusService = new HWStatusService(config.hardware.binary, config.hardware.cacheTimeout)
+
+    builder = builder
+      .mountService(
+        service(HardwareAPIRoutes(config.hardware.hosts.toSet, hwStatusService)),
+        "/api/hardware"
+      )
+  }
 
   private val server = builder.run
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
@@ -83,6 +69,6 @@ object WebServer extends App  {
   server.shutdownNow()
 
 
-  def service(service: HttpService): HttpService = GZip(HSTS(JsonMiddleware(service)))
+  private def service(service: HttpService): HttpService = GZip(HSTS(JsonMiddleware(service)))
 
 }
