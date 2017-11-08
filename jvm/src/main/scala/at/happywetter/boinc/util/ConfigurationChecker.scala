@@ -35,7 +35,8 @@ object ConfigurationChecker {
       System.exit(1)
     }
 
-    if (config.hardware.enabled && !new File(config.hardware.binary).exists()) {
+    if (config.hardware.isDefined && config.hardware.get.enabled
+      && !new File(config.hardware.get.binary).exists()) {
       System.err.println("Binary for Hardware Data fetching is missing!")
       System.exit(1)
     }

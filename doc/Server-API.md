@@ -65,3 +65,6 @@ seconds. The Server will not open a new Connection to the Core Client!*
   
 ### BOINC WebRPC
 *This is currently not exported by the Webserver!*
+
+### Extensions
+* The Hardware Extensions is found at `/api/hardware`. ([Documentation](doc/extension/Hardware.md))

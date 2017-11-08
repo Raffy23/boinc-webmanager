@@ -49,12 +49,12 @@ object WebServer extends App  {
       .mountService(service(LanguageService()), "/language")
 
   // Only enable /hardware routing if enabled in config
-  if (config.hardware.enabled) {
-    val hwStatusService = new HWStatusService(config.hardware.binary, config.hardware.cacheTimeout)
+  if (config.hardware.isDefined && config.hardware.get.enabled) {
+    val hwStatusService = new HWStatusService(config.hardware.get.binary, config.hardware.get.cacheTimeout)
 
     builder = builder
       .mountService(
-        service(HardwareAPIRoutes(config.hardware.hosts.toSet, hwStatusService)),
+        service(HardwareAPIRoutes(config.hardware.get.hosts.toSet, hwStatusService)),
         "/api/hardware"
       )
   }

@@ -21,7 +21,7 @@ object AppConfig {
                     development: Option[Boolean] = Some(false),
                     autoDiscovery: AutoDiscovery,
                     hostGroups: Map[String, List[String]],
-                    hardware: Hardware)
+                    hardware: Option[Hardware])
 
   case class Server(address: String,
                     port: Short,
