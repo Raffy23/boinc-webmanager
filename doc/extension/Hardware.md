@@ -23,7 +23,6 @@ hardware {
 }
 ````
 
-
 ##Hardware Monitor (Binary)
 To be able to use the Hardware Extension, the Binary which can read
 the Data must be provided. The Server does only know how to parse the
@@ -38,7 +37,8 @@ The Standard Output (stdout) of the binary must be formatted as XML:
 ````xml
 <data>
     <cpu-freq>
-            TODO: Insert sample output of cpupower frequency-info -f -m 
+           analysiere CPU 0:
+             current CPU frequency: 2.01 GHz (asserted by call to kernel)
     </cpu-freq>
     <sensors>
             TODO: Insert sample output of sensors 
@@ -46,6 +46,15 @@ The Standard Output (stdout) of the binary must be formatted as XML:
 </data>
 ````
 where `<cpu-freq>` and `<sensors>` do contain the output of the utilities.
+
+### cpufreq
+The binary must call the cpufreq binary as follows: `cpupower frequency-info -f -m` 
+
+### Sensors
+To be able to view the values of sensors in the table, the sensors utility has to be
+configured first. Only values which are named like the Table header will show up.
+TODO: HowTo configure sensors
+
 
 ##Server - API
 The Hardware Extensions is found at `/api/hardware`.

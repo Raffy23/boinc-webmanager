@@ -216,7 +216,10 @@ object DashboardMenu {
 
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
     rootElement.childNodes.forEach((li, _, _) => {
-      if (li.firstChild.textContent == content) {
+      if (li.firstChild != null && li.firstChild.textContent == content) {
+        li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
+        marked = true
+      } else if(li.firstChild == null && li.textContent == content) {
         li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
         marked = true
       }

@@ -50,7 +50,10 @@ object WebServer extends App  {
 
   // Only enable /hardware routing if enabled in config
   if (config.hardware.isDefined && config.hardware.get.enabled) {
-    val hwStatusService = new HWStatusService(config.hardware.get.binary, config.hardware.get.cacheTimeout)
+    val hwStatusService = new HWStatusService(
+      config.hardware.get.binary,
+      config.hardware.get.params,
+      config.hardware.get.cacheTimeout)
 
     builder = builder
       .mountService(

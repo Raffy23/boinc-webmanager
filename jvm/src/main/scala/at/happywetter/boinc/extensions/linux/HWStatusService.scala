@@ -1,5 +1,7 @@
 package at.happywetter.boinc.extensions.linux
 
+import java.util
+
 import at.happywetter.boinc.shared.HardwareData.SensorsData
 
 import scala.collection.concurrent.TrieMap
@@ -13,7 +15,7 @@ import scala.xml.XML
   * @author Raphael
   * @version 02.11.2017
   */
-class HWStatusService(resolverBinary: String, cacheTimeout: Long) {
+class HWStatusService(resolverBinary: String, parameters: List[String], cacheTimeout: Long) {
 
   type Timestamp = Long
   type CPUFrequency = Double
@@ -21,7 +23,12 @@ class HWStatusService(resolverBinary: String, cacheTimeout: Long) {
   private val hostData = new TrieMap[String, (Timestamp, CPUFrequency, SensorsData)]()
 
   private def executeResolver(host: String): (CPUFrequency, SensorsData) = {
-    val pb = new ProcessBuilder(resolverBinary, host)
+    val procLine = new util.ArrayList[String]()
+    procLine.add(resolverBinary)
+    parameters.foreach(procLine.add)
+    procLine.add(host)
+
+    val pb = new ProcessBuilder(procLine)
     pb.redirectOutput(ProcessBuilder.Redirect.PIPE)
 
     val process = pb.start()

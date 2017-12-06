@@ -31,12 +31,12 @@ object ErrorDialogUtil {
 
     case ex: Exception =>
       NProgress.done(true)
+      ex.printStackTrace()
 
       new OkDialog("dialog_error_header".localize, List("ups_something_went_wrong".localize, br(),
         ex.getLocalizedMessage))
         .renderToBody().show()
 
-      ex.printStackTrace()
   }
 
 

@@ -36,6 +36,6 @@ class OkDialog(title: String, content: List[Modifier], action: (OkDialog) => Uni
 
   override def show(): Unit = {
     super.show()
-    dom.document.querySelector("#modal-dialog button[name='dialog_ok_btn']").asInstanceOf[HTMLElement].focus()
+    dom.document.querySelector("#modal-dialog-type1 button[name='dialog_ok_btn']").asInstanceOf[HTMLElement].focus()
   }
 }

@@ -10,7 +10,7 @@ import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
 import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
-import at.happywetter.boinc.web.util.DashboardMenuBuilder
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -73,19 +73,7 @@ object Dashboard extends Layout {
       }
 
       AppRouter.router.updatePageLinks()
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-
-      case e: Exception =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("ups_something_bad_happend".localize))
-          .renderToBody().show()
-
-        e.printStackTrace()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   private def renderDashboardContent(clients: List[String]): Unit = {

@@ -51,6 +51,7 @@ object AppConfig {
   case class Hardware(enabled: Boolean,
                       hosts: List[String],
                       binary: String,
+                      params: List[String],
                       cacheTimeout: Long
   )
 
@@ -65,7 +66,7 @@ object AppConfig {
   lazy val sharedConf = ServerSharedConfig(
     if (conf.autoDiscovery.enabled) FiniteDuration(conf.autoDiscovery.scanTimeout, TimeUnit.MINUTES).toMillis
     else FiniteDuration(12, TimeUnit.HOURS).toMillis,
-    conf.hardware.enabled
+    conf.hardware.exists(_.enabled)
   )
 
 }

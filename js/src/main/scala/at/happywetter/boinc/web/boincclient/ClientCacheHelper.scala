@@ -31,8 +31,13 @@ object ClientCacheHelper {
     state.apps.foreach(s => TaskSpecCache.save(name, s._1, s._2))
     state.workunits.foreach(workunit => AppSettingsStorage.save(name, workunit))
 
-    HostInfoCache.saveFromState(name, state)
-    TaskSpecCache.updateCacheTimeStamp(name)
+    try {
+      HostInfoCache.saveFromState(name, state)
+      TaskSpecCache.updateCacheTimeStamp(name)
+    } catch {
+      case ex: Exception => ex.printStackTrace()
+    }
+
   }
 
 }
