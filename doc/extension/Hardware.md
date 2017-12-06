@@ -4,7 +4,7 @@ This is the Documentation about the Hardware Extension used by the Boinc-Webmana
 hardware information about the clients. The Communication is done via a custom script or binary
 which must be provided to the Manager in order to use this extension.
 
-##Configuration
+## Configuration
 Add the following lines to the `application.conf` to be able to use the extension: 
 ````hocon
 hardware {
@@ -18,12 +18,15 @@ hardware {
   # For more information look at the Documentation (/doc/extension/Hardware.md)
   binary: "/hw-monitor"
   
+  # TODO: Description
+  params: ["some-parameter"]
+  
   # Timeout in ms
   cache-timeout: 1200000
 }
 ````
 
-##Hardware Monitor (Binary)
+## Hardware Monitor (Binary)
 To be able to use the Hardware Extension, the Binary which can read
 the Data must be provided. The Server does only know how to parse the
 output of following utilities: 
@@ -56,7 +59,26 @@ configured first. Only values which are named like the Table header will show up
 TODO: HowTo configure sensors
 
 
-##Server - API
+## Example script as Hardware Monitor
+If this script is made executable it can be called directly by the Server otherwise bash has to 
+be called with this script a parameter. Parameters can be modified with the parameters array
+```bash
+#!/bin/bash
+
+echo "<data>"
+echo "   <cpu-freq>"
+cpupower frequency-info -f -m
+echo "   </cpu-freq>"
+echo "   <sensors>"
+sensors
+echo "   </sensors>"
+echo "</data>"
+
+```
+
+
+
+## Server - API
 The Hardware Extensions is found at `/api/hardware`.
 * **GET** `/` - Returns a List of clients which can provide Hardware Information
 * **GET** `/:client/cpufrequency` - Reports the CPu Frequency in GHz
