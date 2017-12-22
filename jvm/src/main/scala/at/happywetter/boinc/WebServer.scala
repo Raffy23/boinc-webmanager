@@ -63,15 +63,32 @@ object WebServer extends App  {
   }
 
   private val server = builder.run
-  println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
-  StdIn.readLine()               // let it run until user presses return
+  println(s"Server online and listening at https://${config.server.address}:${config.server.port}")
 
-  // Cleanup
-  hostManager.destroy()
-  scheduler.shutdownNow()
-  server.shutdownNow()
+  if (config.serviceMode) {
+    println("Server was started in service mode")
+    println("Send SIGTERM or SIGHUP to terminate the server ...")
 
+    Runtime.getRuntime.addShutdownHook(new Thread() {
+      override def run(): Unit = {
+        println("Stopping Server ...")
+        cleanUp()
+      }
+    })
+
+  } else {
+    println("Server was started in interactive mode")
+    println("Press RETURN to stop...")
+
+    StdIn.readLine()               // let it run until user presses return
+    cleanUp()
+  }
 
   private def service(service: HttpService): HttpService = GZip(HSTS(JsonMiddleware(service)))
 
+  private def cleanUp(): Unit = {
+    hostManager.destroy()
+    scheduler.shutdownNow()
+    server.shutdownNow()
+  }
 }
