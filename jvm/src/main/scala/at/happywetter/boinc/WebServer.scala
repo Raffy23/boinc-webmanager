@@ -9,6 +9,7 @@ import org.http4s.HttpService
 import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.middleware.{GZip, HSTS}
+import cats.effect._
 
 import scala.io.StdIn
 
@@ -39,8 +40,8 @@ object WebServer extends App  {
   projects.importFrom(config)
 
   private var builder =
-    BlazeBuilder
-      .enableHttp2(true) // Doesn't work properly in 0.17
+    BlazeBuilder[IO]
+      .enableHttp2(true) // h2spec check fails in 0.18
       .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
       .bindHttp(config.server.port, config.server.address)
       .mountService(service(authService.protectedService(BoincApiRoutes(hostManager, projects))), "/api")
@@ -62,7 +63,7 @@ object WebServer extends App  {
       )
   }
 
-  private val server = builder.run
+  private val server = builder.start.unsafeRunSync()
   println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
   StdIn.readLine()               // let it run until user presses return
 
@@ -72,6 +73,6 @@ object WebServer extends App  {
   server.shutdownNow()
 
 
-  private def service(service: HttpService): HttpService = GZip(HSTS(JsonMiddleware(service)))
+  private def service(service: HttpService[IO]): HttpService[IO] = GZip(HSTS(JsonMiddleware(service)))
 
 }

@@ -5,13 +5,12 @@ import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.{ApplicationError, User}
+import cats.data.OptionT
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import fs2.Task
 import org.http4s.util.CaseInsensitiveString
-import prickle.{Pickle, Unpickle}
 
-import scala.util.{Random, Try}
+import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 
 /**
@@ -23,59 +22,63 @@ import scala.language.implicitConversions
 class AuthenticationService(config: Config) {
 
   import AuthenticationService.toDate
-  import org.http4s._
-  import org.http4s.dsl._
+  import cats.effect._
+  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
+  import org.http4s.circe._
+  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
-  def authService: HttpService = HttpService {
+  def authService: HttpService[IO] = HttpService[IO] {
     case GET -> Root => Ok(AuthenticationService.nonce)
 
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-
-        if (!validate(header.value)) {
-          new Response()
-            .withBody(Pickle.intoString(ApplicationError("error_invalid_token")))
-            .withStatus(Unauthorized)
-
-        } else {
-          Ok(refreshToken(header.value))
+        validate(header.value) match {
+          case Success(true) => Ok(refreshToken(header.value))
+          case _ => new Response[IO]()
+            .withBody(ApplicationError("error_invalid_token").asJson)
+            .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
         }
 
       }).getOrElse(
-        new Response()
-          .withBody(Pickle.intoString(ApplicationError("error_no_token")))
-          .withStatus(Unauthorized)
+        new Response[IO]()
+          .withBody(ApplicationError("error_no_token").asJson)
+          .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
       )
 
     case request @ POST -> Root =>
       request.decode[String] { body =>
-        Unpickle[User].fromString(body).toOption.map(user => {
+        decode[User](body).toOption.map(user => {
           if (config.server.username.equals(user.username)
             && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
             Ok(buildToken(user.username))
           else
-            BadRequest(Pickle.intoString(ApplicationError("error_invalid_credentials")))
-        }).getOrElse(BadRequest(Pickle.intoString(ApplicationError("error_invalid_request"))))
+            BadRequest(ApplicationError("error_invalid_credentials").asJson)
+        }).getOrElse(BadRequest(ApplicationError("error_invalid_request").asJson))
       }
   }
 
-  def protectedService(service: HttpService): HttpService = Service.lift { req =>
+  private def denyService(errorText: String): HttpService[IO] = HttpService[IO] {
+    case _ =>
+      new Response[IO]()
+        .withBody(ApplicationError(errorText).asJson)
+        .map(_.withStatus(Unauthorized))
+  }
+
+  def protectedService(service: HttpService[IO]): HttpService[IO] = Service.lift { req: Request[IO] =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-
-      if (validate(header.value)) {
-        service(req)
-      } else {
-        new Response().withBody(Pickle.intoString(ApplicationError("error_invalid_token"))).withStatus(Unauthorized)
+      validate(header.value) match {
+        case Success(true) => service(req)
+        case Success(false) => denyService("error_invalid_token")(req)
+        case Failure(_) => denyService("error_invalid_token")(req)
       }
-
-    }).getOrElse(new Response().withBody(Pickle.intoString(ApplicationError("error_no_token"))).withStatus(Unauthorized))
+    }).getOrElse(denyService("error_no_token")(req))
   }
 
-  def validate(token: String): Boolean = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())).getOrElse(false)
+  def validate(token: String): Try[Boolean] = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date()))
   def buildToken(user: String): String = jwtBuilder.withClaim("user", user).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm)
   def refreshToken(token: String): String = {
     val jwtToken = jwtVerifyer.build().verify(token)

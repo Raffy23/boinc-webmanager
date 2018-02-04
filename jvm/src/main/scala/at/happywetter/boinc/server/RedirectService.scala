@@ -1,7 +1,7 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.AppConfig.Config
-import org.http4s.Uri.{Authority, RegName}
+import org.http4s.Uri.{Authority, RegName, Scheme}
 import org.http4s.headers.Host
 
 /**
@@ -11,10 +11,11 @@ import org.http4s.headers.Host
   * @version 08.09.2017
   */
 object RedirectService {
+  import cats.effect._
   import org.http4s._
-  import org.http4s.dsl._
+  import org.http4s.dsl.io._
 
-  def apply(config: Config):  HttpService = HttpService {
+  def apply(config: Config):  HttpService[IO] = HttpService[IO] {
     case request =>
       request.headers.get(Host) match {
         case Some(Host(host, _)) =>
@@ -23,8 +24,8 @@ object RedirectService {
       }
   }
 
-  private def buildUri(request: Request, host: String, securePort: Int) = request.uri.copy(
-      scheme    = Some("https".ci),
+  private def buildUri(request: Request[IO], host: String, securePort: Int) = request.uri.copy(
+      scheme    = Some(Scheme.https),
       authority = Some(
         Authority(
           request.uri.authority.flatMap(_.userInfo),

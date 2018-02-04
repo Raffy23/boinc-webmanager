@@ -1,9 +1,9 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.AppConfig.Config
-
-import fs2.Task
-import fs2.interop.cats._
+import cats.effect._
+import org.http4s.dsl.io._
+import org.http4s.implicits._
 
 /**
   * Created by: 
@@ -14,7 +14,6 @@ import fs2.interop.cats._
 object WebResourcesRoute {
 
   import org.http4s._
-  import org.http4s.dsl._
 
   // Workaround of content encoding Bugs
   private val contentTypes = Map[String, String](
@@ -53,13 +52,13 @@ object WebResourcesRoute {
   }
 
   private lazy val indexPage =
-    Ok(indexContent)
-      .putHeaders(Header("X-Frame-Options", "DENY"))
-      .putHeaders(Header("X-XSS-Protection", "1"))
-      .putHeaders(Header("Content-Type", "text/html; charset=UTF-8"))
+    Ok(indexContent,
+      Header("X-Frame-Options", "DENY"),
+      Header("X-XSS-Protection", "1"),
+      Header("Content-Type", "text/html; charset=UTF-8")
+    )
 
-
-  def apply(implicit config: Config): HttpService = HttpService {
+  def apply(implicit config: Config): HttpService[IO] = HttpService[IO] {
 
     // Normal index Page which is served
     case GET -> Root => indexPage
@@ -88,13 +87,13 @@ object WebResourcesRoute {
     if (config.development.getOrElse(false)) "boinc-webmanager-jsdeps.js"
     else "boinc-webmanager-jsdeps.min.js"
 
-  private def fromResource(file: String, request: Request) =
+  private def fromResource(file: String, request: Request[IO]) =
     StaticFile.fromResource("/web-root/" + file, Some(request))
 
-  private def fromFile(file: String, request: Request)(implicit config: Config) =
+  private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
     StaticFile.fromString(config.server.webroot + file, Some(request))
 
-  private def completeWithGipFile(file: String, request: Request)(implicit config: Config) = {
+  private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) = {
     lazy val zipFile =
       if (config.development.getOrElse(false)) fromFile(file + ".gz", request)
       else fromResource(file + ".gz", request)

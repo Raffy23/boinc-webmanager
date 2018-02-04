@@ -3,12 +3,10 @@ package at.happywetter.boinc.web.helper
 import at.happywetter.boinc.shared.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom.experimental.Response
-import prickle.Unpickle
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.scalajs.js.Promise
 
 /**
   * Created by: 
@@ -19,6 +17,8 @@ import scala.scalajs.js.Promise
 object ResponseHelper {
 
   implicit class ErrorResponseFeature(response: Response) {
+    import io.circe.generic.auto._
+    import io.circe.parser._
 
     @throws(classOf[FetchResponseException])
     def tryGet: Future[String] = {
@@ -37,8 +37,7 @@ object ResponseHelper {
         if (response.status != 200)
           throw FetchResponseException(
             response.status,
-            Unpickle[ApplicationError]
-              .fromString(content)
+            decode[ApplicationError](content)
               .getOrElse(ApplicationError("error_decoding_msg"))
           )
 

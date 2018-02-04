@@ -24,17 +24,18 @@ object LanguageService {
         (language, lang("language_name"), lang("language_icon"))
       })
 
-  import org.http4s._
-  import org.http4s.dsl._
-  import prickle._
+  import cats.effect._
+  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
+  import org.http4s.circe._
+  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
-  def apply(): HttpService = HttpService {
+  def apply(): HttpService[IO] = HttpService[IO] {
 
-    case GET -> Root => Ok(Pickle.intoString(languages))
+    case GET -> Root => Ok(languages.asJson)
     case GET -> Root / lang =>
       Try(
         Ok(
-          Pickle.intoString(load(lang))
+          load(lang).asJson
         )
       ).getOrElse(NotFound())
 

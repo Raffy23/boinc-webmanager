@@ -21,13 +21,13 @@ object TaskSpecCache extends DatabaseProvider {
   private implicit val objStore: String = "task_cache"
   private implicit val storeNames = js.Array("task_cache")
 
-  import prickle._
+  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
   def save(boincName: String, appName: String, app: App): Future[Unit] =
     if (CompatibilityTester.isFirefox)
-      firefoxTransaction(_.add(Pickle.intoString(app), boincName+"/"+appName))
+      firefoxTransaction(_.add(app.asJson.noSpaces, boincName+"/"+appName))
     else
-      transaction.map(f => f.add(Pickle.intoString(app), boincName+"/"+appName))
+      transaction.map(f => f.add(app.asJson.noSpaces, boincName+"/"+appName))
 
   def get(boincName: String, appName: String): Future[Option[App]] =
     if (CompatibilityTester.isFirefox)
@@ -52,7 +52,7 @@ object TaskSpecCache extends DatabaseProvider {
 
   private def unpack(request: IDBRequest): Future[Option[App]] =
     new Promise[Option[App]]((resolve, reject) => {
-    request.onsuccess = (_) => resolve(request.result.asInstanceOf[js.UndefOr[String]].toOption.flatMap(a => Unpickle[App].fromString(a).toOption))
+    request.onsuccess = (_) => resolve(request.result.asInstanceOf[js.UndefOr[String]].toOption.flatMap(a => decode[App](a).toOption))
     request.onerror = reject
   }).toFuture
 }

@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.helper.ResponseHelper._
 import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
-import prickle.Unpickle
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -29,27 +29,24 @@ object ClientManager {
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
   private var groups: Map[String, List[String]] = null
-  Unpickle[List[String]]
-    .fromString(dom.window.localStorage.getItem("clientmanager/clients"))
+  decode[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
     .getOrElse(List())
     .foreach(c => clients += (c -> new BoincClient(c)))
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
-    import prickle._
-
     cacheTimeout.foreach(cacheTimeout => {
       val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
       timestamp.fold(
         ex => {
           dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-          dom.window.localStorage.setItem("clientmanager/clients", Pickle.intoString(clients))
+          dom.window.localStorage.setItem("clientmanager/clients", clients.asJson.noSpaces)
           dom.console.log("Clientmanager: Could not read timestamp, persist current Clientlist")
         },
         date => {
           val current = new Date()
           if (current.getTime() - date.getTime() > cacheTimeout) {
             dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-            dom.window.localStorage.setItem("clientmanager/clients", Pickle.intoString(clients))
+            dom.window.localStorage.setItem("clientmanager/clients", clients.asJson.noSpaces)
             dom.console.log("Clientmanager: Updated Clientlist")
           }
         }
@@ -110,7 +107,7 @@ object ClientManager {
         baseURI + "/health",
         RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
       )
-      .mapData(data => Unpickle[Map[String, Boolean]].fromString(json = data).get)
+      .mapData(data => decode[Map[String, Boolean]](data).toOption.get)
   }
 
   def queryCompleteProjectList(): Future[Map[String,BoincProjectMetaData]] = {
@@ -119,22 +116,22 @@ object ClientManager {
         baseURI + "/project_list",
         RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
       )
-      .mapData(data => Unpickle[Map[String,BoincProjectMetaData]].fromString(json = data).get)
+      .mapData(data => decode[Map[String,BoincProjectMetaData]](data).toOption.get)
   }
 
 
   private def queryGroups: Future[Map[String, List[String]]] =
     Fetch
       .fetch("/api/groups", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[Map[String, List[String]]].fromString(json = data).get)
+      .mapData(data => decode[Map[String, List[String]]](data).toOption.get)
 
   private def queryClientsFromServer(): Future[List[String]] =
     Fetch
       .fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[List[String]].fromString(json = data).get)
+      .mapData(data => decode[List[String]](data).toOption.get)
 
   private def queryClientsFromCache(): Future[List[String]] = Future {
-    val clients = Unpickle[List[String]].fromString(dom.window.localStorage.getItem("clientmanager/clients"))
+    val clients = decode[List[String]](dom.window.localStorage.getItem("clientmanager/clients")).toOption
     //TODO: Make fallback if cache is corrupted
     clients.get
   }

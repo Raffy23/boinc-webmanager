@@ -1,5 +1,7 @@
 package at.happywetter.boinc.server
 
+import cats.effect.IO
+
 
 /**
   * Created by: 
@@ -11,7 +13,7 @@ object JsonMiddleware {
 
   import org.http4s._
 
-  def apply(service: HttpService): HttpService = Service.lift { req =>
+  def apply(service: HttpService[IO]): HttpService[IO] = Service.lift { req =>
     service(req).map {
       case Status.Successful(response) => response.putHeaders(Header("Content-Type","application/json; charset=utf-8"))
       case response => response

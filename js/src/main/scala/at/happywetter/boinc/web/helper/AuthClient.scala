@@ -3,16 +3,15 @@ package at.happywetter.boinc.web.helper
 import at.happywetter.boinc.shared.User
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.hacks.TextEncoder
+import at.happywetter.boinc.web.helper.ResponseHelper.ErrorResponseFeature
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
-import prickle.Pickle
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
-import ResponseHelper.ErrorResponseFeature
-import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -52,7 +51,10 @@ object AuthClient {
   }
 
   private def requestToken(user: User): Future[String] = {
-    Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = Pickle.intoString(user)))
+    import io.circe.generic.auto._
+    import io.circe.syntax._
+
+    Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = user.asJson.noSpaces))
       .toFuture
       .flatMap(_.tryGet)
   }
