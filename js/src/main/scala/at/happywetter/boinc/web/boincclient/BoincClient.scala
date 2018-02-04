@@ -19,43 +19,43 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 class BoincClient(val hostname: String) extends BoincCoreClient {
 
   private val baseURI = "/api/boinc/" + hostname + "/"
-  import prickle._
+  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
   def getTasks(active: Boolean = true): Future[List[Result]] = {
     val uri = if(active) "tasks" else "all_tasks"
 
     Fetch.fetch(baseURI + uri, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[List[Result]].fromString(json = data).get)
+      .mapData(data => decode[List[Result]](data).toOption.get)
   }
 
   def getHostInfo: Future[HostInfo] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetHostInfo, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[HostInfo].fromString(json = data).get)
+      .mapData(data => decode[HostInfo](data).toOption.get)
   }
 
   def isNetworkAvailable: Future[Boolean] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetNetworkAvailable, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   def getDiskUsage: Future[DiskUsage] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetDiskUsage, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[DiskUsage].fromString(json = data).get)
+      .mapData(data => decode[DiskUsage](data).toOption.get)
   }
 
   override def getProjects: Future[List[Project]] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetProjectStatus, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[List[Project]].fromString(json = data).get)
+      .mapData(data => decode[List[Project]](data).toOption.get)
   }
 
   override def getState: Future[BoincState] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetState, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[BoincState].fromString(json = data).get)
+      .mapData(data => decode[BoincState](data).toOption.get)
   }
 
   override def getFileTransfer: Future[List[FileTransfer]] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetFileTransfer, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[List[FileTransfer]].fromString(json = data).get)
+      .mapData(data => decode[List[FileTransfer]](data).toOption.get)
   }
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] = {
@@ -65,10 +65,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(WorkunitRequestBody(project, action.toString))
+          body = WorkunitRequestBody(project, action.toString).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def project(name: String, action: ProjectAction): Future[Boolean] = {
@@ -78,15 +78,15 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(ProjectRequestBody(name, action.toString))
+          body = ProjectRequestBody(name, action.toString).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def getCCState: Future[CCState] = {
     Fetch.fetch(baseURI + BoincRPC.Command.GetCCStatus, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[CCState].fromString(json = data).get)
+      .mapData(data => decode[CCState](data).toOption.get)
   }
 
   override def setCpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
@@ -96,10 +96,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+          body = BoincModeChange(mode.toString, duration).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def setGpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
@@ -109,10 +109,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+          body = BoincModeChange(mode.toString, duration).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
@@ -122,16 +122,16 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+          body = BoincModeChange(mode.toString, duration).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = {
     Fetch
       .fetch(baseURI + BoincRPC.Command.ReadGlobalPrefsOverride, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => Unpickle[GlobalPrefsOverride].fromString(json = data).get)
+      .mapData(data => decode[GlobalPrefsOverride](data).toOption.get)
   }
 
   override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean] = {
@@ -141,10 +141,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(globalPrefsOverride)
+          body = globalPrefsOverride.asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] = {
@@ -154,10 +154,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(BoincModeChange(mode.toString, duration))
+          body = BoincModeChange(mode.toString, duration).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   // Needs to have WebRPC exposed to client ...
@@ -170,10 +170,10 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
         RequestInit(
           method = HttpMethod.POST,
           headers = FetchHelper.header,
-          body = Pickle.intoString(AddProjectBody(url, name, username, password))
+          body = AddProjectBody(url, name, username, password).asJson.noSpaces
         )
       )
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 
   override def getStatistics: Future[Statistics] = {
@@ -185,7 +185,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
           headers = FetchHelper.header
         )
       )
-      .mapData(data => Unpickle[Statistics].fromString(json = data).get)
+      .mapData(data => decode[Statistics](data).toOption.get)
   }
 
   override def getMessages(seqno: Int): Future[List[Message]] = {
@@ -197,7 +197,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
           headers = FetchHelper.header
         )
       )
-      .mapData(data => Unpickle[List[Message]].fromString(json = data).get)
+      .mapData(data => decode[List[Message]](data).toOption.get)
   }
 
   override def getNotices(seqno: Int): Future[List[Notice]] = {
@@ -209,11 +209,11 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
           headers = FetchHelper.header
         )
       )
-      .mapData(data => Unpickle[List[Notice]].fromString(json = data).get)
+      .mapData(data => decode[List[Notice]](data).toOption.get)
   }
 
   override def readGlobalPrefsOverride: Future[Boolean] = {
     Fetch.fetch(baseURI + BoincRPC.Command.ReadGlobalPrefsOverride, RequestInit(method = HttpMethod.PATCH, headers = FetchHelper.header))
-      .mapData(data => Unpickle[Boolean].fromString(json = data).get)
+      .mapData(data => decode[Boolean](data).toOption.get)
   }
 }

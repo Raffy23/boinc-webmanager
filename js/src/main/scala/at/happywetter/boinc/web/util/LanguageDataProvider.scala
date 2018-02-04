@@ -3,12 +3,13 @@ package at.happywetter.boinc.web.util
 import at.happywetter.boinc.web.helper.FetchHelper
 import at.happywetter.boinc.web.util.I18N.Locale
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
-import prickle.Unpickle
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 /**
   * Created by: 
@@ -44,12 +45,12 @@ object LanguageDataProvider {
     Fetch.fetch("/language", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
       .flatMap(response => response.text().toFuture)
-      .map(data => Unpickle[List[(String, String, String)]].fromString(json = data).get)
+      .map(data => decode[List[(String, String, String)]](data).toOption.get)
 
   private def fetchLanguage(lang: String = Locale.current): Future[Map[String, String]] =
     Fetch.fetch("/language/" + lang, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
       .toFuture
       .flatMap(response => response.text().toFuture)
-      .map(data => Unpickle[Map[String, String]].fromString(json = data).get)
+      .map(data => decode[Map[String, String]](data).toOption.get)
 
 }

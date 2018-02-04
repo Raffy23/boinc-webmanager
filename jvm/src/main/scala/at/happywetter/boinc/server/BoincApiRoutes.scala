@@ -17,23 +17,24 @@ import scala.util.Try
   */
 object BoincApiRoutes {
 
-  import org.http4s._
-  import org.http4s.dsl._
-  import prickle._
+  import cats.effect._
+  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
+  import org.http4s.circe._
+  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
   private def getIntParameter(name: String)(implicit params: Map[String,Seq[String]]): Int =
     Try {
       params(name).head.toInt
     }.toOption.getOrElse(0)
 
-  def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpService = HttpService {
+  def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpService[IO] = HttpService[IO] {
 
     // Basic Meta States
-    case GET -> Root / "boinc" => Ok(Pickle.intoString(hostManager.getAllHostNames))
-    case GET -> Root / "health" => Ok(hostManager.checkHealth.map(Pickle.intoString(_)))
-    case GET -> Root / "config" => Ok(Pickle.intoString(AppConfig.sharedConf))
-    case GET -> Root / "groups" => Ok(Pickle.intoString(hostManager.getSerializableGroups))
-    case GET -> Root / "boinc" / "project_list" => Ok(Pickle.intoString(projects.getProjects))
+    case GET -> Root / "boinc" => Ok(hostManager.getAllHostNames.asJson)
+    case GET -> Root / "health" => Ok(hostManager.checkHealth.map(_.asJson))
+    case GET -> Root / "config" => Ok(AppConfig.sharedConf.asJson)
+    case GET -> Root / "groups" => Ok(hostManager.getSerializableGroups.asJson)
+    case GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects.asJson)
 
     // Main route for Boinc Data
     case GET -> Root / "boinc" / name / action :? requestParams =>
@@ -41,19 +42,19 @@ object BoincApiRoutes {
         implicit val params = requestParams
 
         action match {
-          case "tasks" => Ok(client.getTasks().map(Pickle.intoString(_)))
-          case "all_tasks" => Ok(client.getTasks(active = false).map(Pickle.intoString(_)))
-          case "hostinfo" => Ok(client.getHostInfo.map(Pickle.intoString(_)))
-          case "network" => Ok(client.isNetworkAvailable.map(Pickle.intoString(_)))
-          case "projects" => Ok(client.getProjects.map(Pickle.intoString(_)))
-          case "state" => Ok(client.getState.map(Pickle.intoString(_)))
-          case "filetransfers" => Ok(client.getFileTransfer.map(Pickle.intoString(_)))
-          case "disk" => Ok(client.getDiskUsage.map(Pickle.intoString(_)))
-          case "ccstate" => Ok(client.getCCState.map(Pickle.intoString(_)))
-          case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(Pickle.intoString(_)))
-          case "statistics" => Ok(client.getStatistics.map(Pickle.intoString(_)))
-          case "messages" => Ok(client.getMessages(getIntParameter("seqno")).map(Pickle.intoString(_)))
-          case "notices" => Ok(client.getNotices(getIntParameter("seqno")).map(Pickle.intoString(_)))
+          case "tasks" => Ok(client.getTasks().map(_.asJson))
+          case "all_tasks" => Ok(client.getTasks(active = false).map(_.asJson))
+          case "hostinfo" => Ok(client.getHostInfo.map(_.asJson))
+          case "network" => Ok(client.isNetworkAvailable.map(_.asJson))
+          case "projects" => Ok(client.getProjects.map(_.asJson))
+          case "state" => Ok(client.getState.map(_.asJson))
+          case "filetransfers" => Ok(client.getFileTransfer.map(_.asJson))
+          case "disk" => Ok(client.getDiskUsage.map(_.asJson))
+          case "ccstate" => Ok(client.getCCState.map(_.asJson))
+          case "global_prefs_override" => Ok(client.getGlobalPrefsOverride.map(_.asJson))
+          case "statistics" => Ok(client.getStatistics.map(_.asJson))
+          case "messages" => Ok(client.getMessages(getIntParameter("seqno")).map(_.asJson))
+          case "notices" => Ok(client.getNotices(getIntParameter("seqno")).map(_.asJson))
 
           case _ => NotAcceptable()
         }
@@ -64,10 +65,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "tasks" / task =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[WorkunitRequestBody]
-            .fromString(body)
+          decode[WorkunitRequestBody](body)
+            .toOption
             .map(requestBody => client.workunit(requestBody.project, task, WorkunitAction.fromValue(requestBody.action).get))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -77,13 +78,13 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "project" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[AddProjectBody]
-            .fromString(body)
+          decode[AddProjectBody](body)
+            .toOption
             .map(requestBody => {
               WebRPC
                 .lookupAccount(requestBody.projectUrl, requestBody.user, Some(requestBody.password))
                 .map { case (_, auth) => auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName)) }
-                .flatMap(result => result.getOrElse(Future {false}).map(s => Pickle.intoString(s)))
+                .flatMap(result => result.getOrElse(Future {false}).map(_.asJson))
             })
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
@@ -93,10 +94,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "projects" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[ProjectRequestBody]
-            .fromString(body)
+          decode[ProjectRequestBody](body)
+            .toOption
             .map(requestBody => client.project(requestBody.project, ProjectAction.fromValue(requestBody.action).get))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -107,10 +108,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "run_mode" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[BoincModeChange]
-            .fromString(body)
+          decode[BoincModeChange](body)
+            .toOption
             .map(requestBody => client.setRun(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -119,10 +120,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "cpu" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[BoincModeChange]
-            .fromString(body)
+          decode[BoincModeChange](body)
+            .toOption
             .map(requestBody => client.setCpu(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -131,10 +132,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "gpu" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[BoincModeChange]
-            .fromString(body)
+          decode[BoincModeChange](body)
+            .toOption
             .map(requestBody => client.setGpu(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -143,10 +144,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "network" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[BoincModeChange]
-            .fromString(body)
+          decode[BoincModeChange](body)
+            .toOption
             .map(requestBody => client.setNetwork(BoincRPC.Modes.fromValue(requestBody.mode).get, requestBody.duration))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -155,10 +156,10 @@ object BoincApiRoutes {
     case request @ POST -> Root / "boinc" / name / "global_prefs_override" =>
       hostManager.get(name).map(client => {
         request.decode[String] { body =>
-          Unpickle[GlobalPrefsOverride]
-            .fromString(body)
+          decode[GlobalPrefsOverride](body)
+            .toOption
             .map(requestBody => client.setGlobalPrefsOverride(requestBody))
-            .map(f => f.map(response => Pickle.intoString(response)))
+            .map(f => f.map(_.asJson))
             .map(content => Ok(content))
             .getOrElse(InternalServerError())
         }
@@ -167,7 +168,7 @@ object BoincApiRoutes {
 
     case PATCH -> Root / "boinc" / name / "global_prefs_override" =>
       hostManager.get(name).map(client => {
-        Ok(client.readGlobalPrefsOverride.map(Pickle.intoString(_)))
+        Ok(client.readGlobalPrefsOverride.map(_.asJson))
       }).getOrElse(BadRequest())
 
     case _ => NotAcceptable()
