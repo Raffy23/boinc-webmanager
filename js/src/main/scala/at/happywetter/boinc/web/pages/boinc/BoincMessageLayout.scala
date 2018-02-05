@@ -15,6 +15,7 @@ import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 
@@ -216,4 +217,6 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
     ret
   }
+
+  override def render: Elem = {<div>MESSAGES</div>}
 }

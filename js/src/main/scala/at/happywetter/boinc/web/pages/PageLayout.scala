@@ -4,10 +4,8 @@ import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.language.postfixOps
-import scala.scalajs.js
+import scala.xml.Elem
 import scalacss.ProdDefaults._
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -16,10 +14,10 @@ import scalatags.JsDom
   * @version 25.07.2017
   */
 object PageLayout {
+  import scala.language.postfixOps
 
   object Style extends StyleSheet.Inline {
     import dsl._
-
 
     val heading = style(
       position.fixed,
@@ -85,7 +83,7 @@ object PageLayout {
     )
   }
 
-  val hamburgerMenuAction: js.Function1[Event,Unit] = (event) => {
+  val hamburgerMenuAction: (Event) => Unit = (event) => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
     val content = dom.document.getElementById("client-container").asInstanceOf[HTMLElement]
 
@@ -103,24 +101,14 @@ object PageLayout {
 
   }
 
-  val heading: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    JsDom.all.header(Style.heading,
-      h1(Style.headerText,
-        i(`class` := "fa fa-bars", style := "margin-right:13px;cursor:pointer;",
-          onclick := hamburgerMenuAction)
-        , "Boinc Webmanager"),
-      div(id:="navigation")
-    )
-  }
-
-  val footer: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    JsDom.all.footer(Style.footer, p("DEVELOPMENT VERSION!"))
+  val heading: Elem = {
+    <header class={Style.heading.htmlClass}>
+      <h1 class={Style.headerText.htmlClass}>
+        <i class="fa fa-bars" stlye="margin-right:13px;cursor:pointer" onclick={hamburgerMenuAction}></i>
+        Boinc Webmanager
+      </h1>
+      <div id="navigation"></div>
+    </header>
   }
 
 }

@@ -21,6 +21,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.util.Try
+import scala.xml.Elem
 import scalatags.JsDom
 /**
   * Created by: 
@@ -30,36 +31,14 @@ import scalatags.JsDom
   */
 object Dashboard extends Layout {
 
-  lazy val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalatags.JsDom.all._
-    import scalacss.ScalatagsCss._
+  override def before(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-    Some(
-    div(
-      DashboardMenu.component.render,
-      div(id := "client-container", PageLayout.Style.clientContainer)
-    )
-    )
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
+    }
   }
-
-  override val routerHook: Option[Hook] = Some(new Hook {
-    override def already(): Unit = {
-      LayoutManager.render(Dashboard.this)
-    }
-
-    override def before(done: js.Function0[Unit]): Unit = {
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-      AuthClient.tryLogin.foreach {
-        case true => done()
-        case false => AppRouter.navigate(LoginPageLocation)
-      }
-    }
-
-    override def leave(): Unit = {}
-
-    override def after(): Unit = {}
-  })
 
   override def onRender(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -295,4 +274,6 @@ object Dashboard extends Layout {
 
   import at.happywetter.boinc.shared.App
   case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty, workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
+
+  override def render: Elem = {<div>DASHBOARD</div>}
 }

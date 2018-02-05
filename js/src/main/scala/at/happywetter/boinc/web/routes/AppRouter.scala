@@ -58,11 +58,15 @@ object AppRouter {
       path,
 
       (params: js.Dictionary[String]) => {
-        layout.beforeRender(params)
-        LayoutManager.render(layout)
+        LayoutManager.renderLayout(params, layout)
       },
 
-      layout.routerHook.getOrElse(defaultPageHook)
+      new Hook {
+        override def already(): Unit = layout.already()
+        override def before(done: js.Function0[Unit]): Unit = layout.before(done)
+        override def leave(): Unit = layout.leave()
+        override def after(): Unit = layout.after()
+      }
     )
   }
 

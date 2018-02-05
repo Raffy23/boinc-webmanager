@@ -1,24 +1,21 @@
 package at.happywetter.boinc.web.pages
-import at.happywetter.boinc.shared.HardwareData
-import at.happywetter.boinc.web.boincclient.{ClientCacheHelper, ClientManager, FetchResponseException}
+import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.helper.table.HardwareTableModel
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLElement
 
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scalatags.JsDom
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -27,28 +24,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @version 03.11.2017
   */
 object HardwarePage extends Layout {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
-  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = None
-  override val routerHook: Option[Hook] =  Some(new Hook {
-    override def already(): Unit = {
-      LayoutManager.render(HardwarePage.this)
+
+  override def before(done: js.Function0[Unit]): Unit = {
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
     }
 
-    override def before(done: js.Function0[Unit]): Unit = {
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-      AuthClient.tryLogin.foreach {
-        case true => done()
-        case false => AppRouter.navigate(LoginPageLocation)
-      }
-
-    }
-
-    override def leave(): Unit = {
-      dataTable.dispose()
-    }
-    override def after(): Unit = {}
-  })
+  }
 
   private var clients: Future[List[HardwareStatusClient]] = _
   private var dataTable: DataTable[HardwareTableRow] = _
@@ -91,20 +76,12 @@ object HardwarePage extends Layout {
     })
   }
 
-  override def render: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    Some(
-      div(
-        DashboardMenu.component.render,
-        div(id := "client-container", PageLayout.Style.clientContainer,
-          div(id := "hardware",
-            h2(BoincClientLayout.Style.pageHeader,
-              i(`class` := "fa fa-microchip"), "hardware_header".localize)
-          )
-        )
-      )
-    )
+  override def render: Elem = {
+    <div id="hardware">
+      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-microchip"></i>
+        {"hardware_header".localize}
+      </h2>
+    </div>
   }
 }

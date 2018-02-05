@@ -16,6 +16,7 @@ import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.xml.Elem
 import scalatags.JsDom
 
 /**
@@ -212,6 +213,8 @@ class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout
   }
 
   override val path = "boinc"
+
+  override def render: Elem = {<div>HOST_MAIN</div>}
 }
 
 object BoincMainHostLayout {

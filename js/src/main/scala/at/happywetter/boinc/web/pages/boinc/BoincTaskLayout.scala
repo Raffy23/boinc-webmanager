@@ -92,28 +92,21 @@ class BoincTaskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     onViewRender((newNode) => {root.replaceChild(newNode.render, oldNode)})
   }
 
-  override val routerHook = Some(new Hook {
-    override def before(done: js.Function0[Unit]): Unit = {
-      NProgress.start()
-      done()
-    }
+  override def after(): Unit = {
+    refreshHandle = dom.window.setInterval(() => updateActiveTasks(), 5000)
+    fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), 600000)
+  }
 
-    override def after(): Unit = {
-      refreshHandle = dom.window.setInterval(() => updateActiveTasks(), 5000)
-      fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), 600000)
-    }
+  override def leave(): Unit = {
+    dataTable.dispose()
+    dom.window.clearInterval(refreshHandle)
+    dom.window.clearInterval(fullSyncHandle)
+  }
 
-    override def leave(): Unit = {
-      dataTable.dispose()
-      dom.window.clearInterval(refreshHandle)
-      dom.window.clearInterval(fullSyncHandle)
-    }
-
-    override def already(): Unit = {
-      dataTable.dispose()
-      syncTaskViewWithServer()
-    }
-  })
+  override def already(): Unit = {
+    dataTable.dispose()
+    syncTaskViewWithServer()
+  }
 
   override val path = "tasks"
 }

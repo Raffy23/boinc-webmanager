@@ -2,15 +2,14 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
-import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scalatags.JsDom
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -22,53 +21,34 @@ object BoincLayout extends Layout {
 
   private val INITAL_STATE = "boinc"
 
-  var child: BoincPageLayout = _
+  val child: Var[BoincPageLayout] = Var(null)
   private var currentState: String = "NONE"
 
   override val path: String = "/view/dashboard"
-  override val requestedParent = Some("main #client-container")
-  override def requestParentLayout(): Some[Dashboard.type] = { Some(Dashboard) }
 
-  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] =  {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
+  private val component =
+    <div class={BoincClientLayout.Style.content.htmlClass} id="client-data">
+      {child.map( child => {
+          if(child != null) child.render
+          else {<div>Loading ...</div>}
+        })
+      }
+    </div>
 
-    Some(div(BoincClientLayout.Style.content, id := "client-data"))
+  override def already(): Unit = childRouteAction(_.already())
+  override def before(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
+    }
   }
-
-  override val routerHook: Option[Hook] = Some(new Hook {
-    override def already(): Unit = {
-      child.routerHook.foreach(p => p.already())
-
-      // Refresh Boinc page even it router hook is not set in client
-      if (child.routerHook.isEmpty)
-        LayoutManager.render(child)
-    }
-
-    override def before(done: js.Function0[Unit]): Unit = {
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-      AuthClient.tryLogin.foreach {
-        case true => done()
-        case false => AppRouter.navigate(LoginPageLocation)
-      }
-    }
-
-    override def leave(): Unit = {
-      if (child != null) {
-        child.routerHook.foreach(p => p.leave())
-        dom.document.getElementById("client-data").innerHTML = ""
-      }
-    }
-
-    override def after(): Unit = {
-      if(child!=null) child.routerHook.foreach(p => p.after())
-    }
-
-  })
+  override def leave(): Unit = childRouteAction(_.leave())
+  override def after(): Unit = childRouteAction(_.after())
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    val oldChild = child
+    val oldChild = getLayout
 
     params.getOrElse("action","_DEFAULT_ACTION_") match {
       case view @ "boinc"      => generateChild(view, new BoincMainHostLayout(params))
@@ -81,10 +61,9 @@ object BoincLayout extends Layout {
       case view @ "global_prefs" => generateChild(view, new BoincGlobalPrefsLayout(params))
 
       case _ =>
-        if (child != null)
-          child.routerHook.foreach(p => p.leave())
+        childRouteAction(_.leave())
 
-        child = null
+        child.update(_ => null)
         currentState = "NONE"
 
         // Delay navigation, maybe we are currently in one ...
@@ -100,19 +79,30 @@ object BoincLayout extends Layout {
 
   private[this] def generateChild(view: String, boincPageLayout: BoincPageLayout): Unit = {
     if (view == currentState) {
-      child.routerHook.foreach(p => p.already())
+      child.impure.run(_.already())
     } else {
-      if (child != null)
-        child.routerHook.foreach(p => p.leave())
+      childRouteAction(_.leave())
 
       currentState = view
-      boincPageLayout.routerHook.foreach(p => p.before(() => {}))
-      child = boincPageLayout
+      boincPageLayout.before(() => {})
+      child := boincPageLayout
     }
   }
 
-  override def onRender(): Unit = {
-    if (child != null) LayoutManager.render(child)
+  private[this] def getChildPath: String = getLayout.path
+  private[this] def getLayout: BoincPageLayout = {
+    var value: BoincPageLayout = null
+    child.impure.run(layout => value = layout)
+
+    value
   }
 
+  private[this] def childRouteAction(f: (BoincPageLayout) => Unit): Unit = {
+    var value: BoincPageLayout = null
+    child.impure.run(layout => value = layout)
+
+    if (value != null) f(value)
+  }
+
+  override def render: Elem = component
 }

@@ -1,11 +1,10 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.pages.component.DropdownMenu.Style
-import org.scalajs.dom.raw.HTMLElement
+import mhtml.{Rx, Var}
 
-import scala.language.postfixOps
+import scala.xml.Elem
 import scalacss.ProdDefaults._
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -17,6 +16,7 @@ object DropdownMenu {
 
   object Style extends StyleSheet.Inline {
     import dsl._
+    import scala.language.postfixOps
 
     val dropdown = style(
       position.relative,
@@ -66,17 +66,13 @@ object DropdownMenu {
   }
 }
 
-class DropdownMenu(text: List[scalatags.JsDom.Modifier], elements: List[JsDom.TypedTag[HTMLElement]], dropdownStyle: String = "") {
+class DropdownMenu(text: Elem, elements: Rx[List[Elem]], dropdownStyle: String = "") {
 
-  val component: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    div(Style.dropdown,
-      a(Style.button, text),
-      div(Style.dropdownContent, style := dropdownStyle, elements)
-    )
+  val component: Elem = {
+    <div class={Style.dropdown.htmlClass}>
+      <a class={Style.button.htmlClass}>{text}</a>
+      <div class={Style.dropdownContent.htmlClass} style={dropdownStyle}>{elements}</div>
+    </div>
   }
 
-  def render(): HTMLElement = component.render
 }

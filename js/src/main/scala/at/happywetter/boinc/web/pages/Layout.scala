@@ -1,10 +1,9 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.web.routes.Hook
-import org.scalajs.dom.raw.HTMLElement
+import at.happywetter.boinc.web.routes.{Hook, NProgress}
 
 import scala.scalajs.js
-import scalatags.JsDom
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -16,13 +15,15 @@ trait Layout {
 
   val path: String
 
-  def render: Option[JsDom.TypedTag[HTMLElement]] = { None }
-  val staticComponent: Option[JsDom.TypedTag[HTMLElement]]
+  def render: Elem
 
-  val routerHook: Option[Hook]
-
-  val requestedParent: Option[String] = None
-  def requestParentLayout(): Option[Layout] = None
+  def before(done: js.Function0[Unit]): Unit = {
+    NProgress.start()
+    done()
+  }
+  def after(): Unit = {}
+  def leave(): Unit = {}
+  def already(): Unit = {}
 
   def onRender(): Unit = {}
   def beforeRender(params: js.Dictionary[String])

@@ -1,18 +1,18 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.shared.ServerSharedConfig
 import at.happywetter.boinc.web.helper.ServerConfig
 import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, HardwareLocation, SettingsLocation, SwarmControlLocation}
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.language.postfixOps
-import scala.scalajs.js
-import scalacss.ProdDefaults._
-import scalatags.JsDom
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
+import scala.xml.Elem
+import scalacss.ProdDefaults._
 
 /**
   * Created by: 
@@ -21,7 +21,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @version 25.07.2017
   */
 object DashboardMenu {
+
   object Style extends StyleSheet.Inline {
+
     import dsl._
 
     val menu = style(
@@ -72,62 +74,90 @@ object DashboardMenu {
     )
   }
 
-  def component: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
+  //TODO: some kind of initializer
+  private val hwMenuEntry: Var[Elem] = Var(<span id="config-hardware-disabled"></span>)
+  processSeverConfig()
 
-    computedMenuEntries()
-    ul(Style.menu, id := "dashboard-menu",
-      li(Style.elem,
-        a(
-          href := DashboardLocation.link,
-          i(`class` := "fa fa-tachometer"), "dashboard_menu_home".localize,
-          data("navigo") := "", data("menu-id") := "dashboard",
-          onclick := masterSelectionListener
-        )
-      ),
+  case class MenuEntry(name: String, href: String, icon: Option[String]=None,
+                       reference: Option[String]=None, subMenuRef: Option[String] = None,
+                       subMenu: ListBuffer[MenuEntry] = new ListBuffer())
+  private val menuEntries: Var[List[MenuEntry]] = Var(List.empty[MenuEntry])
 
-      li(Style.elem,
-        a(
-          href := SwarmControlLocation.link,
-          i(`class` := "fa fa-industry"), "dashboard_swarm_control".localize,
-          data("navigo") := "", data("menu-id") := "swarm_control",
-          onclick := masterSelectionListener
-        )
-      ),
+  def component: Elem = {
+    <ul class={Style.menu.htmlClass} id="dashboard-menu">
+      <li class={Style.elem.htmlClass}>
+        <a href={DashboardLocation.link} onclick={masterSelectionListener}
+           data-navigo="true" data-menu-id="dashboard">
+          <i class="fa fa-tachometer"></i>
+          {"dashboard_menu_home".localize}
+        </a>
+      </li>
+      <li class={Style.elem.htmlClass}>
+        <a href={SwarmControlLocation.link} onclick={masterSelectionListener}
+           data-navigo="true" data-menu-id="swarm_control">
+          <i class="fa fa-industry"></i>
+          {"dashboard_swarm_control".localize}
+        </a>
+      </li>
 
-      span(id := "hw-menu-entry-placeholder"),
+      {hwMenuEntry}
 
-      li(Style.elem,
-        a(
-          href := SettingsLocation.link,
-          i(`class` := "fa fa-cog"), "dashboard_menu_settings".localize,
-          data("navigo") := "", data("menu-id") := "settings",
-          onclick := masterSelectionListener
-        )
-      ),
+      <li class={Style.elem.htmlClass}>
+        <a href={SettingsLocation.link} onclick={masterSelectionListener}
+           data-navigo="true" data-menu-id="settings">
+          <i class="fa fa-cog"></i>
+          {"dashboard_settings".localize}
+        </a>
+      </li>
 
-      li(Style.elem, h2(style :="padding-left: 5px", i(`class` := "fa fa-cubes", style:="margin-right:8px"), "dashboard_menu_computers".localize))
-    )
+      <li class={Style.elem.htmlClass}>
+        <h2 style="padding-left:5px">
+          <i class="fa fa-cubes"  style="margin-right:8px"></i>
+          {"dashboard_menu_computers".localize}
+        </h2>
+      </li>
 
+      <span id="menu-entry-spliter"></span>
+      {
+        menuEntries.map(_.map(entry =>
+          <li class={Style.elem.htmlClass}>
+            <a href={entry.href} data-menu-id={entry.reference} data-navigo="true"
+               onclick={entry.subMenuRef.map(_ => subMenuListener).getOrElse(selectionListener)}>
+              {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
+              {entry.name}
+              {entry.subMenuRef.map(name =>
+                <ul data-submenu-id={name} style="display:none">
+                  {entry.subMenu.map(entry =>
+                    <li class={Style.elem.htmlClass}>
+                      <a href={entry.href} data-menu-id={entry.reference} data-navigo="true" onclick={selectionListener}>
+                        {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
+                        {entry.name}
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              )}
+            </a>
+          </li>
+        ))
+      }
+
+    </ul>
   }
 
-  def computedMenuEntries(): Unit = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
+  def processSeverConfig(): Unit = {
     ServerConfig.get.foreach(config => {
+      if (config == null)
+        dom.console.error("ServerConfig is null!")
+
       if (config.hardware) {
-        dom.document.getElementById("hw-menu-entry-placeholder").appendChild(
-          li(Style.elem,
-            a(
-              href := HardwareLocation.link,
-              i(`class` := "fa fa-microchip"), "dashboard_hardware".localize,
-              data("navigo") := "", data("menu-id") := "hardware",
-              onclick := masterSelectionListener
-            )
-          ).render
-        )
+        hwMenuEntry :=
+          <li class={Style.elem.htmlClass}>
+            <a href={HardwareLocation.link} onclick={masterSelectionListener}
+               data-navigo="true" data-menu-id="dashboard_hardware">
+              <i class="fa fa-microchip"></i>{"dashboard_hardware".localize}
+            </a>
+          </li>
       }
     })
   }
@@ -165,43 +195,38 @@ object DashboardMenu {
   }
 
   def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
-    val newElement = buildMenuItem(linkUrl, elementName, reference, icon)
+    menuEntries.update(_ :+ MenuEntry(elementName, linkUrl, icon, reference))
 
-    dom.document.getElementById("dashboard-menu").appendChild(newElement.render)
     if (selected != null) {
       selectMenuItemByContent(selected)
     }
   }
 
   def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None, icon: Option[String] = Some("caret-down")): Unit = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    val subMenu = li(Style.elem, Style.clickable,
-      a(icon.map(n => i(`class` := s"fa fa-$n")), elementName, reference.map(r => data("menu-id") := r), data("menu-ref") := menuReference), onclick := subMenuListener,
-      ul(data("submenu-id") := menuReference, style := "display:none"
-      )
-    ).render
-
-    dom.document.getElementById("dashboard-menu").appendChild(subMenu)
+    menuEntries.update(_ :+ MenuEntry(elementName, "#", icon, reference, Some(menuReference)))
   }
 
   def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
-    val newElement = buildMenuItem(linkUrl, elementName, reference, icon)
+    menuEntries.update(menu => {
+      menu.find(_.subMenuRef.contains(submenu)).get.subMenu.append(
+        MenuEntry(elementName, linkUrl, icon, reference)
+      )
 
-    dom.document.querySelector(s"#dashboard-menu ul[data-submenu-id='$submenu'").appendChild(newElement.render)
+      menu
+    })
+
     if (selected != null) {
       selectMenuItemByContent(selected)
     }
   }
 
-  private val selectionListener: js.Function1[Event, Unit] = (event) => onMenuItemClick(event)
-  private val masterSelectionListener: js.Function1[Event, Unit] = (event) => {
+  private val selectionListener: (Event) => Unit = (event) => onMenuItemClick(event)
+  private val masterSelectionListener: (Event) => Unit = (event) => {
     dom.document.getElementById("navigation").innerHTML = ""
     onMenuItemClick(event)
   }
 
-  private val subMenuListener: js.Function1[Event, Unit] = (event) => {
+  private val subMenuListener: (Event) => Unit = (event) => {
     val target = event.target.asInstanceOf[HTMLElement].getAttribute("data-menu-ref")
     val element = dom.document.querySelector(s"#dashboard-menu ul[data-submenu-id='$target']").asInstanceOf[HTMLElement]
 
@@ -227,19 +252,6 @@ object DashboardMenu {
 
     if (!marked) selected = content
     else selected = null
-  }
-
-  private def buildMenuItem(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None) = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    li(Style.elem,
-      a(href := linkUrl,
-        icon.map(n => i(`class` := s"fa fa-$n")), elementName,
-        reference.map(r => data("menu-id") := r), data("navigo") := "",
-        onclick := selectionListener
-      )
-    )
   }
 
 }

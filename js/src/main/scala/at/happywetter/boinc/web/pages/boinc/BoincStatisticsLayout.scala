@@ -18,6 +18,7 @@ import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.JSConverters._
+import scala.xml.Elem
 import scalacss.internal.mutable.StyleSheet
 import scalacss.ProdDefaults._
 
@@ -255,4 +256,6 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
   }
 
   override val path = "statistics"
+
+  override def render: Elem = {<div>STAISTICS</div>}
 }

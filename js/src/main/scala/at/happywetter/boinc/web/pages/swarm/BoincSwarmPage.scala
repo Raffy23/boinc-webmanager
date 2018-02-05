@@ -14,6 +14,7 @@ import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 import scalatags.JsDom
@@ -64,7 +65,8 @@ object BoincSwarmPage extends SwarmSubPage {
 
   override def header = "Boinc"
 
-  override def render: JsDom.TypedTag[HTMLElement] ={
+  override def render: Elem = {<div>SWARM_BOINC_PAGE</div>}
+  def render1: JsDom.TypedTag[HTMLElement] ={
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
@@ -116,10 +118,12 @@ object BoincSwarmPage extends SwarmSubPage {
     root
   }
 
+  /*
   private def reRender(): Unit = {
     dom.document.getElementById("swarm-boinc-content").innerHTML = ""
     dom.document.getElementById("swarm-boinc-content").appendChild(render.render.firstChild)
   }
+  */
 
   private def renderControlTable(): Unit = {
     import scalacss.ScalatagsCss._
@@ -142,7 +146,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
@@ -155,7 +159,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "never".localize, onclick := { (event: Event) => {
@@ -168,7 +172,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }}))
             ),
@@ -183,7 +187,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
@@ -196,7 +200,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "never".localize, onclick := { (event: Event) => {
@@ -209,7 +213,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }}))
             ),
@@ -224,7 +228,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
@@ -237,7 +241,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }})),
               td(a(Style.button, "never".localize, onclick := { (event: Event) => {
@@ -250,7 +254,7 @@ object BoincSwarmPage extends SwarmSubPage {
                   })
                 ).foreach(_ => {
                   NProgress.done(true)
-                  reRender()
+                  //reRender()
                 })
               }}))
             )

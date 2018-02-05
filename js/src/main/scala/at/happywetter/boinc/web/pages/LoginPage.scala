@@ -2,10 +2,10 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.pages.LoginPage.Style
-import at.happywetter.boinc.web.pages.component.LanguageChooser
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
+import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
@@ -17,6 +17,7 @@ import scala.language.postfixOps
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
+import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalatags.JsDom
 
@@ -82,96 +83,93 @@ object LoginPage {
   }
 }
 class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layout {
+  override val path = "login"
 
-  val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = None
+  override def render: Elem = {
+    <div>
+      <div id="language-selector-area" style="position:fixed;top:74px;right:22px"></div>
+      {
+        new LanguageChooser((event, lang_code) => {
+          event.preventDefault()
 
-  override def render: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalacss.ScalatagsCss._
+          NProgress.start()
+          LanguageDataProvider
+            .loadLanguage(lang_code)
+            .foreach(_ => {
+              Locale.save(lang_code)
+
+              LayoutManager.render(this)
+              NProgress.done(true)
+            })
+        }, -35).component
+      }
+
+      <div>
+        <form class={Style.content.htmlClass} id="login-form">
+          <h2 style="margin-bottom:25px">{"login_title".localize}</h2>
+          <input class={Style.input.htmlClass} type="text"
+                 placeholder={"login_username".localize} id="login-username"></input>
+          <input class={Style.input.htmlClass} type="password"
+                 placeholder={"login_password".localize} id="login-password"></input>
+          <button style={Style.button.htmlClass} onclick={loginAction}>
+            {"login_btn".localize}
+          </button>
+        </form>
+      </div>
+
+      <span style="position:fixed;bottom:0">
+        <small><b>Version: </b>{BuildInfo.version}</small>
+      </span>
+    </div>
+  }
+
+  private val loginAction: (Event) => Unit = (event) => {
     import scalatags.JsDom.all._
 
-    Some(
-    div(
-      div(id := "language-selector-area", style := "position:fixed;top:74px;right:22px",
-        new LanguageChooser((event, lang_code) => {
-            event.preventDefault()
+    NProgress.start()
+    val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
+    val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
 
-            NProgress.start()
-            LanguageDataProvider
-              .loadLanguage(lang_code)
-              .foreach(_ => {
-                Locale.save(lang_code)
+    loginValidator(username, password).foreach {
+      case true =>
+        dom.window.sessionStorage.setItem("username", username)
+        dom.window.sessionStorage.setItem("password", password)
+        AppRouter.navigate(event, DashboardLocation)
+        DashboardMenu.processSeverConfig()
 
-                LayoutManager.render(this)
-                NProgress.done(true)
-              })
-        }, -35).component.render()
-      ),
-      div(
-        form(Style.content, id := "login-form",
-          h2(style := "margin-bottom: 25px", "Login"),
-          input(Style.input, `type` := "text", placeholder := "login_username".localize, id := "login-username"),
-          input(Style.input, `type` := "password", placeholder := "login_password".localize, id := "login-password"),
-          button(Style.button, onclick := {
-            (event: Event) => {
-              NProgress.start()
-              val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
-              val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
+      case _ =>
+        new OkDialog(
+          "dialog_error_header".localize,
+          List("login_wrong_password_msg".localize),
+          (_) => {dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus()}
+        ).renderToBody().show()
 
-              loginValidator(username, password).foreach {
-                case true =>
-                  dom.window.sessionStorage.setItem("username", username)
-                  dom.window.sessionStorage.setItem("password", password)
-                  AppRouter.navigate(event, DashboardLocation)
+        NProgress.done(true)
+    }
 
-                case _ =>
-                  new OkDialog(
-                    "dialog_error_header".localize,
-                    List("login_wrong_password_msg".localize),
-                    (_) => {dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus()}
-                  ).renderToBody().show()
+    event.preventDefault()
+  }
 
-                  NProgress.done(true)
-              }
+  override def before(done: js.Function0[Unit]): Unit = {
+    val usr = dom.window.sessionStorage.getItem("username")
+    val pwd = dom.window.sessionStorage.getItem("password")
 
-              event.preventDefault()
-            }
-          }, "login_btn".localize)
-        )
-      ),
-      span( style := "position:fixed;bottom:0",
-        small(b("Version: "),s"${BuildInfo.version}")
-      )
-    )
-    )
+    done()
+
+    if (usr != null && pwd != null)
+      loginValidator(usr, pwd).foreach {
+        case true => AppRouter.navigate(DashboardLocation)
+        case _ =>
+          dom.window.sessionStorage.removeItem("username")
+          dom.window.sessionStorage.removeItem("password")
+          NProgress.done(true)
+      }
+  }
+
+  override def already(): Unit = {
+    dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value = ""
+    dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value = ""
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
-
-  override val routerHook: Option[Hook] = Some(new Hook {
-    override def before(done: js.Function0[Unit]): Unit = {
-      val usr = dom.window.sessionStorage.getItem("username")
-      val pwd = dom.window.sessionStorage.getItem("password")
-
-      done()
-
-      if (usr != null && pwd != null)
-        loginValidator(usr, pwd).foreach {
-          case true => AppRouter.navigate(DashboardLocation)
-          case _ =>
-            dom.window.sessionStorage.removeItem("username")
-            dom.window.sessionStorage.removeItem("password")
-            NProgress.done(true)
-        }
-    }
-
-    override def after(): Unit = {}
-
-    override def leave(): Unit = {}
-
-    override def already(): Unit = {
-      dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value = ""
-      dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value = ""
-    }
-  })
-  override val path = "login"
 }

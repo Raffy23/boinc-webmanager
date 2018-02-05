@@ -1,20 +1,17 @@
 package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseException}
+import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager, NProgress}
+import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
+import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, LanguageDataProvider}
-import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
-import scalatags.JsDom
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -25,35 +22,34 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 object SettingsPage extends Layout {
   override val path: String = "settings"
 
-  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] =  None
 
-  override def render: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalatags.JsDom.all._
-    import scalacss.ScalatagsCss._
+  override def render: Elem = {
+    <div id="settings">
+      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-cog"></i>
+        {"settings_header".localize}
+      </h2>
 
-    Some(
-      div(
-        DashboardMenu.component.render,
-        div(id := "client-container", PageLayout.Style.clientContainer,
-          div( id := "settings",
+      <div>
+        <h3 class={BoincClientLayout.Style.h4_without_line.htmlClass}>
+          {"settings_version_group".localize}
+        </h3>
+        <table class={TableTheme.table.htmlClass}>
+          <tbody>
+            <tr><td><b>{"verion".localize}</b></td><td>{BuildInfo.version}</td></tr>
+            <tr><td><b>{"git_branch".localize}</b></td><td>{BuildInfo.gitCurrentBranch}</td></tr>
+            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis).toLocaleDateString()}</td></tr>
+            <tr><td><b>{"scala_version".localize}</b></td><td>{BuildInfo.scalaVersion}</td></tr>
+          </tbody>
+        </table>
 
-            h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-cog"), "settings_header".localize),
-
-            div(
-              h3(BoincClientLayout.Style.h4_without_line, "settings_version_group".localize),
-              table(TableTheme.table,
-                tbody(
-                  tr(td(b("verion".localize)), td(BuildInfo.version)),
-                  tr(td(b("git_branch".localize)), td(BuildInfo.gitCurrentBranch)),
-                  tr(td(b("buid_date".localize)), td(new Date(BuildInfo.builtAtMillis).toLocaleDateString())),
-                  tr(td(b("scala_version".localize)), td(BuildInfo.scalaVersion))
-                )
-              )
-            ),
-
-            h3(BoincClientLayout.Style.h4_without_line, "settings_language_group".localize),
-            div( style := "margin-top: 25px",
-              new LanguageChooser((event, lang_code) => {
+        <h3 class={BoincClientLayout.Style.h4_without_line.htmlClass}>
+          {"settings_language_group".localize}
+        </h3>
+        <div style="margin-top:25px">
+          {
+            new LanguageChooser((event, lang_code) => {
+              import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
                 event.preventDefault()
 
                 NProgress.start()
@@ -62,36 +58,26 @@ object SettingsPage extends Layout {
                   .foreach(_ => {
                     Locale.save(lang_code)
 
-                    LayoutManager.render(this)
+                    // Force complete page re-render
+                    LayoutManager.init()
                     this.beforeRender(null)
                     NProgress.done(true)
                   })
-              }).component.render()
-            )
-          )
-        )
-      )
-    )
+              }).component
+          }
+        </div>
+      </div>
+    </div>
   }
 
-  override val routerHook: Option[Hook] = Some(new Hook {
-    override def already(): Unit = {
-      LayoutManager.render(SettingsPage.this)
+  override def before(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
     }
-
-    override def before(done: js.Function0[Unit]): Unit = {
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-      AuthClient.tryLogin.foreach {
-        case true => done()
-        case false => AppRouter.navigate(LoginPageLocation)
-      }
-    }
-
-    override def leave(): Unit = {}
-
-    override def after(): Unit = {}
-  })
+  }
 
   override def beforeRender(params: Dictionary[String]): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -100,12 +86,7 @@ object SettingsPage extends Layout {
       DashboardMenuBuilder.renderClients(clients)
 
       AppRouter.router.updatePageLinks()
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
   }
 
   override def onRender(): Unit = {

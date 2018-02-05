@@ -27,18 +27,6 @@ abstract class BoincClientLayout(clientName: String) extends Layout  with BoincC
   implicit val boincClientName: String = clientName
   protected implicit lazy val boinc: BoincClient = ClientManager.clients(clientName)
 
-  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    Some(div(BoincClientLayout.Style.content, id := "client-data"))
-  }
-
-  override val routerHook: Option[Hook] = None
-
-  override val requestedParent = Some("main #client-container")
-  override def requestParentLayout() = { Some(Dashboard) }
-
   def root: Element = dom.document.getElementById("client-data")
 
   private val links = List(

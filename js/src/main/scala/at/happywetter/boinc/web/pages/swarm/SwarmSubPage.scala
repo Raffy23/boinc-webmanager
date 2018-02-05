@@ -1,8 +1,6 @@
 package at.happywetter.boinc.web.pages.swarm
 
-import org.scalajs.dom.raw.HTMLElement
-
-import scalatags.JsDom
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -14,6 +12,6 @@ trait SwarmSubPage {
 
   def header: String
 
-  def render: JsDom.TypedTag[HTMLElement]
+  def render: Elem
 
 }

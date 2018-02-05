@@ -42,17 +42,20 @@ object WebRPC {
   //  Http(url+"/server_status.php?xml=1").option(HttpOptions.followRedirects(true)).asString.body.toServerStatus
   //}
 
-  //TODO: Some error handling and refactor
   def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {
-    var request = Http(url+"/lookup_account.php").param("email_addr", email).option(HttpOptions.followRedirects(true))
+    var request = Http(url+"/lookup_account.php")
+      .param("email_addr", email)
+      .option(HttpOptions.followRedirects(true))
+
     if (password.isDefined)
       request = request.param("passwd_hash", BoincCryptoHelper.md5(password.get+email.toLowerCase()))
 
+    //TODO: Give a Error Code to UI
     Try {
       val response = XML.loadString(request.asString.body)
       ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
     }.recover{
-      case ex: Exception =>
+      case _: Exception =>
         (false, Some("err_unable_to_read_webrpc_response"))
     }.get
 

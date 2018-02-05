@@ -23,6 +23,7 @@ import BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.web.pages.component.dialog._
 
 import scala.collection.mutable.ListBuffer
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -59,7 +60,8 @@ object ProjectSwarmPage extends SwarmSubPage {
 
   override def header: String = "project_header".localize
 
-  override def render: JsDom.TypedTag[HTMLElement] = {
+  //TODO
+  def render1: JsDom.TypedTag[HTMLElement] = {
     import scalacss.ScalatagsCss._
     import scalatags.JsDom.all._
 
@@ -293,4 +295,6 @@ object ProjectSwarmPage extends SwarmSubPage {
     ProjectNameCache.save(project.url, project.name)
     project.name
   }
+
+  override def render: Elem = {<div>__PROJECT_SWARM_PAGE__</div>}
 }

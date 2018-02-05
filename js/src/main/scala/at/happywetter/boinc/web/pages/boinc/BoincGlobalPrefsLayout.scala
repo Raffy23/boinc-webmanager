@@ -17,6 +17,7 @@ import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
 import scala.language.postfixOps
 import scala.scalajs.js
+import scala.xml.Elem
 import scalacss.internal.mutable.StyleSheet
 import scalacss.ProdDefaults._
 import scalatags.JsDom.TypedTag
@@ -203,4 +204,6 @@ class BoincGlobalPrefsLayout(params: js.Dictionary[String]) extends BoincPageLay
     if (checkStatus) input(`type` := "checkbox", checked, id := cID)
     else input(`type` := "checkbox", id := cID)
   }
+
+  override def render: Elem = {<div>GLOBAL_PREFS</div>}
 }

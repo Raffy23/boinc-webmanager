@@ -16,6 +16,7 @@ import org.scalajs.dom.raw.HTMLCanvasElement
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.js
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -115,4 +116,6 @@ class BoincDiskLayout(params: js.Dictionary[String]) extends BoincPageLayout(_pa
     s"${projectNames(data.labels(tooltipItem.index.intValue()))}: ${BoincFormater.convertSize(data.datasets(tooltipItem.datasetIndex.intValue()).data(tooltipItem.index.intValue()).asInstanceOf[Double])}"
   }
   override val path = "disk"
+
+  override def render: Elem = {<div>DISK</div>}
 }

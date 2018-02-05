@@ -11,6 +11,7 @@ import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.js
 import scala.util.Try
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -84,4 +85,5 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
     builder.toString()
   }
 
+  override def render: Elem = {<div>TRANSFER</div>}
 }

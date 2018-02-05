@@ -16,6 +16,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
+import scala.xml.Elem
 import scalatags.JsDom
 
 /**
@@ -26,25 +27,15 @@ import scalatags.JsDom
   */
 object SwarmControlPage extends Layout {
   override val path: String = "swarm"
-  override val staticComponent: Option[JsDom.TypedTag[HTMLElement]] = None
-  override val routerHook: Option[Hook] = Some(new Hook {
-    override def already(): Unit = {
-      LayoutManager.render(SwarmControlPage.this)
+
+  override def before(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
     }
-
-    override def before(done: js.Function0[Unit]): Unit = {
-      import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-      AuthClient.tryLogin.foreach {
-        case true => done()
-        case false => AppRouter.navigate(LoginPageLocation)
-      }
-
-    }
-
-    override def leave(): Unit = {}
-    override def after(): Unit = {}
-  })
+  }
 
   private val subPages = List(
     ("boinc", "head_menu_boinc".localize, "fa fa-id-card-o"),
@@ -95,39 +86,31 @@ object SwarmControlPage extends Layout {
     }
   }
 
-  override def render: Option[JsDom.TypedTag[HTMLElement]] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    Some(
-      div(
-        DashboardMenu.component.render,
-        div(id := "client-container", PageLayout.Style.clientContainer,
-
-          AppRouter.current.split("/").last match {
-            case "boinc" => renderSubPage(BoincSwarmPage)
-            case "projects" => renderSubPage(ProjectSwarmPage)
-            case _ => div(
-              h4(BoincClientLayout.Style.pageHeader, "not_found".localize)
-            )
-          }
-        )
-      )
-    )
+  override def render: Elem = {
+   <div>
+     {
+       AppRouter.current.split("/").last match {
+         case "boinc"     => renderSubPage(BoincSwarmPage)
+         case "projects"  => renderSubPage(ProjectSwarmPage)
+         case _ =>
+           <div>
+              <h4 class={BoincClientLayout.Style.pageHeader.htmlClass}>{"not_found".localize}</h4>
+           </div>
+       }
+     }
+   </div>
   }
 
-  private def renderSubPage(page: SwarmSubPage): JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
+  private def renderSubPage(page: SwarmSubPage): Elem = {
+    <div id="swarm">
+      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-industry">
+          {"swarm_header".localize + " - "}
+          <small id="subheader">{page.header}</small>
+        </i>
+      </h2>
 
-    div( id := "swarm",
-
-      h2(BoincClientLayout.Style.pageHeader,
-        i(`class` := "fa fa-industry"), "swarm_header".localize, " - ",
-        small(id := "subheader", page.header)
-      ),
-
-      page.render
-    )
+      {page.render}
+    </div>
   }
 }

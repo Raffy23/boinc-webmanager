@@ -52,23 +52,8 @@ class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(
 
   private var dataTable: DataTable[ProjectTableRow] = _
 
-
-  override val routerHook = Some(new Hook() {
-    override def before(done: js.Function0[Unit]): Unit = {
-      NProgress.start()
-      done()
-    }
-
-    override def after(): Unit = {}
-
-    override def leave(): Unit = {
-      dataTable.dispose()
-    }
-
-    override def already(): Unit = {
-      dataTable.dispose()
-    }
-  })
+  override def leave(): Unit = dataTable.dispose()
+  override def already(): Unit = dataTable.dispose()
 
   override def onRender(client: BoincClient): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue

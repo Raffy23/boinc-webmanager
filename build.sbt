@@ -7,7 +7,7 @@ enablePlugins(GitVersioning)
 
 name := "Boinc-Webmanager"
 
-scalaVersion in ThisBuild := "2.12.4"
+scalaVersion in ThisBuild := "2.12.3"
 scalacOptions in ThisBuild ++= Seq(
   "-unchecked",
   "-deprecation",
@@ -67,7 +67,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion ,
-      "com.thoughtworks.binding" %%% "dom" % "latest.release"
+      "in.nvilla" %%% "monadic-html" % "0.4.0-RC1"
     ),
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(
