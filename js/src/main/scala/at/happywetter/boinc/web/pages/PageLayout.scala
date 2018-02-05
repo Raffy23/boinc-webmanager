@@ -85,20 +85,9 @@ object PageLayout {
 
   val hamburgerMenuAction: (Event) => Unit = (event) => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
-    val content = dom.document.getElementById("client-container").asInstanceOf[HTMLElement]
 
-    if (menu.style.display == "none") {
-      menu.style.display = "block"
-
-      if (dom.window.outerWidth > 690)
-        content.style.marginLeft = "218px"
-    } else {
-      menu.style.display = "none"
-
-      if (dom.window.outerWidth > 690) content.style.marginLeft = "20px"
-      else content.style.marginLeft = "5px"
-    }
-
+    if (menu.style.display == "none") showMenu()
+    else hideMenu()
   }
 
   val heading: Elem = {
@@ -109,6 +98,26 @@ object PageLayout {
       </h1>
       <div id="navigation"></div>
     </header>
+  }
+
+  def showMenu(): Unit = {
+    val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
+    val content = dom.document.getElementById("client-container").asInstanceOf[HTMLElement]
+
+    menu.style.display = "block"
+
+    if (dom.window.outerWidth > 690)
+      content.style.marginLeft = "218px"
+  }
+
+  def hideMenu(): Unit = {
+    val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
+    val content = dom.document.getElementById("client-container").asInstanceOf[HTMLElement]
+
+    menu.style.display = "none"
+
+    if (dom.window.outerWidth > 690) content.style.marginLeft = "20px"
+    else content.style.marginLeft = "5px"
   }
 
 }

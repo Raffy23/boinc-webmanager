@@ -74,7 +74,7 @@ object DashboardMenu {
     )
   }
 
-  //TODO: some kind of initializer
+  private val viewState: Var[String] = Var("display:block")
   private val hwMenuEntry: Var[Elem] = Var(<span id="config-hardware-disabled"></span>)
   processSeverConfig()
 
@@ -84,7 +84,7 @@ object DashboardMenu {
   private val menuEntries: Var[List[MenuEntry]] = Var(List.empty[MenuEntry])
 
   def component: Elem = {
-    <ul class={Style.menu.htmlClass} id="dashboard-menu">
+    <ul class={Style.menu.htmlClass} id="dashboard-menu" style={viewState}>
       <li class={Style.elem.htmlClass}>
         <a href={DashboardLocation.link} onclick={masterSelectionListener}
            data-navigo="true" data-menu-id="dashboard">
@@ -144,6 +144,9 @@ object DashboardMenu {
 
     </ul>
   }
+
+  def show(): Unit = viewState := "display:block"
+  def hide(): Unit = viewState := "display:none"
 
   def processSeverConfig(): Unit = {
     ServerConfig.get.foreach(config => {

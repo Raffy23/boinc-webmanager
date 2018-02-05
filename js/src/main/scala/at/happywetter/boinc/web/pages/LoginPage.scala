@@ -87,7 +87,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
 
   override def render: Elem = {
     <div>
-      <div id="language-selector-area" style="position:fixed;top:74px;right:22px"></div>
+      <div id="language-selector-area" style="position:fixed;top:74px;right:22px">
       {
         new LanguageChooser((event, lang_code) => {
           event.preventDefault()
@@ -103,6 +103,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
             })
         }, -35).component
       }
+      </div>
 
       <div>
         <form class={Style.content.htmlClass} id="login-form">
@@ -111,7 +112,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
                  placeholder={"login_username".localize} id="login-username"></input>
           <input class={Style.input.htmlClass} type="password"
                  placeholder={"login_password".localize} id="login-password"></input>
-          <button style={Style.button.htmlClass} onclick={loginAction}>
+          <button class={Style.button.htmlClass} onclick={loginAction}>
             {"login_btn".localize}
           </button>
         </form>
@@ -134,7 +135,10 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
       case true =>
         dom.window.sessionStorage.setItem("username", username)
         dom.window.sessionStorage.setItem("password", password)
+
         AppRouter.navigate(event, DashboardLocation)
+
+        PageLayout.showMenu()
         DashboardMenu.processSeverConfig()
 
       case _ =>
@@ -154,6 +158,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
     val usr = dom.window.sessionStorage.getItem("username")
     val pwd = dom.window.sessionStorage.getItem("password")
 
+    DashboardMenu.hide()
+    PageLayout.hideMenu()
     done()
 
     if (usr != null && pwd != null)
