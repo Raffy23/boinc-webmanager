@@ -106,7 +106,7 @@ object DashboardMenu {
         <a href={SettingsLocation.link} onclick={masterSelectionListener}
            data-navigo="true" data-menu-id="settings">
           <i class="fa fa-cog"></i>
-          {"dashboard_settings".localize}
+          {"dashboard_menu_settings".localize}
         </a>
       </li>
 
