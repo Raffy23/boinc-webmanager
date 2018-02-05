@@ -24,6 +24,9 @@ object AppRouter {
   case object DashboardLocation extends Page
   case object BoincHomeLocation extends Page
 
+  case object BoincClientLocation extends Page {
+    override def link: String = Try(super.link).getOrElse("/view/boinc-client")
+  }
   case object SettingsLocation extends Page {
     override def link: String = Try(super.link).getOrElse("/view/settings")
   }

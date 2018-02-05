@@ -34,6 +34,8 @@ object Dashboard extends Layout {
   override def before(done: js.Function0[Unit]): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+    PageLayout.showMenu()
+
     AuthClient.tryLogin.foreach {
       case true => done()
       case false => AppRouter.navigate(LoginPageLocation)
@@ -54,6 +56,10 @@ object Dashboard extends Layout {
       AppRouter.router.updatePageLinks()
     }).recover(ErrorDialogUtil.showDialog)
   }
+
+
+
+
 
   private def renderDashboardContent(clients: List[String]): Unit = {
     import scalacss.ScalatagsCss._

@@ -3,7 +3,7 @@ import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.BoincPageLayout
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, LoginPageLocation}
+import at.happywetter.boinc.web.routes.AppRouter.{BoincClientLocation, DashboardLocation, LoginPageLocation}
 import mhtml.Var
 import org.scalajs.dom
 
@@ -24,7 +24,7 @@ object BoincLayout extends Layout {
   val child: Var[BoincPageLayout] = Var(null)
   private var currentState: String = "NONE"
 
-  override val path: String = "/view/dashboard"
+  override val path: String = BoincClientLocation.link
 
   private val component =
     <div class={BoincClientLayout.Style.content.htmlClass} id="client-data">
@@ -69,8 +69,8 @@ object BoincLayout extends Layout {
         // Delay navigation, maybe we are currently in one ...
         dom.window.setTimeout(() => {
           oldChild match {
-            case null => AppRouter.router.navigate(DashboardLocation.link + "/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
-            case _ => AppRouter.router.navigate(DashboardLocation.link + "/" + params.get("client").get + "/" + oldChild.path, absolute = true)
+            case null => AppRouter.router.navigate(BoincClientLocation.link + "/" + params.get("client").get + "/" + INITAL_STATE, absolute = true)
+            case _ => AppRouter.router.navigate(BoincClientLocation.link + "/" + params.get("client").get + "/" + oldChild.path, absolute = true)
           }
         }, 100)
     }

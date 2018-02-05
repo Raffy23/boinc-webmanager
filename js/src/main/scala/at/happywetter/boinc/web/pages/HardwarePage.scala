@@ -8,7 +8,7 @@ import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
-import at.happywetter.boinc.web.util.DashboardMenuBuilder
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 
@@ -58,12 +58,7 @@ object HardwarePage extends Layout {
 
       DashboardMenu.selectByReference("hardware")
       AppRouter.router.updatePageLinks()
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
+    }).recover(ErrorDialogUtil.showDialog)
 
     clients.foreach(clients => {
       val body = dom.document.getElementById("hardware")
