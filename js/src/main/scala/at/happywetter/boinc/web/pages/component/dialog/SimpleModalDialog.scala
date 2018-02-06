@@ -1,14 +1,12 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog.Style
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLElement
 
-import scalatags.JsDom
-import scalatags.JsDom.all._
-import scalacss.ScalatagsCss._
+import scala.xml.{Elem, Node}
 
 /**
   * Created by:
@@ -16,8 +14,8 @@ import scalacss.ScalatagsCss._
   * @author Raphael
   * @version 08.08.2017
   */
-class SimpleModalDialog(bodyElement: JsDom.TypedTag[HTMLElement],
-                        headerElement: JsDom.TypedTag[HTMLElement] = JsDom.tags.span,
+class SimpleModalDialog(bodyElement: Node,
+                        headerElement: Node = "",
                         okAction: (SimpleModalDialog) => Unit,
                         abortAction: (SimpleModalDialog) => Unit,
                         okLabel: String = "dialog_ok".localize,
@@ -28,20 +26,22 @@ class SimpleModalDialog(bodyElement: JsDom.TypedTag[HTMLElement],
         List(headerElement),
         List(bodyElement),
         List(
-          button(Style.button, okLabel, onclick := { (event: Event) => {
+          <button class={Style.button.htmlClass} onclick={(event: Event) => {
             event.preventDefault()
             okAction(this)
-          }
-          }),
-          button(Style.button, abortLabel, onclick := { (event: Event) => {
+          }}>
+            {okLabel}
+          </button>,
+          <button class={Style.button.htmlClass} onclick={(event: Event) => {
             event.preventDefault()
             abortAction(this)
-          }
-          })
+          }}>
+            {abortLabel}
+          </button>
         )
       )
 
-  override def render(): HTMLElement = dialog.render()
+  override def render(): Elem = dialog.render()
 
   def close(): Unit = SimpleModalDialog.remove()
 

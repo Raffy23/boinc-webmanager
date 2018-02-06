@@ -1,13 +1,13 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
-import org.scalajs.dom
-import org.scalajs.dom.raw.{Element, Event, HTMLElement}
-import rx._
+import mhtml.{Rx, Var}
+import org.scalajs.dom.raw.{Event, HTMLElement}
 
 import scala.scalajs.js
+import scala.xml.{Elem, Node, Text}
 import scalacss.internal.StyleA
 
 /**
@@ -17,81 +17,55 @@ import scalacss.internal.StyleA
   * @version 25.09.2017
   */
 object DataTable {
-  import scalatags.JsDom.all._
 
-  abstract class TableColumn(val content: Rx[scalatags.JsDom.Modifier], val datasource: TableRow) extends Ordered[TableColumn] {}
-  class StringColumn(val source: Rx[String])(implicit ctx: Ctx.Owner) extends TableColumn(content = Rx { source() }, null) {
+  abstract class TableColumn(val content: Rx[Node], val datasource: TableRow) extends Ordered[TableColumn] {}
+  class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
-  class DoubleColumn(val source: Rx[Double])(implicit ctx: Ctx.Owner) extends TableColumn(content = Rx { source() }, null) {
+  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map(d => Text(d.toString)), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 
-  abstract class TableRow(implicit ctx: Ctx.Owner) {
-    lazy val htmlRow: HTMLElement = {
-      val root = dom.document.createElement("tr").asInstanceOf[HTMLElement]
-
-      root.addEventListener("contextmenu", contextMenuHandler)
-      transform(columns).foreach(root.appendChild)
-
-      root
-    }
+  abstract class TableRow {
 
     val columns: List[TableColumn]
+    val contextMenuHandler: (Event) => Unit = (_) => {}
 
-    val contextMenuHandler: js.Function1[Event,Unit] = (_) => {}
-
-    private def transform(raw: List[TableColumn]): List[Element] = {
-      raw.map(data => {
-        val column = dom.document.createElement("td")
-        data.content.now.applyTo(column)
-
-        data.content.foreach(colData => {
-          column.innerHTML = ""
-          colData.applyTo(column)
-        })
-
-        column
-      })
+    lazy val htmlRow: Elem = {
+      <tr oncontextmenu={contextMenuHandler}>
+        {columns.map(column => <td>{column.content}</td>)}
+      </tr>
     }
   }
 }
 
-class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: List[T], tableStyle: Option[StyleA] = None) {
+class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: List[T] = List.empty, tableStyle: Option[StyleA] = None) {
 
   val reactiveData: Var[List[T]] = Var(tableData)
-  private val tBody = dom.document.createElement("tbody")
 
-  private val internalRX = Rx.unsafe {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    val root = table(TableTheme.table, tableStyle,
-      thead(
-        tr(
-          headers.zipWithIndex.map { case ((header, sortable), idx) =>
-            if (sortable)
-              th(BoincClientLayout.Style.in_text_icon, style := "cursor:pointer",
-                i(`class` := "fa fa-sort", data("sort-icon") := ""),
-                header, onclick := tableSortFunction(idx))
-            else th(header)
+  lazy val component: Elem = {
+    <table>
+      <thead>
+        <tr>
+          {
+            headers.zipWithIndex.map { case ((header, sortable), idx) =>
+              if (sortable)
+                <th class={BoincClientLayout.Style.in_text_icon.htmlClass}
+                    style="cursor:pointer" onclick={tableSortFunction(idx)}>
+                  <i class="fa fa-sort" data-sort-icon="icon"></i>
+                  {header}
+                </th>
+              else
+                <th>{header}</th>
+            }
           }
-        )
-      )
-    ).render
-
-    reactiveData.foreach(data => {
-      tBody.innerHTML = ""
-      data.foreach(x => tBody.appendChild(x.htmlRow))
-    })
-
-    reactiveData.now.foreach(x => tBody.appendChild(x.htmlRow))
-    root.appendChild(tBody)
-
-    root
+        </tr>
+      </thead>
+      <tbody>
+        {reactiveData.map(_.map(_.htmlRow))}
+      </tbody>
+    </table>
   }
-
-  lazy val component: HTMLElement = internalRX.now
 
   private def tableSortFunction(idx: Int): js.Function1[Event,Unit] = (event) => {
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
@@ -108,17 +82,12 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
     allIcons.forEach((node, _, _ ) => node.asInstanceOf[HTMLElement].setAttribute("class","fa fa-sort"))
 
     if (sortState == "fa fa-sort" || sortState == "fa fa-sort-desc") {
-      reactiveData() = reactiveData.now.sortBy(_.columns(idx))
+      reactiveData.update(_.sortBy(_.columns(idx)))
       icon.setAttribute("class","fa fa-sort-asc")
     } else {
-      reactiveData() = reactiveData.now.sortBy(_.columns(idx)).reverse
+      reactiveData.update(_.sortBy(_.columns(idx)).reverse)
       icon.setAttribute("class","fa fa-sort-desc")
     }
   }
-
-  def dispose(): Unit = {
-    internalRX.kill()
-  }
-
 }
 

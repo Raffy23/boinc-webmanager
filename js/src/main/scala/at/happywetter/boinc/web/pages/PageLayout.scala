@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages
 
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -83,6 +84,8 @@ object PageLayout {
     )
   }
 
+  val nav: Var[Elem] = Var(<span></span>)
+
   val hamburgerMenuAction: (Event) => Unit = (event) => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
 
@@ -96,7 +99,7 @@ object PageLayout {
         <i class="fa fa-bars" stlye="margin-right:13px;cursor:pointer" onclick={hamburgerMenuAction}></i>
         Boinc Webmanager
       </h1>
-      <div id="navigation"></div>
+      <div id="navigation">{nav}</div>
     </header>
   }
 

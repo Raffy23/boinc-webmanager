@@ -2,8 +2,10 @@ package at.happywetter.boinc.web.helper.table
 
 import at.happywetter.boinc.shared.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.{App, Result, Task}
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, FetchResponseException}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
@@ -12,13 +14,11 @@ import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, ProjectNameCache, TaskSpecCache}
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.Event
-import rx.async._
-import rx.{Ctx, Rx, Var}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -28,7 +28,7 @@ import scalatags.JsDom
   */
 object WuDataTableModel {
 
-  class ReactiveResult(result: Result)(implicit boinc: BoincClient, ctx: Ctx.Owner) {
+  class ReactiveResult(result: Result)(implicit boinc: BoincClient) {
     val activeTask: Var[Option[Task]] = Var(result.activeTask)
 
     val projectURI: String= result.project
@@ -45,21 +45,15 @@ object WuDataTableModel {
     val remainingCPU: Var[Double] = Var(result.remainingCPU)
     val reportDeadline: Var[Double] = Var(result.reportDeadline)
 
-    val progress: Rx[Double] = Rx {
-      activeTask().map(_.done).getOrElse(0D)
-    }
-
-    val pastTime: Rx[Double] = Rx {
-      activeTask().map(_.time).getOrElse(0D)
-    }
+    val progress: Rx[Double] = activeTask.map(_.map(_.done).getOrElse(0D))
+    val pastTime: Rx[Double] = activeTask.map(_.map(_.time).getOrElse(0D))
 
     val appName: Var[String] = Var("")
     val app: Rx[Option[App]] =
       AppSettingsStorage.get(boinc.hostname, result.wuName).flatMap(wu => {
-        appName() = wu.map(_.appName).getOrElse("")
+        appName := wu.map(_.appName).getOrElse("")
         TaskSpecCache.get(boinc.hostname, wu.get.appName)
       }).toRx(None)
-
 
     val uiStatus: Rx[String] = Rx {
       state(); supsended()
@@ -67,145 +61,148 @@ object WuDataTableModel {
     }
   }
 
-  class WuTableRow(val result: ReactiveResult)(implicit boinc: BoincClient,ctx: Ctx.Owner) extends DataTable.TableRow {
-    import scalatags.JsDom.all._
-    import scalacss.ScalatagsCss._
+  class WuTableRow(val result: ReactiveResult)(implicit boinc: BoincClient) extends DataTable.TableRow {
 
     override val columns = List(
       new StringColumn(result.project),
       new TableColumn( Rx {
-        span(BoincClientLayout.Style.progressBar,
-          JsDom.tags2.progress(
-            value := result.progress(),
-            max := 1,
-          ),
-
-          span(style := "float:right", (result.progress.now*100D).toString.split("\\.")(0) + " %")
-        )
-      }, this) {
-        override def compare(that: TableColumn) = result.progress.now.compare(that.datasource.asInstanceOf[WuTableRow].result.progress.now)
-      },
-      new StringColumn(Rx { result.uiStatus() }),
-      new TableColumn(Rx { BoincFormater.convertTime(result.pastTime()) }, this) {
-        override def compare(that: TableColumn) = result.pastTime.now.compare(that.datasource.asInstanceOf[WuTableRow].result.pastTime.now)
-      },
-      new TableColumn(Rx { BoincFormater.convertTime(result.remainingCPU()) }, this) {
-        override def compare(that: TableColumn) = result.remainingCPU.now.compare(that.datasource.asInstanceOf[WuTableRow].result.remainingCPU.now)
-      },
-      new TableColumn(Rx { BoincFormater.convertDate(new Date(result.reportDeadline()*1000)) }, this) {
-        override def compare(that: TableColumn) = result.reportDeadline.now.compare(that.datasource.asInstanceOf[WuTableRow].result.reportDeadline.now)
-      },
-      new StringColumn(Rx { result.app().map(_.userFriendlyName).getOrElse(result.wuName.now).asInstanceOf[String] }),
-      new TableColumn(Rx { div(
-        new Tooltip(if(result.supsended()) "state_continue".localize else "state_stop".localize,
-          a(href:="#", onclick := { (event: Event) => {
-            event.preventDefault()
-            NProgress.start()
-
-            val action = if(result.supsended.now) WorkunitAction.Resume else WorkunitAction.Suspend
-            boinc.workunit(result.projectURI, result.name.now, action).map(response => {
-              if (!response) {
-                new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
-                  .renderToBody().show()
-
-              } else {
-                result.supsended() = !result.supsended.now
-                NProgress.done(true)
-              }
-            }).recover(ErrorDialogUtil.showDialog)
-          }},
-            i(`class` := s"fa fa-${ if(result.supsended.now) "play" else "pause" }-circle-o")
-          ),
-          tooltipId = Some("tooltip-"+result.name.now)
-        ).render(),
-
-        new Tooltip("workunit_cancel".localize,
-          a(href:="#", i(`class` := "fa fa-stop-circle-o"),
-            onclick := {
-              (event: Event) => {
-                event.preventDefault()
-
-                new SimpleModalDialog(
-                  bodyElement = div(
-                    "workunit_dialog_cancel_content".localize,p(
-                      b("workunit_dialog_cancel_details".localize),br(),
-                      table(
-                        tbody(
-                          tr(td("workunit_dialog_cancel_project".localize), td(result.project.now)),
-                          tr(td("workunit_dialog_cancel_name".localize), td(result.name.now)),
-                          tr(td("workunit_dialog_cancel_remaining_time".localize), td(BoincFormater.convertTime(result.remainingCPU.now)))
-                        )
-                      )
-                    )
-                  ),
-                  okAction = (dialog: SimpleModalDialog) => {
-                    dialog.hide()
-                    boinc.workunit(result.projectURI, result.name.now, WorkunitAction.Abort).map(result => {
-                      if (!result) {
-                        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-                          .renderToBody().show()
-                      } //TODO: Update Tasks Table
-                    }).recover {
-                      case _: FetchResponseException =>
-                        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-                          .renderToBody().show()
-                    }
-                  },
-                  abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
-                  headerElement = div(h3("workunit_dialog_cancel_header".localize))
-                ).renderToBody().show()
-              }
+        <span class={BoincClientLayout.Style.progressBar.htmlClass}>
+          <progress value={result.progress} max="1"></progress>
+          <span style="flot:right">
+            {
+              result.progress.map(value => (value*100D).toString.split("\\.")(0) + " %")
             }
-          )
-        ).render(),
+          </span>
+        </span>
+      }, this) {
+        override def compare(that: TableColumn): Int = result.progress.now.compare(that.datasource.asInstanceOf[WuTableRow].result.progress.now)
+      },
+      new StringColumn(result.uiStatus),
+      new StringColumn(result.pastTime.map(BoincFormater.convertTime)) {
+        override def compare(that: TableColumn): Int = result.pastTime.now.compare(that.datasource.asInstanceOf[WuTableRow].result.pastTime.now)
+      },
+      new StringColumn(result.remainingCPU.map(BoincFormater.convertTime)) {
+        override def compare(that: TableColumn): Int = result.remainingCPU.now.compare(that.datasource.asInstanceOf[WuTableRow].result.remainingCPU.now)
+      },
+      new StringColumn(result.reportDeadline.map(v => v*1000).map(BoincFormater.convertDate).map(new Date(_).toDateString())) {
+        override def compare(that: TableColumn): Int = result.reportDeadline.now.compare(that.datasource.asInstanceOf[WuTableRow].result.reportDeadline.now)
+      },
+      new StringColumn(result.app.map(_.map(_.userFriendlyName).getOrElse(result.wuName.now))),
+      new TableColumn(Rx {
+        <div>
+          {
+            new Tooltip(
+              result.supsended.map(v => if(v) "state_continue".localize else "state_stop".localize),
+              <a href="#" onclick={jsPauseAction}>
+                <i class={s"fa fa-${result.supsended.map(v => if(v) "play" else "pause")}-circle-o"}></i>
+              </a>
+            ).component
 
-        new Tooltip("project_properties".localize,
-          a(href:="#", i(`class` := "fa fa-info-circle"),
-            onclick := {
-              (event: Event) => {
+            new Tooltip(
+              Var("workunit_cancel".localize),
+              <a href="#" onclick={(event: Event) => {
                 event.preventDefault()
+                cancelDialog.renderToBody().show()
+              }}>
+                <i class="fa fa-stop-circle-o"></i>
+              </a>
+            ).component
 
-                result.app.now.foreach(app => {
-                  new OkDialog("workunit_dialog_properties".localize + " " + result.name.now, List(
-                    table(TableTheme.table,
-                      tbody(
-                        tr(td(b("wu_dialog_appname".localize)), td(app.userFriendlyName)),
-                        tr(td(b("wu_dialog_xml_appname".localize)), td(result.appName.now)),
-                        tr(td(b("wu_dialog_name".localize)), td(result.name.now)),
-                        tr(td(b("wu_dialog_status".localize)), td(result.uiStatus.now)),
-                        tr(td(b("wu_dialog_deadline".localize)), td(BoincFormater.convertDate(result.reportDeadline.now))),
-                        result.activeTask.now.map(task => {
-                          List(
-                            tr(td(b("wu_dialog_checkpoint_time".localize)), td(BoincFormater.convertTime(task.checkpoint))),
-                            tr(td(b("wu_dialog_cpu_time".localize)), td(BoincFormater.convertTime(task.cpuTime))),
-                            tr(td(b("wu_dialog_run_time".localize)), td(BoincFormater.convertTime(task.time))),
-                            tr(td(b("wu_dialog_progress".localize)), td((task.done*100).formatted("%.4f %%"))),
-                            tr(td(b("wu_dialog_used_ram".localize)), td(BoincFormater.convertSize(task.workingSet))),
-                            tr(td(b("wu_dialog_used_disk".localize)), td(BoincFormater.convertSize(task.swapSize))),
-                            tr(td(b("wu_dialog_slot".localize)), td(task.slot)),
-                            tr(td(b("wu_dialog_pid".localize)), td(task.pid)),
-                            tr(td(b("wu_dialog_version".localize)), td(task.appVersionNum)),
-                          )
-                        }),
-                        tr(td(b("wu_dialog_plan_class".localize)), td(result.plan.now))
-                      )
-                    )
-                  )).renderToBody().show()
-                })
-              }}
-          )
-        ).render()
-      )}, this ) {
+            new Tooltip(
+              Var("project_properties".localize),
+              <a href="#" onclick={(event: Event) => {
+                event.preventDefault()
+                projectPropertiesDialog.renderToBody().show()
+              }}>
+                <i class="fa fa-info-circle"></i>
+              </a>
+            )
+          }
+        </div>
+      }, this ) {
         override def compare(that: TableColumn): Int = ???
       }
     )
+
+    private lazy val cancelDialog = new SimpleModalDialog(
+      bodyElement = {
+        <div>
+          {"workunit_dialog_cancel_content".localize}
+          <p>
+            <b>{"workunit_dialog_cancel_details".localize}</b><br></br>
+            <table class={TableTheme.table.htmlClass}>
+              <tbody>
+                <tr><td>{"workunit_dialog_cancel_project".localize}</td><td>{result.project}</td></tr>
+                <tr><td>{"workunit_dialog_cancel_name".localize}</td><td>{result.name}</td></tr>
+                <tr><td>{"workunit_dialog_cancel_remaining_time".localize}</td><td>{result.remainingCPU.map(BoincFormater.convertTime)}</td></tr>
+              </tbody>
+            </table>
+          </p>
+        </div>
+      },
+      okAction = (dialog: SimpleModalDialog) => {
+        dialog.hide()
+        boinc.workunit(result.projectURI, result.name.now, WorkunitAction.Abort).map(result => {
+          if (!result) {
+            new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
+              .renderToBody().show()
+          } //TODO: Update Tasks Table
+        }).recover(ErrorDialogUtil.showDialog)
+      },
+      abortAction = (dialog: SimpleModalDialog) => {dialog.hide()},
+      headerElement = {<h3>{"workunit_dialog_cancel_header".localize}</h3>}
+    )
+
+    private def boincApp(f: (App) => String): Rx[String] = result.app.map(_.map(f).getOrElse(""))
+    private lazy val projectPropertiesDialog = new OkDialog(
+      "workunit_dialog_properties".localize + " " + result.name.now,
+      List(
+        <table class={TableTheme.table.htmlClass}>
+          <tbody>
+            <tr><td><b>{"wu_dialog_appname".localize}</b></td><td>{boincApp(_.userFriendlyName)}</td></tr>
+            <tr><td><b>{"wu_dialog_xml_appname".localize}</b></td><td>{result.appName}</td></tr>
+            <tr><td><b>{"wu_dialog_name".localize}</b></td><td>{result.name}</td></tr>
+            <tr><td><b>{"wu_dialog_status".localize}</b></td><td>{result.uiStatus}</td></tr>
+            <tr><td><b>{"wu_dialog_deadline".localize}</b></td><td>{result.reportDeadline.map(BoincFormater.convertDate)}</td></tr>
+            {
+              result.activeTask.map(_.map(task => {
+                <tr><td><b>{"wu_dialog_checkpoint_time".localize}</b></td><td>{BoincFormater.convertTime(task.checkpoint)}</td></tr>
+                <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{BoincFormater.convertTime(task.cpuTime)}</td></tr>
+                <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{BoincFormater.convertTime(task.time)}</td></tr>
+                <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>
+                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{BoincFormater.convertTime(task.workingSet)}</td></tr>
+                <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{BoincFormater.convertTime(task.swapSize)}</td></tr>
+                <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>
+                <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>
+                <tr><td><b>{"wu_dialog_version".localize}</b></td><td>{task.appVersionNum}</td></tr>
+              }))
+            }
+            <tr><td><b>{"wu_dialog_plan_class".localize}</b></td><td>{result.plan}</td></tr>
+          </tbody>
+        </table>
+      )
+    )
+
+    private lazy val jsPauseAction: (Event) => Unit = (event) => {
+      event.preventDefault()
+      NProgress.start()
+
+      val action = if(result.supsended.now) WorkunitAction.Resume else WorkunitAction.Suspend
+      boinc.workunit(result.projectURI, result.name.now, action).map(response => {
+        if (!response) {
+          new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+            .renderToBody().show()
+
+        } else {
+          result.supsended.update(!_)
+          NProgress.done(true)
+        }
+      }).recover(ErrorDialogUtil.showDialog)
+    }
   }
 
-  def convert(result: Result)(implicit boinc: BoincClient): WuTableRow = Rx.unsafe {
+  def convert(result: Result)(implicit boinc: BoincClient): WuTableRow =
     new WuTableRow(new ReactiveResult(result))
-  }.now
-
-
 
   private def prettyPrintStatus(result: Result): String = {
     Result.State(result.state) match {

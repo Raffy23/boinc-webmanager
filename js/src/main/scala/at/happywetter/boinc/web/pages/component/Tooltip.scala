@@ -1,11 +1,11 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.pages.component.Tooltip.Style
-import org.scalajs.dom.raw.HTMLElement
+import mhtml.{Rx, Var}
 
-import scalacss.ProdDefaults._
 import scala.language.postfixOps
-import scalatags.JsDom
+import scala.xml.Elem
+import scalacss.ProdDefaults._
 
 /**
   * Created by: 
@@ -56,14 +56,13 @@ object Tooltip {
   }
 }
 
-class Tooltip(text: String, parent: JsDom.TypedTag[HTMLElement], textOrientation: StyleA = Style.topText, tooltipId: Option[String] = None) {
+class Tooltip(text: Rx[String], parent: Elem, textOrientation: StyleA = Style.topText, tooltipId: Option[String] = None) {
 
-  val component: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    div(Style.tooltip, parent, span(Style.tooltipText,textOrientation, text, id := tooltipId.getOrElse("")))
+  val component: Elem = {
+    <div class={Style.tooltip.htmlClass}>
+      <span class={Style.tooltipText.htmlClass + " " + textOrientation.htmlClass}>{text}</span>
+      {parent}
+    </div>
   }
 
-  def render(): HTMLElement = component.render
 }

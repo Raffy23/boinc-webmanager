@@ -3,6 +3,7 @@ package at.happywetter.boinc.web.pages.component.dialog
 import at.happywetter.boinc.web.pages.component.dialog.BasicModalDialog.Style
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.xml.{Elem, Node}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 import scalatags.JsDom
@@ -81,23 +82,17 @@ object BasicModalDialog {
 }
 
 class BasicModalDialog(dialogID: String,
-                       headerElement: List[scalatags.JsDom.Modifier],
-                       contentElement: List[scalatags.JsDom.Modifier],
-                       footerElement: List[scalatags.JsDom.Modifier]) extends Dialog(dialogID) {
+                       headerElement: List[Node],
+                       contentElement: List[Node],
+                       footerElement: List[Node]) extends Dialog(dialogID) {
 
-  val component: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    div(Style.modal, id := dialogID,
-      div(Style.content,
-        div(Style.modalHeader, headerElement),
-        div(Style.modalBody, contentElement),
-        div(Style.modalFooter, footerElement)
-      )
-    )
+  override def render(): Elem = {
+    <div class={Style.modal.htmlClass} id={dialogID}>
+      <div class={Style.content.htmlClass}>
+        <div class={Style.modalHeader.htmlClass}>{headerElement}</div>
+        <div class={Style.modalBody.htmlClass}>{contentElement}</div>
+        <div class={Style.modalFooter.htmlClass}>{footerElement}</div>
+      </div>
+    </div>
   }
-
-  def render(): HTMLElement = component.render
-
 }

@@ -3,9 +3,9 @@ package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.BoincRPC
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
-import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
+import at.happywetter.boinc.web.pages.component.dialog.{OkDialog}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry
@@ -15,9 +15,10 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
 import scala.xml.Elem
 import scalatags.JsDom
+
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 
 /**
   * Created by: 
@@ -25,15 +26,14 @@ import scalatags.JsDom
   * @author Raphael
   * @version 08.08.2017
   */
-class BoincMainHostLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
+class BoincMainHostLayout extends BoincClientLayout {
   override def onRender(client: BoincClient): Unit = {
     val data = HostInfoCache.get(boincClientName)
     if (data.isDefined) {
       buildUI(data.get, client)
       NProgress.done(true)
     } else {
-      import scalatags.JsDom.all._
-      val dialog = new OkDialog("loading_dialog_content".localize, List(div("loading_dialog_content".localize)))
+      val dialog = new OkDialog("loading_dialog_content".localize, List("loading_dialog_content".localize))
       dialog.renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {

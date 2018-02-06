@@ -1,19 +1,13 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
-import at.happywetter.boinc.web.css.TopNavigation
-import at.happywetter.boinc.web.pages.BoincClientLayout.Style
-import at.happywetter.boinc.web.pages.boinc.BoincComponent
-import at.happywetter.boinc.web.pages.component.DashboardMenu
-import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
-import at.happywetter.boinc.web.routes.{AppRouter, Hook}
-import at.happywetter.boinc.web.util.I18N._
-import org.scalajs.dom
-import org.scalajs.dom.Element
-import org.scalajs.dom.raw.HTMLElement
+import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.pages.component.{BoincTopNavigation, DashboardMenu}
+import at.happywetter.boinc.web.routes.AppRouter
+import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 
+import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -21,54 +15,30 @@ import scalatags.JsDom
   * @author Raphael
   * @version 31.07.2017
   */
+abstract class BoincClientLayout extends Layout {
 
-abstract class BoincClientLayout(clientName: String) extends Layout  with BoincComponent {
+  implicit var boincClientName: String = _
+  protected implicit var boinc: BoincClient = _
 
-  implicit val boincClientName: String = clientName
-  protected implicit lazy val boinc: BoincClient = ClientManager.clients(clientName)
+  override def beforeRender(params: Dictionary[String]): Unit = {
+    boincClientName = params.get("clients").get
+    boinc = ClientManager.clients(boincClientName)
 
-  def root: Element = dom.document.getElementById("client-data")
+    BoincTopNavigation.clientName := boincClientName
+    BoincTopNavigation.render(path)
 
-  private val links = List(
-    ("boinc", "head_menu_boinc".localize, "fa fa-id-card-o"),
-    ("messages", "head_menu_messages".localize, "fa fa-envelope-o"),
-    ("projects", "head_menu_projects".localize, "fa fa-tag"),
-    ("tasks", "head_menu_tasks".localize, "fa fa-tasks"),
-    ("transfers", "head_menu_transfers".localize, "fa fa-exchange"),
-    ("statistics", "head_menu_statistics".localize, "fa fa-area-chart"),
-    ("disk", "head_menu_disk".localize, "fa fa-pie-chart"),
-    ("global_prefs", "head_menu_prefs".localize, "fa fa-cogs")
-  )
-
-  override def onRender(): Unit = {
-    DashboardMenu.selectMenuItemByContent(clientName)
-
-    //Render Top-Navbar for Boinc
-    val nav = dom.document.getElementById("navigation")
-    if (nav.childNodes.length > 0) nav.removeChild(nav.firstChild)
-    nav.appendChild({
-      import scalacss.ScalatagsCss._
-      import scalatags.JsDom.all._
-
-      ul(TopNavigation.nav, id := "boinc_top_navbar",
-        links.map { case (nav, name, icon) =>
-          li(Style.in_text_icon,
-            a(
-              href := s"${DashboardLocation.link}/$clientName/$nav",
-              i(`class` := icon), span(TopNavigation.invisible_on_small_screen, name),
-              data("navigo") := "",
-              `class` := (if (path == nav) TopNavigation.active.htmlClass else "")
-            )
-          )
-        }
-      ).render
-    })
-
-    AppRouter.router.updatePageLinks()
-    onRender(boinc)
+    DashboardMenu.selectMenuItemByContent(boincClientName)
   }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {}
+  override def before(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPageLocation)
+    }
+  }
+
 }
 
 object BoincClientLayout {

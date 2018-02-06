@@ -4,6 +4,7 @@ import at.happywetter.boinc.web.pages.BoincClientLayout
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.xml.Elem
 import scalacss.StyleSheet
 import scalacss.ProdDefaults._
 
@@ -27,14 +28,14 @@ object Dialog {
 
 abstract class Dialog(dialogID: String) {
 
-  def render(): HTMLElement
+  def render(): Elem
 
   def renderToBody(): Dialog = {
     val existingDialog = dom.document.getElementById(dialogID)
     if (existingDialog != null)
       dom.document.body.removeChild(existingDialog)
 
-    dom.document.body.appendChild(render())
+    mhtml.mount(dom.document.body, render())
     this
   }
 

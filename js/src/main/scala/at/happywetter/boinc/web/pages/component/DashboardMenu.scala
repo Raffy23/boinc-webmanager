@@ -224,10 +224,7 @@ object DashboardMenu {
   }
 
   private val selectionListener: (Event) => Unit = (event) => onMenuItemClick(event)
-  private val masterSelectionListener: (Event) => Unit = (event) => {
-    dom.document.getElementById("navigation").innerHTML = ""
-    onMenuItemClick(event)
-  }
+  private val masterSelectionListener: (Event) => Unit = (event) => onMenuItemClick(event)
 
   private val subMenuListener: (Event) => Unit = (event) => {
     val target = event.target.asInstanceOf[HTMLElement].getAttribute("data-menu-ref")
