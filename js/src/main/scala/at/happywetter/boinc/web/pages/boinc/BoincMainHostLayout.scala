@@ -1,24 +1,25 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.BoincRPC
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientCacheHelper}
+import at.happywetter.boinc.shared.BoincRPC.Modes
+import at.happywetter.boinc.shared.BoincRPC.Modes.Mode
+import at.happywetter.boinc.shared.{CCState, HostInfo}
+import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
-import at.happywetter.boinc.web.pages.component.dialog.{OkDialog}
+import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
-import at.happywetter.boinc.web.storage.HostInfoCache.CacheEntry
 import at.happywetter.boinc.web.util.I18N._
-import org.scalajs.dom
+import mhtml.{Rx, Var}
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
+import org.scalajs.dom.raw.HTMLInputElement
 
+import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
-import scalatags.JsDom
-
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 
 /**
   * Created by: 
@@ -27,194 +28,138 @@ import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
   * @version 08.08.2017
   */
 class BoincMainHostLayout extends BoincClientLayout {
-  override def onRender(client: BoincClient): Unit = {
+
+  override val path = "boinc"
+
+  private val clientCC: Var[CCState] = Var(CCState(0,0,0,0,0,0D,0,0,0,0D,0,0,0,0D,true,true,0))
+  private val clientData: Var[HostInfoCache.CacheEntry] = Var(
+    HostInfoCache.CacheEntry(
+      HostInfo("","","",0,"","",List.empty,0D,0D,0D,0D,0D,0D,0D,0D,"","",List.empty,None),
+      "",
+      ""
+    )
+  )
+
+  override def after(): Unit = {
     val data = HostInfoCache.get(boincClientName)
+    boinc.getCCState.foreach(cc => clientCC := cc)
+
     if (data.isDefined) {
-      buildUI(data.get, client)
+      clientData.update(_ => data.get)
       NProgress.done(true)
     } else {
       val dialog = new OkDialog("loading_dialog_content".localize, List("loading_dialog_content".localize))
       dialog.renderToBody().show()
 
       ClientCacheHelper.updateClientCache(boinc,(_) => {
-        buildUI(HostInfoCache.get(boincClientName).get, client)
+        clientData.update(_ => HostInfoCache.get(boincClientName).get)
         dialog.hide()
         NProgress.done(true)
       })
     }
   }
 
-  private def buildUI(boincData: CacheEntry, boincClient: BoincClient): Unit = {
-    root.appendChild(renderView(boincData))
-    boincClient.getCCState.map(state => {
-      state.gpuMode match {
-        case 1 => dom.document.getElementById("gm-al").asInstanceOf[HTMLInputElement].checked = true
-        case 2 => dom.document.getElementById("gm-au").asInstanceOf[HTMLInputElement].checked = true
-        case 3 => dom.document.getElementById("gm-n").asInstanceOf[HTMLInputElement].checked = true
-      }
-      state.taskMode match {
-        case 1 => dom.document.getElementById("rm-al").asInstanceOf[HTMLInputElement].checked = true
-        case 2 => dom.document.getElementById("rm-au").asInstanceOf[HTMLInputElement].checked = true
-        case 3 => dom.document.getElementById("rm-n").asInstanceOf[HTMLInputElement].checked = true
-      }
-      state.networkMode match {
-        case 1 => dom.document.getElementById("nm-al").asInstanceOf[HTMLInputElement].checked = true
-        case 2 => dom.document.getElementById("nm-au").asInstanceOf[HTMLInputElement].checked = true
-        case 3 => dom.document.getElementById("nm-n").asInstanceOf[HTMLInputElement].checked = true
-      }
+  override def render: Elem = {
+    <div id="host-info">
+      <h2 class={Style.pageHeader.htmlClass}>
+        <i class="fa fa-id-card-o"></i>
+        {"boinc_info_header".localize}
+      </h2>
+
+      <div id="boinc_cc_state">
+        <h4 class={Style.h4_without_line.htmlClass}>
+          <i class="fa fa-cogs"></i>
+          {"boinc_info_cc_state_header".localize}
+        </h4>
+
+        <table class={s"${TableTheme.table.htmlClass} ${TableTheme.no_border.htmlClass}"} style="width:auto!important">
+          <thead>
+            <tr>
+              <th></th>
+              <th class={TableTheme.vertical_table_text.htmlClass} style="width:24px">
+                <div style="margin-bottom:-8px"><span>{"always".localize}</span></div>
+              </th>
+              <th class={TableTheme.vertical_table_text.htmlClass} style="width:24px">
+                <div style="margin-bottom:-8px"><span>{"auto".localize}</span></div>
+              </th>
+              <th class={TableTheme.vertical_table_text.htmlClass} style="width:24px">
+                <div style="margin-bottom:-8px"><span>{"never".localize}</span></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td> <i class="fa fa-tasks"></i> {"boinc_info_run_mode".localize} </td>
+              <td> <input type="radio" name="run_mode" value="always" checked={clientCC.map(_.taskMode == 1)} onclick={action(boinc.setRun, Modes.Always)}></input> </td>
+              <td> <input type="radio" name="run_mode" value="auto"   checked={clientCC.map(_.taskMode == 2)} onclick={action(boinc.setRun, Modes.Auto)}></input> </td>
+              <td> <input type="radio" name="run_mode" value="never"  checked={clientCC.map(_.taskMode == 3)} onclick={action(boinc.setRun, Modes.Never)}></input> </td>
+
+              <td> <input type="radio" name="gpu_mode" value="always" checked={clientCC.map(_.gpuMode == 1)} onclick={action(boinc.setGpu, Modes.Always)}></input> </td>
+              <td> <input type="radio" name="gpu_mode" value="auto"   checked={clientCC.map(_.gpuMode == 2)} onclick={action(boinc.setGpu, Modes.Auto)}></input> </td>
+              <td> <input type="radio" name="gpu_mode" value="never"  checked={clientCC.map(_.gpuMode == 3)} onclick={action(boinc.setGpu, Modes.Never)}></input> </td>
+
+              <td> <input type="radio" name="network_mode" value="always" checked={clientCC.map(_.networkMode == 1)} onclick={action(boinc.setNetwork, Modes.Always)}></input> </td>
+              <td> <input type="radio" name="network_mode" value="auto"   checked={clientCC.map(_.networkMode == 2)} onclick={action(boinc.setNetwork, Modes.Auto)}></input> </td>
+              <td> <input type="radio" name="network_mode" value="never"  checked={clientCC.map(_.networkMode == 3)} onclick={action(boinc.setNetwork, Modes.Never)}></input> </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class={s"${TableTheme.table.htmlClass} ${BoincMainHostLayout.Style.table.htmlClass}"} style="line-height:1.4567">
+          <tbody>
+            <tr><td style="width:55px"><b>{"boinc_info_version".localize}</b></td><td>{clientData.map(_.boincVersion)}</td></tr>
+            <tr><td><b>{"boinc_info_domain".localize}</b></td><td>{clientData.map(_.hostInfo.domainName)}</td></tr>
+            <tr><td><b>{"boinc_info_os".localize}</b></td>
+                <td>{clientData.map(_.hostInfo.osName)}<br/>
+                  <small>{clientData.map(_.hostInfo.osVersion)}</small>
+                </td>
+            </tr>
+            <tr><td><b>{"boinc_info_cpu".localize}</b></td>
+                <td>{clientData.map(_.hostInfo.cpuVendor)}<br/>
+                  <small>{clientData.map(_.hostInfo.cpuModel)}</small><br/>
+                  <small><small>{clientData.map(_.hostInfo.cpuFeatures.mkString(", "))}</small></small>
+                </td>
+            </tr>
+            <tr><td><b>{"boinc_info_#cpu".localize}</b></td><td>{clientData.map(_.hostInfo.cpus)}</td></tr>
+            <tr><td><b>{"boinc_info_ip".localize}</b></td><td>{clientData.map(_.hostInfo.ipAddr)}</td></tr>
+            <tr><td><b>{"boinc_info_ram".localize}</b></td>
+              <td>{clientData.map(x => BoincFormater.convertSize(x.hostInfo.memory))}</td>
+            </tr>
+            <tr><td><b>{"boinc_info_swap".localize}</b></td>
+              <td>{clientData.map(x => BoincFormater.convertSize(x.hostInfo.swap))}</td>
+            </tr>
+            <tr><td><b>{"boinc_info_disk".localize}</b></td> <td>
+              <progress style="width:250px" value={progressBarValue} max={clientData.map(_.hostInfo.diskTotal.toString)}></progress>
+              <br/>
+              {
+              "boinc_info_disk_content".localize.format(
+                clientData.map(x => BoincFormater.convertSize(x.hostInfo.diskFree)).now,
+                clientData.map(x => BoincFormater.convertSize(x.hostInfo.diskTotal)).now
+              )
+              }</td></tr>
+            <tr><td><b>{"boinc_info_platfrom".localize}</b></td><td>{clientData.map(_.platform)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  private def progressBarValue: Rx[String] = {
+    val total = clientData.map(_.hostInfo.diskTotal)
+    val free  = clientData.map(_.hostInfo.diskFree)
+
+    total.zip(free).map(f => (f._1 - f._2).toString)
+  }
+
+  private def action(function: (Modes.Value, Double) => Future[Boolean], mode: Mode): (Event) => Unit = (event) => {
+    event.preventDefault()
+    NProgress.start()
+
+    function(mode, 0).foreach(result => {
+      NProgress.done(true)
+      if (result)
+        event.target.asInstanceOf[HTMLInputElement].checked = true
     })
   }
-
-  private def renderView(boincData: CacheEntry): HTMLElement = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    div( id := "host-info", Style.in_text_icon,
-      h2(Style.pageHeader, i(`class` := "fa fa-id-card-o"), "boinc_info_header".localize),
-      div( id := "boinc_cc_state",
-        h4(Style.h4_without_line, i(`class` := "fa fa-cogs"), "boinc_info_cc_state_header".localize),
-        table(TableTheme.table,  TableTheme.no_border, style := "width:auto!important",
-          thead(
-            tr(
-              th(),
-              th(TableTheme.vertical_table_text, div(span("always".localize), style := "margin-bottom:-8px"), style := "width:24px"),
-              th(TableTheme.vertical_table_text, div(span("auto".localize), style := "margin-bottom:-8px"), style := "width:24px"),
-              th(TableTheme.vertical_table_text, div(span("never".localize), style := "margin-bottom:-8px"), style := "width:24px"),
-            )
-          ),
-          tbody(
-            tr(
-              td(i(`class` := "fa fa-tasks"), "boinc_info_run_mode".localize),
-              td(input(`type` := "radio", name := "run_mode", value := "always", id:="rm-al",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setRun(BoincRPC.Modes.Always).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }}
-              )),
-              td(input(`type` := "radio", name := "run_mode", value := "auto", id:="rm-au",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setRun(BoincRPC.Modes.Auto).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }})),
-              td(input(`type` := "radio", name := "run_mode", value := "never", id:="rm-n",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setRun(BoincRPC.Modes.Never).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }}))
-            ),
-            tr(td(i(`class` := "fa fa-television"), "boinc_info_gpu_mode".localize),
-              td(input(`type` := "radio", name := "gpu_mode", value := "always", id:="gm-al",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setGpu(BoincRPC.Modes.Always).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }})),
-              td(input(`type` := "radio", name := "gpu_mode", value := "auto", id:="gm-au",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setGpu(BoincRPC.Modes.Auto).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }})),
-              td(input(`type` := "radio", name := "gpu_mode", value := "never", id:="gm-n",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setGpu(BoincRPC.Modes.Never).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }}))
-            ),
-            tr(td(i(`class` := "fa fa-exchange"), "boinc_info_network_mode".localize),
-              td(input(`type` := "radio", name := "network_mode", value := "always", id:="nm-al",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setNetwork(BoincRPC.Modes.Always).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }})),
-              td(input(`type` := "radio", name := "network_mode", value := "auto", id:="nm-au",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setNetwork(BoincRPC.Modes.Auto).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }})),
-              td(input(`type` := "radio", name := "network_mode", value := "never", id:="nm-n",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  boinc.setNetwork(BoincRPC.Modes.Never).foreach(result => {
-                    NProgress.done(true)
-                    if (result)
-                      event.target.asInstanceOf[HTMLInputElement].checked = true
-                  })
-                }}))
-            )
-          )
-        )
-      ),
-      table(TableTheme.table, style:="line-height: 1.4567", BoincMainHostLayout.Style.table,
-       tbody(
-         tr(td(style:="width:55px;",b("boinc_info_version".localize)), td(boincData.boincVersion)),
-         tr(td(b("boinc_info_domain".localize)), td(boincData.hostInfo.domainName)),
-         tr(td(b("boinc_info_os".localize)), td(boincData.hostInfo.osName,br(),small(boincData.hostInfo.osVersion))),
-         tr(td(b("boinc_info_cpu".localize)), td(boincData.hostInfo.cpuVendor,br(),small(boincData.hostInfo.cpuModel),br(),small(small(boincData.hostInfo.cpuFeatures.mkString(", "))))),
-         tr(td(b("boinc_info_#cpu".localize)), td(boincData.hostInfo.cpus)),
-         tr(td(b("boinc_info_ip".localize)), td(boincData.hostInfo.ipAddr)),
-         tr(td(b("boinc_info_ram".localize)), td(BoincFormater.convertSize(boincData.hostInfo.memory))),
-         tr(td(b("boinc_info_swap".localize)), td(BoincFormater.convertSize(boincData.hostInfo.swap))),
-         tr(td(b("boinc_info_disk".localize)), td(Style.progressBar, JsDom.tags2.progress(style := "width:250px;", value := boincData.hostInfo.diskTotal-boincData.hostInfo.diskFree, max := boincData.hostInfo.diskTotal),br(),
-           "boinc_info_disk_content".localize.format(BoincFormater.convertSize(boincData.hostInfo.diskFree), BoincFormater.convertSize(boincData.hostInfo.diskTotal))
-         )),
-         tr(td(b("boinc_info_platfrom".localize)), td(boincData.platform)),
-       )
-      )
-    ).render
-  }
-
-  override val path = "boinc"
-
-  override def render: Elem = {<div>HOST_MAIN</div>}
 }
 
 object BoincMainHostLayout {

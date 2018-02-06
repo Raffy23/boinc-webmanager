@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.boincclient
 
 import at.happywetter.boinc.shared.BoincState
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, HostInfoCache, TaskSpecCache}
+import at.happywetter.boinc.web.util.ErrorDialogUtil
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -18,12 +19,12 @@ object ClientCacheHelper {
   def updateClientCache(boinc: BoincClient, finishAction: (BoincState) => Unit = (_) => {}): Unit = {
     if (!stateUpdate) {
       stateUpdate = true
-      boinc.getState.foreach(state => {
+      boinc.getState.map(state => {
         updateCache(boinc.hostname, state)
 
         stateUpdate = false
         finishAction(state)
-      })
+      }).recover(ErrorDialogUtil.showDialog)
     }
   }
 

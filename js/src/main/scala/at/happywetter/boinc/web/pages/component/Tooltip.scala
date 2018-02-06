@@ -4,7 +4,7 @@ import at.happywetter.boinc.web.pages.component.Tooltip.Style
 import mhtml.{Rx, Var}
 
 import scala.language.postfixOps
-import scala.xml.Elem
+import scala.xml.{Elem, Node}
 import scalacss.ProdDefaults._
 
 /**
@@ -54,6 +54,7 @@ object Tooltip {
       )
     )
   }
+
 }
 
 class Tooltip(text: Rx[String], parent: Elem, textOrientation: StyleA = Style.topText, tooltipId: Option[String] = None) {
@@ -64,5 +65,7 @@ class Tooltip(text: Rx[String], parent: Elem, textOrientation: StyleA = Style.to
       {parent}
     </div>
   }
+
+  def toXML: Node = component
 
 }

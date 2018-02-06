@@ -11,6 +11,7 @@ import scala.concurrent.Future
   * @version 06.02.2018
   */
 object RichRx {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   implicit class NowRx[T](rx: Rx[T]) {
     def now: T = extract(rx)

@@ -55,10 +55,8 @@ object WuDataTableModel {
         TaskSpecCache.get(boinc.hostname, wu.get.appName)
       }).toRx(None)
 
-    val uiStatus: Rx[String] = Rx {
-      state(); supsended()
-      prettyPrintStatus(result) + prettyPrintAppStatus(app())
-    }
+    val uiStatus: Rx[String] =
+      Var(prettyPrintStatus(result)).zip(app.map(x => prettyPrintAppStatus(x))).map(x => x._1 + x._2)
   }
 
   class WuTableRow(val result: ReactiveResult)(implicit boinc: BoincClient) extends DataTable.TableRow {
@@ -67,7 +65,7 @@ object WuDataTableModel {
       new StringColumn(result.project),
       new TableColumn( Rx {
         <span class={BoincClientLayout.Style.progressBar.htmlClass}>
-          <progress value={result.progress} max="1"></progress>
+          <progress value={result.progress.map(_.toString)} max="1"></progress>
           <span style="flot:right">
             {
               result.progress.map(value => (value*100D).toString.split("\\.")(0) + " %")
@@ -96,7 +94,7 @@ object WuDataTableModel {
               <a href="#" onclick={jsPauseAction}>
                 <i class={s"fa fa-${result.supsended.map(v => if(v) "play" else "pause")}-circle-o"}></i>
               </a>
-            ).component
+            ).toXML
 
             new Tooltip(
               Var("workunit_cancel".localize),
@@ -106,7 +104,7 @@ object WuDataTableModel {
               }}>
                 <i class="fa fa-stop-circle-o"></i>
               </a>
-            ).component
+            ).toXML
 
             new Tooltip(
               Var("project_properties".localize),
@@ -116,7 +114,7 @@ object WuDataTableModel {
               }}>
                 <i class="fa fa-info-circle"></i>
               </a>
-            )
+            ).toXML
           }
         </div>
       }, this ) {
@@ -166,15 +164,17 @@ object WuDataTableModel {
             <tr><td><b>{"wu_dialog_deadline".localize}</b></td><td>{result.reportDeadline.map(BoincFormater.convertDate)}</td></tr>
             {
               result.activeTask.map(_.map(task => {
-                <tr><td><b>{"wu_dialog_checkpoint_time".localize}</b></td><td>{BoincFormater.convertTime(task.checkpoint)}</td></tr>
-                <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{BoincFormater.convertTime(task.cpuTime)}</td></tr>
-                <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{BoincFormater.convertTime(task.time)}</td></tr>
-                <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>
-                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{BoincFormater.convertTime(task.workingSet)}</td></tr>
-                <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{BoincFormater.convertTime(task.swapSize)}</td></tr>
-                <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>
-                <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>
+                List( //mthml does not like NodeBuffer -> wrap it into a list
+                <tr><td><b>{"wu_dialog_checkpoint_time".localize}</b></td><td>{BoincFormater.convertTime(task.checkpoint)}</td></tr>,
+                <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{BoincFormater.convertTime(task.cpuTime)}</td></tr>,
+                <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{BoincFormater.convertTime(task.time)}</td></tr>,
+                <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{BoincFormater.convertTime(task.workingSet)}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{BoincFormater.convertTime(task.swapSize)}</td></tr>,
+                <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>,
+                <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>,
                 <tr><td><b>{"wu_dialog_version".localize}</b></td><td>{task.appVersionNum}</td></tr>
+                )
               }))
             }
             <tr><td><b>{"wu_dialog_plan_class".localize}</b></td><td>{result.plan}</td></tr>

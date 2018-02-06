@@ -49,7 +49,7 @@ class BoincTaskLayout extends BoincClientLayout {
 
   override def render: Elem = {
     <div id="workunits">
-      <h2 class={BoincClientLayout.Style.pageHeader}>
+      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
         <i class="fa fa-tasks"></i>
         {"workunit_header".localize}
       </h2>

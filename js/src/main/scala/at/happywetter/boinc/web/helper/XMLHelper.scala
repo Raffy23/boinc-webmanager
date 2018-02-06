@@ -10,6 +10,8 @@ import scala.xml.{Node, Text}
   */
 object XMLHelper {
 
+  import scala.language.implicitConversions
+
   implicit def toXMLTextNode(str: String): Node = Text(str)
 
 }

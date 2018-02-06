@@ -67,7 +67,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
     </table>
   }
 
-  private def tableSortFunction(idx: Int): js.Function1[Event,Unit] = (event) => {
+  private def tableSortFunction(idx: Int): (Event) => Unit = (event) => {
     import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
 
     var target = event.target.asInstanceOf[HTMLElement]

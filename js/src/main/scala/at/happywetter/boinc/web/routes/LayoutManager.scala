@@ -40,7 +40,7 @@ object LayoutManager {
   }
 
   def beforeRender(params: js.Dictionary[String]): Unit =
-    childLayout.impure.run(_.beforeRender(params))
+    childLayout.impure.run(_.beforeRender(params)).cancel
 
   def render(page: Layout): Unit = {
     dom.window.console.log(s"LayoutManager: Rendering ${page.getClass.getSimpleName}")
