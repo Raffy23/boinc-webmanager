@@ -88,7 +88,7 @@ object AppRouter {
     dom.window.open(link, "_blank")
   }
 
-  val openExternal: js.Function1[Event, Unit] = (event: Event) => {
+  val openExternal: (Event) => Unit = (event) => {
     event.preventDefault()
     dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
   }

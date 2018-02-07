@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement}
 
-import scala.scalajs.js
 import scala.xml.{Elem, Node, Text}
 import scalacss.internal.StyleA
 
@@ -22,7 +22,7 @@ object DataTable {
   class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
-  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map(d => Text(d.toString)), null) {
+  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map(d => d.toString), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 

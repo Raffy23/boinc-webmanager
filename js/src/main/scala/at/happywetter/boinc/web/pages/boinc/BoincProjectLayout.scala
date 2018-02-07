@@ -1,22 +1,22 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
+import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.ProjectDataTableModel.ProjectTableRow
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
-import at.happywetter.boinc.web.pages.component.{BoincPageLayout, DataTable, Tooltip}
-import at.happywetter.boinc.web.routes.{Hook, NProgress}
-import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
+import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.scalajs.js
+import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 
@@ -35,7 +35,7 @@ object BoincProjectLayout {
 
     val link = style(
       cursor.pointer,
-      textDecoration := "none",
+      textDecoration := none,
       color(c"#333")
     )
 
@@ -45,75 +45,86 @@ object BoincProjectLayout {
       )
     )
 
+    val floatingHeadbar = style(
+      position.absolute,
+      top(80 px),
+      right(20 px)
+    )
+
+    val floatingHeadbarButton = style(
+      color(c"#333"),
+      textDecoration := none,
+      fontSize(30 px),
+      cursor.pointer
+    )
+
   }
 }
 
-class BoincProjectLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
-
-  private var dataTable: DataTable[ProjectTableRow] = _
-
-  override def leave(): Unit = dataTable.dispose()
-  override def already(): Unit = dataTable.dispose()
-
-  override def onRender(client: BoincClient): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-    client.getProjects.map(results => {
-      import scalacss.ScalatagsCss._
-      import scalatags.JsDom.all._
-
-      dataTable = new DataTable(List(
-        ("table_project".localize, true),
-        ("table_account".localize, true),
-        ("table_team".localize, true),
-        ("table_credits".localize, true),
-        ("table_avg_credits".localize, true),
-        ("", false)
-      ), results, Some(Style.firstRowFixedWith))
-      root.appendChild(
-        div( id := "projects",
-          h2(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-tag"), "project_header".localize),
-          div(style := "position:absolute;top:80px;right:20px;",
-            new Tooltip("project_new_tooltip".localize,
-              a(href := "#add-project", i(`class` := "fa fa-plus-square"), style := "color:#333;text-decoration:none;font-size:30px",
-                onclick := { (event: Event) => {
-                  event.preventDefault()
-                  NProgress.start()
-
-                  //TODO: Use some cache ...
-                  ClientManager.queryCompleteProjectList().foreach(data => {
-                    new ProjectAddDialog(data, (url, username, password, name) => {
-                      client.attachProject(url, username, password, name).map(result => {
-                        NProgress.done(true)
-                        onRender(client)
-
-                        if(!result)
-                          new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
-                            dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
-                          }).renderToBody().show()
-
-                        result
-                      }).recover{
-                        case e => ErrorDialogUtil.showDialog(e); false
-                      }
-                    }).renderToBody().show()
-
-                    NProgress.done(true)
-                  })
-                }},
-              ),
-              textOrientation = Tooltip.Style.leftText
-            ).render()
-          ),
-
-          dataTable.component
-
-        ).render
-      )
-
-      NProgress.done(true)
-    }).recover(ErrorDialogUtil.showDialog)
-  }
+class BoincProjectLayout extends BoincClientLayout {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "projects"
+
+  private var dataTable: DataTable[ProjectTableRow] = new DataTable[ProjectTableRow](
+    List(
+      ("table_project".localize, true),
+      ("table_account".localize, true),
+      ("table_team".localize, true),
+      ("table_credits".localize, true),
+      ("table_avg_credits".localize, true),
+      ("", false)
+    )
+  )
+
+  override def render: Elem = {
+    boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
+
+    <div id="projects">
+      <h2 class={BoincClientLayout.Style.pageHeader}>
+        <i class="fa fa-tag"></i>
+        {"project_header".localize}
+      </h2>
+
+      <div class={Style.floatingHeadbar}>
+        {
+          new Tooltip(
+            Var("project_new_tooltip".localize),
+            <a href="#add-project" class={Style.floatingHeadbarButton} onclick={jsProjectAddAction}>
+              <i class="fa fa-plus-square"></i>
+            </a>
+          ).toXML
+        }
+      </div>
+
+      {dataTable.component}
+    </div>
+  }
+
+  private val jsProjectAddAction: (Event) => Unit = (event) => {
+    event.preventDefault()
+    NProgress.start()
+
+      //TODO: Use some cache ...
+      ClientManager.queryCompleteProjectList().foreach(data => {
+        new ProjectAddDialog(data, (url, username, password, name) => {
+          boinc.attachProject(url, username, password, name).map(result => {
+            NProgress.done(true)
+
+            if(!result)
+              new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
+                dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+              }).renderToBody().show()
+            else
+              boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
+
+            result
+          }).recover{
+            case e => ErrorDialogUtil.showDialog(e); false
+          }
+        }).renderToBody().show()
+
+        NProgress.done(true)
+    })
+  }
 }

@@ -12,7 +12,12 @@ import at.happywetter.boinc.web.boincclient.BoincClient
 object DataModelConverter {
   import scala.language.implicitConversions
 
-  implicit def resultConverter(data: List[Result])(implicit boinc: BoincClient): List[WuDataTableModel.WuTableRow] = data.map(WuDataTableModel.convert)
-  implicit def projectConverter(data: List[Project])(implicit boinc: BoincClient): List[ProjectDataTableModel.ProjectTableRow] = data.map(ProjectDataTableModel.convert)
+  implicit def resultConverter
+  (data: List[Result])(implicit boinc: BoincClient): List[WuDataTableModel.WuTableRow] =
+    data.map(WuDataTableModel.convert)
+
+  implicit def projectConverter
+  (data: List[Project])(implicit boinc: BoincClient): List[ProjectDataTableModel.ProjectTableRow] =
+    data.map(ProjectDataTableModel.convert)
 
 }

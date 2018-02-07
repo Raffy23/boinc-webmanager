@@ -4,7 +4,7 @@ import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
-import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincTaskLayout}
+import at.happywetter.boinc.web.pages.boinc.{BoincMainHostLayout, BoincProjectLayout, BoincTaskLayout}
 import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
@@ -69,6 +69,7 @@ object Main {
     AppRouter.addRoute(BoincClientLocation, s"${BoincClientLocation.link}/:client", new BoincMainHostLayout)
     addBoincRoute(new BoincMainHostLayout)
     addBoincRoute(new BoincTaskLayout)
+    addBoincRoute(new BoincProjectLayout)
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {
