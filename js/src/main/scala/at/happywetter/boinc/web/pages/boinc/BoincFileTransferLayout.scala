@@ -1,15 +1,12 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.FileTransfer
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, FetchResponseException}
+import at.happywetter.boinc.web.boincclient.BoincFormater
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 
-import scala.scalajs.js
 import scala.util.Try
 import scala.xml.Elem
 
@@ -19,43 +16,45 @@ import scala.xml.Elem
   * @author Raphael
   * @version 30.08.2017
   */
-class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
-
-  override def onRender(client: BoincClient): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    client.getFileTransfer.map(transfers => {
-      root.appendChild(
-        div(id := "file_transfer",
-          h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-exchange"), "file_transfer_header".localize),
-          table(TableTheme.table,
-            thead(
-              tr(
-                th("table_project".localize), th("table_task".localize), th("table_transfer".localize),
-                th("table_speed".localize), th("table_transfer_time".localize), th("table_status".localize)
-              )
-            ),
-            tbody(
-              transfers.map(transfer => {
-                tr(
-                  td(transfer.projectName),
-                  td(transfer.name),
-                  td(BoincFormater.convertSize(transfer.fileXfer.bytesXfered)),
-                  td(BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"),
-                  td(BoincFormater.convertTime(transfer.xfer.timeSoFar)),
-                  td(buildStatusField(transfer))
-                )
-              })
-            )
-          )
-        ).render
-      )
-    }).recover(ErrorDialogUtil.showDialog)
-  }
+class BoincFileTransferLayout extends BoincClientLayout {
 
   override val path = "transfers"
+
+  private val data = Var(List.empty[FileTransfer])
+
+  override def render: Elem = {
+    boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
+
+    <div id="file_transfer">
+      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-exchange"></i>
+        {"file_transfer_header".localize}
+      </h3>
+      <table class={TableTheme.table.htmlClass}>
+        <thead>
+          <tr>
+            <th>{"table_project".localize}</th><th>{"table_task".localize}</th>
+            <th>{"table_transfer".localize}</th> <th>{"table_speed".localize}</th>
+            <th>{"table_transfer_time".localize}</th> <th>{"table_status".localize}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            data.map(_.map(transfer => {
+              <tr>
+                <td>{transfer.projectName}</td>
+                <td>{transfer.name}</td>
+                <td>{BoincFormater.convertSize(transfer.fileXfer.bytesXfered)}</td>
+                <td>{BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"}</td>
+                <td>{BoincFormater.convertTime(transfer.xfer.timeSoFar}</td>
+                <td>{buildStatusField(transfer)}</td>
+              </tr>
+            }))
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 
   def buildStatusField(transfer: FileTransfer): String = {
     val builder = new StringBuilder()
@@ -85,5 +84,4 @@ class BoincFileTransferLayout(params: js.Dictionary[String]) extends BoincPageLa
     builder.toString()
   }
 
-  override def render: Elem = {<div>TRANSFER</div>}
 }
