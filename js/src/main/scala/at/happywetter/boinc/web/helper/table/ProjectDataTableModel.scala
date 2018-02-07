@@ -40,7 +40,7 @@ object ProjectDataTableModel {
     
     override val columns: List[DataTable.TableColumn] = List(
       new TableColumn(Var(
-        <a href={project.data.url} onclick={AppRouter.openExternal} class={BoincProjectLayout.Style.link}>
+        <a href={project.data.url} onclick={AppRouter.openExternal} class={BoincProjectLayout.Style.link.htmlClass}>
           {updateCache(project.data)}
         </a>
       ), this) {

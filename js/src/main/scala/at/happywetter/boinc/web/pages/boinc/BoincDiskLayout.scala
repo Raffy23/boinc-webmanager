@@ -24,6 +24,7 @@ import scala.xml.Elem
   * @version 30.08.2017
   */
 class BoincDiskLayout extends BoincClientLayout {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "disk"
 

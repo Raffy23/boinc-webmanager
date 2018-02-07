@@ -17,6 +17,7 @@ import scala.xml.Elem
   * @version 30.08.2017
   */
 class BoincFileTransferLayout extends BoincClientLayout {
+  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "transfers"
 
@@ -46,7 +47,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
                 <td>{transfer.name}</td>
                 <td>{BoincFormater.convertSize(transfer.fileXfer.bytesXfered)}</td>
                 <td>{BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"}</td>
-                <td>{BoincFormater.convertTime(transfer.xfer.timeSoFar}</td>
+                <td>{BoincFormater.convertTime(transfer.xfer.timeSoFar)}</td>
                 <td>{buildStatusField(transfer)}</td>
               </tr>
             }))

@@ -81,16 +81,16 @@ class BoincProjectLayout extends BoincClientLayout {
     boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
 
     <div id="projects">
-      <h2 class={BoincClientLayout.Style.pageHeader}>
+      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
         <i class="fa fa-tag"></i>
         {"project_header".localize}
       </h2>
 
-      <div class={Style.floatingHeadbar}>
+      <div class={Style.floatingHeadbar.htmlClass}>
         {
           new Tooltip(
             Var("project_new_tooltip".localize),
-            <a href="#add-project" class={Style.floatingHeadbarButton} onclick={jsProjectAddAction}>
+            <a href="#add-project" class={Style.floatingHeadbarButton.htmlClass} onclick={jsProjectAddAction}>
               <i class="fa fa-plus-square"></i>
             </a>
           ).toXML
