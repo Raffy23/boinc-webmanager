@@ -1,15 +1,14 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
-import at.happywetter.boinc.web.boincclient.{BoincClient, FetchResponseException}
 import at.happywetter.boinc.web.chartjs._
+import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout.Style
-import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.raw.{HTMLCanvasElement, HTMLInputElement}
 import org.scalajs.dom.{CanvasRenderingContext2D, Event}
@@ -19,8 +18,10 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.JSConverters._
 import scala.xml.Elem
-import scalacss.internal.mutable.StyleSheet
 import scalacss.ProdDefaults._
+import scalacss.internal.mutable.StyleSheet
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 
@@ -57,8 +58,9 @@ object BoincStatisticsLayout {
   }
 }
 
-class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
+class BoincStatisticsLayout extends BoincClientLayout {
 
+  override val path = "statistics"
   private val DAY = 24*60*60
 
   private sealed trait State
@@ -68,7 +70,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
   private case object HOST_AVG extends State
 
 
-  private var statData: Statistics = _
+  private var statData: Var[Statistics] = Var(Statistics(Map.empty))
   private val projectNameCache = new mutable.HashMap[String, String]()
   private val projectUrlCache = new mutable.HashMap[String, String]()
   private val projectColors = new mutable.HashMap[String, String]()
@@ -76,91 +78,110 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
   private var currentDataSet: State = HOST_AVG
 
 
-  override def onRender(client: BoincClient): Unit = {
+  override def already(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
 
-    client.getStatistics.map(stats => {
-      this.statData = stats
+    boinc.getStatistics
+      .map(processData)
+      .recover(ErrorDialogUtil.showDialog)
+  }
 
+  override def after(): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-      ProjectNameCache.getAll(stats.stats.keys.toList).foreach( projectNameData => {
-        projectNameData.foreach{ case (url, nameOpt) => {
-          projectNameCache += ((url, nameOpt.getOrElse(url)))
-          projectUrlCache += ((nameOpt.getOrElse(url), url))
-        }}
-        projectNameData.map(_._1).zip(ChartColors.stream).foreach(projectColors.+=)
+    boinc.getStatistics
+      .map(processData)
+      .map(_ => buildChart())
+      .map(_ => toggleActiveBtnClass(currentDataSet))
+      .recover(ErrorDialogUtil.showDialog)
+  }
 
-        root.appendChild(
-          div( id := "boinc_statistics",
-            h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-area-chart"), "statistics_header".localize),
-            div( style := "display:inline-block;width:400px",
-              div(style := "padding-bottom:14px;border-bottom:1px #AAA solid;",
-                b("boinc_statistics_projects".localize)
-              ),
-              ul(
-                stats.stats.map{ case (project, data) =>
-                  li(
-                    label( style := (if(data.size <= 2) "color:gray" else ""),
-                      input(`type` := "checkbox", value := project, onclick := checkBoxOnClickFunction),
-                      projectNameCache(project)
-                    )
-                  )
-                }.toList
-              )
-            ),
-            div( style := "display:inline-block;width:calc(100% - 490px); vertical-align: top;",
-              div( style := "padding-bottom:14px;text-align:right;border-bottom:1px #AAA solid;",
-                b("table_credits".localize, style := "float:left"),
-                a("user_total_credit".localize, Style.button, style := "border-left: 1px #AAA solid",
-                  onclick := { (event: Event) => { event.preventDefault(); renderChartData(USER_TOTAL)} } ,
-                  href := "#user_total", id := "user_total"),
-                a("user_avg_credit".localize, Style.button,
-                  onclick := { (event: Event) => { event.preventDefault(); renderChartData(USER_AVG)} },
-                  href := "#user_avg", id := "user_avg"),
-                a("host_total_credit".localize, Style.button,
-                  onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_TOTAL)} },
-                  href := "#host_total", id := "host_total"),
-                a("host_avg_credit".localize, Style.button, Style.active, 
-                  onclick := { (event: Event) => { event.preventDefault(); renderChartData(HOST_AVG)} },
-                  href := "#host_avg", id := "host_avg"),
-              ),
-              canvas(
-                width := "100%",
-                height := "600px",
-                id := "chart-area",
-                style := "margin-top:12px"
-              )
-            )
-          ).render
-        )
+  override def render: Elem = {
+    <div id="boinc_statistics">
+      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-area-chart"></i>
+        {"statistics_header".localize}
+      </h3>
 
-        val context =
-          dom.document.getElementById("chart-area")
-            .asInstanceOf[HTMLCanvasElement]
-            .getContext("2d")
-            .asInstanceOf[CanvasRenderingContext2D]
-
-        this.chart = new ChartJS(context, new ChartConfig {
-          override val data: ChartData = new ChartData {
-            override val datasets: js.Array[Dataset] = new js.Array(0)
+      <div style="display:inline-block;width:400px">
+        <div style="padding-bottom:14px;border-bottom:1px #AAA solid">
+          <b>{"boinc_statistics_projects".localize}</b>
+        </div>
+        <ul>
+          {
+            statData.map(stats => stats.stats.map { case (project, data) =>
+              <li>
+                <label style={if(data.lengthCompare(2) <= 0) Some("color:gray") else None}>
+                  <input type="checkbox" value={project} onclick={jsCheckBoxOnClickFunction}>
+                    {projectNameCache(project)}
+                  </input>
+                </label>
+              </li>
+            }).map(_.toList)
           }
-          override val `type`: String = "line"
-          override val options: ChartOptions = new ChartOptions {
-            tooltips.display = false
-          }
-        })
+        </ul>
+      </div>
+      <div style="display:inline-block;width:calc(100% - 490px);vertical-align:top">
+        <div style="padding-bottom:14px;text-align:right;border-bottom:1px #AAA solid">
+          <b style="float:left">{"table_credits".localize}</b>
+          <a href="#user_total" class={Style.button.htmlClass} style="border-left: 1px #AAA solid" onclick={jsRenderChart(USER_TOTAL)}>
+            {"user_total_credit".localize}
+          </a>
+          <a href="#user_avg" class={Style.button.htmlClass} onclick={jsRenderChart(USER_AVG)}>
+            {"user_avg_credit".localize}
+          </a>
+          <a href="host_total" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_TOTAL)}>
+            {"host_total_credit".localize}
+          </a>
+          <a href="host_avg" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_AVG)}>
+            {"host_avg_credit".localize}
+          </a>
+        </div>
+        <canvas width="100%" height="600px" id="chart-area" style="margin-top:12px">
+        </canvas>
+      </div>
+    </div>
+  }
 
-        toggleActiveBtnClass(currentDataSet)
-      })
-    }).recover(ErrorDialogUtil.showDialog)
+  private def jsRenderChart(state: State): (Event) => Unit = (event) => {
+    event.preventDefault()
+    renderChartData(state)
+  }
+
+  private def processData(stats: Statistics): Unit = {
+    ProjectNameCache.getAll(stats.stats.keys.toList).foreach(projectNameData => {
+      projectNameData.foreach { case (url, nameOpt) =>
+        projectNameCache += ((url, nameOpt.getOrElse(url)))
+        projectUrlCache += ((nameOpt.getOrElse(url), url))
+      }
+
+      projectNameData.map(_._1).zip(ChartColors.stream).foreach(projectColors.+=)
+    })
+
+    this.statData := stats
+  }
+
+  private def buildChart(): Unit = {
+    val context =
+      dom.document.getElementById("chart-area")
+        .asInstanceOf[HTMLCanvasElement]
+        .getContext("2d")
+        .asInstanceOf[CanvasRenderingContext2D]
+
+    this.chart = new ChartJS(context, new ChartConfig {
+      override val data: ChartData = new ChartData {
+        override val datasets: js.Array[Dataset] = new js.Array(0)
+      }
+      override val `type`: String = "line"
+      override val options: ChartOptions = new ChartOptions {
+        tooltips.display = false
+      }
+    })
   }
 
 
-
   private def getMinMax(dataset: List[DailyStatistic] = List()): (Double, Double) = {
-    val globalDataset = chart.data.datasets.toList.map(p => projectUrlCache(p.label)).flatMap(statData.stats(_))
+    val globalDataset = chart.data.datasets.toList.map(p => projectUrlCache(p.label)).flatMap(statData.now.stats(_))
     val data = globalDataset ++ dataset
     if (data.isEmpty)
       return (new Date().getTime(), new Date().getTime())
@@ -187,14 +208,14 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
   }
 
   private def reRenderOldDataset(dataset: Dataset, min: Double, max: Double): Unit = {
-    dataset.data = transformDataset(statData.stats(projectUrlCache(dataset.label)), min, max)
+    dataset.data = transformDataset(statData.now.stats(projectUrlCache(dataset.label)), min, max)
       .map{ case (_, data) => getData(data) }.toJSArray.asInstanceOf[js.Array[js.Any]]
   }
 
   def handleProject(project: String, state: Boolean): Unit = {
     if (state) {
-      val minMax = getMinMax(statData.stats(project))
-      val tData = transformDataset(statData.stats(project), minMax._1, minMax._2)
+      val minMax = getMinMax(statData.now.stats(project))
+      val tData = transformDataset(statData.now.stats(project), minMax._1, minMax._2)
 
       chart.data.labels = tData.map{ case (time, _) => new Date(time*1000).toLocaleDateString() }.toJSArray
 
@@ -223,7 +244,7 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
     this.chart.update()
   }
 
-  private val checkBoxOnClickFunction: js.Function1[Event, Unit] = (event) => {
+  private val jsCheckBoxOnClickFunction: (Event) => Unit = (event) => {
     val project = event.target.asInstanceOf[HTMLInputElement].value
     val state   = event.target.asInstanceOf[HTMLInputElement].checked
 
@@ -254,8 +275,4 @@ class BoincStatisticsLayout(params: js.Dictionary[String]) extends BoincPageLayo
       case HOST_AVG => dom.document.getElementById("host_avg").classList.add(Style.active.htmlClass)
     }
   }
-
-  override val path = "statistics"
-
-  override def render: Elem = {<div>STAISTICS</div>}
 }

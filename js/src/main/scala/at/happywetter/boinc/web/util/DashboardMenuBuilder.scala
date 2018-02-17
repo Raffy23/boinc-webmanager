@@ -17,7 +17,7 @@ object DashboardMenuBuilder {
   private var rendered: Boolean = false
 
   def renderClients(clients: List[String]): Unit = {
-    if (rendered) return;
+    if (rendered) return
     else rendered = true
 
     DashboardMenu.removeMenuReferences("boinc-client-entry")

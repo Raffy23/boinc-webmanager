@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.helper
 
-import scala.xml.{Node, Text}
+import scala.xml.{Node, Text, XmlAttributeEmbeddable}
+import scalacss.internal.StyleA
 
 /**
   * Created by: 
@@ -14,4 +15,7 @@ object XMLHelper {
 
   implicit def toXMLTextNode(str: String): Node = Text(str)
 
+  implicit class RichTextXMLNode(str: String) {
+    def toXML: Node = Text(str)
+  }
 }

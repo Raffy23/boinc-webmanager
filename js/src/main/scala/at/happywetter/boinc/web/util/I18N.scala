@@ -2,8 +2,10 @@ package at.happywetter.boinc.web.util
 
 import at.happywetter.boinc.shared.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
+import at.happywetter.boinc.web.helper.XMLHelper
 import org.scalajs.dom
 
+import scala.xml.{Node, Text}
 import scalatags.JsDom.all.Modifier
 
 /**
@@ -49,16 +51,13 @@ object I18N {
   }
 
   implicit class HtmlString(str: String) {
-    import scalatags.JsDom.all._
+    import at.happywetter.boinc.web.helper.XMLHelper._
 
-
-    def toTags: List[Modifier] =
+    def toTags: Seq[Node] =
       if (str.contains("\n")) {
-        val data = str.split("\n")
-
-        List(data(0), br(), data(1))
+        str.split("\n").flatMap(data => Seq(data.toXML, <br/>))
       } else {
-        List(str)
+        Seq(str)
       }
   }
 
