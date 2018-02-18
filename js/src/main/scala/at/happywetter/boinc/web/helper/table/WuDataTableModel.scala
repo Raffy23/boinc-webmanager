@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.pages.BoincClientLayout
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}

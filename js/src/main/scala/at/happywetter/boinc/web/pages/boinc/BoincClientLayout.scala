@@ -1,13 +1,17 @@
-package at.happywetter.boinc.web.pages
+package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.component.{BoincTopNavigation, DashboardMenu}
+import at.happywetter.boinc.web.pages.{Layout, PageLayout}
+import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.component.topnav.BoincTopNavigation
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
+
+import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -24,8 +28,11 @@ abstract class BoincClientLayout extends Layout {
     boincClientName = params.get("clients").get
     boinc = ClientManager.clients(boincClientName)
 
+    PageLayout.showMenu()
+
     BoincTopNavigation.clientName := boincClientName
     BoincTopNavigation.render(path)
+    PageLayout.nav := BoincTopNavigation.component.now
 
     DashboardMenu.selectMenuItemByContent(boincClientName)
   }

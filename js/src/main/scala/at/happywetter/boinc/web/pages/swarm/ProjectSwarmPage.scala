@@ -3,8 +3,7 @@ package at.happywetter.boinc.web.pages.swarm
 import at.happywetter.boinc.shared.{BoincRPC, Project}
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.BoincClientLayout
-import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout
+import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache

@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.pages.BoincClientLayout
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement}

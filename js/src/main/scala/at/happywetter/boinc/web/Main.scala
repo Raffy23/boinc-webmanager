@@ -5,6 +5,7 @@ import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
@@ -54,15 +55,12 @@ object Main {
     NProgress.done(true)
   }
 
-  private def addBoincRoute(layout: Layout): Unit =
-    AppRouter.addRoute(BoincClientLocation, s"${BoincClientLocation.link}/:client/${layout.path}", layout)
-
   def initRouter(): Unit = {
     AppRouter.addRoute(LoginPageLocation, "/view/login", new LoginPage(AuthClient.validate))
     AppRouter.addRoute(DashboardLocation, "/view/dashboard", Dashboard)
     AppRouter.addRoute(SettingsLocation, "/view/settings", SettingsPage)
-    AppRouter.addRoute(SwarmControlLocation, "/view/swarm", SwarmControlPage)
-    AppRouter.addRoute(SwarmControlLocation, "/view/swarm/:action", SwarmControlPage)
+    AppRouter.addRoute(SwarmControlLocation, "/view/swarm", new BoincSwarmPage)
+    AppRouter.addRoute(SwarmControlLocation, "/view/swarm/boinc", new BoincSwarmPage)
     AppRouter.addRoute(HardwareLocation, "/view/hardware", HardwarePage)
 
     // Catch default path: 
@@ -72,6 +70,12 @@ object Main {
     addBoincRoute(new BoincProjectLayout)
     addBoincRoute(new BoincFileTransferLayout)
     addBoincRoute(new BoincDiskLayout)
+    addBoincRoute(new BoincMessageLayout)
+    addBoincRoute(new BoincGlobalPrefsLayout)
+    addBoincRoute(new BoincStatisticsLayout)
+
+
+
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {
@@ -81,5 +85,10 @@ object Main {
 
     AppRouter.router.updatePageLinks()
   }
+
+  private def addRoute(root: String, layout: Layout): Unit =
+    AppRouter.addRoute(BoincClientLocation, s"$root/:client/${layout.path}", layout)
+
+  private def addBoincRoute(layout: Layout): Unit = addRoute(BoincClientLocation.link, layout)
 
 }

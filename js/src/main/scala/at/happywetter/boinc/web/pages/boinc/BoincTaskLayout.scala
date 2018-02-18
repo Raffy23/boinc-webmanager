@@ -3,7 +3,6 @@ import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.WuDataTableModel.WuTableRow
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.ErrorDialogUtil

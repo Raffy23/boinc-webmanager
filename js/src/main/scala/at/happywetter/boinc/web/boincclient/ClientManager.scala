@@ -74,7 +74,7 @@ object ClientManager {
         }
 
       }).recover{ case _: Exception => queryClientsFromServer() }.get
-    }).map(_.sortWith(_ < _))
+    }).map(_.sorted)
   }
 
   def readClients(): Future[List[String]] = {

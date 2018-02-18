@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
-import at.happywetter.boinc.web.pages.BoincClientLayout
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 

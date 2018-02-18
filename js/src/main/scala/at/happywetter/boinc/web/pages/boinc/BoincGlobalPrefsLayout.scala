@@ -5,7 +5,6 @@ import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.FloatingMenu
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincGlobalPrefsLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage

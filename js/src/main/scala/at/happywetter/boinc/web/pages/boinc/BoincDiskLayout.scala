@@ -4,7 +4,6 @@ import at.happywetter.boinc.shared.DiskUsage
 import at.happywetter.boinc.web.boincclient.BoincFormater
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}

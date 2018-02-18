@@ -1,23 +1,26 @@
 package at.happywetter.boinc.web.pages.swarm
 
 import at.happywetter.boinc.shared.BoincRPC
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
+import at.happywetter.boinc.shared.BoincRPC.Modes
+import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.Tooltip
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage.Style
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
+import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scala.xml.Elem
+import scala.xml.{Elem, Node, UnprefixedAttribute}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
-import scalatags.JsDom
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.pages.component.Tooltip
+import at.happywetter.boinc.web.helper.XMLHelper._
 
 /**
   * Created by: 
@@ -25,9 +28,10 @@ import scalatags.JsDom
   * @author Raphael
   * @version 13.09.2017
   */
-object BoincSwarmPage extends SwarmSubPage {
+object BoincSwarmPage {
 
   object Style extends StyleSheet.Inline {
+
     import dsl._
 
     import scala.language.postfixOps
@@ -62,209 +66,137 @@ object BoincSwarmPage extends SwarmSubPage {
     )
   }
 
+}
 
-  override def header = "Boinc"
+class BoincSwarmPage extends SwarmPageLayout {
 
-  override def render: Elem = {<div>SWARM_BOINC_PAGE</div>}
-  def render1: JsDom.TypedTag[HTMLElement] ={
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
+  override val header = "Boinc"
 
-    val root = div(id := "swarm-boinc-content")
+  override val path: String = "boinc"
 
-    ClientManager.readClients().map(clients => {
-      dom.document.getElementById("swarm-boinc-content").appendChild(
-       table(TableTheme.table, id := "swarm-host-choose-table", style := "width:auto",
-         thead(
-           tr(BoincClientLayout.Style.in_text_icon,
-             th(a(Style.masterCheckbox,
-               i(`class` := "fa fa-check-square-o"), href := "#select-all", onclick := selectAllListener),
-               "table_host".localize),
-             th(i(`class` := "fa fa-tasks"), "table_status_cpu".localize),
-             th(i(`class` := "fa fa-television"), "table_status_gpu".localize),
-             th(i(`class` := "fa fa-exchange"), "table_status_net".localize)
-           )
-         ),
-         tbody(
-          clients.map(client => {
-            val boinc = new BoincClient(client)
-            boinc.getCCState.map(state => {
-              dom.document.getElementById(client + "-cpu").textContent = stateToText(state.taskMode)
-              dom.document.getElementById(client + "-gpu").textContent = stateToText(state.gpuMode)
-              dom.document.getElementById(client + "-net").textContent = stateToText(state.networkMode)
-            }).recover {
-              case _: FetchResponseException =>
-                val hField = dom.document.getElementById(client).asInstanceOf[HTMLElement]
-                val tooltip = new Tooltip("Offline", i(`class` := "fa fa-exclamation-triangle")).render()
-                tooltip.style = "float:right;color:#FF8181"
+  private case class ClientEntry(cpu: Int, gpu: Int, net: Int)
+  private val clients = Var(List.empty[(String, Future[ClientEntry])])
+  private var clientStatus = Map.empty[String, (Var[Int], Var[Int], Var[Int])]
 
-                hField.appendChild(tooltip)
-            }
 
-            tr(
-              td(id := client, input(Style.checkbox, `type` := "checkbox"), client),
-              td(id := client + "-cpu", Style.center),
-              td(id := client + "-gpu", Style.center),
-              td(id := client + "-net", Style.center)
-            )
-          })
-         )
-       ).render
-      )
+  override def already(): Unit = onRender()
 
-      renderControlTable()
-    })
-
-    root
-  }
-
-  /*
-  private def reRender(): Unit = {
-    dom.document.getElementById("swarm-boinc-content").innerHTML = ""
-    dom.document.getElementById("swarm-boinc-content").appendChild(render.render.firstChild)
-  }
-  */
-
-  private def renderControlTable(): Unit = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    dom.document.getElementById("swarm-boinc-content").appendChild(
-      div(
-        h4(BoincClientLayout.Style.h4_without_line, "swarm_boinc_net_state".localize),
-        table(TableTheme.table, style := "width:auto!important",
-          tbody(BoincClientLayout.Style.in_text_icon,
-            tr(
-              td(i(`class` := "fa fa-tasks"), "boinc_info_run_mode".localize),
-              td(a(Style.button, "always".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setRun(BoincRPC.Modes.Always).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setRun(BoincRPC.Modes.Auto).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "never".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setRun(BoincRPC.Modes.Never).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }}))
-            ),
-            tr(td(i(`class` := "fa fa-television"), "boinc_info_gpu_mode".localize),
-              td(a(Style.button, "always".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setGpu(BoincRPC.Modes.Always).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setGpu(BoincRPC.Modes.Auto).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "never".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setGpu(BoincRPC.Modes.Never).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }}))
-            ),
-            tr(td(i(`class` := "fa fa-exchange"), "boinc_info_network_mode".localize),
-              td(a(Style.button, "always".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setNetwork(BoincRPC.Modes.Always).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "auto".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setNetwork(BoincRPC.Modes.Auto).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }})),
-              td(a(Style.button, "never".localize, onclick := { (event: Event) => {
-                event.preventDefault()
-                NProgress.start()
-
-                Future.sequence(
-                  ClientManager.clients.values.map(client => {
-                    client.setNetwork(BoincRPC.Modes.Never).recover { case _: Exception => false }
-                  })
-                ).foreach(_ => {
-                  NProgress.done(true)
-                  //reRender()
-                })
-              }}))
-            )
-          )
+  override def onRender(): Unit = {
+      ClientManager
+      .getClients
+      .map(_.map(boinc =>
+        (boinc.hostname,
+          boinc
+            .getCCState
+            .map(state => ClientEntry(state.taskMode, state.gpuMode, state.networkMode)))
         )
-      ).render
-    )
+      ).foreach(data => {
+        clientStatus =
+        data.map { case (name, result) =>
+          (name, (result.map(_.cpu).toRx(-1), result.map(_.gpu).toRx(-1), result.map(_.net).toRx(-1)))
+        }.toMap
+
+        clients := data
+      })
   }
 
-  private val selectAllListener: js.Function1[Event, Unit] = (event) => {
+  override def renderChildView: Elem = {
+    <div>
+      <table class={TableTheme.table.htmlClass} id="swarm-host-choose-table" style="width:auto">
+        <thead>
+          <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+            <th>
+              <a class={Style.masterCheckbox.htmlClass} onclick={jsSelectAllListener}>
+                <i class="fa fa-check-square-o" href="#select-all"></i>
+                {"table_host".localize}
+              </a>
+            </th>
+            <th><i class="fa fa-tasks"></i>{"table_status_cpu".localize}</th>
+            <th><i class="fa fa-television"></i>{"table_status_gpu".localize}</th>
+            <th><i class="fa fa-exchange"></i>{"table_status_net".localize}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            clients.map(_.map(client => {
+                <td><input class={Style.checkbox.htmlClass} type="checkbox"></input>{injectErrorTooltip(client._1)}</td>
+                <td>{clientStatus(client._1)._1.map(_.toState)}</td>
+                <td>{clientStatus(client._1)._2.map(_.toState)}</td>
+                <td>{clientStatus(client._1)._3.map(_.toState)}</td>
+            }))
+          }
+        </tbody>
+      </table>
+
+      <h4 class={BoincClientLayout.Style.h4_without_line.htmlClass}>{"swarm_boinc_net_state".localize}</h4>
+      <table class={TableTheme.table.htmlClass} style="width:auto!important">
+        <tbody class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+          <tr>
+            <td><i class="fa fa-tasks"></i>{"boinc_info_run_mode".localize}</td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setRun, Modes.Always)}>{"always".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setRun, Modes.Auto)}>{"auto".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setRun, Modes.Never)}>{"never".localize}</a></td>
+          </tr>
+          <tr>
+            <td><i class="fa fa-television"></i>{"boinc_info_gpu_mode".localize}</td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setGpu, Modes.Always)}>{"always".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setGpu, Modes.Auto)}>{"auto".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setGpu, Modes.Never)}>{"never".localize}</a></td>
+          </tr>
+          <tr>
+            <td><i class="fa fa-exchange"></i>{"boinc_info_network_mode".localize}</td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setNetwork, Modes.Always)}>{"always".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setNetwork, Modes.Auto)}>{"auto".localize}</a></td>
+            <td><a class={Style.button.htmlClass} onclick={jsAction(_.setNetwork, Modes.Never)}>{"never".localize}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  }
+
+  private def injectErrorTooltip(name: String)(implicit client: (String, Future[ClientEntry])): Rx[Seq[Node]] = {
+    def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle"): Node = {
+      val tooltip = new Tooltip(
+        Var(label.localize),
+        <i class={`class`}></i>
+      ).toXML.asInstanceOf[Elem]
+
+      tooltip.copy(
+        attributes1 = UnprefixedAttribute("style", "float:right;color:#FF8181", tooltip.attributes1)
+      )
+    }
+
+    client._2
+      .map(_ => Seq(name.toXML))
+      .recover{ case _: Exception => Seq(name.toXML, buildTooltip(name)) }
+      .toRx(Seq(name.toXML)) //TODO: Maybe add Loading icon?
+  }
+
+  private def jsAction(func: (BoincClient) => (Modes.Value, Double) => Future[Boolean], mode: Modes.Value): (Event) => Unit = (event) => {
+    event.preventDefault()
+    NProgress.start()
+
+    Future.sequence(
+      ClientManager.clients.values.map(client => {
+        func(client)(mode, 0)
+          .map(ret => (client.hostname, ret))
+          .recover { case _: Exception => (client.hostname, false) }
+      })
+    ).foreach(results => {
+      results.foreach{ case (name, ret) if !ret =>
+        ClientManager.clients(name).getCCState
+          .foreach(state => {
+            clientStatus(name)._1 := state.taskMode
+            clientStatus(name)._2 := state.gpuMode
+            clientStatus(name)._3 := state.networkMode
+          }) //TODO: Error stuff!
+      }
+
+      NProgress.done(true)
+    })
+  }
+
+  private val jsSelectAllListener: (Event) => Unit = (event) => {
     event.preventDefault()
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
 
@@ -279,4 +211,9 @@ object BoincSwarmPage extends SwarmSubPage {
     case 4 => "restore".localize
     case a => a.toString
   }
+
+  private implicit class StateInteger(state: Int) {
+    def toState: String = stateToText(state)
+  }
+
 }

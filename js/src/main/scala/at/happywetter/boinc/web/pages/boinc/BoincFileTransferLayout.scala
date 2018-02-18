@@ -3,7 +3,6 @@ package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.FileTransfer
 import at.happywetter.boinc.web.boincclient.BoincFormater
 import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 

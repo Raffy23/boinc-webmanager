@@ -2,7 +2,9 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
@@ -13,7 +15,6 @@ import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
-import at.happywetter.boinc.web.helper.table.DataModelConverter._
 
 /**
   * Created by: 
@@ -52,7 +53,7 @@ object HardwarePage extends Layout {
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
 
-      DashboardMenu.selectByReference("hardware")
+      DashboardMenu.selectByMenuId("hardware")
       AppRouter.router.updatePageLinks()
     }).recover(ErrorDialogUtil.showDialog)
 

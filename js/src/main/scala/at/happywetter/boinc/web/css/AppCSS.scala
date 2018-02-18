@@ -4,7 +4,7 @@ import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component._
 import at.happywetter.boinc.web.pages.component.dialog.{BasicModalDialog, Dialog}
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
-import at.happywetter.boinc.web.pages.{BoincClientLayout, Dashboard, LoginPage, PageLayout}
+import at.happywetter.boinc.web.pages.{Dashboard, LoginPage, PageLayout}
 
 import scalacss.internal.mutable.GlobalRegistry
 

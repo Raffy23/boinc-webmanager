@@ -3,7 +3,6 @@ package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.{Message, Notice}
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincMessageLayout.Style
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.ErrorDialogUtil

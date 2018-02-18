@@ -5,8 +5,9 @@ import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.xml.Elem
+import scala.xml.{Elem, Node}
 import scalacss.ProdDefaults._
+import at.happywetter.boinc.web.helper.XMLHelper._
 
 /**
   * Created by: 
@@ -84,7 +85,7 @@ object PageLayout {
     )
   }
 
-  val nav: Var[Elem] = Var(<span></span>)
+  val nav: Var[Node] = Var(<span></span>)
 
   val hamburgerMenuAction: (Event) => Unit = (event) => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
@@ -122,5 +123,7 @@ object PageLayout {
     if (dom.window.outerWidth > 690) content.style.marginLeft = "20px"
     else content.style.marginLeft = "5px"
   }
+
+  def clearNav(): Unit = nav := "".toXML
 
 }

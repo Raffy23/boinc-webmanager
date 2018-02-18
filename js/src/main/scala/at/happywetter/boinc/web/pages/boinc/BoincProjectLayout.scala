@@ -4,7 +4,6 @@ import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.ProjectDataTableModel.ProjectTableRow
-import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincProjectLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}

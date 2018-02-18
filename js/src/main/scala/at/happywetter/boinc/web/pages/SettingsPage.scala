@@ -3,11 +3,12 @@ import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
+import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
 
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
@@ -71,7 +72,6 @@ object SettingsPage extends Layout {
   }
 
   override def before(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
     AuthClient.tryLogin.foreach {
       case true => done()
@@ -90,6 +90,6 @@ object SettingsPage extends Layout {
   }
 
   override def onRender(): Unit = {
-    DashboardMenu.selectByReference("settings")
+    DashboardMenu.selectByMenuId("settings")
   }
 }

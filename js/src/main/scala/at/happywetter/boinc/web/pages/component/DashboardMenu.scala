@@ -174,7 +174,7 @@ object DashboardMenu {
     me.setAttribute("class", Style.active.htmlClass)
   }
 
-  def selectByReference(reference: String): Unit = {
+  def selectByMenuId(reference: String): Unit = {
     val element = dom.document.querySelector(s"ul[id='dashboard-menu'] a[class='${Style.active.htmlClass}']")
     if( element != null)
       element.setAttribute("class", "")

@@ -6,6 +6,7 @@ import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
@@ -46,6 +47,7 @@ object Dashboard extends Layout {
   override def before(done: js.Function0[Unit]): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
+    PageLayout.clearNav()
     PageLayout.showMenu()
 
     AuthClient.tryLogin.foreach {
@@ -65,7 +67,7 @@ object Dashboard extends Layout {
       DashboardMenuBuilder.renderClients(clients)
       this.clients := clients
 
-      DashboardMenu.selectByReference("dashboard")
+      DashboardMenu.selectByMenuId("dashboard")
       AppRouter.router.updatePageLinks()
 
       Future.sequence(

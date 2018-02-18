@@ -22,7 +22,7 @@ object RichRx {
   }
 
   implicit class FutureRx[R](future: Future[R]) {
-    def toRx(default: R): Rx[R] = {
+    def toRx(default: R): Var[R] = {
       val rx = Var[R](default)
       future.foreach(async => rx := async)
 
