@@ -72,4 +72,18 @@ object BoincFormater {
     value
   }
 
+  object Implicits {
+
+    implicit class BoincFormatNumber(double: Double) {
+
+      def toSize: String = convertSize(double)
+      def toSpeed: String = convertSpeed(double)
+      def toSpeedValue(step: Int): Double = convertSpeedValue(double, step)
+      def toTime: String = convertTime(double)
+      def toDate: String = convertDate(double)
+
+    }
+
+  }
+
 }
