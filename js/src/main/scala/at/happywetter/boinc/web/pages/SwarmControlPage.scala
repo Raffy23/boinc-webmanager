@@ -2,22 +2,21 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.TopNavigation
 import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.BoincClientLayout.Style
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage, SwarmSubPage}
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.AppRouter.{LoginPageLocation, SwarmControlLocation}
-import at.happywetter.boinc.web.routes.{AppRouter, Hook, LayoutManager}
 import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLElement
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -29,8 +28,6 @@ object SwarmControlPage extends Layout {
   override val path: String = "swarm"
 
   override def before(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
     AuthClient.tryLogin.foreach {
       case true => done()
       case false => AppRouter.navigate(LoginPageLocation)
@@ -80,7 +77,7 @@ object SwarmControlPage extends Layout {
       AppRouter.router.updatePageLinks()
     }).recover {
       case _: FetchResponseException =>
-        import scalatags.JsDom.all._
+
         new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
           .renderToBody().show()
     }

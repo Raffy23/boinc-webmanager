@@ -21,7 +21,7 @@ class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int 
     LanguageDataProvider.available.find{ case (c,_,_) => c == Locale.current}.get
   )
 
-  val component = new DropdownMenu(
+  val component: Elem = new DropdownMenu(
     <span>
       {"login_lang_chooser".localize}
       {

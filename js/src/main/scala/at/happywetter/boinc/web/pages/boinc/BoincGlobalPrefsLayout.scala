@@ -70,13 +70,13 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
   override def already(): Unit = onRender()
 
   override def render: Elem = {
-    def v[T](x: (GlobalPrefsOverride) => T): Rx[T] = globalPrefsOverride.map(x)
-    def check(x: (GlobalPrefsOverride) => Boolean): Boolean = x(globalPrefsOverride.now)
+    def v[T](x: (GlobalPrefsOverride) => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
+    def b[T](x: (GlobalPrefsOverride) => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
 
 
     <div id="global_prefs" class={Style.root_pane.htmlClass}>
       <div class={Seq(FloatingMenu.root.htmlClass, BoincClientLayout.Style.in_text_icon).mkString(" ")}>
-        <a class={BoincSwarmPage.Style.button} onclick={jsOnSubmitListener}>
+        <a class={BoincSwarmPage.Style.button.htmlClass} onclick={jsOnSubmitListener}>
           <i class="fa fa-check"></i>
         </a>
       </div>
@@ -99,17 +99,17 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
 
       <h4 class={Style.h4.htmlClass}>{"global_prefs_pause".localize}</h4>
       <label>
-        <input type="checkbox" checked={v(!_.runOnBatteries)} id="run_on_batteries"></input>
+        <input type="checkbox" checked={b(!_.runOnBatteries)} id="run_on_batteries"></input>
         {"global_prefs_on_batteries".localize}
       </label>
       <br/>
       <label>
-        <input type="checkbox" checked={v(!_.runIfUserActive)} id="run_if_active"></input>
+        <input type="checkbox" checked={b(!_.runIfUserActive)} id="run_if_active"></input>
         {"global_prefs_cpu_active".localize}
       </label>
       <br/>
       <label>
-        <input type="checkbox" checked={v(!_.runGPUIfUserActive)} id="run_gpu_if_active"></input>
+        <input type="checkbox" checked={b(!_.runGPUIfUserActive)} id="run_gpu_if_active"></input>
         {"global_prefs_gpu_active".localize}
       </label>
       <br/>
@@ -139,12 +139,12 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <input class={Style.input.htmlClass} id="maxBytesPeriod" value={v(_.dailyXFerPeriodDays)}></input>
       <br/>
       <label>
-        <input type="checkbox" checked={v(!_.runGPUIfUserActive)} id="run_gpu_if_active"></input>
+        <input type="checkbox" checked={b(!_.runGPUIfUserActive)} id="run_gpu_if_active"></input>
         {"global_prefs_gpu_active".localize}
       </label>
       <br/>
       <label>
-        <input type="checkbox" checked={v(_.dontVerifyImages)} id="dont_verify_images"></input>
+        <input type="checkbox" checked={b(_.dontVerifyImages)} id="dont_verify_images"></input>
         {"global_prefs_dont_verify_images".localize}
       </label>
       <br/>
@@ -156,10 +156,8 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <label for="max_disk_usage">{"global_prefs_max_disk_usage".localize}</label>
       <input class={Style.input.htmlClass} id="max_disk_usage" value={v(_.diskMaxUsedGB)}></input>
       <br/>
-      <label for="max_disk_usage_pct">
-        <input class={Style.input.htmlClass} id="max_disk_usage_pct" value={v(_.diskMaxUsedPct)}></input>
-        {"global_prefs_max_disk_usage_pct".localize}
-      </label>
+      <label for="max_disk_usage_pct">{"global_prefs_max_disk_usage_pct".localize}</label>
+      <input class={Style.input.htmlClass} id="max_disk_usage_pct" value={v(_.diskMaxUsedPct)}></input>
       <br/>
 
       <h4 class={Style.h4.htmlClass}>{"global_prefs_memory".localize}</h4>
@@ -170,7 +168,7 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <input class={Style.input.htmlClass} id="ram_used_idle" value={v(_.ramUsedIdlePct)}></input>
       <br/>
       <label for="max_disk_usage_pct">
-        <input class={Style.input.htmlClass} id="leave_apps_in_memory" value={v(_.leaveAppsInMemory)}></input>
+        <input type="checkbox" id="leave_apps_in_memory" value={b(_.leaveAppsInMemory)}></input>
         {"global_prefs_leave_apps_in_memory".localize}
       </label>
       <br/>

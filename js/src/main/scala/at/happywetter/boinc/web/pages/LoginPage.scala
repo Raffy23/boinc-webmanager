@@ -1,9 +1,10 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.LoginPage.Style
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
@@ -19,7 +20,6 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 import scalacss.ProdDefaults._
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -125,7 +125,6 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
   }
 
   private val loginAction: (Event) => Unit = (event) => {
-    import scalatags.JsDom.all._
 
     NProgress.start()
     val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
