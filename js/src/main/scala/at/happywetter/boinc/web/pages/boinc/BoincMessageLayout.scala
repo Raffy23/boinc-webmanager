@@ -1,20 +1,19 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, FetchResponseException}
+import at.happywetter.boinc.shared.{Message, Notice}
+import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.pages.BoincClientLayout
 import at.happywetter.boinc.web.pages.boinc.BoincMessageLayout.Style
-import at.happywetter.boinc.web.pages.component.BoincPageLayout
-import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
 import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
@@ -82,119 +81,129 @@ object BoincMessageLayout {
 }
 
 
-class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(_params = params) {
-
-  override def onRender(client: BoincClient): Unit = {
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
-    NProgress.start()
-
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    root.appendChild(
-      div(id := "messages",
-        div(FloatingMenu.root,
-          a("noties_menu_entry".localize, FloatingMenu.active, onclick := { (event: Event) => {
-            event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
-            })
-            event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
-
-            dom.window.document.getElementById("client-notices").asInstanceOf[HTMLElement].style="display:block"
-            dom.window.document.getElementById("client-messages").asInstanceOf[HTMLElement].style="display:none"
-          }}),
-          a("message_menu_entry".localize, onclick := { (event: Event) => {
-            event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
-            })
-            event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
-
-            dom.window.document.getElementById("client-notices").asInstanceOf[HTMLElement].style="display:none"
-            dom.window.document.getElementById("client-messages").asInstanceOf[HTMLElement].style="display:block"
-          }})
-        ),
-        h3(BoincClientLayout.Style.pageHeader, i(`class` := "fa fa-envelope-o"), "messages_header".localize),
-        div(id := "client-notices"),
-        div(id := "client-messages", style := "display:none")
-      ).render
-    )
-
-    renderNotices(client)
-    renderMessages(client)
-    NProgress.done(true)
-  }
-
-  private def renderNotices(client: BoincClient): Unit = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    //TODO: save seqno and notices into app-cache
-    client.getNotices().map(notices => {
-      dom.document.getElementById("client-notices").appendChild(
-        ul(Style.noticeList,
-          notices.reverse.map(notice =>
-            li(
-              div(
-                if (notice.category == "client")
-                  h4(if (notice.project.nonEmpty) notice.project + ": " else "", "notice_from_boinc".localize)
-                else
-                  h4(notice.title)
-                ,
-                p(convertContent(notice.description)),
-                small(BoincFormater.convertDate(notice.createTime),
-                  if (notice.link.nonEmpty)
-                    a("read_more_link".localize, onclick := AppRouter.openExternal, href := notice.link)
-                  else span()
-                )
-              )
-            )
-          )
-        ).render
-      )
-    }).recover {
-      case _: FetchResponseException =>
-        import scalatags.JsDom.all._
-        new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-          .renderToBody().show()
-    }
-  }
-
-
-  private def renderMessages(client: BoincClient): Unit = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-    //TODO: save seqno and messages to app-cache
-    client.getMessages().map(messages => {
-      dom.document.getElementById("client-messages").appendChild(
-          div(
-            table(TableTheme.table,
-              thead(
-                tr(
-                  th("table_project".localize),
-                  //th("table_priority".localize),
-                  th("table_time".localize),
-                  th("table_msg_content".localize)
-                )
-              ),
-              tbody(
-                messages.map(msg => {
-                  tr(Style.tableRow, data("prio") := msg.priority,
-                    td(msg.project),
-                    //td(Style.dateCol, priToStr(msg.priority)),
-                    td(Style.dateCol, BoincFormater.convertDate(msg.time)),
-                    td(msg.msg)
-                  )
-                })
-              )
-            )
-        ).render
-      )
-    }).recover(ErrorDialogUtil.showDialog)
-  }
-
+class BoincMessageLayout extends BoincClientLayout {
 
   override val path: String = "messages"
+
+  private val messages = Var(List.empty[Message])
+  private val notices = Var(List.empty[Notice])
+
+
+  override def already(): Unit = onRender()
+
+  override def onRender(): Unit = {
+    NProgress.start()
+
+    boinc
+      .getMessages()
+      .map(msg => messages := msg)
+      .flatMap(_ =>
+        boinc
+          .getNotices()
+          .map(notice => notices := notice)
+      )
+      .recover(ErrorDialogUtil.showDialog)
+      .map(_ => NProgress.done(true))
+  }
+
+  override def render: Elem = {
+    import at.happywetter.boinc.web.hacks.NodeListConverter._
+
+    <div id="messages">
+      <div class={FloatingMenu.root.htmlClass}>
+        <a class={FloatingMenu.active.htmlClass} onclick={ (event: Event) => {
+          event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
+            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+          })
+          event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
+
+          dom.window.document.getElementById("client-notices").asInstanceOf[HTMLElement].style="display:block"
+          dom.window.document.getElementById("client-messages").asInstanceOf[HTMLElement].style="display:none"
+        }}>
+          {"noties_menu_entry".localize}
+        </a>
+        <a class={FloatingMenu.active.htmlClass} onclick={ (event: Event) => {
+          event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
+            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+          })
+          event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
+
+          dom.window.document.getElementById("client-notices").asInstanceOf[HTMLElement].style="display:none"
+          dom.window.document.getElementById("client-messages").asInstanceOf[HTMLElement].style="display:block"
+        }}>
+          {"message_menu_entry".localize}
+        </a>
+      </div>
+
+      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+        <i class="fa fa-envelope-o"></i>
+        {"messages_header".localize}
+      </h3>
+      <div id="client-notices">
+        <ul class={Style.noticeList.htmlClass}>
+          {
+            notices.map(_.map(notice =>
+              <li>
+                <div>
+                  {
+                    notice.category match {
+                      case "client" =>
+                        <h4>
+                          {if (notice.project.nonEmpty) notice.project + ": " else ""}
+                          {"notice_from_boinc".localize}
+                        </h4>
+                      case _ => <h4>{notice.title}</h4>
+                    }
+                  }
+                  <p mhtml-onmount={jsOnContentMountAction(notice.description)}></p>
+                  <small>
+                    {notice.createTime.toDate}
+                    {
+                      if(notice.link.isEmpty) {
+                        Some(
+                          <a onclick={AppRouter.openExternal} href={notice.link}>
+                            {"read_more_link".localize}
+                          </a>
+                        )
+                      } else {
+                        None
+                      }
+                    }
+                  </small>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div id="client-messages" style="display:none">
+        <table class={TableTheme.table.htmlClass}>
+          <thead>
+            <tr>
+              <th>{"table_project".localize}</th>
+              <th>{"table_time".localize}</th>
+              <th>{"table_msg_content".localize}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              messages.map(_.map(message =>
+                <tr class={Style.tableRow.htmlClass} data-prio={message.priority.toString}>
+                  <td>{message.project}</td>
+                  <td class={Style.dateCol.htmlClass}>{message.time.toDate}</td>
+                  <td>{message.msg}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  private def jsOnContentMountAction(content: String): (dom.html.Paragraph) => Unit = (p) => {
+    p.appendChild(convertContent(content))
+  }
 
   private def convertContent(content: String) = {
     import at.happywetter.boinc.web.hacks.NodeListConverter._
@@ -218,5 +227,5 @@ class BoincMessageLayout(params: js.Dictionary[String]) extends BoincPageLayout(
     ret
   }
 
-  override def render: Elem = {<div>MESSAGES</div>}
+
 }
