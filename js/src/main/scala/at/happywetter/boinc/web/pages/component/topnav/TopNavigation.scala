@@ -1,16 +1,15 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
 import at.happywetter.boinc.web.css.TopNavigation
+import at.happywetter.boinc.web.pages.PageLayout
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.BoincClientLocation
-import mhtml.Var
+import at.happywetter.boinc.web.util.I18N._
+import mhtml.Rx
 import org.scalajs.dom
 
-import scala.xml.Node
-import at.happywetter.boinc.web.helper.XMLHelper._
-
-import at.happywetter.boinc.web.util.I18N._
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 
@@ -25,9 +24,7 @@ trait TopNavigation {
 
   protected val links: List[(String, String, String)]
 
-  protected def link(nav: String): String
-
-  val component: Var[Node] = Var("".toXML)
+  protected def link(nav: String): Rx[String]
 
   def select(elem: String): Unit = {
     val cur = dom.document.querySelector(s"#$componentId a[data-nav=$selected]")
@@ -39,13 +36,13 @@ trait TopNavigation {
     selected = elem
   }
 
-  def clear(): Unit = component := {"".toXML}
+  def clear(): Unit = PageLayout.clearNav()
 
-  def render(select: String = selected): Unit = {
+  def render(select: String = selected): TopNavigation = {
     selected = select
 
-    component :=
-      <ul class={TopNavigation.nav.htmlClass} id={componentId} mhtml-onmount={ (_: dom.html.UList) => AppRouter.router.updatePageLinks()}>
+    PageLayout.nav :=
+      <ul class={TopNavigation.nav.htmlClass} id={componentId} mhtml-onmount={jsUpdatePageLinksAction}>
         {
         links.map { case (nav, name, icon) =>
           <li class={BoincClientLayout.Style.in_text_icon.htmlClass}>
@@ -58,6 +55,13 @@ trait TopNavigation {
         }
         }
       </ul>
+
+    this
   }
 
+  private lazy val jsUpdatePageLinksAction: (dom.html.UList) => Unit = (_) => {
+    Future {
+      AppRouter.router.updatePageLinks()
+    }
+  }
 }

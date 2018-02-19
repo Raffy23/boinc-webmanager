@@ -35,16 +35,11 @@ object LayoutManager {
   }
 
   def renderLayout(params: js.Dictionary[String], page: Layout): Unit = {
-    beforeRender(params)
+    page.beforeRender(params)
     render(page)
   }
 
-  def beforeRender(params: js.Dictionary[String]): Unit =
-    childLayout.impure.run(_.beforeRender(params)).cancel
-
   def render(page: Layout): Unit = {
-    dom.window.console.log(s"LayoutManager: Rendering ${page.getClass.getSimpleName}")
-
     childLayout := page
     page.onRender()
   }

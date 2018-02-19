@@ -8,6 +8,7 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.xml.{Elem, Node}
 import scalacss.ProdDefaults._
 import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.pages.component.topnav.TopNavigation
 
 /**
   * Created by: 
@@ -85,7 +86,8 @@ object PageLayout {
     )
   }
 
-  val nav: Var[Node] = Var(<span></span>)
+  private var curNav: TopNavigation = _
+  val nav: Var[Node] = Var("")
 
   val hamburgerMenuAction: (Event) => Unit = (event) => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
@@ -124,6 +126,6 @@ object PageLayout {
     else content.style.marginLeft = "5px"
   }
 
-  def clearNav(): Unit = nav := "".toXML
+  def clearNav(): Unit = nav := ""
 
 }

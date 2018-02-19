@@ -13,6 +13,7 @@ import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}
+import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
 
@@ -39,7 +40,9 @@ class BoincMainHostLayout extends BoincClientLayout {
     )
   )
 
-  override def after(): Unit = {
+  override def already(): Unit = onRender()
+
+  override def onRender(): Unit = {
     val data = HostInfoCache.get(boincClientName)
     boinc.getCCState.foreach(cc => clientCC := cc)
 
@@ -92,11 +95,15 @@ class BoincMainHostLayout extends BoincClientLayout {
               <td> <input type="radio" name="run_mode" value="always" checked={clientCC.map(_.taskMode == 1)} onclick={action(boinc.setRun, Modes.Always)}></input> </td>
               <td> <input type="radio" name="run_mode" value="auto"   checked={clientCC.map(_.taskMode == 2)} onclick={action(boinc.setRun, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="run_mode" value="never"  checked={clientCC.map(_.taskMode == 3)} onclick={action(boinc.setRun, Modes.Never)}></input> </td>
-
+            </tr>
+            <tr>
+              <td> <i class="fa fa-television"></i> {"boinc_info_gpu_mode".localize} </td>
               <td> <input type="radio" name="gpu_mode" value="always" checked={clientCC.map(_.gpuMode == 1)} onclick={action(boinc.setGpu, Modes.Always)}></input> </td>
               <td> <input type="radio" name="gpu_mode" value="auto"   checked={clientCC.map(_.gpuMode == 2)} onclick={action(boinc.setGpu, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="gpu_mode" value="never"  checked={clientCC.map(_.gpuMode == 3)} onclick={action(boinc.setGpu, Modes.Never)}></input> </td>
-
+            </tr>
+            <tr>
+              <td> <i class="fa fa-exchange"></i> {"boinc_info_network_mode".localize} </td>
               <td> <input type="radio" name="network_mode" value="always" checked={clientCC.map(_.networkMode == 1)} onclick={action(boinc.setNetwork, Modes.Always)}></input> </td>
               <td> <input type="radio" name="network_mode" value="auto"   checked={clientCC.map(_.networkMode == 2)} onclick={action(boinc.setNetwork, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="network_mode" value="never"  checked={clientCC.map(_.networkMode == 3)} onclick={action(boinc.setNetwork, Modes.Never)}></input> </td>
@@ -127,7 +134,9 @@ class BoincMainHostLayout extends BoincClientLayout {
               <td>{clientData.map(x => BoincFormater.convertSize(x.hostInfo.swap))}</td>
             </tr>
             <tr><td><b>{"boinc_info_disk".localize}</b></td> <td>
+              <span class={BoincClientLayout.Style.progressBar.htmlClass} >
               <progress style="width:250px" value={progressBarValue} max={clientData.map(_.hostInfo.diskTotal.toString)}></progress>
+              </span>
               <br/>
               {
               "boinc_info_disk_content".localize.format(

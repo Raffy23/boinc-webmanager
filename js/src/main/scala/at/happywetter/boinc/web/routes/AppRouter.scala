@@ -25,16 +25,16 @@ object AppRouter {
   case object BoincHomeLocation extends Page
 
   case object BoincClientLocation extends Page {
-    override def link: String = Try(super.link).getOrElse("/view/boinc-client")
+    override def link: String = "/view/boinc-client"
   }
   case object SettingsLocation extends Page {
-    override def link: String = Try(super.link).getOrElse("/view/settings")
+    override def link: String = "/view/settings"
   }
-  case object SwarmControlLocation extends Page {
-    override def link: String = Try(super.link).getOrElse("/view/swarm")
+  case class SwarmControlLocation(path: String = "") extends Page {
+    override def link: String = "/view/swarm"
   }
   case object HardwareLocation extends Page {
-    override def link: String = Try(super.link).getOrElse("/view/hardware")
+    override def link: String = "/view/hardware"
   }
 
 

@@ -10,8 +10,8 @@ import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-
 import at.happywetter.boinc.web.helper.RichRx._
+import org.scalajs.dom
 
 /**
   * Created by: 
@@ -25,14 +25,22 @@ abstract class BoincClientLayout extends Layout {
   protected implicit var boinc: BoincClient = _
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    boincClientName = params.get("clients").get
-    boinc = ClientManager.clients(boincClientName)
+    if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]]) {
+      dom.console.error("Unable to instantiate Boinc Client Layout without params!")
+      if (boinc == null) {
+        dom.console.error("No Fallback Client from prev. view, falling back to Dashboard!")
+        AppRouter.navigate(AppRouter.DashboardLocation)
+      }
+
+    } else {
+      boincClientName = params.get("client").get
+      boinc = ClientManager.clients(boincClientName)
+    }
 
     PageLayout.showMenu()
 
     BoincTopNavigation.clientName := boincClientName
     BoincTopNavigation.render(path)
-    PageLayout.nav := BoincTopNavigation.component.now
 
     DashboardMenu.selectMenuItemByContent(boincClientName)
   }

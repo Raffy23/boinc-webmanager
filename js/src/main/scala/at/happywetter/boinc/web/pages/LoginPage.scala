@@ -161,7 +161,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
     PageLayout.hideMenu()
     done()
 
-    if (usr != null && pwd != null)
+    if (usr != null && pwd != null) {
       loginValidator(usr, pwd).foreach {
         case true => AppRouter.navigate(DashboardLocation)
         case _ =>
@@ -169,6 +169,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
           dom.window.sessionStorage.removeItem("password")
           NProgress.done(true)
       }
+    }
   }
 
   override def already(): Unit = {

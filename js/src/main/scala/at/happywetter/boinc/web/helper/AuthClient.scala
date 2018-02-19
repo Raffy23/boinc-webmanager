@@ -54,6 +54,9 @@ object AuthClient {
     import io.circe.generic.auto._
     import io.circe.syntax._
 
+    if (user == null || user.username == null || user.passwordHash == null || user.nonce == null)
+      return Future.failed(new RuntimeException("User case class is not valid! ("+user+")"))
+
     Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = user.asJson.noSpaces))
       .toFuture
       .flatMap(_.tryGet)

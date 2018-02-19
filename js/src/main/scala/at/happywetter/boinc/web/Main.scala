@@ -5,7 +5,7 @@ import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
-import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
+import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
 import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
@@ -59,8 +59,9 @@ object Main {
     AppRouter.addRoute(LoginPageLocation, "/view/login", new LoginPage(AuthClient.validate))
     AppRouter.addRoute(DashboardLocation, "/view/dashboard", Dashboard)
     AppRouter.addRoute(SettingsLocation, "/view/settings", SettingsPage)
-    AppRouter.addRoute(SwarmControlLocation, "/view/swarm", new BoincSwarmPage)
-    AppRouter.addRoute(SwarmControlLocation, "/view/swarm/boinc", new BoincSwarmPage)
+    AppRouter.addRoute(SwarmControlLocation(), "/view/swarm", new BoincSwarmPage)
+    AppRouter.addRoute(SwarmControlLocation("/boinc"), "/view/swarm/boinc", new BoincSwarmPage)
+    AppRouter.addRoute(SwarmControlLocation("/projects"), "/view/swarm/projects", new ProjectSwarmPage)
     AppRouter.addRoute(HardwareLocation, "/view/hardware", HardwarePage)
 
     // Catch default path: 
@@ -73,9 +74,6 @@ object Main {
     addBoincRoute(new BoincMessageLayout)
     addBoincRoute(new BoincGlobalPrefsLayout)
     addBoincRoute(new BoincStatisticsLayout)
-
-
-
 
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {

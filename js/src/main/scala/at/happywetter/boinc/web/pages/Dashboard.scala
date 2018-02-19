@@ -4,7 +4,6 @@ import at.happywetter.boinc.shared.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
@@ -45,12 +44,11 @@ object Dashboard extends Layout {
   }
 
   override def before(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
     PageLayout.clearNav()
     PageLayout.showMenu()
+    PageLayout.clearNav()
 
-    AuthClient.tryLogin.foreach {
+    AuthClient.tryLogin.map {
       case true => done()
       case false => AppRouter.navigate(LoginPageLocation)
     }
@@ -63,12 +61,11 @@ object Dashboard extends Layout {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
     NProgress.start()
 
+    DashboardMenu.selectByMenuId("dashboard")
+
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
       this.clients := clients
-
-      DashboardMenu.selectByMenuId("dashboard")
-      AppRouter.router.updatePageLinks()
 
       Future.sequence(
         clients.map(c => ClientManager.clients(c)).map(client => fullyLoadData(client))
@@ -81,10 +78,8 @@ object Dashboard extends Layout {
         ProjectNameCache.getAll(projects.toList)
           .map( projectNameData => projectNameData.map{ case (url, maybeUrl) => (url, maybeUrl.getOrElse(url)) })
           .map( projectNameData => projectNameData.toMap)
-          .foreach( projectNames => {
-            val projects = projectNames.values.toList.sorted
-            this.projects := projects
-
+          .map( projectNames => {
+            this.projects := projectNames
             NProgress.done(true)
           })
       })
@@ -98,7 +93,7 @@ object Dashboard extends Layout {
   private val clients = Var(List.empty[String])
   private val clientDetails = Var(Map.empty[String, Either[HostData, Exception]])
   private var clientDetailData = Map.empty[String, DetailData]
-  private val projects = Var(List.empty[String])
+  private val projects = Var(Map.empty[String, String])
 
   override def render: Elem = {
     import at.happywetter.boinc.web.hacks.NodeListConverter._
@@ -107,7 +102,8 @@ object Dashboard extends Layout {
       <div class={FloatingMenu.root.htmlClass}>
         <a class={FloatingMenu.active.htmlClass} onclick={(event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 
@@ -118,7 +114,8 @@ object Dashboard extends Layout {
         </a>
         <a class={FloatingMenu.active.htmlClass} onclick={(event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 
@@ -179,10 +176,10 @@ object Dashboard extends Layout {
                   projects.map(_.map(project => {
                     <th class={TableTheme.vertical_table_text.htmlClass}>
                       <div>
-                        <span>{project}</span>
+                        <span>{project._2}</span>
                       </div>
                     </th>
-                  }))
+                  }).toList)
                 }
                 <th></th>
               </tr>
@@ -194,20 +191,27 @@ object Dashboard extends Layout {
                     <td>{injectErrorTooltip(client)(client)}</td>
                     {
                       projects.map(_.map(project => {
-                        val data = clientDetails.now(client)
-                        if (data.isRight)
-                          return <td></td>
-
-                        val rData = clientDetailData(client).projects.getOrElse(project, List())
+                        val rData = clientDetailData(client).projects.getOrElse(project._1, List())
                         val active = rData
                           .filter(p => p.activeTask.nonEmpty)
                           .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+                        val time = rData.map(r => r.remainingCPU).sum / active
+
 
                         <td>
-                          <span>{active} / {rData.size}</span>
-                          <small>{BoincFormater.convertTime(rData.map(r => r.remainingCPU).sum / active)}</small>
+                          {
+                            if (time > 0 || active > 0) {
+                              Seq(
+                                <span>{active} / {rData.size}</span>,
+                                <br/>,
+                                <small>{BoincFormater.convertTime(time)}</small>
+                              )
+                            } else {
+                              Seq("".toXML)
+                            }
+                         }
                         </td>
-                      }))
+                      }).toList)
                     }
                   </tr>
                 }))
@@ -286,7 +290,6 @@ object Dashboard extends Layout {
   }
 
   private def loadStateData(client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
-
     client.getState.map(state => {
       val details = DetailData(client.hostname, state.results.groupBy(f => f.project), state.workunits, state.apps)
       val hostData = HostData(

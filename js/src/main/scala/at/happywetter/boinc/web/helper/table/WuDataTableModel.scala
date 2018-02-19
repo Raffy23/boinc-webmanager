@@ -18,7 +18,7 @@ import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Date
+import BoincFormater.Implicits._
 
 /**
   * Created by: 
@@ -76,13 +76,13 @@ object WuDataTableModel {
         override def compare(that: TableColumn): Int = result.progress.now.compare(that.datasource.asInstanceOf[WuTableRow].result.progress.now)
       },
       new StringColumn(result.uiStatus),
-      new StringColumn(result.pastTime.map(BoincFormater.convertTime)) {
+      new StringColumn(result.pastTime.map(_.toTime)) {
         override def compare(that: TableColumn): Int = result.pastTime.now.compare(that.datasource.asInstanceOf[WuTableRow].result.pastTime.now)
       },
-      new StringColumn(result.remainingCPU.map(BoincFormater.convertTime)) {
+      new StringColumn(result.remainingCPU.map(_.toTime)) {
         override def compare(that: TableColumn): Int = result.remainingCPU.now.compare(that.datasource.asInstanceOf[WuTableRow].result.remainingCPU.now)
       },
-      new StringColumn(result.reportDeadline.map(v => v*1000).map(BoincFormater.convertDate).map(new Date(_).toDateString())) {
+      new StringColumn(result.reportDeadline.map(_.toDate)) {
         override def compare(that: TableColumn): Int = result.reportDeadline.now.compare(that.datasource.asInstanceOf[WuTableRow].result.reportDeadline.now)
       },
       new StringColumn(result.app.map(_.map(_.userFriendlyName).getOrElse(result.wuName.now))),
@@ -132,7 +132,7 @@ object WuDataTableModel {
               <tbody>
                 <tr><td>{"workunit_dialog_cancel_project".localize}</td><td>{result.project}</td></tr>
                 <tr><td>{"workunit_dialog_cancel_name".localize}</td><td>{result.name}</td></tr>
-                <tr><td>{"workunit_dialog_cancel_remaining_time".localize}</td><td>{result.remainingCPU.map(BoincFormater.convertTime)}</td></tr>
+                <tr><td>{"workunit_dialog_cancel_remaining_time".localize}</td><td>{result.remainingCPU.map(_.toTime)}</td></tr>
               </tbody>
             </table>
           </p>
@@ -161,16 +161,16 @@ object WuDataTableModel {
             <tr><td><b>{"wu_dialog_xml_appname".localize}</b></td><td>{result.appName}</td></tr>
             <tr><td><b>{"wu_dialog_name".localize}</b></td><td>{result.name}</td></tr>
             <tr><td><b>{"wu_dialog_status".localize}</b></td><td>{result.uiStatus}</td></tr>
-            <tr><td><b>{"wu_dialog_deadline".localize}</b></td><td>{result.reportDeadline.map(BoincFormater.convertDate)}</td></tr>
+            <tr><td><b>{"wu_dialog_deadline".localize}</b></td><td>{result.reportDeadline.map(_.toDate)}</td></tr>
             {
               result.activeTask.map(_.map(task => {
                 List( //mthml does not like NodeBuffer -> wrap it into a list
-                <tr><td><b>{"wu_dialog_checkpoint_time".localize}</b></td><td>{BoincFormater.convertTime(task.checkpoint)}</td></tr>,
-                <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{BoincFormater.convertTime(task.cpuTime)}</td></tr>,
-                <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{BoincFormater.convertTime(task.time)}</td></tr>,
+                <tr><td><b>{"wu_dialog_checkpoint_time".localize}</b></td><td>{task.checkpoint.toTime}</td></tr>,
+                <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{task.cpuTime.toTime}</td></tr>,
+                <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{task.time.toTime}</td></tr>,
                 <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>,
-                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{BoincFormater.convertTime(task.workingSet)}</td></tr>,
-                <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{BoincFormater.convertTime(task.swapSize)}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{task.workingSet.toTime}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{task.swapSize.toSize}</td></tr>,
                 <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>,
                 <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>,
                 <tr><td><b>{"wu_dialog_version".localize}</b></td><td>{task.appVersionNum}</td></tr>

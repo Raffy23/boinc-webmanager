@@ -87,14 +87,14 @@ object DashboardMenu {
     <ul class={Style.menu.htmlClass} id="dashboard-menu" style={viewState}>
       <li class={Style.elem.htmlClass}>
         <a href={DashboardLocation.link} onclick={masterSelectionListener}
-           data-navigo="true" data-menu-id="dashboard">
+           data-navigo={true} data-menu-id="dashboard">
           <i class="fa fa-tachometer"></i>
           {"dashboard_menu_home".localize}
         </a>
       </li>
       <li class={Style.elem.htmlClass}>
-        <a href={SwarmControlLocation.link} onclick={masterSelectionListener}
-           data-navigo="true" data-menu-id="swarm_control">
+        <a href={SwarmControlLocation().link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="swarm_control">
           <i class="fa fa-industry"></i>
           {"dashboard_swarm_control".localize}
         </a>
@@ -104,7 +104,7 @@ object DashboardMenu {
 
       <li class={Style.elem.htmlClass}>
         <a href={SettingsLocation.link} onclick={masterSelectionListener}
-           data-navigo="true" data-menu-id="settings">
+           data-navigo={true} data-menu-id="settings">
           <i class="fa fa-cog"></i>
           {"dashboard_menu_settings".localize}
         </a>
@@ -121,7 +121,7 @@ object DashboardMenu {
       {
         menuEntries.map(_.map(entry =>
           <li class={Style.elem.htmlClass}>
-            <a href={entry.href} data-menu-id={entry.reference} data-navigo="true"
+            <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
                onclick={entry.subMenuRef.map(_ => subMenuListener).getOrElse(selectionListener)}>
               {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
               {entry.name}
@@ -129,7 +129,7 @@ object DashboardMenu {
                 <ul data-submenu-id={name} style="display:none">
                   {entry.subMenu.map(entry =>
                     <li class={Style.elem.htmlClass}>
-                      <a href={entry.href} data-menu-id={entry.reference} data-navigo="true" onclick={selectionListener}>
+                      <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener}>
                         {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
                         {entry.name}
                       </a>
@@ -157,7 +157,7 @@ object DashboardMenu {
         hwMenuEntry :=
           <li class={Style.elem.htmlClass}>
             <a href={HardwareLocation.link} onclick={masterSelectionListener}
-               data-navigo="true" data-menu-id="dashboard_hardware">
+               data-navigo={true} data-menu-id="dashboard_hardware">
               <i class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>
           </li>
@@ -198,6 +198,7 @@ object DashboardMenu {
   }
 
   def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
+    dom.console.log(s"Add Menu Entry with href=$linkUrl")
     menuEntries.update(_ :+ MenuEntry(elementName, linkUrl, icon, reference))
 
     if (selected != null) {

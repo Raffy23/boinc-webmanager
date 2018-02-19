@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.component
 
+import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
@@ -44,7 +45,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: L
   val reactiveData: Var[List[T]] = Var(tableData)
 
   lazy val component: Elem = {
-    <table>
+    <table class={TableTheme.table.htmlClass}>
       <thead>
         <tr>
           {

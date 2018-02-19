@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.swarm
 
+import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.{Layout, PageLayout}
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
@@ -13,6 +14,8 @@ import scala.xml.Elem
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
+import org.scalajs.dom
 
 /**
   * Created by: 
@@ -47,8 +50,8 @@ abstract class SwarmPageLayout extends Layout {
   override def beforeRender(params: Dictionary[String]): Unit = {
     PageLayout.showMenu()
 
+    DashboardMenuBuilder.renderClients()
     SwarmTopNavigation.render(path)
-    PageLayout.nav := SwarmTopNavigation.component.now
 
     DashboardMenu.selectByMenuId("swarm_control")
   }

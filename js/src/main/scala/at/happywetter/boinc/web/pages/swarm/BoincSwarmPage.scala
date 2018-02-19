@@ -118,13 +118,13 @@ class BoincSwarmPage extends SwarmPageLayout {
         </thead>
         <tbody>
           {
-            clients.map(_.flatMap(implicit client => {
-                List( //NodeBuffer not compatible with mthml
-                  <td><input class={Style.checkbox.htmlClass} type="checkbox"></input>{injectErrorTooltip(client._1)}</td>,
-                  <td>{clientStatus(client._1)._1.map(_.toState)}</td>,
-                  <td>{clientStatus(client._1)._2.map(_.toState)}</td>,
+            clients.map(_.map(implicit client => {
+                <tr>
+                  <td><input class={Style.checkbox.htmlClass} type="checkbox"></input>{injectErrorTooltip(client._1)}</td>
+                  <td>{clientStatus(client._1)._1.map(_.toState)}</td>
+                  <td>{clientStatus(client._1)._2.map(_.toState)}</td>
                   <td>{clientStatus(client._1)._3.map(_.toState)}</td>
-                )
+                </tr>
             }))
           }
         </tbody>
@@ -207,6 +207,7 @@ class BoincSwarmPage extends SwarmPageLayout {
   }
 
   private def stateToText(state: Int): String = state match {
+    case -1 => "offline".localize
     case 1 => "always".localize
     case 2 => "auto".localize
     case 3 => "never".localize

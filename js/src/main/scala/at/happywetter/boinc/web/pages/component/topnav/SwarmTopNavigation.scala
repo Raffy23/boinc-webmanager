@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
 import at.happywetter.boinc.web.routes.AppRouter.SwarmControlLocation
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 
@@ -26,5 +27,5 @@ object SwarmTopNavigation extends TopNavigation {
 
   override protected val componentId: String = "swarm_page_top_nav"
 
-  override protected def link(nav: String): String = s"${SwarmControlLocation.link}/$nav"
+  override protected def link(nav: String): Rx[String] = Var(s"${SwarmControlLocation().link}/$nav")
 }

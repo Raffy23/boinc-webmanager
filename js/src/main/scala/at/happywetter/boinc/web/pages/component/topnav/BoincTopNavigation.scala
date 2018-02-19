@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
 import at.happywetter.boinc.web.routes.AppRouter.BoincClientLocation
-import mhtml.Var
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 
@@ -26,8 +26,8 @@ object BoincTopNavigation extends TopNavigation {
 
   override protected val componentId: String = "boinc_top_navigation"
 
-  override protected def link(nav: String): String =
-    s"${BoincClientLocation.link}/$clientName/$nav"
+  override protected def link(nav: String): Rx[String] =
+    clientName.map(clientName =>  s"${BoincClientLocation.link}/$clientName/$nav")
 
   val clientName: Var[String] = Var("none")
 
