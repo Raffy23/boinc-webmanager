@@ -1,28 +1,29 @@
 package at.happywetter.boinc.web.pages.swarm
 
+import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.{BoincRPC, Project}
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}
 import at.happywetter.boinc.web.pages.component.Tooltip
+import at.happywetter.boinc.web.pages.component.dialog._
+import at.happywetter.boinc.web.pages.swarm.ProjectSwarmPage.Style
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scalacss.internal.mutable.StyleSheet
-import scalatags.JsDom
-import scalacss.ProdDefaults._
-import BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.web.pages.component.dialog._
-
-import scala.collection.mutable.ListBuffer
 import scala.xml.Elem
+import scalacss.ProdDefaults._
+import scalacss.internal.mutable.StyleSheet
 
 /**
   * Created by: 
@@ -30,11 +31,11 @@ import scala.xml.Elem
   * @author Raphael
   * @version 14.09.2017
   */
-object ProjectSwarmPage extends SwarmSubPage {
-
+object ProjectSwarmPage {
   object Style extends StyleSheet.Inline {
-    import scala.language.postfixOps
     import dsl._
+
+    import scala.language.postfixOps
 
     val masterCheckbox = BoincSwarmPage.Style.masterCheckbox
     val checkbox = BoincSwarmPage.Style.checkbox
@@ -53,140 +54,19 @@ object ProjectSwarmPage extends SwarmSubPage {
       width(1.5 em)
     )
   }
+}
 
-  private var dataset: Map[String, List[(BoincClient, Project)]] = _
+class ProjectSwarmPage extends SwarmPageLayout {
+  override val path: String = "project"
+
+  private val dataset: Var[Map[String, List[(BoincClient, Project)]]] = Var(Map.empty)
   private case class Account(userName: String, teamName: String, credits: Double)
 
-  override def header: String = "project_header".localize
+  override val header: String = "project_header"
 
-  //TODO
-  def render1: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
+  override def already(): Unit = onRender()
 
-    val root = div(id := "swarm-project-content",
-      div(style := "position:absolute;top:80px;right:20px;",
-        new Tooltip("project_swarm_play".localize,
-          a(href := "#apply-to_all-project", i(`class` := "fa fa-play-circle-o"),
-            Style.top_nav_action,
-            onclick := { (event: Event) => {
-              event.preventDefault()
-
-              new SimpleModalDialog(
-                p("project_resume_dialog_content".localize),
-                h4(Dialog.Style.header, "are_you_sure".localize),
-                (dialog) => {
-                  dialog.close()
-                  NProgress.start()
-                  applyToAllSelected(BoincRPC.ProjectAction.Resume).foreach(_ => {
-                    NProgress.done(true)
-                  })
-                },
-                (dialog) => {dialog.close()}
-              ).renderToBody().show()
-
-            }},
-          ),
-          textOrientation = Tooltip.Style.topText
-        ).render(),
-        new Tooltip("project_swarm_pause".localize,
-          a(href := "#apply-to_all-project", i(`class` := "fa fa-pause-circle-o"),
-            Style.top_nav_action,
-            onclick := { (event: Event) => {
-              event.preventDefault()
-
-              new SimpleModalDialog(
-                p("project_suspend_dialog_content".localize),
-                h4(Dialog.Style.header, "are_you_sure".localize),
-                (dialog) => {
-                  dialog.close()
-                  NProgress.start()
-                  applyToAllSelected(BoincRPC.ProjectAction.Suspend).foreach(_ => {
-                    NProgress.done(true)
-                  })
-                },
-                (dialog) => {dialog.close()}
-              ).renderToBody().show()
-
-            }},
-          ),
-          textOrientation = Tooltip.Style.topText
-        ).render(),
-        new Tooltip("project_swarm_refresh".localize,
-          a(href := "#apply-to_all-project", i(`class` := "fa fa-refresh"),
-            Style.top_nav_action,
-            onclick := { (event: Event) => {
-              event.preventDefault()
-              NProgress.start()
-
-              applyToAllSelected(BoincRPC.ProjectAction.Update).foreach(_ => {
-                NProgress.done(true)
-              })
-            }},
-          ),
-          textOrientation = Tooltip.Style.topText
-        ).render(),
-        new Tooltip("project_swarm_trash".localize,
-          a(href := "#apply-to_all-project", i(`class` := "fa fa-trash-o"),
-            Style.top_nav_action,
-            onclick := { (event: Event) => {
-              event.preventDefault()
-
-              new SimpleModalDialog(
-                p("project_remove_dialog_content".localize),
-                h4(Dialog.Style.header, "are_you_sure".localize),
-                (dialog) => {
-                  dialog.close()
-                  NProgress.start()
-                  applyToAllSelected(BoincRPC.ProjectAction.Remove).foreach(_ => {
-                    NProgress.done(true)
-                  })
-                },
-                (dialog) => {dialog.close()}
-              ).renderToBody().show()
-            }},
-          ),
-          textOrientation = Tooltip.Style.topText
-        ).render(),
-        new Tooltip("project_new_tooltip".localize,
-          a(href := "#add-project", i(`class` := "fa fa-plus-square"),
-            style := "color:#333;text-decoration:none;font-size:30px",
-            onclick := { (event: Event) => {
-              event.preventDefault()
-
-              //TODO: Use some cache ...
-              ClientManager.queryCompleteProjectList().foreach(data => {
-                new ProjectAddDialog(data, (url, username, password, name) => {
-                  NProgress.start()
-
-                  ClientManager
-                    .getClients
-                    .map(_.map(
-                      _.attachProject(url, username, password, name).recover { case _: Exception => false })
-                    ).flatMap(
-                      Future
-                        .sequence(_)
-                        .map(_.count(_.unary_!))
-                        .map(failures => {
-                          if (failures > 0) {
-                            new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
-                              dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
-                            }).renderToBody().show()
-                          }
-
-                          NProgress.done(true)
-                          failures == 0
-                        })
-                    )
-
-                }).renderToBody().show()
-              })
-            }},
-          ),
-          textOrientation = Tooltip.Style.topText
-        ).render()
-      ),
-    )
+  override def onRender(): Unit = {
     NProgress.start()
 
     ClientManager.getClients.foreach(clients => {
@@ -194,66 +74,174 @@ object ProjectSwarmPage extends SwarmSubPage {
         clients
           .map(client =>
             client.getProjects
-                  .map(_.map(project => (client, project)))
-                  .recover{ case _: Exception => List() }
+              .map(_.map(project => (client, project)))
+              .recover { case _: Exception => List() }
           )
       ).map(_.flatten.groupBy(_._2.url))
-       .map(projects => {
-         val parent = dom.document.getElementById("swarm-project-content")
-          dataset = projects
-         //val hasEveryClient = projects.map { case (name, data) => (name, data.size == clients.size) }
-
-         parent.appendChild(
-         table(TableTheme.table, id := "swarm-project-data-table",
-           thead(
-             tr(BoincClientLayout.Style.in_text_icon,
-               th(a(Style.masterCheckbox, i(`class` := "fa fa-check-square-o"), href := "#select-all", onclick := selectAllListener),
-                 "table_project".localize), th("table_hosts".localize),
-               th("table_account".localize),
-               th("table_team".localize),
-               th("table_credits".localize),
-               th(Style.last_row_small)
-             )
-           ),
-           tbody(
-             projects.map{ case(url, data) => {
-               val project = data.head._2
-               val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit) }
-               val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
-
-               tr(
-                 td(input(Style.checkbox, `type` := "checkbox", value := url),
-                   a(updateCache(project), href := project.url, onclick := AppRouter.openExternal, Style.link), style := "max-width: 100px;"),
-                 td(data.size, style := "text-align:center"),
-                 td(accounts.map(t => t.userName).distinct.map(t => List(span(t), br()))),
-                 td(accounts.map(t => t.teamName).distinct.map(t => List(span(t), br()))),
-                 td(creditsRange._1 + " - " + creditsRange._2),
-                 td(
-                   new Tooltip("project_properties".localize,
-                     a(href := "#project-properties", i(`class` := "fa fa-info-circle"),
-                       onclick := {
-                         (event: Event) => {
-                           event.preventDefault()
-                           new OkDialog("dialog_properties_header".localize, List("not_implemented".localize))
-                             .renderToBody().show()
-                         }
-                       }
-                     ), textOrientation = Tooltip.Style.leftText
-                   ).render()
-                 )
-               )
-             }}.toList
-           )
-         ).render
-         )
-
-         NProgress.done(true)
-       })
+       .map(projects => dataset := projects)
+       .foreach(_ => NProgress.done(true))
     })
-
-    root
   }
 
+  override def renderChildView: Elem = {
+    <div id="swarm-project-content">
+      <div style="position:absolute;top:80px;right:20px">
+        {
+          new Tooltip(
+            Var("project_swarm_play".localize),
+            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
+              <i class="fa fa-play-circle-o"></i>
+            </a>,
+            textOrientation = Tooltip.Style.topText
+          ).toXML
+          new Tooltip(
+            Var("project_swarm_pause".localize),
+            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
+              <i class="fa fa-pause-circle-o"></i>
+            </a>,
+            textOrientation = Tooltip.Style.topText
+          ).toXML
+          new Tooltip(
+            Var("project_swarm_refresh".localize),
+            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
+              <i class="fa fa-refresh"></i>
+            </a>,
+            textOrientation = Tooltip.Style.topText
+          ).toXML
+          new Tooltip(
+            Var("project_swarm_trash".localize),
+            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
+              <i class="fa fa-trash-o"></i>
+            </a>,
+            textOrientation = Tooltip.Style.topText
+          ).toXML
+          new Tooltip(
+            Var("project_new_tooltip".localize),
+            <a class={Style.top_nav_action.htmlClass} href="#add-project" style="font-size:30px"
+               onclick={jsAddNewProjectAction}>
+              <i class="fa fa-plus-square"></i>
+            </a>,
+            textOrientation = Tooltip.Style.topText
+          ).toXML
+        }
+      </div>
+      <table class={TableTheme.table.htmlClass} id="swarm-project-data-table">
+        <thead>
+          <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+            <th>
+              <a class={Style.masterCheckbox.htmlClass} href="#" onclick={jsSelectAllListener}>
+                <i class="fa fa-check-square-o"></i>
+                {"table_project".localize}
+              </a>
+            </th>
+            <th>{"table_hosts".localize}</th>
+            <th>{"table_account".localize}</th>
+            <th>{"table_team".localize}</th>
+            <th>{"table_credits".localize}</th>
+            <th class={Style.last_row_small.htmlClass}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            dataset.map(projects => {
+              projects.map { case (url, data) =>
+                val project = data.head._2
+                val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit) }
+                val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
+
+                <tr>
+                  <td style="max-width:100px">
+                    <input type="checkbox" value={url}></input>
+                    <a class={Style.link.htmlClass} href={project.url} onclick={AppRouter.openExternal}>{updateCache(project)}</a>
+                  </td>
+                  <td style="text-align:center">{data.size}</td>
+                  <td>{accounts.map(t => t.userName).distinct.flatMap(t => List(t.toXML, <br/>))}</td>
+                  <td>{accounts.map(t => t.teamName).distinct.flatMap(t => List(t.toXML, <br/>))}</td>
+                  <td>{creditsRange._1 + " - " + creditsRange._2}</td>
+                  <td>
+                    {
+                      new Tooltip(
+                        Var("project_properties".localize),
+                        <a href="#project-properties" onclick={jsShowProjectProperties(url, data)}>
+                          <i class="fa fa-info-circle"></i>
+                        </a>,
+                        textOrientation = Tooltip.Style.leftText
+                      ).toXML
+                    }
+                  </td>
+                </tr>
+              }.toList // Iterable is not compatible with mthml
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  private lazy val jsAddNewProjectAction: (Event) => Unit = (event) => {
+    event.preventDefault()
+
+    //TODO: Use some cache ...
+    ClientManager.queryCompleteProjectList().foreach(data => {
+      new ProjectAddDialog(data, (url, username, password, name) => {
+        NProgress.start()
+
+        ClientManager
+          .getClients
+          .map(_.map(
+            _.attachProject(url, username, password, name).recover { case _: Exception => false })
+          ).flatMap(
+          Future
+            .sequence(_)
+            .map(_.count(_.unary_!))
+            .map(failures => {
+              if (failures > 0) {
+                new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
+                  dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                }).renderToBody().show()
+              }
+
+              NProgress.done(true)
+              failures == 0
+            })
+        )
+
+      }).renderToBody().show()
+    })
+  }
+
+  private def jsShowProjectProperties(project: String, data: List[(BoincClient, Project)]): (Event) => Unit = (event) => {
+    event.preventDefault()
+
+    new OkDialog(
+      "dialog_properties_header".localize,
+      List("not_implemented".localize)
+    )
+      .renderToBody()
+      .show()
+  }
+
+  private def jsPlayAllSelectedAction(action: ProjectAction): (Event) => Unit = (event) => {
+    event.preventDefault()
+
+    new SimpleModalDialog(
+      <p>{"project_resume_dialog_content".localize}</p>,
+      <h4 class={Dialog.Style.header.htmlClass}>{"are_you_sure".localize}</h4>,
+      (dialog) => {
+        dialog.close()
+        NProgress.start()
+        applyToAllSelected(action).foreach(_ => {
+          NProgress.done(true)
+        })
+      },
+      (dialog) => {dialog.close()}
+    ).renderToBody().show()
+
+  }
 
   private def applyAction(clientList: List[BoincClient], project: String, action: ProjectAction): Future[List[Boolean]] =
     Future.sequence(
@@ -261,7 +249,7 @@ object ProjectSwarmPage extends SwarmSubPage {
     )
 
   private def applyToAll(project: String, action: ProjectAction): Future[List[Boolean]] =
-    applyAction(dataset(project).map(_._1), project, action)
+    applyAction(dataset.now(project).map(_._1), project, action)
 
   private def applyToAllSelected(action: ProjectAction): Future[List[List[Boolean]]] =
     Future.sequence(
@@ -282,7 +270,7 @@ object ProjectSwarmPage extends SwarmSubPage {
     result.toList
   }
 
-  private val selectAllListener: js.Function1[Event, Unit] = (event) => {
+  private val jsSelectAllListener: (Event) => Unit = (event) => {
     event.preventDefault()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
@@ -295,5 +283,4 @@ object ProjectSwarmPage extends SwarmSubPage {
     project.name
   }
 
-  override def render: Elem = {<div>__PROJECT_SWARM_PAGE__</div>}
 }

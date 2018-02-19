@@ -14,6 +14,8 @@ import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
 import scala.xml.Elem
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 /**
   * Created by: 
   *
@@ -72,7 +74,6 @@ object SettingsPage extends Layout {
   }
 
   override def before(done: js.Function0[Unit]): Unit = {
-
     AuthClient.tryLogin.foreach {
       case true => done()
       case false => AppRouter.navigate(LoginPageLocation)

@@ -81,7 +81,7 @@ object ProjectDataTableModel {
 
     )
 
-    override val contextMenuHandler: js.Function1[Event, Unit] = (event) => {
+    override val contextMenuHandler: (Event) => Unit = (event) => {
       val contextMenu = new ContextMenu("project-"+project.data.hashCode()+"-context-menu")
       project.data.guiURLs.foreach( url => {
         contextMenu.addMenu(url.url, url.name, AppRouter.openExternal)

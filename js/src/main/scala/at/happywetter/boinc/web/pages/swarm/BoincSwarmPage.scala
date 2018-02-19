@@ -118,11 +118,13 @@ class BoincSwarmPage extends SwarmPageLayout {
         </thead>
         <tbody>
           {
-            clients.map(_.map(client => {
-                <td><input class={Style.checkbox.htmlClass} type="checkbox"></input>{injectErrorTooltip(client._1)}</td>
-                <td>{clientStatus(client._1)._1.map(_.toState)}</td>
-                <td>{clientStatus(client._1)._2.map(_.toState)}</td>
-                <td>{clientStatus(client._1)._3.map(_.toState)}</td>
+            clients.map(_.flatMap(implicit client => {
+                List( //NodeBuffer not compatible with mthml
+                  <td><input class={Style.checkbox.htmlClass} type="checkbox"></input>{injectErrorTooltip(client._1)}</td>,
+                  <td>{clientStatus(client._1)._1.map(_.toState)}</td>,
+                  <td>{clientStatus(client._1)._2.map(_.toState)}</td>,
+                  <td>{clientStatus(client._1)._3.map(_.toState)}</td>
+                )
             }))
           }
         </tbody>

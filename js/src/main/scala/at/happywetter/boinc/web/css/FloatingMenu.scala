@@ -22,7 +22,7 @@ object FloatingMenu extends StyleSheet.Inline {
       BoincStatisticsLayout.Style.button,
 
       &.firstChild(
-        borderLeft := "1px #AAA solid"
+        borderLeft :=! "1px #AAA solid"
       )
     ),
   )

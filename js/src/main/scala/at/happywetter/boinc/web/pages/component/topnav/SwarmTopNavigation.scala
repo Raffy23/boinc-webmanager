@@ -10,7 +10,7 @@ import at.happywetter.boinc.web.routes.AppRouter.SwarmControlLocation
   */
 object SwarmTopNavigation extends TopNavigation {
 
-  override protected val selected = "boinc"
+  override protected var selected = "boinc"
 
   override protected val links = List(
     ("boinc", "head_menu_boinc", "fa fa-id-card-o"),
