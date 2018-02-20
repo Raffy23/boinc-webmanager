@@ -4,6 +4,7 @@ import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout.Style
+import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
@@ -89,7 +90,6 @@ class BoincStatisticsLayout extends BoincClientLayout {
 
     boinc.getStatistics
       .map(processData)
-      .map(_ => buildChart())
       .map(_ => toggleActiveBtnClass(currentDataSet))
       .recover(ErrorDialogUtil.showDialog)
   }
@@ -110,9 +110,8 @@ class BoincStatisticsLayout extends BoincClientLayout {
             statData.map(stats => stats.stats.map { case (project, data) =>
               <li>
                 <label style={if(data.lengthCompare(2) <= 0) Some("color:gray") else None}>
-                  <input type="checkbox" value={project} onclick={jsCheckBoxOnClickFunction}>
-                    {projectNameCache(project)}
-                  </input>
+                  <input type="checkbox" value={project} onclick={jsCheckBoxOnClickFunction}/>
+                  {projectNameCache.getOrElse(project, project)}
                 </label>
               </li>
             }).map(_.toList)
@@ -122,21 +121,22 @@ class BoincStatisticsLayout extends BoincClientLayout {
       <div style="display:inline-block;width:calc(100% - 490px);vertical-align:top">
         <div style="padding-bottom:14px;text-align:right;border-bottom:1px #AAA solid">
           <b style="float:left">{"table_credits".localize}</b>
-          <a href="#user_total" class={Style.button.htmlClass} style="border-left: 1px #AAA solid" onclick={jsRenderChart(USER_TOTAL)}>
+          <a id="user_total" href="#user_total" class={Style.button.htmlClass} style="border-left: 1px #AAA solid" onclick={jsRenderChart(USER_TOTAL)}>
             {"user_total_credit".localize}
           </a>
-          <a href="#user_avg" class={Style.button.htmlClass} onclick={jsRenderChart(USER_AVG)}>
+          <a id="user_avg" href="#user_avg" class={Style.button.htmlClass} onclick={jsRenderChart(USER_AVG)}>
             {"user_avg_credit".localize}
           </a>
-          <a href="host_total" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_TOTAL)}>
+          <a id="host_total" href="host_total" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_TOTAL)}>
             {"host_total_credit".localize}
           </a>
-          <a href="host_avg" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_AVG)}>
+          <a id="host_avg" href="host_avg" class={Style.button.htmlClass} onclick={jsRenderChart(HOST_AVG)}>
             {"host_avg_credit".localize}
           </a>
         </div>
-        <canvas width="100%" height="600px" id="chart-area" style="margin-top:12px">
-        </canvas>
+        <div style="max-height:calc(100% - 500px)">
+          <canvas width="100%" height="100%" id="chart-area" style="margin-top:12px"/>
+        </div>
       </div>
     </div>
   }
@@ -154,9 +154,11 @@ class BoincStatisticsLayout extends BoincClientLayout {
       }
 
       projectNameData.map(_._1).zip(ChartColors.stream).foreach(projectColors.+=)
-    })
 
-    this.statData := stats
+      buildChart()
+      this.statData := stats
+      NProgress.done(true)
+    })
   }
 
   private def buildChart(): Unit = {
