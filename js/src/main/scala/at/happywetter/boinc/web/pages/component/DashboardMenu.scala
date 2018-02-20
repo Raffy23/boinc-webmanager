@@ -78,9 +78,13 @@ object DashboardMenu {
   private val hwMenuEntry: Var[Elem] = Var(<span id="config-hardware-disabled"></span>)
   processSeverConfig()
 
-  case class MenuEntry(name: String, href: String, icon: Option[String]=None,
-                       reference: Option[String]=None, subMenuRef: Option[String] = None,
-                       subMenu: ListBuffer[MenuEntry] = new ListBuffer())
+  trait MenuEntry
+  case class TopLevelEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
+  case class SublistEntry(name: String, href: String, visible: Var[Boolean] = Var(false),
+                          subMenuRef: String, reference: Option[String]=None,
+                          subMenu: Var[List[SubMenuEntry]] = Var(List.empty)) extends MenuEntry
+  case class SubMenuEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
+
   private val menuEntries: Var[List[MenuEntry]] = Var(List.empty[MenuEntry])
 
   def component: Elem = {
@@ -117,31 +121,37 @@ object DashboardMenu {
         </h2>
       </li>
 
-      <span id="menu-entry-spliter"></span>
+      <hr id="menu-entry-spliter"/>
       {
-        menuEntries.map(_.map(entry =>
-          <li class={Style.elem.htmlClass}>
-            <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
-               onclick={entry.subMenuRef.map(_ => subMenuListener).getOrElse(selectionListener)}>
-              {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
-              {entry.name}
-              {entry.subMenuRef.map(name =>
-                <ul data-submenu-id={name} style="display:none">
-                  {entry.subMenu.map(entry =>
-                    <li class={Style.elem.htmlClass}>
-                      <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener}>
-                        {entry.icon.map(icon => <i class={s"fa fa-$icon"}></i>)}
-                        {entry.name}
-                      </a>
-                    </li>
-                  )}
-                </ul>
-              )}
-            </a>
-          </li>
-        ))
-      }
+        menuEntries.map(_.map {
+          case entry: TopLevelEntry =>
+            <li class={Style.elem.htmlClass}>
+              <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
+                 onclick={selectionListener}>
+                {entry.name}
+              </a>
+            </li>
 
+          case entry: SublistEntry =>
+            <li class={Seq(Style.elem.htmlClass, Style.clickable.htmlClass).mkString(" ")}>
+              <a class={ Style.clickable.htmlClass} data-menu-id={entry.reference}
+                 data-menu-ref={entry.subMenuRef} onclick={subMenuListener(entry)}>
+                <i class={entry.visible.map(icon => s"fa fa-caret-${if(icon) "down" else "right"}")}></i>
+                {entry.name}
+              </a>
+
+              <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>
+                {entry.subMenu.map(_.map(entry =>
+                  <li class={Style.elem.htmlClass}>
+                    <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener}>
+                      {entry.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+        })
+      }
     </ul>
   }
 
@@ -197,43 +207,28 @@ object DashboardMenu {
     }
   }
 
-  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
-    dom.console.log(s"Add Menu Entry with href=$linkUrl")
-    menuEntries.update(_ :+ MenuEntry(elementName, linkUrl, icon, reference))
+  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None): Unit =
+    menuEntries.update(_ :+ TopLevelEntry(elementName, linkUrl, reference))
 
-    if (selected != null) {
-      selectMenuItemByContent(selected)
-    }
-  }
+  def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None): Unit =
+    menuEntries.update(_ :+ SublistEntry(elementName, "#", Var(false), menuReference, reference))
 
-  def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None, icon: Option[String] = Some("caret-down")): Unit = {
-    menuEntries.update(_ :+ MenuEntry(elementName, "#", icon, reference, Some(menuReference)))
-  }
+  def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None): Unit = {
+    def find(menu: List[MenuEntry]): SublistEntry =
+      menu.find(x =>
+        x.isInstanceOf[SublistEntry] && x.asInstanceOf[SublistEntry].subMenuRef == submenu
+      ).get.asInstanceOf[SublistEntry]
 
-  def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None, icon: Option[String] = None): Unit = {
     menuEntries.update(menu => {
-      menu.find(_.subMenuRef.contains(submenu)).get.subMenu.append(
-        MenuEntry(elementName, linkUrl, icon, reference)
-      )
-
+      find(menu).subMenu.update(_ :+ SubMenuEntry(elementName, linkUrl, reference))
       menu
     })
-
-    if (selected != null) {
-      selectMenuItemByContent(selected)
-    }
   }
 
   private val selectionListener: (Event) => Unit = (event) => onMenuItemClick(event)
   private val masterSelectionListener: (Event) => Unit = (event) => onMenuItemClick(event)
 
-  private val subMenuListener: (Event) => Unit = (event) => {
-    val target = event.target.asInstanceOf[HTMLElement].getAttribute("data-menu-ref")
-    val element = dom.document.querySelector(s"#dashboard-menu ul[data-submenu-id='$target']").asInstanceOf[HTMLElement]
-
-    if (element.style.display == "") element.style.display = "none"
-    else element.style.display = ""
-  }
+  private def subMenuListener(entry: SublistEntry): (Event) => Unit = (event) => entry.visible.update(!_)
 
   private var selected: String = _
   def selectMenuItemByContent(content: String): Unit = {

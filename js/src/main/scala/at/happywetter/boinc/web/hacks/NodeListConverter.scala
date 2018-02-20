@@ -22,8 +22,8 @@ object NodeListConverter {
 @js.native
 class MDNNodeList extends NodeList {
 
-  def forEach(func: js.Function3[Node, Int, NodeList, Unit]): Unit = js.native
-
   def values(): Iterator[Node] = js.native
+
+  def forEach(func: js.Function3[Node, Int, NodeList, Unit]): Unit = js.native
 
 }
