@@ -114,14 +114,14 @@ object DashboardMenu {
         </a>
       </li>
 
+      <hr id="menu-entry-spliter"/>
+
       <li class={Style.elem.htmlClass}>
         <h2 style="padding-left:5px">
           <i class="fa fa-cubes"  style="margin-right:8px"></i>
           {"dashboard_menu_computers".localize}
         </h2>
       </li>
-
-      <hr id="menu-entry-spliter"/>
       {
         menuEntries.map(_.map {
           case entry: TopLevelEntry =>
@@ -168,7 +168,7 @@ object DashboardMenu {
           <li class={Style.elem.htmlClass}>
             <a href={HardwareLocation.link} onclick={masterSelectionListener}
                data-navigo={true} data-menu-id="dashboard_hardware">
-              <i class="fa fa-microchip"></i>{"dashboard_hardware".localize}
+              <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>
           </li>
       }

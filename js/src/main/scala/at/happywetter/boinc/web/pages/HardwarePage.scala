@@ -53,7 +53,7 @@ object HardwarePage extends Layout {
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
 
-      DashboardMenu.selectByMenuId("hardware")
+      DashboardMenu.selectByMenuId("dashboard_hardware")
       AppRouter.router.updatePageLinks()
     }).recover(ErrorDialogUtil.showDialog)
 
