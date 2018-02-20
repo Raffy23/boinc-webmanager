@@ -107,6 +107,8 @@ abstract class ChartOptions extends js.Object {
     }
   }
 
+  var maintainAspectRatio: Boolean = true
+
 }
 
 @ScalaJSDefined

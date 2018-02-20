@@ -15,6 +15,8 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.xml.Elem
+import BoincFormater.Implicits._
+import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -26,8 +28,6 @@ class BoincDiskLayout extends BoincClientLayout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "disk"
-
-  private val projectNames: mutable.Map[String, String] = new mutable.HashMap[String, String]()
 
   private val data = Var(Option.empty[DiskUsage])
   private val names = Var(Map.empty[String, String])
@@ -85,8 +85,8 @@ class BoincDiskLayout extends BoincClientLayout {
             </tbody>
           </table>
         </div>
-        <div style="display:inline-block;width:calc(100% - 495px);padding-right:90px;vertical-align:top;">
-          <canvas width="100%" height="600px" id="chart-area"></canvas>
+        <div style="display:inline-block;width:calc(100% - 500px);padding-right:90px;vertical-align:top;max-height:600px">
+          <canvas width="100" height="600" id="chart-area"></canvas>
         </div>
       </div>
     </div>
@@ -114,12 +114,23 @@ class BoincDiskLayout extends BoincClientLayout {
       override val options: ChartOptions = new ChartOptions {
         legend.display = false
         tooltips.callbacks.label = tooltipLabel
+        maintainAspectRatio = false
       }
     })
   }
 
+  private def getTooltipLabel(tooltipItem: TooltipItem, data: ChartData): String = {
+    val idx = tooltipItem.index.intValue()
+    names.map(x => x(data.labels(idx))).now
+  }
+
+  private def getTooltipValue(tooltipItem: TooltipItem, data: ChartData): String = {
+    val idx = tooltipItem.index.intValue()
+    this.data.map(_.map(u => u.diskUsage(data.labels(idx))).getOrElse(0D)).now.toSize
+  }
+
   private val tooltipLabel: js.Function2[TooltipItem, ChartData, String] = (tooltipItem, data) => {
-    s"${projectNames(data.labels(tooltipItem.index.intValue()))}: ${BoincFormater.convertSize(data.datasets(tooltipItem.datasetIndex.intValue()).data(tooltipItem.index.intValue()).asInstanceOf[Double])}"
+    s"${getTooltipLabel(tooltipItem, data)}: ${getTooltipValue(tooltipItem, data)}"
   }
 
 }

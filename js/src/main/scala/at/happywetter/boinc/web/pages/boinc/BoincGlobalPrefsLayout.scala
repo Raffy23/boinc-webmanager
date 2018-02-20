@@ -77,6 +77,7 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <div class={Seq(FloatingMenu.root.htmlClass, BoincClientLayout.Style.in_text_icon).mkString(" ")}>
         <a class={BoincSwarmPage.Style.button.htmlClass} onclick={jsOnSubmitListener}>
           <i class="fa fa-check"></i>
+          {"submit".localize}
         </a>
       </div>
 
