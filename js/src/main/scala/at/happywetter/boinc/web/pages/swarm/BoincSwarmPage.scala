@@ -159,7 +159,7 @@ class BoincSwarmPage extends SwarmPageLayout {
   private def injectErrorTooltip(name: String)(implicit client: (String, Future[ClientEntry])): Rx[Seq[Node]] = {
     def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle"): Node = {
       val tooltip = new Tooltip(
-        Var(label.localize),
+        Var("offline".localize),
         <i class={`class`}></i>
       ).toXML.asInstanceOf[Elem]
 
