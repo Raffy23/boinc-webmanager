@@ -20,6 +20,7 @@ import org.scalajs.dom.raw.HTMLInputElement
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
+import BoincFormater.Implicits._
 
 /**
   * Created by: 
@@ -139,10 +140,9 @@ class BoincMainHostLayout extends BoincClientLayout {
               </span>
               <br/>
               {
-              "boinc_info_disk_content".localize.format(
-                clientData.map(x => BoincFormater.convertSize(x.hostInfo.diskFree)).now,
-                clientData.map(x => BoincFormater.convertSize(x.hostInfo.diskTotal)).now
-              )
+                clientData.map(x =>
+                  "boinc_info_disk_content".localize.format(x.hostInfo.diskFree.toSize, x.hostInfo.diskTotal.toSize)
+                )
               }</td></tr>
             <tr><td><b>{"boinc_info_platfrom".localize}</b></td><td>{clientData.map(_.platform)}</td></tr>
           </tbody>
