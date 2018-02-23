@@ -2,11 +2,9 @@ package at.happywetter.boinc.web.util
 
 import at.happywetter.boinc.shared.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
-import at.happywetter.boinc.web.helper.XMLHelper
 import org.scalajs.dom
 
-import scala.xml.{Node, Text}
-import scalatags.JsDom.all.Modifier
+import scala.xml.Node
 
 /**
   * Created by: 

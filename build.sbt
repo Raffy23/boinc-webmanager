@@ -44,7 +44,6 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
       "org.http4s" %% "http4s-dsl" % http4sVersion,
       "org.http4s" %% "http4s-circe" % http4sVersion,
       "org.http4s" %% "http4s-blaze-server" % http4sVersion,
-      //"com.github.benhutchison" %% "prickle" % "1.1.13",
       "com.github.pureconfig" %% "pureconfig" % "0.7.2",
       "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
       "com.auth0" % "java-jwt" % "3.2.0",
@@ -58,12 +57,8 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.3",
-      //"com.github.benhutchison" %%% "prickle" % "1.1.13",
-      "com.github.japgolly.scalacss" %%% "core" % "0.5.3",
-      "com.github.japgolly.scalacss" %%% "ext-scalatags" % "0.5.3",
-      "com.lihaoyi" %%% "scalatags" % "0.6.7", // needs a *very* old scala-js version
-      "com.lihaoyi" %%% "scalarx" % "0.3.2" ,
+      "org.scala-js" %%% "scalajs-dom" % "0.9.4",
+      "com.github.japgolly.scalacss" %%% "core" % "0.5.5",
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion ,

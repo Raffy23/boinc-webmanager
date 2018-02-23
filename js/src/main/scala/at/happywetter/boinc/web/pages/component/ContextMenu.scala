@@ -1,16 +1,15 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.pages.component.ContextMenu.Style
-import at.happywetter.boinc.web.pages.component.dialog.Dialog
+import mhtml.Var
 import org.scalajs.dom
-import org.scalajs.dom.{Event, MouseEvent}
 import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.{Event, MouseEvent}
 
-import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.scalajs.js
+import scala.xml.{Elem, Node}
 import scalacss.ProdDefaults._
-import scalatags.JsDom
 
 /**
   * Created by: 
@@ -60,16 +59,12 @@ object ContextMenu {
 
 class ContextMenu(contextMenuId: String) {
 
-  private val elements = new ListBuffer[JsDom.TypedTag[HTMLElement]]
+  private val elements = Var(List.empty[Node])
 
-  lazy val component: JsDom.TypedTag[HTMLElement] = {
-    import scalacss.ScalatagsCss._
-    import scalatags.JsDom.all._
-
-
-    div(Style.contextMenu, id := contextMenuId,
-      ul(elements)
-    )
+  lazy val component: Elem = {
+    <div class={Style.contextMenu.htmlClass} id={contextMenuId}>
+      <ul>{elements}</ul>
+    </div>
   }
 
   def display(event: MouseEvent): Unit = display(event.clientX.toInt, event.clientY.toInt)
@@ -113,22 +108,17 @@ class ContextMenu(contextMenuId: String) {
   }
 
   def addMenu(linkUrl: String, elementName: String, menuAction: (Event) => Unit, reference: Option[String] = None): Unit = {
-    val contextMenu = dom.document.getElementById(contextMenuId)
-    val newElement: JsDom.TypedTag[HTMLElement] = {
-      import scalacss.ScalatagsCss._
-      import scalatags.JsDom.all._
-
-      li(Style.elem,
-        a(href := linkUrl,
-          elementName,
-          reference.map(r => data("menu-id") := r), if (linkUrl.startsWith("/")) data("navigo") := "" else data("external-url") := "",
-          onclick := { (event: Event) => { menuAction(event); event.preventDefault() }}
-        )
-      )
+    val newElement: Elem = {
+      <li class={Style.elem.htmlClass}>
+        <a href={linkUrl} data-menu-id={reference} data-navigo={linkUrl.startsWith("/")}
+           data-external-url={if (!linkUrl.startsWith("/")) Some(linkUrl) else None}
+           onclick={(event: Event) => {menuAction(event); event.preventDefault()}}>
+          {elementName}
+        </a>
+      </li>
     }
 
-    elements += newElement
-    if (contextMenu != null) contextMenu.appendChild(newElement.render)
+    elements.update( _ :+ newElement)
   }
 
   def renderToBody(): ContextMenu = {
@@ -136,7 +126,7 @@ class ContextMenu(contextMenuId: String) {
     if (existingElement != null)
       dom.document.body.removeChild(existingElement)
 
-    dom.document.body.appendChild(component.render)
+    mhtml.mount(dom.document.body, component)
     this
   }
 
