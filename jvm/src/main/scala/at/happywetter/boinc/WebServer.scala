@@ -64,8 +64,14 @@ object WebServer extends App  {
   }
 
   private val server = builder.start.unsafeRunSync()
-  println(s"Server online at https://${config.server.address}:${config.server.port}/\nPress RETURN to stop...")
-  StdIn.readLine()               // let it run until user presses return
+  println(s"Server online at https://${config.server.address}:${config.server.port}/")
+
+  if (!config.serviceMode) {
+    println("Press RETURN to stop...")
+    StdIn.readLine() // let it run until user presses return
+  } else {
+    println("Server was started in service mode, send SIG_TERM to shut the JVM down")
+  }
 
   // Cleanup
   hostManager.destroy()
