@@ -49,9 +49,10 @@ object Main {
   }
 
   def navigate(): Unit = {
-    dom.console.log("Finished, navigating to Path")
-
-    AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
+    AppRouter.router.resolve()
+    //dom.console.log("Finished, navigating to Path: " + dom.window.location.pathname)
+    //
+    //AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
     NProgress.done(true)
   }
 
@@ -78,6 +79,8 @@ object Main {
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {
       dom.window.alert("page_not_found".localize)
+      dom.console.error(s"Error: The page ('${dom.window.location.pathname}') was not found!")
+
       AppRouter.navigate(DashboardLocation)
     })
 

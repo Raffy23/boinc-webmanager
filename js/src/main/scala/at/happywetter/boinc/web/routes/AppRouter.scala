@@ -37,21 +37,6 @@ object AppRouter {
     override def link: String = "/view/hardware"
   }
 
-
-  val defaultPageHook = new Hook {
-    override def already(): Unit = {}
-
-    override def before(done: js.Function0[Unit]): Unit = {
-      NProgress.start()
-      done()
-    }
-
-    override def leave(): Unit = {}
-
-    override def after(): Unit = {}
-  }
-
-
   val routes: mutable.Map[Page, (String,Layout)] = new mutable.HashMap[Page, (String,Layout)]()
   val router = new Navigo()
 
@@ -65,10 +50,10 @@ object AppRouter {
       },
 
       new Hook {
-        override def already(): Unit = layout.already()
-        override def before(done: js.Function0[Unit]): Unit = layout.before(done)
-        override def leave(): Unit = layout.leave()
-        override def after(): Unit = layout.after()
+        override def already(params: js.Dictionary[String]): Unit = layout.already()
+        override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = layout.before(done)
+        override def leave(params: js.Dictionary[String]): Unit = layout.leave()
+        override def after(params: js.Dictionary[String]): Unit = layout.after()
       }
     )
   }

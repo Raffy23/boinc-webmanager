@@ -11,6 +11,7 @@ import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
 import org.scalajs.dom
 
 /**
@@ -42,6 +43,7 @@ abstract class BoincClientLayout extends Layout {
     BoincTopNavigation.clientName := boincClientName
     BoincTopNavigation.render(path)
 
+    DashboardMenuBuilder.renderClients()
     DashboardMenu.selectMenuItemByContent(boincClientName)
   }
 

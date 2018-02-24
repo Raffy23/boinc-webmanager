@@ -26,7 +26,7 @@ object Navigo extends js.Object {
 
 @js.native
 @JSGlobal
-class Navigo extends js.Object {
+class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") extends js.Object {
 
   //Doesn't work but is in Docs
   //def on(genericHook: GenericHook): Navigo = js.native
@@ -65,18 +65,20 @@ class Navigo extends js.Object {
 
   def updatePageLinks(): Unit = js.native
 
+  def resolve(): Boolean = js.native
+
 }
 
 @ScalaJSDefined
 abstract class Hook extends js.Object {
 
-  def before(done: js.Function0[Unit]): Unit
+  def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit
 
-  def after(): Unit
+  def after(params: js.Dictionary[String]): Unit
 
-  def leave(): Unit
+  def leave(params: js.Dictionary[String]): Unit
 
-  def already(): Unit
+  def already(params: js.Dictionary[String]): Unit
 
 }
 
