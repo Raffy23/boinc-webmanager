@@ -92,10 +92,10 @@ object WuDataTableModel {
             new Tooltip(
               result.supsended.map(v => if(v) "state_continue".localize else "state_stop".localize),
               <a href="#" onclick={jsPauseAction}>
-                <i class={s"fa fa-${result.supsended.map(v => if(v) "play" else "pause")}-circle-o"}></i>
+                <i class={result.supsended.map(v => if(v) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
               </a>
             ).toXML
-
+          }{
             new Tooltip(
               Var("workunit_cancel".localize),
               <a href="#" onclick={(event: Event) => {
@@ -105,7 +105,7 @@ object WuDataTableModel {
                 <i class="fa fa-stop-circle-o"></i>
               </a>
             ).toXML
-
+          }{
             new Tooltip(
               Var("project_properties".localize),
               <a href="#" onclick={(event: Event) => {

@@ -55,17 +55,17 @@ object ProjectDataTableModel {
               project.dontRequestWork.map(x => if(x) "project_allow_more_work".localize else "project_dont_allow_more_work".localize),
               <a href="#change-project-state" data-pause-work={project.dontRequestWork.map(_.toString)}
                  onclick={jsToggleWorkAction}>
-                <i class={s"fa fa-${project.dontRequestWork.map(x => if(x) "play" else "pause")}-circle-o"}></i>
+                <i class={project.dontRequestWork.map(x => if(x) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
               </a>
             ).toXML
-
+          }{
             new Tooltip(
               Var("project_refresh".localize),
               <a href="#refresh-project" onclick={jsRefreshAction}>
                 <i class="fa fa-fw fa-refresh" style="font-size:20px"></i>
               </a>
             ).toXML
-
+          }{
             new Tooltip(
               Var("project_properties".localize),
               <a href="#project-properties" onclick={jsShowDetailsAction}>
