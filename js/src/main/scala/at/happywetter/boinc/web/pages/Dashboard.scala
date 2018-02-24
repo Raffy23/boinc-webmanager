@@ -24,6 +24,7 @@ import scala.scalajs.js.Dictionary
 import scala.xml.{Elem, Node, UnprefixedAttribute}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
+import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -87,8 +88,11 @@ object Dashboard extends Layout {
   }
 
   import at.happywetter.boinc.shared.App
-  private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty, workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
-  private case class HostData(cpu: String, memory: String, time: String, deadline: String, disk: String, disk_max: String, disk_value: String, var network: String = "")
+  private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty,
+                                workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
+  private case class HostData(cpu: String, memory: String, time: String, deadline: String,
+                              disk: String, disk_max: String, disk_value: String,
+                              network: Future[String])
 
   private val clients = Var(List.empty[String])
   private val clientDetails = Var(Map.empty[String, Either[HostData, Exception]])
@@ -154,7 +158,7 @@ object Dashboard extends Layout {
                   <td>{injectErrorTooltip(client.hostname)}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.cpu) }</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.memory)}</td>
-                  <td class={Style.centeredText.htmlClass}>{getData(_.network)}</td>
+                  <td class={Style.centeredText.htmlClass}>{getNetwork()}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.time)}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.deadline)}</td>
                   <td style="width:240px" class={BoincClientLayout.Style.progressBar.htmlClass}>
@@ -241,7 +245,7 @@ object Dashboard extends Layout {
           ex =>
             Seq(
             ex match {
-              case _: FetchResponseException => buildTooltip("offline")
+              case _: FetchResponseException => buildTooltip("offline".localize)
               case _ => buildTooltip("error")
             },
             name.toXML
@@ -268,6 +272,17 @@ object Dashboard extends Layout {
     })
   }
 
+  private def getNetwork(errorTooltip: Boolean = false, default: String = "-- / --")(implicit c: String): Rx[Node] = {
+    clientDetails.flatMap(clientMap => {
+      clientMap.get(c).map(data => {
+        data.fold(
+          hostData => hostData.network.map(_.toXML).toRx(default),
+          ex => Var(if(errorTooltip) "ERROR".toXML else "".toXML)
+        )
+      }).getOrElse(Var(default))
+    })
+  }
+
   private def calculateOffsetOfWoruntsTable(): Unit = {
     import at.happywetter.boinc.web.hacks.NodeListConverter._
 
@@ -282,10 +297,7 @@ object Dashboard extends Layout {
   }
 
   private def fullyLoadData(client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
-    loadStateData(client).map(data => {
-      loadFileTransferData(client, data._2)
-      data
-    })
+    loadStateData(client)
   }
 
   private def loadStateData(client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
@@ -314,7 +326,8 @@ object Dashboard extends Layout {
         BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min),
         s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
         state.hostInfo.diskTotal.toString,
-        (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString
+        (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString,
+        loadFileTransferData(client)
       )
 
       ClientCacheHelper.updateCache(client.hostname, state)
@@ -326,16 +339,13 @@ object Dashboard extends Layout {
     }
   }
 
-  private def loadFileTransferData(client: BoincClient, hostData: Either[HostData, Exception]): Unit = {
-    if (hostData.isLeft) {
-      client.getFileTransfer.foreach(transfers => {
-        val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-        val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+  private def loadFileTransferData(client: BoincClient): Future[String] = {
+    client.getFileTransfer.map(transfers => {
+      val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+      val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
 
-        hostData.left.get.network =
-          BoincFormater.convertSpeed(upload) + " / " + BoincFormater.convertSpeed(download)
-      })
-    }
+      BoincFormater.convertSpeed(upload) + " / " + BoincFormater.convertSpeed(download)
+    })
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}

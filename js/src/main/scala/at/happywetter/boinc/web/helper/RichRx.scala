@@ -28,6 +28,15 @@ object RichRx {
 
       rx
     }
+
+    def toRx(default: R, failure: R): Var[R] = {
+      val rx = Var[R](default)
+      future
+        .map(async => rx := async)
+        .recover{ case _ => rx := failure}
+
+      rx
+    }
   }
 
   protected def extract[T](rx: Rx[T]): T = {
