@@ -174,7 +174,7 @@ object ProjectDataTableModel {
             </tbody>
           </table>
         )
-      )
+      ).renderToBody().show()
     }
   }
 
