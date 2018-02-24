@@ -21,7 +21,9 @@ object AppRouter {
     def link: String = AppRouter.href(this)
   }
   case object LoginPageLocation extends Page
-  case object DashboardLocation extends Page
+  case object DashboardLocation extends Page{
+    override def link: String = "/view/dashboard"
+  }
   case object BoincHomeLocation extends Page
 
   case object BoincClientLocation extends Page {
@@ -38,9 +40,11 @@ object AppRouter {
   }
 
   val routes: mutable.Map[Page, (String,Layout)] = new mutable.HashMap[Page, (String,Layout)]()
-  val router = new Navigo()
+  val router = new Navigo(root = s"${dom.window.location.protocol}//${dom.window.location.host}")
 
   def addRoute(page: Page, path: String, layout: Layout): Unit = {
+    println(page + ", " + path + ", " + layout)
+
     routes.put(page, (path,layout))
     router.on(
       path,

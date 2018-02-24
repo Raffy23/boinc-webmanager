@@ -42,17 +42,14 @@ object Main {
       dom.console.log("Setting current language to: " + Locale.current)
       dom.console.log("Language Name: " + "language_name".localize)
 
-      initRouter()
       LayoutManager.init()
+      initRouter()
       navigate()
     })
   }
 
   def navigate(): Unit = {
     AppRouter.router.resolve()
-    //dom.console.log("Finished, navigating to Path: " + dom.window.location.pathname)
-    //
-    //AppRouter.router.navigate(dom.window.location.pathname, absolute = true)
     NProgress.done(true)
   }
 
@@ -79,7 +76,7 @@ object Main {
     AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
     AppRouter.router.notFound((_) => {
       dom.window.alert("page_not_found".localize)
-      dom.console.error(s"Error: The page ('${dom.window.location.pathname}') was not found!")
+      dom.console.error(s"Error: The page ('${AppRouter.current}') was not found!")
 
       AppRouter.navigate(DashboardLocation)
     })

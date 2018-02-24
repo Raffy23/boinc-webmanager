@@ -40,8 +40,6 @@ object LayoutManager {
   }
 
   def render(page: Layout): Unit = {
-    println("Render: " + page)
-
     childLayout := page
     page.onRender()
   }
