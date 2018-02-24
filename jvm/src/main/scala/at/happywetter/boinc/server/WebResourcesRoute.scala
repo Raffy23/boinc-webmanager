@@ -46,10 +46,19 @@ object WebResourcesRoute {
         ),
 
         script( `type` := "text/javascript", src := "/files/app.js"),
-        script( `type` := "text/javascript", "Main.launch()" )
+        script( `type` := "text/javascript", launchScript )
       )
     ).render
   }
+
+  private lazy val launchScript =
+    """
+      | if(Main === undefined) {
+      |   alert('Can not start Application, maybe app.js could not be loaded?')
+      | } else {
+      |   Main.launch()
+      | }
+    """.stripMargin
 
   private lazy val indexPage =
     Ok(indexContent,

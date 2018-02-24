@@ -39,7 +39,7 @@ object Dashboard extends Layout {
     import dsl._
 
     val centeredText: StyleA = style(
-      textAlign.center
+      textAlign.center.important
     )
   }
 
@@ -158,9 +158,8 @@ object Dashboard extends Layout {
                   <td class={Style.centeredText.htmlClass}>{getData(_.time)}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.deadline)}</td>
                   <td style="width:240px" class={BoincClientLayout.Style.progressBar.htmlClass}>
-                    <progress style="width:calc(100% - 5em);margin-right:20px" value={getDataAttr(_.disk_value)} max={getDataAttr(_.disk_max)}>
-                      <span>{getData(_.disk)}</span>
-                    </progress>
+                    <progress style="width:calc(100% - 5em);margin-right:20px" value={getDataAttr(_.disk_value)} max={getDataAttr(_.disk_max)}/>
+                    <span>{getData(_.disk)}</span>
                   </td>
                 </tr>
               }))
