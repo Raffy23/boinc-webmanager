@@ -13,6 +13,7 @@ import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
@@ -112,7 +113,8 @@ class BoincMessageLayout extends BoincClientLayout {
       <div class={FloatingMenu.root.htmlClass}>
         <a class={FloatingMenu.active.htmlClass} onclick={ (event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 
@@ -121,9 +123,10 @@ class BoincMessageLayout extends BoincClientLayout {
         }}>
           {"noties_menu_entry".localize}
         </a>
-        <a class={FloatingMenu.active.htmlClass} onclick={ (event: Event) => {
+        <a onclick={ (event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
+            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+              node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
 

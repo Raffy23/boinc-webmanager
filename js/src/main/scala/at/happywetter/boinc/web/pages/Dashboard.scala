@@ -112,7 +112,7 @@ object Dashboard extends Layout {
         }}>
           {"dashboard_home".localize}
         </a>
-        <a class={FloatingMenu.active.htmlClass} onclick={(event: Event) => {
+        <a onclick={(event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
             if (node.asInstanceOf[HTMLElement].classList != js.undefined)
               node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
