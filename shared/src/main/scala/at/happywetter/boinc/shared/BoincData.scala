@@ -221,33 +221,35 @@ object CCState {
 
 }
 
-final case class GlobalPrefsOverride(runOnBatteries: Boolean,
-                                     batteryChargeMinPct: Double,
-                                     batteryMaxTemperature: Double,
-                                     runIfUserActive: Boolean,
-                                     runGPUIfUserActive: Boolean,
-                                     idleTimeToRun: Double,
-                                     suspendCpuUsage: Double,
-                                     leaveAppsInMemory: Boolean,
-                                     dontVerifyImages: Boolean,
-                                     workBufferMinDays: Double,
-                                     workBufferAdditionalDays: Double,
-                                     maxNCpuPct: Double,
-                                     cpuSchedulingPeriodMinutes: Double,
-                                     diskInterval: Double,
-                                     diskMaxUsedGB: Double,
-                                     diskMaxUsedPct: Double,
-                                     diskMinFreeGB: Double,
-                                     ramUsedBusyPct: Double,
-                                     ramUsedIdlePct: Double,
-                                     maxBytesSecUpload: Double,
-                                     maxBytesSecDownload: Double,
-                                     cpuUsageLimit: Double,
-                                     dailyXFerLimitMB: Double,
-                                     dailyXFerPeriodDays: Int,
-                                     networkWifiOnly: Boolean,
-                                     cpuTimes: List[(Double, Double)],   // length == 7
-                                     netTimes: List[(Double, Double)]    // length == 7
+final case class GlobalPrefsOverride(runOnBatteries: Boolean
+                                     ,batteryChargeMinPct: Double
+                                     ,batteryMaxTemperature: Double
+                                     ,runIfUserActive: Boolean
+                                     ,runGPUIfUserActive: Boolean
+                                     ,idleTimeToRun: Double
+                                     ,suspendCpuUsage: Double
+                                     ,leaveAppsInMemory: Boolean
+                                     ,dontVerifyImages: Boolean
+                                     ,workBufferMinDays: Double
+                                     ,workBufferAdditionalDays: Double
+                                     ,maxNCpuPct: Double
+                                     ,cpuSchedulingPeriodMinutes: Double
+                                     ,diskInterval: Double
+                                     ,diskMaxUsedGB: Double
+                                     ,diskMaxUsedPct: Double
+                                     ,diskMinFreeGB: Double
+                                     ,ramUsedBusyPct: Double
+                                     ,ramUsedIdlePct: Double
+                                     ,maxBytesSecUpload: Double
+                                     ,maxBytesSecDownload: Double
+                                     ,cpuUsageLimit: Double
+                                     ,dailyXFerLimitMB: Double
+                                     ,dailyXFerPeriodDays: Int
+                                     ,networkWifiOnly: Boolean
+                                     ,cpuTime: (Double, Double)
+                                     ,netTime: (Double, Double)
+                                     ,cpuTimes: List[(Double, Double)]    // length == 7
+                                     ,netTimes: List[(Double, Double)]    // length == 7
                                     )
 
 final case class TimeSpan(start: Double, end: Double)

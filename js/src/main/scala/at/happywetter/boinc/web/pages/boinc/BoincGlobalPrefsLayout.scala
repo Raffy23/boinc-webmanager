@@ -63,7 +63,7 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
   override val path = "global_prefs"
 
   private var globalPrefsOverride = Var(
-    GlobalPrefsOverride(false,0D,0D,false,false,0D,0D,false,false,0D,0D,0D,0D,0D,0D,0D,0D, 0D,0D,0D,0D,0D,0D,0,false,List(),List())
+    GlobalPrefsOverride(false,0D,0D,false,false,0D,0D,false,false,0D,0D,0D,0D,0D,0D,0D,0D, 0D,0D,0D,0D,0D,0D,0,false,(-1D,-1D),(-1D,-1D),List(),List())
   )
 
   override def already(): Unit = onRender()
@@ -214,6 +214,8 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
         getHTMLInputElement("maxBytes").value.toDouble,
         getHTMLInputElement("maxBytesPeriod").value.toInt,
         globalPrefsOverride.networkWifiOnly,
+        globalPrefsOverride.cpuTime,
+        globalPrefsOverride.netTime,
         globalPrefsOverride.cpuTimes,
         globalPrefsOverride.netTimes
       )
