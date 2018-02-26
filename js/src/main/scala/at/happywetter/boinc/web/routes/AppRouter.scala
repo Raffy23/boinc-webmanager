@@ -43,8 +43,6 @@ object AppRouter {
   val router = new Navigo(root = s"${dom.window.location.protocol}//${dom.window.location.host}")
 
   def addRoute(page: Page, path: String, layout: Layout): Unit = {
-    println(page + ", " + path + ", " + layout)
-
     routes.put(page, (path,layout))
     router.on(
       path,
