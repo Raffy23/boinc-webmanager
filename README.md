@@ -10,12 +10,11 @@ Boinc Webmanager is compatible with most **7.x.x** BOINC Versions
 * Display multiple Clients in a simple Dashboard View
 * Display Projects / Workunits and other data similar to the BOINC Manager
 * Limited control over Workunits and Projects (suspend, delete, ...)
-* Auto Discovery for BOINC Clients 
+* Auto Discovery for BOINC Clients in local network
 
 ## Building
-The Boinc Webmanager currently needs scala >= **2.12.2** and sbt >= **0.13.16** which must be installed 
-before the Project can be build. All other Dependencies are managed by SBT. To build the Project
-follow theses steps: 
+The Boinc Webmanager currently needs scala **2.12.3** and sbt **1.0.3**. 
+All other Dependencies are managed by SBT. To build the Project follow theses steps: 
 
  - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
  - Copy `boinc-webmanager-opt.js` and `boinc-webmanager-jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
@@ -49,6 +48,5 @@ would hang*
 A short overview of the Server API is documented [here](doc/Server-API.md)
 
 ## Issues
-* ~~Does not work in Internet Explorer or Microsoft Edge~~
-* Page broken on Mobile Devices
+* Page broken on Mobile Devices, minimal width is ~1120
 * Self-Signed Certificate causes Unsafe Error in Chrome / Firefox / ...

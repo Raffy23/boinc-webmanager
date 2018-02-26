@@ -13,6 +13,11 @@ boinc-default-port: 31416
 # True if the WebServer should run in development mode
 # development: false 
 
+# If started as service or where stdin does not block
+# set this to true, otherwise server shuts down on a 
+# keypress 
+service-mode: false
+
 # Basic Settings of the Server
 server {
   # Adress and Port on which the Server listens
