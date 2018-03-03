@@ -1,14 +1,14 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.ServerConfig
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, HardwareLocation, SettingsLocation, SwarmControlLocation}
+import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage}
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
 import scala.xml.Elem
@@ -90,14 +90,14 @@ object DashboardMenu {
   def component: Elem = {
     <ul class={Style.menu.htmlClass} id="dashboard-menu" style={viewState}>
       <li class={Style.elem.htmlClass}>
-        <a href={DashboardLocation.link} onclick={masterSelectionListener}
+        <a href={Dashboard.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="dashboard">
           <i class="fa fa-tachometer"></i>
           {"dashboard_menu_home".localize}
         </a>
       </li>
       <li class={Style.elem.htmlClass}>
-        <a href={SwarmControlLocation().link} onclick={masterSelectionListener}
+        <a href={BoincSwarmPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="swarm_control">
           <i class="fa fa-industry"></i>
           {"dashboard_swarm_control".localize}
@@ -107,7 +107,7 @@ object DashboardMenu {
       {hwMenuEntry}
 
       <li class={Style.elem.htmlClass}>
-        <a href={SettingsLocation.link} onclick={masterSelectionListener}
+        <a href={SettingsPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="settings">
           <i class="fa fa-cog"></i>
           {"dashboard_menu_settings".localize}
@@ -166,7 +166,7 @@ object DashboardMenu {
       if (config.hardware) {
         hwMenuEntry :=
           <li class={Style.elem.htmlClass}>
-            <a href={HardwareLocation.link} onclick={masterSelectionListener}
+            <a href={HardwarePage.link} onclick={masterSelectionListener}
                data-navigo={true} data-menu-id="dashboard_hardware">
               <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>

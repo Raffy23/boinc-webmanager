@@ -7,7 +7,6 @@ import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
 
@@ -26,11 +25,8 @@ object HardwarePage extends Layout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    AuthClient.validateAction(done)
   }
 
   private var clients: Future[List[HardwareStatusClient]] = _

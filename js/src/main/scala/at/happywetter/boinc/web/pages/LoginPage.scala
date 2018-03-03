@@ -5,7 +5,6 @@ import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.LoginPage.Style
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.routes.AppRouter.DashboardLocation
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.LanguageDataProvider
@@ -81,7 +80,11 @@ object LoginPage {
       )
     )
   }
+
+  def link: String = "/view/login"
+
 }
+
 class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layout {
   override val path = "login"
 
@@ -135,7 +138,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
         dom.window.sessionStorage.setItem("username", username)
         dom.window.sessionStorage.setItem("password", password)
 
-        AppRouter.navigate(event, DashboardLocation)
+        AppRouter.navigate(event, Dashboard)
 
         PageLayout.showMenu()
         DashboardMenu.processSeverConfig()
@@ -153,7 +156,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
     event.preventDefault()
   }
 
-  override def before(done: js.Function0[Unit]): Unit = {
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
     val usr = dom.window.sessionStorage.getItem("username")
     val pwd = dom.window.sessionStorage.getItem("password")
 
@@ -163,7 +166,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
 
     if (usr != null && pwd != null) {
       loginValidator(usr, pwd).foreach {
-        case true => AppRouter.navigate(DashboardLocation)
+        case true => AppRouter.navigate(Dashboard.link)
         case _ =>
           dom.window.sessionStorage.removeItem("username")
           dom.window.sessionStorage.removeItem("password")

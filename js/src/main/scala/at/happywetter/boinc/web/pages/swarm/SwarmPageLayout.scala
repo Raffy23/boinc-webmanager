@@ -1,21 +1,16 @@
 package at.happywetter.boinc.web.pages.swarm
 
-import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.{Layout, PageLayout}
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.SwarmTopNavigation
-import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
+import at.happywetter.boinc.web.pages.{Layout, PageLayout}
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
+import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
-import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.pages.component.DashboardMenu
-import at.happywetter.boinc.web.util.DashboardMenuBuilder
-import org.scalajs.dom
 
 /**
   * Created by: 
@@ -25,13 +20,10 @@ import org.scalajs.dom
   */
 abstract class SwarmPageLayout extends Layout {
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  override def link: String = "/view/swarm/" + path
 
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    AuthClient.validateAction(done)
   }
 
   override def render: Elem = {

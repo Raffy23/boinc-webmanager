@@ -4,10 +4,10 @@ import at.happywetter.boinc.shared.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
@@ -24,7 +24,6 @@ import scala.scalajs.js.Dictionary
 import scala.xml.{Elem, Node, UnprefixedAttribute}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
-import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -44,15 +43,12 @@ object Dashboard extends Layout {
     )
   }
 
-  override def before(done: js.Function0[Unit]): Unit = {
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
     PageLayout.clearNav()
     PageLayout.showMenu()
     PageLayout.clearNav()
 
-    AuthClient.tryLogin.map {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+    AuthClient.validateAction(done)
   }
 
 
@@ -66,7 +62,7 @@ object Dashboard extends Layout {
 
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
-      this.clients := clients
+      this.clients := clients.sorted
 
       Future.sequence(
         clients.map(c => ClientManager.clients(c)).map(client => fullyLoadData(client))

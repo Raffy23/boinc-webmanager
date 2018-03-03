@@ -5,7 +5,6 @@ import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
@@ -73,11 +72,8 @@ object SettingsPage extends Layout {
     </div>
   }
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    AuthClient.validateAction(done)
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {

@@ -54,39 +54,37 @@ object Main {
   }
 
   def initRouter(): Unit = {
-    AppRouter.addRoute(LoginPageLocation, "/view/login", new LoginPage(AuthClient.validate))
-    AppRouter.addRoute(DashboardLocation, "/view/dashboard", Dashboard)
-    AppRouter.addRoute(SettingsLocation, "/view/settings", SettingsPage)
-    AppRouter.addRoute(SwarmControlLocation(), "/view/swarm", new BoincSwarmPage)
-    AppRouter.addRoute(SwarmControlLocation("/boinc"), "/view/swarm/boinc", new BoincSwarmPage)
-    AppRouter.addRoute(SwarmControlLocation("/projects"), "/view/swarm/projects", new ProjectSwarmPage)
-    AppRouter.addRoute(HardwareLocation, "/view/hardware", HardwarePage)
+    // Login Page:
+    AppRouter += new LoginPage(AuthClient.validate)
 
-    // Catch default path: 
-    AppRouter.addRoute(BoincClientLocation, s"${BoincClientLocation.link}/:client", new BoincMainHostLayout)
-    addBoincRoute(new BoincMainHostLayout)
-    addBoincRoute(new BoincTaskLayout)
-    addBoincRoute(new BoincProjectLayout)
-    addBoincRoute(new BoincFileTransferLayout)
-    addBoincRoute(new BoincDiskLayout)
-    addBoincRoute(new BoincMessageLayout)
-    addBoincRoute(new BoincGlobalPrefsLayout)
-    addBoincRoute(new BoincStatisticsLayout)
+    // Static pages for all views:
+    AppRouter += Dashboard
+    AppRouter += SettingsPage
+    AppRouter += HardwarePage
 
-    AppRouter.router.on(() => AppRouter.navigate(DashboardLocation))
+    // Swarm pages:
+    AppRouter += new BoincSwarmPage
+    AppRouter += new ProjectSwarmPage
+
+    // All Boinc pages:
+    (AppRouter += BoincRootLayout).currentController = AppRouter += new BoincMainHostLayout
+    AppRouter += new BoincTaskLayout
+    AppRouter += new BoincProjectLayout
+    AppRouter += new BoincFileTransferLayout
+    AppRouter += new BoincDiskLayout
+    AppRouter += new BoincMessageLayout
+    AppRouter += new BoincGlobalPrefsLayout
+    AppRouter += new BoincStatisticsLayout
+
+    AppRouter.router.on(() => AppRouter.navigate(Dashboard))
     AppRouter.router.notFound((_) => {
       dom.window.alert("page_not_found".localize)
       dom.console.error(s"Error: The page ('${AppRouter.current}') was not found!")
 
-      AppRouter.navigate(DashboardLocation)
+      AppRouter.navigate(Dashboard)
     })
 
     AppRouter.router.updatePageLinks()
   }
-
-  private def addRoute(root: String, layout: Layout): Unit =
-    AppRouter.addRoute(BoincClientLocation, s"$root/:client/${layout.path}", layout)
-
-  private def addBoincRoute(layout: Layout): Unit = addRoute(BoincClientLocation.link, layout)
 
 }

@@ -2,17 +2,16 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.{Layout, PageLayout}
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.BoincTopNavigation
+import at.happywetter.boinc.web.pages.{Dashboard, Layout, LoginPage, PageLayout}
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
+import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.util.DashboardMenuBuilder
-import org.scalajs.dom
+import scala.util.Try
 
 /**
   * Created by: 
@@ -23,19 +22,30 @@ import org.scalajs.dom
 abstract class BoincClientLayout extends Layout {
 
   implicit var boincClientName: String = _
+
+  override def link: String = {
+    val name =
+      if(boincClientName != null) boincClientName
+      else ":client"
+
+    s"/view/boinc-client/$name/$path"
+  }
+
   protected implicit var boinc: BoincClient = _
 
   override def beforeRender(params: Dictionary[String]): Unit = {
+    println(s"BoincClientLayout.beforeRender(${params.toList})")
+
     if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]]) {
       dom.console.error("Unable to instantiate Boinc Client Layout without params!")
       if (boinc == null) {
         dom.console.error("No Fallback Client from prev. view, falling back to Dashboard!")
-        AppRouter.navigate(AppRouter.DashboardLocation)
+        AppRouter.navigate(Dashboard)
       }
 
     } else {
-      boincClientName = params.get("client").get
-      boinc = ClientManager.clients(boincClientName)
+      parse(params)
+      BoincRootLayout.currentController = this
     }
 
     PageLayout.showMenu()
@@ -47,12 +57,23 @@ abstract class BoincClientLayout extends Layout {
     DashboardMenu.selectMenuItemByContent(boincClientName)
   }
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    AuthClient.validateAction(done)
+    parse(params)
+  }
 
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
+  private def parse(params: js.Dictionary[String]): Unit = {
+    if(params == null)
+      return
+
+    boincClientName = params.get("client").get
+
+    Try(
+      boinc = ClientManager.clients(boincClientName)
+    ).recover{
+      case e: Exception =>
+        ErrorDialogUtil.showDialog(e)
+        AppRouter.navigate(Dashboard)
     }
   }
 
@@ -136,5 +157,9 @@ object BoincClientLayout {
 
     )
   }
+
+  def link(client: String, path: String): String = s"/view/boinc-client/$client/$path"
+
+  def link(client: String): String = s"/view/boinc-client/$client"
 
 }

@@ -4,12 +4,15 @@ import at.happywetter.boinc.shared.User
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.hacks.TextEncoder
 import at.happywetter.boinc.web.helper.ResponseHelper.ErrorResponseFeature
+import at.happywetter.boinc.web.pages.LoginPage
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
 
@@ -48,6 +51,15 @@ object AuthClient {
           e.printStackTrace()
           false
       }
+  }
+
+  def validateAction(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPage.link)
+    }
   }
 
   private def requestToken(user: User): Future[String] = {

@@ -1,10 +1,12 @@
 package at.happywetter.boinc.web.pages.swarm
 
-import at.happywetter.boinc.shared.BoincRPC
 import at.happywetter.boinc.shared.BoincRPC.Modes
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage.Style
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
@@ -18,9 +20,6 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.{Elem, Node, UnprefixedAttribute}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.pages.component.Tooltip
-import at.happywetter.boinc.web.helper.XMLHelper._
 
 /**
   * Created by: 
@@ -66,6 +65,7 @@ object BoincSwarmPage {
     )
   }
 
+  def link = "/view/swarm/boinc"
 }
 
 class BoincSwarmPage extends SwarmPageLayout {
