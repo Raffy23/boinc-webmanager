@@ -1,6 +1,7 @@
 package at.happywetter.boinc.util
 
 import java.net.{InetSocketAddress, Socket}
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.{ScheduledExecutorService, TimeUnit}
 
 import at.happywetter.boinc.AppConfig.AutoDiscovery
@@ -19,16 +20,28 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: (Future[Lis
   private val start = IP(config.startIp)
   private val end   = IP(config.endIp)
 
+  val excluded = new AtomicReference[List[IP]](List.empty)
+
   if (config.enabled)
     scheduler.scheduleWithFixedDelay(() => autoScanCallback( search ), config.scanTimeout, config.scanTimeout, TimeUnit.MINUTES)
 
   def search: Future[List[IP]] =
     Future
       .sequence( propeRange(config.port) )
-      .map(_.filter { case (_, found) => found })
+      .map(_.filter { case (ip, found) => excludeIP(ip, found) })
       .map(_.map { case (ip, _) => ip })
 
-  private def propeRange(port: Int) = (start to end).map(ip => { propeSocket(ip, port) }).toList
+  private def excludeIP(ip: IP, found: Boolean): Boolean = {
+    if (found)
+      excluded.set(ip :: excluded.get())
+
+    found
+  }
+
+  private def propeRange(port: Int) = (start to end)
+    .filterNot(excluded.get().contains)
+    .map(ip => { propeSocket(ip, port) })
+    .toList
 
   private def propeSocket(ip: IP, port: Int) = Future {
     val socket = new Socket()

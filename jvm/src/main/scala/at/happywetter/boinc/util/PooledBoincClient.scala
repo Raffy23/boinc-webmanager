@@ -33,13 +33,15 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
     lastUsed += (client -> 0)
   })
 
-  private def connection[R](extractor: (BoincClient) => Future[R]): Future[R] =
-    Future {
-      val con = pool.take()
-      lastUsed(con) = System.currentTimeMillis()
+  private def takeConnection(): Future[BoincClient] = Future {
+    val con = pool.take()
+    lastUsed(con) = System.currentTimeMillis()
 
-      con
-    }
+    con
+  }
+
+  private def connection[R](extractor: (BoincClient) => Future[R]): Future[R] =
+    takeConnection()
       .map(client => (client, extractor(client)))
       .flatMap{ case (client, result) => pool.offer(client); result }
       .recover{ case e: Exception => deathCounter.incrementAndGet(); throw e }
