@@ -1,10 +1,13 @@
 package at.happywetter.boinc.boincclient
 
-import scala.concurrent.Future
-import scala.xml.XML
-import scalaj.http.{Http, HttpOptions}
+import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
+import at.happywetter.boinc.shared.webrpc._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.Try
+import scala.xml.{NodeSeq, XML}
+import scalaj.http.{Http, HttpOptions, HttpRequest}
 
 /**
   * Created by: 
@@ -38,9 +41,11 @@ object WebRPC {
   //}
 
   //TODO:
-  //def getServerStatus(url: String): Future[WebRPCServerStatus] = Future {
-  //  Http(url+"/server_status.php?xml=1").option(HttpOptions.followRedirects(true)).asString.body.toServerStatus
-  //}
+  def getServerStatus(url: String): Future[ServerStatus] = Future {
+    ServerStatusParser.fromXML(
+      Http(url+"/server_status.php?xml=1").option(HttpOptions.followRedirects(true)).asXML
+    )
+  }
 
   def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {
     var request = Http(url+"/lookup_account.php")
@@ -59,6 +64,11 @@ object WebRPC {
         (false, Some("err_unable_to_read_webrpc_response"))
     }.get
 
+  }
+
+
+  private implicit class XMLHttpResponse(httpRequest: HttpRequest) {
+    def asXML: NodeSeq = XML.loadString(httpRequest.asString.body)
   }
 
 }
