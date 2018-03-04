@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.web.boincclient._
+import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.WuDataTableModel.WuTableRow
@@ -10,6 +11,7 @@ import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 
 import scala.xml.Elem
+import at.happywetter.boinc.web.helper.ScalaCSS._
 
 /**
   * Created by: 

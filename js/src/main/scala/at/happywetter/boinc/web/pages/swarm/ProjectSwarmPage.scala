@@ -57,7 +57,7 @@ object ProjectSwarmPage {
 }
 
 class ProjectSwarmPage extends SwarmPageLayout {
-  override val path: String = "project"
+  override val path: String = "projects"
 
   private val dataset: Var[Map[String, List[(BoincClient, Project)]]] = Var(Map.empty)
   private case class Account(userName: String, teamName: String, credits: Double)

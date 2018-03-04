@@ -9,7 +9,7 @@ import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement}
 
 import scala.xml.{Elem, Node, Text}
-import scalacss.internal.StyleA
+import at.happywetter.boinc.web.helper.ScalaCSS._
 
 /**
   * Created by: 
@@ -40,12 +40,14 @@ object DataTable {
   }
 }
 
-class DataTable[T <: TableRow](headers: List[(String, Boolean)],val tableData: List[T] = List.empty, tableStyle: Option[StyleA] = None) {
+class DataTable[T <: TableRow](headers: List[(String, Boolean)],
+                               val tableData: List[T] = List.empty,
+                               tableStyle: List[String] = List(TableTheme.table, TableTheme.table_lastrowsmall)) {
 
   val reactiveData: Var[List[T]] = Var(tableData)
 
   lazy val component: Elem = {
-    <table class={TableTheme.table.htmlClass}>
+    <table class={tableStyle.mkString(" ")}>
       <thead>
         <tr>
           {
