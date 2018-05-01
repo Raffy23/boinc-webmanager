@@ -244,7 +244,7 @@ object Dashboard extends Layout {
             Seq(
             ex match {
               case _: FetchResponseException => buildTooltip("offline".localize)
-              case _ => buildTooltip("error")
+              case _ => buildTooltip("error".localize)
             },
             name.toXML
           )
@@ -342,7 +342,7 @@ object Dashboard extends Layout {
       val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
       val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
 
-      BoincFormater.convertSpeed(upload) + " / " + BoincFormater.convertSpeed(download)
+      BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
     })
   }
 

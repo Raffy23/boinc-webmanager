@@ -169,7 +169,7 @@ object WuDataTableModel {
                 <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{task.cpuTime.toTime}</td></tr>,
                 <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{task.time.toTime}</td></tr>,
                 <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>,
-                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{task.workingSet.toTime}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{task.workingSet.toSize}</td></tr>,
                 <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{task.swapSize.toSize}</td></tr>,
                 <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>,
                 <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>,
