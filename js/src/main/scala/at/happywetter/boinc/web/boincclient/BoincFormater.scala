@@ -12,7 +12,9 @@ object BoincFormater {
 
   def convertDate(date: Date): String = date.toLocaleDateString() + " " + date.toLocaleTimeString()
 
-  def convertDate(unixtimestamp: Double): String = convertDate(new Date(unixtimestamp*1000))
+  def convertDate(unixtimestamp: Double): String =
+    if(unixtimestamp > 0) convertDate(new Date(unixtimestamp*1000))
+    else ""
 
   def convertTime(time: Double): String = {
     val day  = time.toInt / 86400

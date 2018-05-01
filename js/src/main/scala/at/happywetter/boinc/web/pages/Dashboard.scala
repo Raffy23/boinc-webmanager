@@ -25,6 +25,8 @@ import scala.xml.{Elem, Node, UnprefixedAttribute}
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 
+import scala.util.Try
+
 /**
   * Created by: 
   *
@@ -319,7 +321,7 @@ object Dashboard extends Layout {
             .map(_.workingSet)
             .sum)} / ${BoincFormater.convertSize(state.hostInfo.memory)}",
         BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus),
-        BoincFormater.convertDate(state.results.map(f => f.reportDeadline).min),
+        BoincFormater.convertDate(Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D)),
         s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
         state.hostInfo.diskTotal.toString,
         (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString,
