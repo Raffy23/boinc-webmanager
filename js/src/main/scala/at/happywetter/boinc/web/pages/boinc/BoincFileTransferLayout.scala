@@ -8,6 +8,7 @@ import mhtml.Var
 
 import scala.util.Try
 import scala.xml.Elem
+import BoincFormater.Implicits._
 
 /**
   * Created by: 
@@ -34,6 +35,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
         <thead>
           <tr>
             <th>{"table_project".localize}</th><th>{"table_task".localize}</th>
+            <th>{"table_transfer_size".localize}</th>
             <th>{"table_transfer".localize}</th> <th>{"table_speed".localize}</th>
             <th>{"table_transfer_time".localize}</th> <th>{"table_status".localize}</th>
           </tr>
@@ -44,9 +46,10 @@ class BoincFileTransferLayout extends BoincClientLayout {
               <tr>
                 <td>{transfer.projectName}</td>
                 <td>{transfer.name}</td>
-                <td>{BoincFormater.convertSize(transfer.fileXfer.bytesXfered)}</td>
-                <td>{BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"}</td>
-                <td>{BoincFormater.convertTime(transfer.xfer.timeSoFar)}</td>
+                <td>{transfer.byte.toSize}</td>
+                <td>{transfer.fileXfer.bytesXfered.toSize}</td>
+                <td>{transfer.fileXfer.xferSpeed.toSpeed}</td>
+                <td>{transfer.xfer.timeSoFar.toTime}</td>
                 <td>{buildStatusField(transfer)}</td>
               </tr>
             }))

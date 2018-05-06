@@ -26,6 +26,7 @@ import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
 
 import scala.util.Try
+import BoincFormater.Implicits._
 
 /**
   * Created by: 
@@ -314,14 +315,15 @@ object Dashboard extends Layout {
                 .getOrElse(0)
             ).sum
         } / ${state.hostInfo.cpus}",
-        s"${BoincFormater.convertSize(
+        s"${
           state.results
             .filter(_.activeTask.nonEmpty)
             .map(_.activeTask.get)
             .map(_.workingSet)
-            .sum)} / ${BoincFormater.convertSize(state.hostInfo.memory)}",
+            .sum
+            .toSize} / ${state.hostInfo.memory.toSize}",
         BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus),
-        BoincFormater.convertDate(Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D)),
+        Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D).toDate,
         s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
         state.hostInfo.diskTotal.toString,
         (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString,
@@ -342,7 +344,7 @@ object Dashboard extends Layout {
       val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
       val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
 
-      BoincFormater.convertSize(upload) + " / " + BoincFormater.convertSize(download)
+      upload.toSize + " / " + download.toSize
     })
   }
 

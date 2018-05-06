@@ -28,6 +28,7 @@ object ProjectParser {
     (node \ "host_total_credit").text.toDouble,
     (node \ "host_expavg_credit").text.toDouble,
     (node \ "dont_request_more_work").xml_==(<dont_request_more_work/>),
+    (node \ "suspended_via_gui").xml_==(<suspended_via_gui/>),
     (node \ "trickle_up_pending").xml_==(<trickle_up_pending/>),
     (node \ "resource_share").text.toDouble,
     (node \ "desired_disk_usage").tryToDouble,

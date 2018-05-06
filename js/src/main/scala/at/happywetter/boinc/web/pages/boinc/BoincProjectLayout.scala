@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.ProjectDataTableModel.ProjectTableRow
@@ -57,6 +58,12 @@ object BoincProjectLayout {
       cursor.pointer
     )
 
+    val lastTableCol = style(
+      unsafeChild("tbody>tr>td:last-of-type")(
+        width(7 em)
+      )
+    )
+
   }
 }
 
@@ -73,8 +80,14 @@ class BoincProjectLayout extends BoincClientLayout {
       ("table_credits".localize, true),
       ("table_avg_credits".localize, true),
       ("", false)
+    ),
+    List.empty,
+    List(
+      TableTheme.table.htmlClass,
+      Style.lastTableCol.htmlClass
     )
   )
+
 
   override def render: Elem = {
     boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)

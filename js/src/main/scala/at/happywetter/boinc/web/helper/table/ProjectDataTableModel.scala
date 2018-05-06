@@ -12,12 +12,11 @@ import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{ErrorDialogUtil, StatisticPlatforms}
-import mhtml.Var
+import mhtml.{Rx, Var}
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 
@@ -29,9 +28,13 @@ import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
   */
 object ProjectDataTableModel {
 
+  private implicit class BoolVar(_var: Var[Boolean]) {
+    def mapBoolean[T](_true: T, _false: T): Rx[T] = _var.map(x => if(x) _true else _false)
+  }
 
   class ReactiveProject(val data: Project) {
     val dontRequestWork: Var[Boolean] = Var(data.dontRequestWork)
+    val suspended: Var[Boolean] = Var(data.suspended)
   }
 
   class ProjectTableRow(val project: ReactiveProject)(implicit boinc: BoincClient) extends DataTable.TableRow {
@@ -52,19 +55,25 @@ object ProjectDataTableModel {
         <div>
           {
             new Tooltip(
-              project.dontRequestWork.map(x => if(x) "project_allow_more_work".localize else "project_dont_allow_more_work".localize),
-              <a href="#change-project-state" data-pause-work={project.dontRequestWork.map(_.toString)}
-                 onclick={jsToggleWorkAction}>
-                <i class={project.dontRequestWork.map(x => if(x) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
+              project.dontRequestWork.mapBoolean("project_allow_more_work".localize, "project_dont_allow_more_work".localize),
+              <a href="#change-project-state" onclick={jsToggleWorkAction}>
+                <i class={project.dontRequestWork.mapBoolean("lock", "unlock").map(x => s"fa fa-$x")} style="font-size:20px"></i>
               </a>
             ).toXML
           }{
             new Tooltip(
-              Var("project_refresh".localize),
-              <a href="#refresh-project" onclick={jsRefreshAction}>
-                <i class="fa fa-fw fa-refresh" style="font-size:20px"></i>
+              project.suspended.mapBoolean("project_running".localize, "project_suspended".localize),
+              <a href="#refresh-project" onclick={jsPauseAction}>
+                <i class={project.suspended.mapBoolean("play", "pause").map(x => s"fa fa-$x-circle-o")}></i>
               </a>
             ).toXML
+          }{
+          new Tooltip(
+            Var("project_refresh".localize),
+            <a href="#pause-project" onclick={jsRefreshAction}>
+              <i class="fa fa-fw fa-refresh" style="font-size:20px"></i>
+            </a>
+          ).toXML
           }{
             new Tooltip(
               Var("project_properties".localize),
@@ -119,6 +128,24 @@ object ProjectDataTableModel {
         if (!result)
           new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
             .renderToBody().show()
+
+      }).recover(ErrorDialogUtil.showDialog)
+    }
+
+    private lazy val jsPauseAction: (Event) => Unit = (event) => {
+      event.preventDefault()
+      NProgress.start()
+
+      val action = project.suspended.mapBoolean(ProjectAction.Resume, ProjectAction.Suspend).now
+
+      boinc.project(project.data.url, action).map(result => {
+        NProgress.done(true)
+
+        if (!result)
+          new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+            .renderToBody().show()
+        else
+          project.suspended.update(!_)
 
       }).recover(ErrorDialogUtil.showDialog)
     }

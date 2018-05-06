@@ -147,6 +147,7 @@ final case class Project(name: String
                          , hostTotalCredit: Double
                          , hostAvgCredit: Double
                          , dontRequestWork: Boolean
+                         , suspended: Boolean
                          , trickles: Boolean
                          , resourceShare: Double
                          , desiredDiskUsage: Double
