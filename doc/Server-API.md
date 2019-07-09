@@ -4,9 +4,9 @@ This Document gives a short overview of the REST Service which is provided by th
 Webserver. This functions are used by the Webclient but can also be used by any other
 Program. 
 
-*Please note that a the Library [Prickle](https://github.com/benhutchison/prickle) which 
-is used to serialize Scala Classes to JSON and back do produce Elements names like `#id`
-and the Server might fail to parse the JSON if these Elements are not present!* 
+POST requests that are made by the client encode the data into the JSON format, while the
+server will always answer in the message pack format. If the client does support gzip compression
+it will used to compress the ``/language`` endpoint. 
 
 ### Authentication
 To be able to use all REST functions the client has to login and retrieve a JWT-Token.

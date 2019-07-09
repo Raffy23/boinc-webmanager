@@ -13,7 +13,7 @@ Boinc Webmanager is compatible with most **7.x.x** BOINC Versions
 * Auto Discovery for BOINC Clients in local network
 
 ## Building
-The Boinc Webmanager currently needs scala **2.12.3** and sbt **1.0.3**. 
+The Boinc Webmanager currently needs scala **2.12.8** and sbt **1.0.3**. 
 All other Dependencies are managed by SBT. To build the Project follow theses steps: 
 
  - Execute following commands to Build the Javascript Client: `managerJS/fullOptJS`
