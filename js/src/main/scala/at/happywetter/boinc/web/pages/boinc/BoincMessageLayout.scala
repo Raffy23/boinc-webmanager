@@ -113,7 +113,7 @@ class BoincMessageLayout extends BoincClientLayout {
       <div class={FloatingMenu.root.htmlClass}>
         <a class={FloatingMenu.active.htmlClass} onclick={ (event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+            if (!js.isUndefined(node.asInstanceOf[HTMLElement].classList))
               node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
@@ -125,7 +125,7 @@ class BoincMessageLayout extends BoincClientLayout {
         </a>
         <a onclick={ (event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+            if (!js.isUndefined(node.asInstanceOf[HTMLElement].classList))
               node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
@@ -203,7 +203,7 @@ class BoincMessageLayout extends BoincClientLayout {
     </div>
   }
 
-  private def jsOnContentMountAction(content: String): (dom.html.Paragraph) => Unit = (p) => {
+  private def jsOnContentMountAction(content: String): dom.html.Paragraph => Unit = p => {
     p.appendChild(convertContent(content))
   }
 

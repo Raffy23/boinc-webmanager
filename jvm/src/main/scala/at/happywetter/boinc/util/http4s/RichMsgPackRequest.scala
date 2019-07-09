@@ -2,8 +2,8 @@ package at.happywetter.boinc.util.http4s
 
 import cats.{Applicative, Monad}
 import org.http4s.dsl.io._
-import org.http4s.{EntityDecoder, Request, Response}
-import upickle.default.{Reader, readBinary, read}
+import org.http4s.{EntityDecoder, Header, Headers, Request, Response}
+import upickle.default.{Reader, read, readBinary}
 
 import scala.language.higherKinds
 import scala.util.Try
@@ -16,23 +16,28 @@ import scala.util.Try
   */
 object RichMsgPackRequest {
 
+  private val HEADER_MSGPACK = "application/messagepack"
+  private val HEADER_JSON    = "application/json; charset=utf-8"
+
   implicit class RichMsgPacKResponse[F[_]: Applicative](request: Request[F]) {
 
-    def decodeMessagePack[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] = {
-      println(contentReader.getClass)
+    def decodeMessagePack[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] =
       request.decode[Array[Byte]] { body =>
-        println(new String(body))
-        println(body.mkString(""))
-        Try(readBinary(body)).map(f).recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}.get
+        Try(readBinary(body))
+          .map(f)
+          .map(resp => F.map(resp)(_.withHeaders(Headers.of(Header("Content-Type", HEADER_MSGPACK)))))
+          .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError)) }
+          .get
       }
-    }
 
-    def decodeJson[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] = {
+    def decodeJson[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] =
       request.decode[Array[Byte]] { body =>
-        Try(read(body)).map(f).recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}.get
+        Try(read(body))
+          .map(f)
+          .map(resp => F.map(resp)(_.withHeaders(Headers.of(Header("Content-Type", HEADER_JSON)))))
+          .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}
+          .get
       }
-    }
-
   }
 
 }

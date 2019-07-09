@@ -12,8 +12,11 @@ import org.http4s.util.CaseInsensitiveString
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
-import upickle.default.{writeBinary}
+import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
+import cats.data.Kleisli
+
+import at.happywetter.boinc.util.http4s.Implicits._
 
 /**
   * Created by: 
@@ -38,17 +41,14 @@ class AuthenticationService(config: Config) {
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
         validate(header.value) match {
           case Success(true) => Ok(writeBinary(refreshToken(header.value)))
-          case _ => new Response[IO](status = Unauthorized)
-            .withBody(writeBinary(ApplicationError("error_invalid_token")))
+          case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_invalid_token"))))
         }
 
       }).getOrElse(
-        new Response[IO](status = Unauthorized)
-          .withBody(writeBinary(ApplicationError("error_no_token")))
+        IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
       )
 
     case request @ POST -> Root =>
-      println(s"POST: ${writeBinary(User("admin", AuthenticationService.sha256Hash("password"), "b4775713f235c5173b166820dfa04208923fb38096b28f7a6b0a697f088377e6")).mkString("")}")
       request.decodeJson[User]{ user =>
         if (config.server.username.equals(user.username)
           && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
@@ -60,14 +60,10 @@ class AuthenticationService(config: Config) {
   }
 
   private def denyService(errorText: String): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case _ =>
-      new Response[IO]()
-        .withBody(writeBinary(ApplicationError(errorText)))
-        .map(_.withStatus(Unauthorized))
+    case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError(errorText))))
   }
 
-  // TODO: Update to http4s 0.20.0-M4
-  def protectedService(service: HttpService[IO]): HttpService[IO] = Service.lift { req: Request[IO] =>
+  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
       validate(header.value) match {
         case Success(true) => service(req)

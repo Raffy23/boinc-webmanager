@@ -5,8 +5,8 @@ Webserver. This functions are used by the Webclient but can also be used by any 
 Program. 
 
 POST requests that are made by the client encode the data into the JSON format, while the
-server will always answer in the message pack format. If the client does support gzip compression
-it will used to compress the ``/language`` endpoint. 
+server will encode the responses in either json or the message pack format.
+If the client does support gzip compression it will used to compress the `/language` endpoint. 
 
 ### Authentication
 To be able to use all REST functions the client has to login and retrieve a JWT-Token.

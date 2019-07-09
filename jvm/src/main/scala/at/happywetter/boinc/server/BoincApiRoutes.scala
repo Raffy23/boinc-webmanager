@@ -2,21 +2,20 @@ package at.happywetter.boinc.server
 
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAction}
-import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.boincrpc.{BoincRPC, GlobalPrefsOverride}
+import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc._
 import at.happywetter.boinc.util.PooledBoincClient
 import at.happywetter.boinc.util.http4s.MsgPackRequRespHelper
+import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import at.happywetter.boinc.{AppConfig, BoincManager}
 import cats.effect._
 import org.http4s._
 import org.http4s.dsl.io._
-import at.happywetter.boinc.shared.parser._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
-import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 
 /**
   * Created by: 
@@ -31,31 +30,31 @@ object BoincApiRoutes extends MsgPackRequRespHelper {
   def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Basic Meta States
-    case GET -> Root / "boinc" => Ok(hostManager.getAllHostNames)
-    case GET -> Root / "health" => Ok(hostManager.checkHealth)
-    case GET -> Root / "config" => Ok(AppConfig.sharedConf)
-    case GET -> Root / "groups" => Ok(hostManager.getSerializableGroups)
-    case GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects)
+    case request @ GET -> Root / "boinc" => Ok(hostManager.getAllHostNames, request)
+    case request @ GET -> Root / "health" => Ok(hostManager.checkHealth, request)
+    case request @ GET -> Root / "config" => Ok(AppConfig.sharedConf, request)
+    case request @ GET -> Root / "groups" => Ok(hostManager.getSerializableGroups, request)
+    case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects, request)
 
     // Main route for Boinc Data
-    case GET -> Root / "boinc" / name / action :? requestParams =>
+    case request @ GET -> Root / "boinc" / name / action :? requestParams =>
       hostManager.get(name).map(client => {
         implicit val params: Map[String, Seq[String]] = requestParams
 
         action match {
-          case "tasks" => Ok(client.getTasks())
-          case "all_tasks" => Ok(client.getTasks(active = false))
-          case "hostinfo" => Ok(client.getHostInfo)
-          case "network" => Ok(client.isNetworkAvailable)
-          case "projects" => Ok(client.getProjects)
-          case "state" => Ok(client.getState)
-          case "filetransfers" => Ok(client.getFileTransfer)
-          case "disk" => Ok(client.getDiskUsage)
-          case "ccstate" => Ok(client.getCCState)
-          case "global_prefs_override" => Ok(client.getGlobalPrefsOverride)
-          case "statistics" => Ok(client.getStatistics)
-          case "messages" => Ok(client.getMessages(getIntParameter("seqno")))
-          case "notices" => Ok(client.getNotices(getIntParameter("seqno")))
+          case "tasks" => Ok(client.getTasks(), request)
+          case "all_tasks" => Ok(client.getTasks(active = false), request)
+          case "hostinfo" => Ok(client.getHostInfo, request)
+          case "network" => Ok(client.isNetworkAvailable, request)
+          case "projects" => Ok(client.getProjects, request)
+          case "state" => Ok(client.getState, request)
+          case "filetransfers" => Ok(client.getFileTransfer, request)
+          case "disk" => Ok(client.getDiskUsage, request)
+          case "ccstate" => Ok(client.getCCState, request)
+          case "global_prefs_override" => Ok(client.getGlobalPrefsOverride, request)
+          case "statistics" => Ok(client.getStatistics, request)
+          case "messages" => Ok(client.getMessages(getIntParameter("seqno")), request)
+          case "notices" => Ok(client.getNotices(getIntParameter("seqno")), request)
 
           case _ => NotAcceptable()
         }
@@ -107,9 +106,9 @@ object BoincApiRoutes extends MsgPackRequRespHelper {
         client.setGlobalPrefsOverride(requestBody)
       })
 
-    case PATCH -> Root / "boinc" / name / "global_prefs_override" =>
+    case request @ PATCH -> Root / "boinc" / name / "global_prefs_override" =>
       hostManager.get(name).map(client => {
-        Ok(client.readGlobalPrefsOverride)
+        Ok(client.readGlobalPrefsOverride, request)
       }).getOrElse(BadRequest())
 
     case _ => NotAcceptable()
@@ -118,7 +117,7 @@ object BoincApiRoutes extends MsgPackRequRespHelper {
   private def executeForClient[IN, OUT](hostManager: BoincManager, name: String, request: Request[IO], f: (PooledBoincClient, IN) => Future[OUT])(implicit decoder: upickle.default.Reader[IN], encoder: upickle.default.Writer[OUT]): IO[Response[IO]] = {
     hostManager.get(name).map(client => {
       request.decodeJson[IN]{ requestBody =>
-        Ok(f(client, requestBody))
+        Ok(f(client, requestBody), request)
       }
     }).getOrElse(BadRequest())
   }

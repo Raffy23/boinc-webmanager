@@ -42,7 +42,7 @@ trait DatabaseProvider {
   protected def transaction(implicit storeNames: js.Array[String], objStore: String): Future[IDBObjectStore] =
     database.map(r => r.transaction(storeNames, "readwrite").objectStore(objStore))
 
-  protected def firefoxTransaction[A](firefoxCallback: (IDBObjectStore) => A)(implicit storeNames: js.Array[String], objStore: String): Future[A] =
+  protected def firefoxTransaction[A](firefoxCallback: IDBObjectStore => A)(implicit storeNames: js.Array[String], objStore: String): Future[A] =
     database.map(r => {
       val ffTransaction = r.transaction(storeNames, "readwrite")
       val objStorage   = ffTransaction.objectStore(objStore)
@@ -50,7 +50,7 @@ trait DatabaseProvider {
       firefoxCallback(objStorage)
     })
 
-  protected def firefoxTransactionAsync[A](firefoxCallback: (IDBObjectStore) => Future[A])(implicit storeNames: js.Array[String], objStore: String): Future[A] =
+  protected def firefoxTransactionAsync[A](firefoxCallback: IDBObjectStore => Future[A])(implicit storeNames: js.Array[String], objStore: String): Future[A] =
     database.flatMap(r => {
       val ffTransaction = r.transaction(storeNames, "readwrite")
       val objStorage   = ffTransaction.objectStore(objStore)
@@ -67,7 +67,7 @@ trait DatabaseProvider {
   def deleteDatabase(): Future[Boolean] = new Promise[Boolean]((resolve, reject) => {
     val result = dom.window.indexedDB.deleteDatabase("BoincCache")
     result.onerror = reject
-    result.onsuccess = (_) => resolve(result.result == js.undefined)
+    result.onsuccess = (_) => resolve(js.isUndefined(result.result))
   }).toFuture
 
   implicit class IDBRequestStringFuture(request: IDBRequest) {

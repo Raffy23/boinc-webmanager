@@ -42,7 +42,8 @@ object WebServer extends IOApp with Logger {
       val hwStatusService = new HWStatusService(
         config.hardware.get.binary,
         config.hardware.get.params,
-        config.hardware.get.cacheTimeout)
+        config.hardware.get.cacheTimeout
+      )
 
       HardwareAPIRoutes(config.hardware.get.hosts.toSet, hwStatusService)
     } else {

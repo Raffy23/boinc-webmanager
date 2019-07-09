@@ -122,7 +122,7 @@ object Dashboard extends Layout {
       <div class={FloatingMenu.root.htmlClass}>
         <a class={FloatingMenu.active.htmlClass} onclick={(event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+            if (js.isUndefined(node.asInstanceOf[HTMLElement].classList))
               node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
@@ -134,7 +134,7 @@ object Dashboard extends Layout {
         </a>
         <a onclick={(event: Event) => {
           event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
-            if (node.asInstanceOf[HTMLElement].classList != js.undefined)
+            if (js.isUndefined(node.asInstanceOf[HTMLElement].classList))
               node.asInstanceOf[HTMLElement].classList.remove(FloatingMenu.active.htmlClass)
           })
           event.target.asInstanceOf[HTMLElement].classList.add(FloatingMenu.active.htmlClass)
@@ -284,7 +284,7 @@ object Dashboard extends Layout {
         )
       }.getOrElse(
         Seq(
-          buildTooltip("loading".localize, "fa fa-spinner fa-pulse", "#004cff"),
+          buildTooltip("loading".localize, "fa fa-spinner fa-pulse", "#428bca"),
           name.toXML
         )
       )

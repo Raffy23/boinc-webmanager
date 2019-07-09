@@ -1,11 +1,14 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.util.ResourceWalker
+import at.happywetter.boinc.util.http4s.MsgPackRequRespHelper
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
-import scala.io.{Codec => IOCodec, Source}
+import scala.io.{Source, Codec => IOCodec}
 import scala.util.Try
 import upickle.default._
+import cats.effect._
+import org.http4s._, org.http4s.dsl.io._
 
 /**
   * Created by: 
@@ -13,7 +16,7 @@ import upickle.default._
   * @author Raphael
   * @version 29.08.2017
   */
-object LanguageService {
+object LanguageService extends MsgPackRequRespHelper {
 
   val languages: List[(String, String, String)] =
     ResourceWalker
@@ -25,18 +28,10 @@ object LanguageService {
         (language, lang("language_name"), lang("language_icon"))
       })
 
-  import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._
-
   def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
-    case GET -> Root => Ok(writeBinary(languages))
-    case GET -> Root / lang =>
-      Try(
-        Ok(
-          writeBinary(load(lang))
-        )
-      ).getOrElse(NotFound())
+    case request @ GET -> Root => Ok(languages, request)
+    case request @ GET -> Root / lang => Try(Ok(load(lang), request)).getOrElse(NotFound())
 
   }
 

@@ -20,16 +20,16 @@ object HardwareAPIRoutes extends MsgPackRequRespHelper {
 
   def apply(hosts: Set[String], hwStatusService: HWStatusService): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
-    case GET -> Root => Ok(hosts.toList)
+    case request @ GET -> Root => Ok(hosts.toList, request)
 
-    case GET -> Root / name / "cpufrequency" =>
+    case request @ GET -> Root / name / "cpufrequency" =>
       hosts.find(_ == name).map(_ => {
-        Ok(hwStatusService.query(name).map(_._1))
+        Ok(hwStatusService.query(name).map(_._1), request)
       }).getOrElse(BadRequest())
 
-    case GET -> Root / name / "sensors" =>
+    case request @ GET -> Root / name / "sensors" =>
       hosts.find(_ == name).map(_ => {
-        Ok(hwStatusService.query(name).map(_._2.toMap))
+        Ok(hwStatusService.query(name).map(_._2.toMap), request)
       }).getOrElse(BadRequest())
   }
 

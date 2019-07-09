@@ -76,7 +76,7 @@ object WebResourcesRoute {
       Header("Content-Type", "text/html; charset=UTF-8")
     )
 
-  def apply(implicit config: Config): HttpService[IO] = HttpService[IO] {
+  def apply(implicit config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Normal index Page which is served
     case GET -> Root => indexPage

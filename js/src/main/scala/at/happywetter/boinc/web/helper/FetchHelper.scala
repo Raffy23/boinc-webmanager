@@ -21,7 +21,8 @@ import scala.scalajs.js.typedarray.{TypedArray, Uint8Array}
 object FetchHelper {
 
   val header = new Headers()
-  header.append("Content-Type", "application/octet-stream")
+  header.append("Content-Type", "application/json")
+  header.set("Accept", "application/messagepack")
 
   def setToken(token: String): Unit = {
     header.set("X-Authorization", token)
