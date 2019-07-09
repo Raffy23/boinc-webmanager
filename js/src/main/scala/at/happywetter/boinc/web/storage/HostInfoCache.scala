@@ -1,7 +1,10 @@
 package at.happywetter.boinc.web.storage
 
-import at.happywetter.boinc.shared.{BoincState, HostInfo}
+import at.happywetter.boinc.shared.boincrpc.{BoincState, HostInfo}
+import at.happywetter.boinc.shared.parser._
 import org.scalajs.dom
+
+import scala.util.Try
 
 /**
   * Created by: 
@@ -10,18 +13,18 @@ import org.scalajs.dom
   * @version 08.08.2017
   */
 object HostInfoCache {
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  import upickle.default._
 
   case class CacheEntry(hostInfo: HostInfo, platform: String, boincVersion: String)
+  private implicit val cacheEntryParser = macroRW[CacheEntry]
 
   def saveFromState(name: String, boincState: BoincState): Unit =
     dom.window.localStorage.setItem(name+"/host-info",
-      CacheEntry(boincState.hostInfo, boincState.platform, boincState.boincVersion).asJson.noSpaces
+      write(CacheEntry(boincState.hostInfo, boincState.platform, boincState.boincVersion))
     )
 
-  def get(name: String): Option[CacheEntry] = decode[CacheEntry](
+  def get(name: String): Option[CacheEntry] = Try(read[CacheEntry](
     dom.window.localStorage.getItem(name+"/host-info")
-  ).toOption
-
+  )).toOption
 
 }

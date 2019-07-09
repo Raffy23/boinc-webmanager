@@ -22,8 +22,8 @@ object BoincFormater {
     val min  = (time.toInt / 60) % 60
     val sec  = time.toInt % 60
 
-    (if(day >0) s"$day T, " else "") ++
-      s"${hour.formatted("%02d")}:${min.formatted("%02d")}:${sec.formatted("%02d")}"
+    (if(day >0) s"$day T, ${(hour - day*24).formatted("%02d")}" else s"${hour.formatted("%02d")}") ++
+      s":${min.formatted("%02d")}:${sec.formatted("%02d")}"
   }
 
   def convertTime(time: String): Int = {

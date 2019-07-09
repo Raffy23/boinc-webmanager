@@ -1,4 +1,4 @@
-package at.happywetter.boinc.shared
+package at.happywetter.boinc.shared.extension
 
 /**
   * Created by: 
@@ -11,6 +11,7 @@ object HardwareData {
   case class SensorsRow(value: Double, unit: String, arguments: List[(String, String)], flags: String) {
     def toValueUnitString: String = value + " " + unit
   }
+
   type SensorsData = Map[String, SensorsRow]
 
 }

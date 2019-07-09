@@ -8,7 +8,7 @@ import java.net.InetAddress
   * @author Raphael
   * @version 19.09.2017
   */
-case class IP(value : Int) {
+case class IP(value : Int) extends AnyVal {
 
   private def a: Int = (value >> 24) & 255
   private def b: Int = (value >> 16) & 255

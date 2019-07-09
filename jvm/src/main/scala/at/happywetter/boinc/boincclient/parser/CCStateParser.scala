@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.CCState
+import at.happywetter.boinc.shared.boincrpc.CCState
 
 import scala.xml.NodeSeq
 

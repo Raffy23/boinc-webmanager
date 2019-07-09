@@ -1,10 +1,9 @@
-package at.happywetter.boinc.shared
+package at.happywetter.boinc.shared.boincrpc
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 
 import scala.concurrent.Future
-
 
 /**
   * Created by: 

@@ -4,14 +4,16 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.{ApplicationError, User}
-import cats.data.OptionT
+import at.happywetter.boinc.shared.webrpc.{ApplicationError, User}
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import org.http4s.util.CaseInsensitiveString
 
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
+import at.happywetter.boinc.shared.parser._
+import upickle.default.{writeBinary}
+import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 
 /**
   * Created by: 
@@ -23,51 +25,48 @@ class AuthenticationService(config: Config) {
 
   import AuthenticationService.toDate
   import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-  import org.http4s.circe._
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  import org.http4s._, org.http4s.dsl.io._
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
-  def authService: HttpService[IO] = HttpService[IO] {
-    case GET -> Root => Ok(AuthenticationService.nonce)
+  def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case GET -> Root => Ok(writeBinary(AuthenticationService.nonce))
 
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
         validate(header.value) match {
-          case Success(true) => Ok(refreshToken(header.value))
-          case _ => new Response[IO]()
-            .withBody(ApplicationError("error_invalid_token").asJson)
-            .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
+          case Success(true) => Ok(writeBinary(refreshToken(header.value)))
+          case _ => new Response[IO](status = Unauthorized)
+            .withBody(writeBinary(ApplicationError("error_invalid_token")))
         }
 
       }).getOrElse(
-        new Response[IO]()
-          .withBody(ApplicationError("error_no_token").asJson)
-          .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
+        new Response[IO](status = Unauthorized)
+          .withBody(writeBinary(ApplicationError("error_no_token")))
       )
 
     case request @ POST -> Root =>
-      request.decode[String] { body =>
-        decode[User](body).toOption.map(user => {
-          if (config.server.username.equals(user.username)
-            && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
-            Ok(buildToken(user.username))
-          else
-            BadRequest(ApplicationError("error_invalid_credentials").asJson)
-        }).getOrElse(BadRequest(ApplicationError("error_invalid_request").asJson))
+      println(s"POST: ${writeBinary(User("admin", AuthenticationService.sha256Hash("password"), "b4775713f235c5173b166820dfa04208923fb38096b28f7a6b0a697f088377e6")).mkString("")}")
+      request.decodeJson[User]{ user =>
+        if (config.server.username.equals(user.username)
+          && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
+          Ok(writeBinary(buildToken(user.username)))
+        else
+          BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
       }
+
   }
 
-  private def denyService(errorText: String): HttpService[IO] = HttpService[IO] {
+  private def denyService(errorText: String): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case _ =>
       new Response[IO]()
-        .withBody(ApplicationError(errorText).asJson)
+        .withBody(writeBinary(ApplicationError(errorText)))
         .map(_.withStatus(Unauthorized))
   }
 
+  // TODO: Update to http4s 0.20.0-M4
   def protectedService(service: HttpService[IO]): HttpService[IO] = Service.lift { req: Request[IO] =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
       validate(header.value) match {

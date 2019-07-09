@@ -2,7 +2,7 @@ package at.happywetter.boinc
 
 import java.util.concurrent.TimeUnit
 
-import at.happywetter.boinc.shared.ServerSharedConfig
+import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.concurrent.duration.FiniteDuration
@@ -57,10 +57,18 @@ object AppConfig {
   )
 
   val conf: Config = {
-    val confString: String = Source.fromFile("./application.conf").getLines().mkString("\n")
+    val confString: String = {
+      val source = Source.fromFile("./application.conf")
+      val result = source.getLines().mkString("\n")
+      source.close()
+
+      result
+    }
+
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._
+    import pureconfig.generic.auto._
     loadConfigOrThrow[Config](hocon)
   }
 

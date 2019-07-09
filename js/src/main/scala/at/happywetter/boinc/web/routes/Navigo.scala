@@ -69,7 +69,7 @@ class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") 
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class Hook extends js.Object {
 
   def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit
@@ -82,7 +82,7 @@ abstract class Hook extends js.Object {
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class GenericHook extends js.Object {
 
   def before(done: js.Function0[Unit], params: String): Unit

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
+import at.happywetter.boinc.shared.boincrpc.{DailyStatistic, Statistics}
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout.Style

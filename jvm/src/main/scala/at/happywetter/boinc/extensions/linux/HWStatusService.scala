@@ -2,11 +2,10 @@ package at.happywetter.boinc.extensions.linux
 
 import java.util
 
-import at.happywetter.boinc.shared.HardwareData.SensorsData
+import at.happywetter.boinc.shared.extension.HardwareData.SensorsData
+import cats.effect.IO
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.xml.XML
 
 /**
@@ -16,9 +15,7 @@ import scala.xml.XML
   * @version 02.11.2017
   */
 class HWStatusService(resolverBinary: String, parameters: List[String], cacheTimeout: Long) {
-
-  type Timestamp = Long
-  type CPUFrequency = Double
+  import HWStatusService._
 
   private val hostData = new TrieMap[String, (Timestamp, CPUFrequency, SensorsData)]()
 
@@ -42,7 +39,7 @@ class HWStatusService(resolverBinary: String, parameters: List[String], cacheTim
     )
   }
 
-  def query(host: String): Future[(CPUFrequency, SensorsData)] = Future {
+  def query(host: String): IO[(CPUFrequency, SensorsData)] = IO {
     val cached = hostData.get(host)
 
     if (cached.isEmpty) {
@@ -62,4 +59,9 @@ class HWStatusService(resolverBinary: String, parameters: List[String], cacheTim
       }
     }
   }
+}
+
+object HWStatusService {
+  type Timestamp = Long
+  type CPUFrequency = Double
 }

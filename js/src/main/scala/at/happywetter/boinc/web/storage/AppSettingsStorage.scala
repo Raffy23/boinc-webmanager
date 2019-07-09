@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.storage
 
-import at.happywetter.boinc.shared.Workunit
+import at.happywetter.boinc.shared.boincrpc.Workunit
 import at.happywetter.boinc.web.helper.CompatibilityTester
 import org.scalajs.dom.raw.IDBRequest
 

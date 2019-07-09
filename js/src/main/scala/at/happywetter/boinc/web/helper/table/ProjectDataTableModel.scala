@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction
-import at.happywetter.boinc.shared.Project
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.Project
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}

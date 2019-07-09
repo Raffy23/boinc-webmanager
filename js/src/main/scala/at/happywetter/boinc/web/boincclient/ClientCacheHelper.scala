@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.BoincState
+import at.happywetter.boinc.shared.boincrpc.BoincState
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, HostInfoCache, TaskSpecCache}
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 
@@ -16,7 +16,7 @@ object ClientCacheHelper {
 
   private var stateUpdate = false
 
-  def updateClientCache(boinc: BoincClient, finishAction: (BoincState) => Unit = (_) => {}): Unit = {
+  def updateClientCache(boinc: BoincClient, finishAction: BoincState => Unit = _ => {}): Unit = {
     if (!stateUpdate) {
       stateUpdate = true
       boinc.getState.map(state => {

@@ -1,6 +1,7 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.{Project, ProjectGuiURL}
+import at.happywetter.boinc.shared.boincrpc
+import at.happywetter.boinc.shared.boincrpc.{Project, ProjectGuiURL}
 
 import scala.xml.NodeSeq
 
@@ -14,7 +15,7 @@ object ProjectParser {
 
   def fromXML(node: NodeSeq): List[Project] = (node \ "project").theSeq.map(fromNodeXML).toList
 
-  def fromNodeXML(node: NodeSeq) = Project(
+  def fromNodeXML(node: NodeSeq) = boincrpc.Project(
     getText(node \ "project_name"),
     getText(node \ "master_url"),
     getText(node \ "user_name"),

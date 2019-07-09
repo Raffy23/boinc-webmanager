@@ -4,9 +4,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 
 import at.happywetter.boinc.boincclient.BoincClient
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared._
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc._
+import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
@@ -40,7 +41,7 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
     con
   }
 
-  private def connection[R](extractor: (BoincClient) => Future[R]): Future[R] =
+  private def connection[R](extractor: BoincClient => Future[R]): Future[R] =
     takeConnection()
       .map(client => (client, extractor(client)))
       .flatMap{ case (client, result) => pool.offer(client); result }

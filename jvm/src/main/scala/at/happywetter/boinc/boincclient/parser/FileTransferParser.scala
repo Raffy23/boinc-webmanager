@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.{FileTransfer, FileXfer, PersistentFileXfer}
+import at.happywetter.boinc.shared.boincrpc.{FileTransfer, FileXfer, PersistentFileXfer}
 
 import scala.xml.NodeSeq
 

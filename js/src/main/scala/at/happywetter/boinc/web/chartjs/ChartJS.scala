@@ -59,14 +59,14 @@ class ChartJS(ctx: CanvasRenderingContext2D, config: ChartConfig) extends js.Obj
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartData extends js.Object {
   var labels: js.Array[String] = new js.Array(0)
   val datasets: js.Array[Dataset]
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class Dataset extends js.Object {
   var label: String = ""
   var data: js.Array[js.Any] = js.Array(0)
@@ -76,22 +76,22 @@ abstract class Dataset extends js.Object {
   var fill: String = "origin"
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartOptions extends js.Object {
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   trait Legend extends js.Object {
     var display: Boolean
   }
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   //http://www.chartjs.org/docs/latest/configuration/tooltip.html
   trait Tooltips extends js.Object {
     var display: Boolean
     val callbacks: TooltipCallbacks
   }
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   trait TooltipCallbacks extends js.Object {
     var label: js.Function2[TooltipItem, ChartData, String]
   }
@@ -111,7 +111,7 @@ abstract class ChartOptions extends js.Object {
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartConfig extends js.Object {
 
   val `type`: String

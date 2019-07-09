@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.Task
+import at.happywetter.boinc.shared.boincrpc.Task
 
 import scala.xml.NodeSeq
 

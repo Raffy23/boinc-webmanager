@@ -27,7 +27,7 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: (Future[Lis
 
   def search: Future[List[IP]] =
     Future
-      .sequence( propeRange(config.port) )
+      .sequence( probeRange(config.port) )
       .map(_.filter { case (ip, found) => excludeIP(ip, found) })
       .map(_.map { case (ip, _) => ip })
 
@@ -38,12 +38,12 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: (Future[Lis
     found
   }
 
-  private def propeRange(port: Int) = (start to end)
+  private def probeRange(port: Int) = (start to end)
     .filterNot(excluded.get().contains)
-    .map(ip => { propeSocket(ip, port) })
+    .map(ip => { probeSocket(ip, port) })
     .toList
 
-  private def propeSocket(ip: IP, port: Int) = Future {
+  private def probeSocket(ip: IP, port: Int) = Future {
     val socket = new Socket()
     socket.connect(new InetSocketAddress(ip.toInetAddress, port), config.timeout)
     socket.close()

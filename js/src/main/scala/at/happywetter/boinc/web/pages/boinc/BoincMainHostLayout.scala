@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.BoincRPC.Modes
-import at.happywetter.boinc.shared.BoincRPC.Modes.Mode
-import at.happywetter.boinc.shared.{CCState, HostInfo}
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes.Mode
+import at.happywetter.boinc.shared.boincrpc.{CCState, HostInfo}
 import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
@@ -54,7 +54,7 @@ class BoincMainHostLayout extends BoincClientLayout {
       val dialog = new OkDialog("loading_dialog_content".localize, List("loading_dialog_content".localize))
       dialog.renderToBody().show()
 
-      ClientCacheHelper.updateClientCache(boinc,(_) => {
+      ClientCacheHelper.updateClientCache(boinc, _ => {
         clientData.update(_ => HostInfoCache.get(boincClientName).get)
         dialog.hide()
         NProgress.done(true)

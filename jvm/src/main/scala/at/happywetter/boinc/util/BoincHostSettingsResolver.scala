@@ -17,9 +17,8 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.09.2017
   */
-class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(implicit val scheduler: ScheduledExecutorService) {
+class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(implicit val scheduler: ScheduledExecutorService) extends Logger {
 
-  private val logger = LoggerFactory.getILoggerFactory.getLogger(this.getClass.getCanonicalName)
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted)
 
   def beginSearch(): Unit =
@@ -28,8 +27,8 @@ class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(impl
 
   private def discoveryCompleted(data: Future[List[IP]]): Unit = {
     data.foreach{ hosts =>
-      logger.debug("Completed Discovery: " + hosts)
-      logger.debug("Following Hosts can be added: " + hosts.diff(getUsedIPs))
+      LOG.debug("Completed Discovery: " + hosts)
+      LOG.debug("Following Hosts can be added: " + hosts.diff(getUsedIPs))
 
       hosts.diff(getUsedIPs).foreach( ip => {
         Future {
@@ -51,7 +50,7 @@ class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(impl
           }).find{ case (succ, _, _) => succ }
             .foreach{ case (_, domainName, pw) =>
               domainName.foreach( domainName => {
-                logger.debug(s"Found usable Core Client at $ip")
+                LOG.debug(s"Found usable Core Client at $ip")
 
                 boincManager.add(
                   domainName,

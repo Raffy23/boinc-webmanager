@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.Notice
+import at.happywetter.boinc.shared.boincrpc.Notice
 import org.jsoup.nodes.{Document, Element}
 
 import scala.collection.JavaConverters._

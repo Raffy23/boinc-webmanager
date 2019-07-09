@@ -3,8 +3,9 @@ package at.happywetter.boinc.server
 import at.happywetter.boinc.util.ResourceWalker
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
-import scala.io.{Codec, Source}
+import scala.io.{Codec => IOCodec, Source}
 import scala.util.Try
+import upickle.default._
 
 /**
   * Created by: 
@@ -25,17 +26,15 @@ object LanguageService {
       })
 
   import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-  import org.http4s.circe._
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  import org.http4s._, org.http4s.dsl.io._
 
-  def apply(): HttpService[IO] = HttpService[IO] {
+  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
-    case GET -> Root => Ok(languages.asJson)
+    case GET -> Root => Ok(writeBinary(languages))
     case GET -> Root / lang =>
       Try(
         Ok(
-          load(lang).asJson
+          writeBinary(load(lang))
         )
       ).getOrElse(NotFound())
 
@@ -45,7 +44,7 @@ object LanguageService {
     val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
     val ins  = ResourceWalker.getStream(path)
 
-    val confString: String = Source.fromInputStream(ins)(Codec.UTF8).getLines().mkString("\n")
+    val confString: String = Source.fromInputStream(ins)(IOCodec.UTF8).getLines().mkString("\n")
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._

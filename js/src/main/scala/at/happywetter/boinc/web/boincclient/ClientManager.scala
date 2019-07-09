@@ -1,18 +1,16 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.BoincProjectMetaData
-import at.happywetter.boinc.web.boincclient.ClientManager.queryGroups
-import at.happywetter.boinc.web.helper.ResponseHelper._
+import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
 import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
 import org.scalajs.dom
-import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+import upickle.default._
 
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
+import at.happywetter.boinc.shared.parser._
 
 /**
   * Created by: 
@@ -28,9 +26,8 @@ object ClientManager {
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
-  private var groups: Map[String, List[String]] = null
-  decode[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
-    .getOrElse(List())
+  private var groups: Map[String, List[String]] = _
+  read[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
     .foreach(c => clients += (c -> new BoincClient(c)))
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
@@ -39,14 +36,14 @@ object ClientManager {
       timestamp.fold(
         ex => {
           dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-          dom.window.localStorage.setItem("clientmanager/clients", clients.asJson.noSpaces)
+          dom.window.localStorage.setItem("clientmanager/clients", write(clients))
           dom.console.log("Clientmanager: Could not read timestamp, persist current Clientlist")
         },
         date => {
           val current = new Date()
           if (current.getTime() - date.getTime() > cacheTimeout) {
             dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-            dom.window.localStorage.setItem("clientmanager/clients", clients.asJson.noSpaces)
+            dom.window.localStorage.setItem("clientmanager/clients", write(clients))
             dom.console.log("Clientmanager: Updated Clientlist")
           }
         }
@@ -101,38 +98,20 @@ object ClientManager {
   }
   */
 
-  def queryClientHealth(): Future[Map[String, Boolean]] =  {
-    Fetch
-      .fetch(
-        baseURI + "/health",
-        RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
-      )
-      .mapData(data => decode[Map[String, Boolean]](data).toOption.get)
-  }
+  def queryClientHealth(): Future[Map[String, Boolean]] =
+    FetchHelper.get[Map[String, Boolean]](baseURI + "/health")
 
-  def queryCompleteProjectList(): Future[Map[String,BoincProjectMetaData]] = {
-    Fetch
-      .fetch(
-        baseURI + "/project_list",
-        RequestInit(method = HttpMethod.GET, headers = FetchHelper.header)
-      )
-      .mapData(data => decode[Map[String,BoincProjectMetaData]](data).toOption.get)
-  }
-
+  def queryCompleteProjectList(): Future[Map[String,BoincProjectMetaData]] =
+    FetchHelper.get[Map[String, BoincProjectMetaData]](baseURI + "/project_list")
 
   private def queryGroups: Future[Map[String, List[String]]] =
-    Fetch
-      .fetch("/api/groups", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => decode[Map[String, List[String]]](data).toOption.get)
+    FetchHelper.get[Map[String, List[String]]]("/api/groups")
 
   private def queryClientsFromServer(): Future[List[String]] =
-    Fetch
-      .fetch(baseURI, RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .mapData(data => decode[List[String]](data).toOption.get)
+    FetchHelper.get[List[String]](baseURI)
 
   private def queryClientsFromCache(): Future[List[String]] = Future {
-    val clients = decode[List[String]](dom.window.localStorage.getItem("clientmanager/clients")).toOption
-    //TODO: Make fallback if cache is corrupted
-    clients.get
+    read[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
   }
+
 }

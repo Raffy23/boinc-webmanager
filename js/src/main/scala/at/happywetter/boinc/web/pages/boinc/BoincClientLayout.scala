@@ -141,6 +141,10 @@ object BoincClientLayout {
         width :=! "calc(100% - 3em)"
       ),
 
+      unsafeChild("span")(
+        float.right
+      ),
+
       unsafeChild("progress::-webkit-progress-bar")(
         backgroundColor.transparent,
         borderRadius(1 px),

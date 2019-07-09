@@ -15,7 +15,7 @@ object RedirectService {
   import org.http4s._
   import org.http4s.dsl.io._
 
-  def apply(config: Config):  HttpService[IO] = HttpService[IO] {
+  def apply(config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case request =>
       request.headers.get(Host) match {
         case Some(Host(host, _)) =>

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.DiskUsage
+import at.happywetter.boinc.shared.boincrpc.DiskUsage
 import at.happywetter.boinc.web.boincclient.BoincFormater
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.TableTheme

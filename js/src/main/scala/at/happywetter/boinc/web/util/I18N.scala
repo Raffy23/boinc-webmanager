@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.ApplicationError
+import at.happywetter.boinc.shared.webrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom
 
@@ -41,7 +41,7 @@ object I18N {
 
 
   implicit class TranslatableString(str: String) {
-    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
+    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, {println(s"[Warning]: Could not translate: $str into ${Locale.current}"); str})
   }
 
   implicit class TranslatableBoolean(bool: Boolean) {

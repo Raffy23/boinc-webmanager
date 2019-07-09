@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.swarm
 
-import at.happywetter.boinc.shared.BoincRPC.Modes
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._

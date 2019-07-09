@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
-import at.happywetter.boinc.shared.BoincProjectMetaData
+import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.pages.LoginPage
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}

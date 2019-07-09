@@ -3,7 +3,7 @@ package at.happywetter.boinc.server
 import java.io.File
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.BoincProjectMetaData
+import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
 
 import scala.collection.mutable
 import scala.xml.XML

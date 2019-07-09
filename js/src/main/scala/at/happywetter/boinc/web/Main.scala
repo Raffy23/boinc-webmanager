@@ -11,8 +11,12 @@ import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
+import upack.{MsgPackReader, Readable}
+import upickle.core.Visitor
 
+import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.util.Try
 
 /**
   * Created by: 
@@ -42,9 +46,13 @@ object Main {
       dom.console.log("Setting current language to: " + Locale.current)
       dom.console.log("Language Name: " + "language_name".localize)
 
-      LayoutManager.init()
-      initRouter()
-      navigate()
+      Try{
+        LayoutManager.init()
+        initRouter()
+        navigate()
+      }.recover {
+        case ex: Exception => ex.printStackTrace()
+      }
     })
   }
 

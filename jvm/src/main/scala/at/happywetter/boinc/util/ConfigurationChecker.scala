@@ -10,12 +10,12 @@ import at.happywetter.boinc.AppConfig.Config
   * @author Raphael
   * @version 03.11.2017
   */
-object ConfigurationChecker {
+object ConfigurationChecker extends Logger {
 
   def checkConfiguration(config: Config): Unit = {
     if (config.development.getOrElse(false)) {
-      println("WebServer was launched with development options!")
-      println("All resources will be served from: " + config.server.webroot)
+      LOG.info("WebServer was launched with development options!")
+      LOG.info("All resources will be served from: " + config.server.webroot)
     }
 
     // Check environment

@@ -1,5 +1,5 @@
 package at.happywetter.boinc.web.pages.boinc
-import at.happywetter.boinc.shared.Result
+import at.happywetter.boinc.shared.boincrpc.Result
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
@@ -39,11 +39,21 @@ class BoincTaskLayout extends BoincClientLayout {
   private var fullSyncHandle: Int = _
   private val dataTable: DataTable[WuTableRow] = new DataTable[WuTableRow](tableHeaders)
 
-  private val tasksToCompute  = Var(0)
-  private val tasksInProgress = Var(0)
-  private val tasksInTransfer = Var(0)
-  private val tasksFinished   = Var(0)
-  private val allTasks        = Var(0)
+  private class HeaderBarData {
+    var toCompute: Int = 0
+    var inProgress: Int = 0
+    var inTransfer: Int = 0
+    var finished: Int = 0
+    var allTasks: Int = 0
+
+    def updateToCompute(value: Int): HeaderBarData = { toCompute = toCompute + value; this }
+    def updateInProgress(value: Int): HeaderBarData = { inProgress = inProgress + value; this }
+    def updateInTransfer(value: Int): HeaderBarData = { inTransfer = inTransfer + value; this }
+    def updateFinished(value: Int): HeaderBarData = { finished = finished + value; this }
+    def updateAllTasks(value: Int): HeaderBarData = { allTasks = allTasks + value; this }
+  }
+
+  private val headBarData  = Var(new HeaderBarData)
 
   private def loadResults(): Unit = {
     NProgress.start()
@@ -51,12 +61,11 @@ class BoincTaskLayout extends BoincClientLayout {
     boinc.getTasks(active = false).map(results => {
       dataTable.reactiveData := results.sortBy(f => f.activeTask.map(t => -t.done).getOrElse(0D))
 
-      tasksToCompute := 0
-      tasksInTransfer:= 0
-      tasksInProgress:= 0
+      val data = new HeaderBarData
+      results.foreach(x => updateTaskHeadline(data, x))
+      data.updateAllTasks(results.size)
 
-      results.foreach(updateTaskHeadline(_))
-      allTasks := results.size
+      headBarData := data
 
       NProgress.done(true)
     }).recover(ErrorDialogUtil.showDialog)
@@ -72,7 +81,7 @@ class BoincTaskLayout extends BoincClientLayout {
             new Tooltip(
               Var("tasks_in_progress".localize),
               <span>
-                {tasksInProgress}
+                {headBarData.map(_.inProgress)}
                 <i class="fa fa-cogs" style="margin-left:2px"></i>
               </span>
             ).toXML
@@ -81,7 +90,7 @@ class BoincTaskLayout extends BoincClientLayout {
             new Tooltip(
               Var("tasks_in_transfer".localize),
               <span>
-                {tasksInTransfer}
+                {headBarData.map(_.inTransfer)}
                 <i class="fa fa-exchange" style="margin-left:2px"></i>
               </span>
             ).toXML
@@ -90,7 +99,7 @@ class BoincTaskLayout extends BoincClientLayout {
             new Tooltip(
               Var("tasks_to_compute".localize),
               <span>
-                {tasksToCompute}
+                {headBarData.map(_.toCompute)}
                 <i class="fa fa-tasks" style="margin-left:2px"></i>
               </span>
             ).toXML
@@ -99,7 +108,7 @@ class BoincTaskLayout extends BoincClientLayout {
             new Tooltip(
               Var("all_tasks".localize),
               <span>
-                {allTasks}
+                {headBarData.map(_.allTasks)}
                 <i class="fa fa-globe" style="margin-left:2px"></i>
               </span>
             ).toXML
@@ -110,26 +119,27 @@ class BoincTaskLayout extends BoincClientLayout {
     </div>
   }
 
-  private def updateTaskHeadline(result: Result, _value: Int = 1): Unit = {
+  private def updateTaskHeadline(data: HeaderBarData, result: Result, _value: Int = 1): Unit = {
     Result.State(result.state) match {
-      case Result.State.Result_New => tasksToCompute.update(x => x + _value)
+      case Result.State.Result_New => data.updateToCompute(_value)
       case Result.State.Result_Files_Downloaded =>
 
         result.activeTask.foreach(task => Result.ActiveTaskState(task.activeTaskState) match {
-          case Result.ActiveTaskState.PROCESS_EXECUTING => tasksInProgress.update(x => x + _value)
-          case Result.ActiveTaskState.PROCESS_ABORTED => tasksFinished.update(x => x + _value)
-          case Result.ActiveTaskState.PROCESS_SUSPENDED => tasksToCompute.update(x => x + _value)
-          case Result.ActiveTaskState.PROCESS_EXITED => tasksToCompute.update(x => x + _value)
-          case Result.ActiveTaskState.PROCESS_UNINITIALIZED => tasksToCompute.update(x => x + _value)
+          case Result.ActiveTaskState.PROCESS_EXECUTING => data.updateInProgress(_value)
+          case Result.ActiveTaskState.PROCESS_SUSPENDED => data.updateToCompute(_value)
+          case Result.ActiveTaskState.PROCESS_EXITED => data.updateToCompute(_value)
+          case Result.ActiveTaskState.PROCESS_UNINITIALIZED =>  data.updateToCompute(_value)
+          case _ => data.updateFinished(_value)
         })
 
         if (result.activeTask.isEmpty)
-          tasksToCompute.update(x => x + _value)
+          data.updateToCompute(_value)
 
-      case Result.State.Result_Files_Uploaded => tasksInTransfer.update(x => x + _value)
-      case Result.State.Result_Files_Uploading => tasksInTransfer.update(x => x + _value)
-      case Result.State.Result_File_Downloading => tasksInTransfer.update(x => x + _value)
-      case Result.State.Result_Upload_Failed => tasksInTransfer.update(x => x + _value)
+      case Result.State.Result_Files_Uploaded => data.updateInTransfer(_value)
+      case Result.State.Result_Files_Uploading => data.updateInTransfer(_value)
+      case Result.State.Result_File_Downloading => data.updateInTransfer(_value)
+      case Result.State.Result_Upload_Failed => data.updateInTransfer(_value)
+      case x => dom.console.log("Unknown Result state: " + x)
     }
   }
 
@@ -139,16 +149,37 @@ class BoincTaskLayout extends BoincClientLayout {
 
     client.getTasks().foreach(result => {
       result.foreach(task => {
-        val current = dataTable.tableData.find(_.result.name.now == task.name)
+        dataTable.reactiveData.now.find(_.result.name.now == task.name).foreach{ current =>
+          Result.State(current.result.state.now) match {
+            case Result.State.Result_New => headBarData.update(_.updateToCompute(-1))
+            case Result.State.Result_Files_Downloaded =>
 
-        //TODO: Update Task headline
+              current.result.activeTask.map(_.foreach(task => Result.ActiveTaskState(task.activeTaskState) match {
+                case Result.ActiveTaskState.PROCESS_EXECUTING => headBarData.update(_.updateInProgress(-1))
+                case Result.ActiveTaskState.PROCESS_SUSPENDED => headBarData.update(_.updateToCompute(-1))
+                case Result.ActiveTaskState.PROCESS_EXITED => headBarData.update(_.updateToCompute(-1))
+                case Result.ActiveTaskState.PROCESS_UNINITIALIZED =>  headBarData.update(_.updateToCompute(-1))
+                case _ => headBarData.update(_.updateFinished(-1));
+              }))
 
-        current.foreach(current => {
+              current.result.activeTask.map(x =>
+                if( x.isEmpty)
+                  headBarData.update(_.updateToCompute(-1))
+              )
+
+            case Result.State.Result_Files_Uploaded => headBarData.update(_.updateInTransfer(-1))
+            case Result.State.Result_Files_Uploading => headBarData.update(_.updateInTransfer(-1))
+            case Result.State.Result_File_Downloading => headBarData.update(_.updateInTransfer(-1))
+            case Result.State.Result_Upload_Failed => headBarData.update(_.updateInTransfer(-1))
+          }
+
+
           current.result.activeTask := task.activeTask
           current.result.remainingCPU := task.remainingCPU
           current.result.supsended := task.supsended
           current.result.state := task.state
-        })
+        }
+
       })
     })
   }

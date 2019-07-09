@@ -1,9 +1,13 @@
 package at.happywetter.boinc.server
 
+import java.util.concurrent.Executors
+
 import at.happywetter.boinc.AppConfig.Config
 import cats.effect._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
+
+import scala.concurrent.ExecutionContext
 
 /**
   * Created by: 
@@ -14,6 +18,11 @@ import org.http4s.implicits._
 object WebResourcesRoute {
 
   import org.http4s._
+
+  private val blockingPool = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors))
+  private val blocker      = Blocker.liftExecutionContext(blockingPool)
+
+  private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   // Workaround of content encoding Bugs
   private val contentTypes = Map[String, String](
@@ -97,10 +106,10 @@ object WebResourcesRoute {
     else "boinc-webmanager-jsdeps.min.js"
 
   private def fromResource(file: String, request: Request[IO]) =
-    StaticFile.fromResource("/web-root/" + file, Some(request))
+    StaticFile.fromResource("/web-root/" + file, blocker, Some(request))
 
   private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
-    StaticFile.fromString(config.server.webroot + file, Some(request))
+    StaticFile.fromString(config.server.webroot + file, blocker, Some(request))
 
   private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) = {
     lazy val zipFile =

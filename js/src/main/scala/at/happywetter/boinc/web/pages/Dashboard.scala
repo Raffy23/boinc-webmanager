@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.shared.{Result, Workunit}
+import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.AuthClient
@@ -46,6 +46,30 @@ object Dashboard extends Layout {
     )
   }
 
+  import at.happywetter.boinc.shared.boincrpc.App
+  private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty,
+                                workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
+
+  private case class HostData(cpu: String, memory: String, time: String, deadline: String,
+                              disk: String, disk_max: String, disk_value: String,
+                              network: Future[String])
+
+  private case class HostSumData(currentCPUs: Var[Int], sumCPUs: Var[Int], runtime: Var[Double],
+                                 networkUpload: Var[Double], networkDownload: Var[Double])
+
+  private case class ClientData(name: String, data: Var[Option[Either[HostData, Exception]]], details: Var[Option[DetailData]])
+  private object ClientData {
+
+    @inline
+    def apply(name: String): ClientData = new ClientData(name, Var(None), Var(None))
+
+    val Empty = new ClientData("", Var(None), Var(None))
+  }
+
+  private val clients = Var(Map.empty[String, ClientData])
+  private val projects = Var(Map.empty[String, String])
+  private val clientsDataSum = HostSumData(Var(0),Var(0),Var(0D),Var(0D),Var(0D))
+
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
     PageLayout.clearNav()
     PageLayout.showMenu()
@@ -53,7 +77,6 @@ object Dashboard extends Layout {
 
     AuthClient.validateAction(done)
   }
-
 
   override def already(): Unit = onRender()
 
@@ -65,14 +88,18 @@ object Dashboard extends Layout {
 
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
-      this.clients := clients.sorted
+      this.clients := clients.map(name => (name, ClientData(name))).toMap
 
+      // Sequence futures for the project names, data is partially updated with Rx[...] and Var[...]
       Future.sequence(
-        clients.map(c => ClientManager.clients(c)).map(client => fullyLoadData(client))
-      ).foreach(details => {
-        clientDetailData = details.map(data => (data._1.client, data._1)).toMap
-        clientDetails := details.map(data => (data._1.client, data._2)).toMap
+        clients
+          .map(name => (name, ClientManager.clients(name)))
+          .map{ case (name, client) =>
+            val future = fullyLoadData(name, client)
 
+            future
+          }
+      ).foreach(details => {
         val projects = details.map(_._1).flatMap(d => d.projects.keySet).toSet
 
         ProjectNameCache.getAll(projects.toList)
@@ -86,17 +113,7 @@ object Dashboard extends Layout {
     }).recover(ErrorDialogUtil.showDialog)
   }
 
-  import at.happywetter.boinc.shared.App
-  private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty,
-                                workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
-  private case class HostData(cpu: String, memory: String, time: String, deadline: String,
-                              disk: String, disk_max: String, disk_value: String,
-                              network: Future[String])
 
-  private val clients = Var(List.empty[String])
-  private val clientDetails = Var(Map.empty[String, Either[HostData, Exception]])
-  private var clientDetailData = Map.empty[String, DetailData]
-  private val projects = Var(Map.empty[String, String])
 
   override def render: Elem = {
     import at.happywetter.boinc.web.hacks.NodeListConverter._
@@ -150,8 +167,9 @@ object Dashboard extends Layout {
           </thead>
           <tbody>
             {
-              clients.map(_.map(implicit c => {
-                val client = ClientManager.clients(c)
+              clients.map(_.map(c => {
+                implicit val data: Rx[Option[Either[HostData, Exception]]] = c._2.data
+                val client = ClientManager.clients(c._1)
 
                 <tr>
                   <td>{injectErrorTooltip(client.hostname)}</td>
@@ -165,8 +183,20 @@ object Dashboard extends Layout {
                     <span>{getData(_.disk)}</span>
                   </td>
                 </tr>
-              }))
+              }).toSeq)
             }
+            <tr>
+              <td><b>{"sum".localize}</b></td>
+              <td class={Style.centeredText.htmlClass}>{clientsDataSum.currentCPUs.map(c => s"$c / ${clientsDataSum.sumCPUs.now}")}</td>
+              <td class={Style.centeredText.htmlClass}>-- / --</td>
+              <td class={Style.centeredText.htmlClass}>
+                {clientsDataSum.networkUpload.map(u => BoincFormater.convertSize(u))} /
+                {clientsDataSum.networkDownload.map(d => BoincFormater.convertSize(d))}
+              </td>
+              <td class={Style.centeredText.htmlClass}>{clientsDataSum.runtime.map(r => BoincFormater.convertTime(r))}</td>
+              <td class={Style.centeredText.htmlClass}>-- / --</td>
+              <td class={Style.centeredText.htmlClass}>-- / --</td>
+            </tr>
           </tbody>
         </table>
         <div id="workunits_table_container">
@@ -189,11 +219,11 @@ object Dashboard extends Layout {
             <tbody>
               {
                 clients.map(_.map(client => {
-                  <tr id={s"dashboard_${client}_details"}>
-                    <td>{injectErrorTooltip(client)(client)}</td>
+                  <tr id={s"dashboard_${client._1}_details"}>
+                    <td>{injectErrorTooltip(client._1)(client._2.data)}</td>
                     {
                       projects.map(_.map(project => {
-                        val rData = clientDetailData(client).projects.getOrElse(project._1, List())
+                        val rData = client._2.details.map(_.map(_.projects.getOrElse(project._1, List.empty)).getOrElse(List.empty)).now
                         val active = rData
                           .filter(p => p.activeTask.nonEmpty)
                           .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
@@ -216,7 +246,7 @@ object Dashboard extends Layout {
                       }).toList)
                     }
                   </tr>
-                }))
+                }).toSeq)
               }
             </tbody>
           </table>
@@ -225,61 +255,63 @@ object Dashboard extends Layout {
     </div>
   }
 
-  private def injectErrorTooltip(name: String)(implicit c: String): Rx[Seq[Node]] = {
-    def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle"): Node = {
+  private def injectErrorTooltip(name: String)(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Seq[Node]] = {
+    def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle", color: String = "#FF8181"): Node = {
       val tooltip = new Tooltip(
         Var(label.localize),
         <i class={`class`}></i>
       ).toXML.asInstanceOf[Elem]
 
       tooltip.copy(
-        attributes1 = UnprefixedAttribute("style", "float:right;color:#FF8181", tooltip.attributes1)
+        attributes1 = UnprefixedAttribute("style", s"float:right;color:$color", tooltip.attributes1)
       )
     }
 
-    clientDetails.map(clientMap => {
-      clientMap.get(c).map(data => {
+
+    data.map { dataOption =>
+
+      dataOption.map { data =>
         data.fold(
           _ => Seq(name.toXML),
           ex =>
             Seq(
-            ex match {
-              case _: FetchResponseException => buildTooltip("offline".localize)
-              case _ => buildTooltip("error".localize)
-            },
-            name.toXML
-          )
+              ex match {
+                case _: FetchResponseException => buildTooltip("offline".localize)
+                case _ => buildTooltip("error".localize)
+              },
+              name.toXML
+            )
         )
-      }).getOrElse(Seq(name))
-    })
+      }.getOrElse(
+        Seq(
+          buildTooltip("loading".localize, "fa fa-spinner fa-pulse", "#004cff"),
+          name.toXML
+        )
+      )
+    }
   }
 
-  private def getDataAttr(f: (HostData) => String)(implicit c: String): Rx[Option[String]] = {
-    clientDetails.map(clientMap =>
-      clientMap.get(c).flatMap(data => data.swap.map(f).toOption)
-    )
+  @inline
+  private def getDataAttr(f: HostData => String)(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Option[String]] = {
+    data.map(_.flatMap(_.swap.map(f).toOption))
   }
 
-  private def getData(f: (HostData) => String, errorTooltip: Boolean = false, default: String = "-- / --")(implicit c: String): Rx[Node] = {
-    clientDetails.map(clientMap => {
-      clientMap.get(c).map(data => {
-        data.fold(
-          hostData => f(hostData).toXML,
-          ex => if(errorTooltip) "ERROR".toXML else "".toXML
-        )
-      }).getOrElse(default)
-    })
+  private def getData(f: HostData => String, errorTooltip: Boolean = false, default: String = "-- / --")(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Node] = {
+    data.map { dataOption =>
+      dataOption.map(_.fold(
+        hostData => f(hostData).toXML,
+        ex => { ex.printStackTrace(); if(errorTooltip) "ERROR".toXML else "".toXML }
+      )).getOrElse(default)
+    }
   }
 
-  private def getNetwork(errorTooltip: Boolean = false, default: String = "-- / --")(implicit c: String): Rx[Node] = {
-    clientDetails.flatMap(clientMap => {
-      clientMap.get(c).map(data => {
-        data.fold(
-          hostData => hostData.network.map(_.toXML).toRx(default),
-          ex => Var(if(errorTooltip) "ERROR".toXML else "".toXML)
-        )
-      }).getOrElse(Var(default))
-    })
+  private def getNetwork(errorTooltip: Boolean = false, default: String = "-- / --")(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Node] = {
+    data.flatMap { dataOption =>
+      dataOption.map(_.fold(
+        hostData => hostData.network.map(_.toXML).toRx(default),
+        ex => { ex.printStackTrace(); Var(if(errorTooltip) "ERROR".toXML else "".toXML) }
+      )).getOrElse(Var(default))
+    }
   }
 
   private def calculateOffsetOfWoruntsTable(): Unit = {
@@ -295,25 +327,35 @@ object Dashboard extends Layout {
     dom.document.getElementById("workunits_table_container").asInstanceOf[HTMLElement].style="margin-top:"+max+"px"
   }
 
-  private def fullyLoadData(client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
-    loadStateData(client)
+  private def fullyLoadData(name: String, client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
+    loadStateData(name, client)
   }
 
-  private def loadStateData(client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
+  private def loadStateData(name: String, client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
+    clientsDataSum.currentCPUs := 0
+    clientsDataSum.networkDownload := 0D
+    clientsDataSum.networkUpload := 0D
+    clientsDataSum.runtime := 0D
+    clientsDataSum.sumCPUs := 0
+
     client.getState.map(state => {
       val details = DetailData(client.hostname, state.results.groupBy(f => f.project), state.workunits, state.apps)
+      var cpus = 0
+      val taskRuntime = state.results.map(r => r.remainingCPU).sum
       val hostData = HostData(
         s"${
-          state.results
+          cpus = state.results
             .filter(p => p.activeTask.nonEmpty)
             .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
             .map(p =>
               state.workunits
                 .find(wu => wu.name == p.wuName)
-                .map(wu => state.apps(wu.appName))
+                .flatMap(wu => state.apps.get(wu.appName))
                 .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
                 .getOrElse(0)
             ).sum
+
+          cpus
         } / ${state.hostInfo.cpus}",
         s"${
           state.results
@@ -322,7 +364,7 @@ object Dashboard extends Layout {
             .map(_.workingSet)
             .sum
             .toSize} / ${state.hostInfo.memory.toSize}",
-        BoincFormater.convertTime(state.results.map(r => r.remainingCPU).sum / state.hostInfo.cpus),
+        if (cpus > 0) BoincFormater.convertTime(taskRuntime / cpus) else BoincFormater.convertTime(0D),
         Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D).toDate,
         s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
         state.hostInfo.diskTotal.toString,
@@ -330,11 +372,26 @@ object Dashboard extends Layout {
         loadFileTransferData(client)
       )
 
+      clientsDataSum.currentCPUs.update(_ + cpus)
+      clientsDataSum.sumCPUs.update(_ + state.hostInfo.cpus)
+      if (cpus > 0) clientsDataSum.runtime.update(_ + (taskRuntime / cpus))
+
       ClientCacheHelper.updateCache(client.hostname, state)
+      this.clients.map { clients =>
+        val entry = clients(name)
+        entry.data := Some(Left(hostData))
+        entry.details := Some(details)
+      }.now
+
       (details, Left(hostData).asInstanceOf[Either[HostData, Exception]])
     }).recover {
       case e: Exception =>
         e.printStackTrace()
+        this.clients.map { clients =>
+          val entry = clients(name)
+          entry.data := Some(Right(e))
+        }.now
+
         (DetailData(client.hostname), Right(e))
     }
   }
@@ -343,6 +400,9 @@ object Dashboard extends Layout {
     client.getFileTransfer.map(transfers => {
       val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
       val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
+
+      clientsDataSum.networkUpload.update(_ + upload)
+      clientsDataSum.networkDownload.update(_ + download)
 
       upload.toSize + " / " + download.toSize
     })

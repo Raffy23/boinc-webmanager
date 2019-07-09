@@ -1,24 +1,19 @@
 package at.happywetter.boinc.boincclient
 
 import java.io.InputStream
-import java.math.BigInteger
 import java.net.{InetAddress, Socket}
-import java.security.MessageDigest
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared.{BoincRPC, _}
+import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.{NodeSeq, XML}
-import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-
-import scala.util.Try
 
 /**
   * Basic Class for the BOINC Communication

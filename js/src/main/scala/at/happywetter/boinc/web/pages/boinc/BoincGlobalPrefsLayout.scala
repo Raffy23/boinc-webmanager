@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.GlobalPrefsOverride
+import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.FloatingMenu
 import at.happywetter.boinc.web.helper.RichRx._

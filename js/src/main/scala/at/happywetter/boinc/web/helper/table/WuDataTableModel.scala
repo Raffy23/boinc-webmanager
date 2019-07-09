@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction
-import at.happywetter.boinc.shared.{App, Result, Task}
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc.{App, Result, Task}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
 import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
@@ -66,7 +66,7 @@ object WuDataTableModel {
       new TableColumn( Rx {
         <span class={BoincClientLayout.Style.progressBar.htmlClass}>
           <progress value={result.progress.map(_.toString)} max="1"></progress>
-          <span style="flot:right">
+          <span>
             {
               result.progress.map(value => (value*100D).toString.split("\\.")(0) + " %")
             }

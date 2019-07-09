@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.{Project, Result}
+import at.happywetter.boinc.shared.boincrpc.{Project, Result}
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow

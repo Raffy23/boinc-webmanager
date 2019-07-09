@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
+import at.happywetter.boinc.shared.boincrpc.{DailyStatistic, Statistics}
 
 import scala.xml.NodeSeq
 
