@@ -57,7 +57,7 @@ object WebServer extends IOApp with Logger {
   private val routes = Router(
     "/"              -> WebResourcesRoute(config),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, projects)),
-    "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),
+    "/api/webrpc"    -> authService.protectedService(WebRPCRoutes(config.webRPC)),
     "/api/hardware"  -> hw,
     "/auth"          -> authService.authService,
     "/language"      -> GZip(LanguageService())

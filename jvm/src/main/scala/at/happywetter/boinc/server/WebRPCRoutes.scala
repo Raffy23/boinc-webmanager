@@ -1,5 +1,6 @@
 package at.happywetter.boinc.server
 
+import at.happywetter.boinc.AppConfig
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import cats.effect.IO
@@ -18,7 +19,7 @@ object WebRPCRoutes extends ResponseEncodingHelper {
 
   object ServerParamDecoder extends QueryParamDecoderMatcher[String]("server")
 
-  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(implicit conf: AppConfig.WebRPC): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case request @ GET -> Root => NotAcceptable()
 

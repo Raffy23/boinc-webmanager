@@ -2,6 +2,7 @@ package at.happywetter.boinc
 
 import java.util.concurrent.TimeUnit
 
+import at.happywetter.boinc.boincclient.webrpc.ProjectRules
 import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
@@ -22,7 +23,8 @@ object AppConfig {
                     autoDiscovery: AutoDiscovery,
                     hostGroups: Map[String, List[String]],
                     hardware: Option[Hardware],
-                    serviceMode: Boolean)
+                    serviceMode: Boolean,
+                    webRPC: WebRPC)
 
   case class Server(address: String,
                     port: Short,
@@ -55,6 +57,11 @@ object AppConfig {
                       params: List[String],
                       cacheTimeout: Long
   )
+
+  case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])
+  case class Parser(default: Int = ProjectRules.UseXMLParser)
+  case class WebRPCRule(serverStatus: Int)
+
 
   val conf: Config = {
     val confString: String = {

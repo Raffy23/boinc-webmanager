@@ -23,6 +23,10 @@ package object parser {
       if (node == null || node.text == null || node.text.isEmpty) 0
       else node.text.toInt
 
+    def tryToLong: Long =
+      if (node == null || node.text == null || node.text.isEmpty) 0L
+      else java.lang.Long.parseLong(node.text)
+
   }
 
 

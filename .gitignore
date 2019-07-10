@@ -15,6 +15,7 @@ shared/target
 application.conf
 all_projects_list.xml
 /web
+/conf
 
 # Ignore .gtm folder
 /.gtm/

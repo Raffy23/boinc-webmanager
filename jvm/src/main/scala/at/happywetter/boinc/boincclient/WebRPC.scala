@@ -1,6 +1,8 @@
 package at.happywetter.boinc.boincclient
 
-import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
+import at.happywetter.boinc.AppConfig
+import at.happywetter.boinc.AppConfig.WebRPCRule
+import at.happywetter.boinc.boincclient.webrpc.{ProjectRules, ServerStatusParser}
 import at.happywetter.boinc.shared.webrpc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,18 +23,18 @@ object WebRPC {
 
   //TODO: Make matchable classes
   object ErrorCodes {
-    val Generic: Int        = -1
-    val InvalidXML: Int     = -112
-    val ItemNotFoundInDB: Int   = -136
-    val NameNotUnique: Int  = -137
-    val DatabaseError: Int  = -138 // Same as ProjectDown error
-    val ItemNotFound: Int   = -161 // Smae as Item not Found in Database
-    val ProjectDown: Int    = -183
-    val InvalidEmail: Int   = -205
-    val WrongPassword: Int  = -207
-    val EmailNotUnique: Int = -207 // Same as -137
+    val Generic: Int                 = -1
+    val InvalidXML: Int              = -112
+    val ItemNotFoundInDB: Int        = -136
+    val NameNotUnique: Int           = -137
+    val DatabaseError: Int           = -138 // Same as ProjectDown error
+    val ItemNotFound: Int            = -161 // Smae as Item not Found in Database
+    val ProjectDown: Int             = -183
+    val InvalidEmail: Int            = -205
+    val WrongPassword: Int           = -207
+    val EmailNotUnique: Int          = -207 // Same as -137
     val AccountCreationDisabled: Int = -208
-    val AttachedFailed: Int = -209
+    val AttachedFailed: Int          = -209
   }
 
   //TODO:
@@ -41,17 +43,23 @@ object WebRPC {
   //}
 
   //TODO:
-  def getServerStatus(url: String): Future[ServerStatus] = Future {
-    ServerStatusParser.fromXML(
-      Http(url+"/server_status.php?xml=1")
-        .timeout(connTimeoutMs = 5000, readTimeoutMs = 5000)
+  def getServerStatus(url: String)(implicit config: AppConfig.WebRPC): Future[ServerStatus] = Future {
+    val request =
+      Http(s"$url/server_status.php?xml=1")
+        .header("Accept", "application/xml")
+        .timeout(connTimeoutMs = 30000, readTimeoutMs = 60000)
         .option(HttpOptions.followRedirects(true))
-        .asXML
-    )
+
+    config.rules.getOrElse(url, WebRPCRule(config.parser.default)).serverStatus match {
+      case ProjectRules.UseXMLParserForEmbeddedXML => ServerStatusParser.fromHtmlXML(request.asXML)
+      case ProjectRules.UseXMLParser               => ServerStatusParser.fromXML(request.asXML)
+      case ProjectRules.UseHtmlParser              => null
+    }
+
   }
 
   def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {
-    var request = Http(url+"/lookup_account.php")
+    var request = Http(s"$url/lookup_account.php")
       .param("email_addr", email)
       .option(HttpOptions.followRedirects(true))
 
@@ -68,6 +76,7 @@ object WebRPC {
     }.get
 
   }
+
 
 
   private implicit class XMLHttpResponse(httpRequest: HttpRequest) {
