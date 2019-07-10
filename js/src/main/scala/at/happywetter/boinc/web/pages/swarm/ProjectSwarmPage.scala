@@ -3,8 +3,10 @@ package at.happywetter.boinc.web.pages.swarm
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.Project
 import at.happywetter.boinc.shared.boincrpc.BoincRPC
+import at.happywetter.boinc.shared.webrpc.ServerStatus
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.helper.FetchHelper
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}
@@ -25,6 +27,9 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
 import scalacss.ProdDefaults._
 import scalacss.internal.mutable.StyleSheet
+import at.happywetter.boinc.web.hacks.Implicits.RichWindow
+
+import scala.util.Try
 
 /**
   * Created by: 
@@ -70,12 +75,19 @@ class ProjectSwarmPage extends SwarmPageLayout {
   override def onRender(): Unit = {
     NProgress.start()
 
+    import at.happywetter.boinc.shared.parser._
     ClientManager.getClients.foreach(clients => {
       Future.sequence(
         clients
           .map(client =>
             client.getProjects
-              .map(_.map(project => (client, project)))
+              .map(_.map(project => {
+                Try(FetchHelper.get[ServerStatus](s"/api/webrpc/status?server=${dom.window.encodeURIComponent(project.url)}").foreach(println)).recover{
+                  case ex: Exception => ex.printStackTrace()
+                }
+
+                (client, project)
+              }))
               .recover { case _: Exception => List() }
           )
       ).map(_.flatten.groupBy(_._2.url))

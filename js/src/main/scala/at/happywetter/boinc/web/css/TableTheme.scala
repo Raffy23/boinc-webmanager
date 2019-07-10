@@ -68,7 +68,15 @@ object TableTheme extends StyleSheet.Inline {
     )
   )
 
-  val table_lastrowsmall = style(unsafeChild("tbody>tr>td:last-of-type")(width(6 em)))
+  val table_lastrowsmall = style(
+    unsafeChild("tbody>tr>td:last-of-type")(
+      width(8 em),
+
+      unsafeChild("a > i")(
+        width(1 em)
+      )
+    )
+  )
 
   val vertical_table_text = style(
     width(95 px),

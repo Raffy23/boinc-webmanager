@@ -1,7 +1,7 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.util.ResourceWalker
-import at.happywetter.boinc.util.http4s.MsgPackRequRespHelper
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.io.{Source, Codec => IOCodec}
@@ -16,7 +16,7 @@ import org.http4s._, org.http4s.dsl.io._
   * @author Raphael
   * @version 29.08.2017
   */
-object LanguageService extends MsgPackRequRespHelper {
+object LanguageService extends ResponseEncodingHelper {
 
   val languages: List[(String, String, String)] =
     ResourceWalker

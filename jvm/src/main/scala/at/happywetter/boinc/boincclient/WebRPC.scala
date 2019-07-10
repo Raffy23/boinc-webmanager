@@ -43,7 +43,10 @@ object WebRPC {
   //TODO:
   def getServerStatus(url: String): Future[ServerStatus] = Future {
     ServerStatusParser.fromXML(
-      Http(url+"/server_status.php?xml=1").option(HttpOptions.followRedirects(true)).asXML
+      Http(url+"/server_status.php?xml=1")
+        .timeout(connTimeoutMs = 5000, readTimeoutMs = 5000)
+        .option(HttpOptions.followRedirects(true))
+        .asXML
     )
   }
 

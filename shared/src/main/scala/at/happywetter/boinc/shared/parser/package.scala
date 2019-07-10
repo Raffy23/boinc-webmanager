@@ -42,8 +42,14 @@ package object parser {
   implicit val userParser = macroRW[webrpc.User]
   implicit val appErrorParser = macroRW[webrpc.ApplicationError]
   implicit val serverCfgParser = macroRW[webrpc.ServerSharedConfig]
+  implicit val swAppStatusParser = macroRW[webrpc.ServerStatusApp]
+  implicit val dbfileParser = macroRW[webrpc.DatabaseFileStates]
+  implicit val daemoParser = macroRW[webrpc.Daemon]
+  implicit val serverStatusParser = macroRW[webrpc.ServerStatus]
 
   implicit val hwSensorsParser = macroRW[extension.HardwareData.SensorsRow]
+
+
 
 
 }

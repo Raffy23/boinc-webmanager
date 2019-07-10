@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Raphael
   * @version 05.07.2019
   */
-trait MsgPackRequRespHelper {
+trait ResponseEncodingHelper {
 
   protected implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 

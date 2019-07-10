@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.ServerConfig
-import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage}
+import at.happywetter.boinc.web.pages.{Dashboard, ProjectOverviewPage, SettingsPage}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
@@ -114,7 +114,16 @@ object DashboardMenu {
         </a>
       </li>
 
-      <hr id="menu-entry-spliter"/>
+      <li class={Style.elem.htmlClass}>
+        <a href={ProjectOverviewPage.link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="project_overview">
+          <i class="fa fa-wrench"></i>
+          {"dashboard_project_overview".localize}
+        </a>
+      </li>
+
+
+    <hr id="menu-entry-spliter"/>
 
       <li class={Style.elem.htmlClass}>
         <h2 style="padding-left:5px">
@@ -143,7 +152,7 @@ object DashboardMenu {
               <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>
                 {entry.subMenu.map(_.map(entry =>
                   <li class={Style.elem.htmlClass}>
-                    <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener}>
+                    <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener} style="width:unset">
                       {entry.name}
                     </a>
                   </li>
@@ -166,7 +175,7 @@ object DashboardMenu {
       if (config.hardware) {
         hwMenuEntry :=
           <li class={Style.elem.htmlClass}>
-            <a href={HardwarePage.link} onclick={masterSelectionListener}
+            <a href={ProjectOverviewPage.link} onclick={masterSelectionListener}
                data-navigo={true} data-menu-id="dashboard_hardware">
               <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>

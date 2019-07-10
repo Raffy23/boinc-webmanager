@@ -68,7 +68,7 @@ object Main {
     // Static pages for all views:
     AppRouter += Dashboard
     AppRouter += SettingsPage
-    AppRouter += HardwarePage
+    AppRouter += ProjectOverviewPage
 
     // Swarm pages:
     AppRouter += new BoincSwarmPage

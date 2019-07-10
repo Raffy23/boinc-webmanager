@@ -1,7 +1,7 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.extensions.linux.HWStatusService
-import at.happywetter.boinc.util.http4s.MsgPackRequRespHelper
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.shared.parser._
 import upickle.default._
 import scala.language.implicitConversions
@@ -12,7 +12,7 @@ import scala.language.implicitConversions
   * @author Raphael
   * @version 02.11.2017
   */
-object HardwareAPIRoutes extends MsgPackRequRespHelper {
+object HardwareAPIRoutes extends ResponseEncodingHelper {
 
   import cats.effect._
   import org.http4s._

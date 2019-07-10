@@ -6,7 +6,7 @@ import at.happywetter.boinc.shared.boincrpc.{BoincRPC, GlobalPrefsOverride}
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc._
 import at.happywetter.boinc.util.PooledBoincClient
-import at.happywetter.boinc.util.http4s.MsgPackRequRespHelper
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import at.happywetter.boinc.{AppConfig, BoincManager}
 import cats.effect._
@@ -23,7 +23,7 @@ import scala.util.Try
   * @author Raphael
   * @version 17.08.2017
   */
-object BoincApiRoutes extends MsgPackRequRespHelper {
+object BoincApiRoutes extends ResponseEncodingHelper {
   private def getIntParameter(name: String)(implicit params: Map[String,Seq[String]]): Int =
     Try { params(name).head.toInt }.toOption.getOrElse(0)
 

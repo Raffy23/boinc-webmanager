@@ -58,12 +58,6 @@ object BoincProjectLayout {
       cursor.pointer
     )
 
-    val lastTableCol = style(
-      unsafeChild("tbody>tr>td:last-of-type")(
-        width(7 em)
-      )
-    )
-
   }
 }
 
@@ -84,7 +78,7 @@ class BoincProjectLayout extends BoincClientLayout {
     List.empty,
     List(
       TableTheme.table.htmlClass,
-      Style.lastTableCol.htmlClass
+      TableTheme.table_lastrowsmall.htmlClass
     )
   )
 
