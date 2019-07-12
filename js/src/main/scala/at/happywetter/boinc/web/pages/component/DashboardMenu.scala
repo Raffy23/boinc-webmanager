@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.ServerConfig
-import at.happywetter.boinc.web.pages.{Dashboard, ProjectOverviewPage, SettingsPage}
+import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
@@ -115,10 +115,10 @@ object DashboardMenu {
       </li>
 
       <li class={Style.elem.htmlClass}>
-        <a href={ProjectOverviewPage.link} onclick={masterSelectionListener}
-           data-navigo={true} data-menu-id="project_overview">
-          <i class="fa fa-wrench"></i>
-          {"dashboard_project_overview".localize}
+        <a href={WebRPCProjectPage.link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="dashboard_webrpc">
+          <i class="fa fa-cloud"></i>
+          {"dashboard_webrpc".localize}
         </a>
       </li>
 
@@ -175,7 +175,7 @@ object DashboardMenu {
       if (config.hardware) {
         hwMenuEntry :=
           <li class={Style.elem.htmlClass}>
-            <a href={ProjectOverviewPage.link} onclick={masterSelectionListener}
+            <a href={HardwarePage.link} onclick={masterSelectionListener}
                data-navigo={true} data-menu-id="dashboard_hardware">
               <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>

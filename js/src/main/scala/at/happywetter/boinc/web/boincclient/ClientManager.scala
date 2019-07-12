@@ -27,8 +27,14 @@ object ClientManager {
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
   private var groups: Map[String, List[String]] = _
-  read[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
-    .foreach(c => clients += (c -> new BoincClient(c)))
+
+  init()
+  private def init(): Unit = {
+    val cachedClients = dom.window.localStorage.getItem("clientmanager/clients")
+    if (cachedClients != null)
+      read[List[String]](cachedClients).foreach(c => clients += (c -> new BoincClient(c)))
+
+  }
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
     cacheTimeout.foreach(cacheTimeout => {

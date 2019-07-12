@@ -28,7 +28,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
 
     <div id="file_transfer">
       <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-exchange"></i>
+        <i class="fa fa-exchange" aria-hidden="true"></i>
         {"file_transfer_header".localize}
       </h3>
       <table class={TableTheme.table.htmlClass}>

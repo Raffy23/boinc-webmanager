@@ -149,7 +149,7 @@ object Dashboard extends Layout {
       </div>
 
       <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-tachometer"></i>
+        <i class="fa fa-tachometer" aria-hidden="true"></i>
         {"dashboard_overview".localize}
       </h2>
       <div>
@@ -259,7 +259,7 @@ object Dashboard extends Layout {
     def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle", color: String = "#FF8181"): Node = {
       val tooltip = new Tooltip(
         Var(label.localize),
-        <i class={`class`}></i>
+        <i class={`class`} aria-hidden="true"></i>
       ).toXML.asInstanceOf[Elem]
 
       tooltip.copy(

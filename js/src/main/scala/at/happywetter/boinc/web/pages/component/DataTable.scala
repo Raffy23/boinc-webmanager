@@ -55,7 +55,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
               if (sortable)
                 <th class={BoincClientLayout.Style.in_text_icon.htmlClass}
                     style="cursor:pointer" onclick={tableSortFunction(idx)}>
-                  <i class="fa fa-sort" data-sort-icon="icon"></i>
+                  <i class="fa fa-sort" data-sort-icon="icon" aria-hidden="true"></i>
                   {header}
                 </th>
               else

@@ -28,7 +28,7 @@ object SettingsPage extends Layout {
   override def render: Elem = {
     <div id="settings">
       <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-cog"></i>
+        <i class="fa fa-cog" aria-hidden="true"></i>
         {"settings_header".localize}
       </h2>
 
@@ -73,6 +73,7 @@ object SettingsPage extends Layout {
   }
 
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    PageLayout.clearNav()
     AuthClient.validateAction(done)
   }
 

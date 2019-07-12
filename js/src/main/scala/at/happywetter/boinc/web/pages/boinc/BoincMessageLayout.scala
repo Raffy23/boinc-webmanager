@@ -138,7 +138,7 @@ class BoincMessageLayout extends BoincClientLayout {
       </div>
 
       <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-envelope-o"></i>
+        <i class="fa fa-envelope-o" aria-hidden="true"></i>
         {"messages_header".localize}
       </h3>
       <div id="client-notices">

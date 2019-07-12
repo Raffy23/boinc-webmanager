@@ -49,7 +49,7 @@ class BoincDiskLayout extends BoincClientLayout {
 
     <div>
       <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-pie-chart"></i>
+        <i class="fa fa-pie-chart" aria-hidden="true"></i>
         {"disk_usage".localize}
       </h3>
 

@@ -82,10 +82,6 @@ class ProjectSwarmPage extends SwarmPageLayout {
           .map(client =>
             client.getProjects
               .map(_.map(project => {
-                Try(FetchHelper.get[ServerStatus](s"/api/webrpc/status?server=${dom.window.encodeURIComponent(project.url)}").foreach(println)).recover{
-                  case ex: Exception => ex.printStackTrace()
-                }
-
                 (client, project)
               }))
               .recover { case _: Exception => List() }

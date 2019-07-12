@@ -97,7 +97,7 @@ class BoincStatisticsLayout extends BoincClientLayout {
   override def render: Elem = {
     <div id="boinc_statistics">
       <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-area-chart"></i>
+        <i class="fa fa-area-chart" aria-hidden="true"></i>
         {"statistics_header".localize}
       </h3>
 

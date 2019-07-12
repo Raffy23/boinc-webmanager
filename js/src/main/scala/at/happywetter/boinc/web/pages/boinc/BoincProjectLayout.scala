@@ -88,7 +88,7 @@ class BoincProjectLayout extends BoincClientLayout {
 
     <div id="projects">
       <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-tag"></i>
+        <i class="fa fa-tag" aria-hidden="true"></i>
         {"project_header".localize}
       </h2>
 

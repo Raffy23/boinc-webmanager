@@ -48,7 +48,7 @@ trait TopNavigation {
           <li class={BoincClientLayout.Style.in_text_icon.htmlClass}>
             <a href={link(nav)} data-navigo={true} data-nav={nav}
                class={if(selected == nav) Some(TopNavigation.active.htmlClass) else None}>
-              <i class={icon}></i>
+              <i class={icon} aria-hidden="true"></i>
               <span class={TopNavigation.invisible_on_small_screen.htmlClass}>{name.localize}</span>
             </a>
           </li>

@@ -26,6 +26,7 @@ object HardwarePage extends Layout {
   override val path: String = "hardware"
 
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    PageLayout.clearNav()
     AuthClient.validateAction(done)
   }
 
@@ -59,7 +60,7 @@ object HardwarePage extends Layout {
   override def render: Elem = {
     <div id="hardware">
       <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-microchip"></i>
+        <i class="fa fa-microchip" aria-hidden="true"></i>
         {"hardware_header".localize}
       </h2>
 
