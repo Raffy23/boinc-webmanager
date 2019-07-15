@@ -48,7 +48,7 @@ abstract class BoincClientLayout extends Layout {
       BoincRootLayout.currentController = this
     }
 
-    PageLayout.showMenu()
+    //PageLayout.showMenu()
 
     BoincTopNavigation.clientName := boincClientName
     BoincTopNavigation.render(path)

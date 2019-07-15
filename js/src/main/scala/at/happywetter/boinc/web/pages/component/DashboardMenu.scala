@@ -26,6 +26,8 @@ object DashboardMenu {
 
     import dsl._
 
+    private val menuMargin = 10
+
     val menu = style(
       position.fixed,
       overflowX.auto,
@@ -38,6 +40,7 @@ object DashboardMenu {
       width(207 px),
       border :=! "1px solid #EEE",
       boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
+      zIndex :=! "99",
 
       media.maxWidth(690 px)(
         top(100 px)
@@ -49,7 +52,7 @@ object DashboardMenu {
         display.block,
         width(207 px),
         textDecoration := "none",
-        padding(10 px, 15 px),
+        padding(menuMargin px, 15 px),
         boxSizing.borderBox,
         color(c"#333"),
 
@@ -59,7 +62,7 @@ object DashboardMenu {
         ),
 
         unsafeChild("i")(
-          marginRight(10 px)
+          marginRight(menuMargin px)
         )
       )
     )
@@ -72,10 +75,22 @@ object DashboardMenu {
     val clickable = style(
       cursor.pointer
     )
+
+    val subMenuHosts = style(
+      float.right,
+      margin(0 px, (-1 * menuMargin + 5) px, 0 px, 0 px),
+      fontSize.smaller,
+      backgroundColor(c"#757575"),
+      color.white,
+      minWidth(20 px),
+      border(1 px, solid, c"#757575"),
+      borderRadius(6 px),
+      textAlign.center
+    )
   }
 
   private val viewState: Var[String] = Var("display:block")
-  private val hwMenuEntry: Var[Elem] = Var(<span id="config-hardware-disabled"></span>)
+  private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)
   processSeverConfig()
 
   trait MenuEntry
@@ -123,7 +138,7 @@ object DashboardMenu {
       </li>
 
 
-    <hr id="menu-entry-spliter"/>
+    <li><hr id="menu-entry-spliter"/></li>
 
       <li class={Style.elem.htmlClass}>
         <h2 style="padding-left:5px">
@@ -147,6 +162,7 @@ object DashboardMenu {
                  data-menu-ref={entry.subMenuRef} onclick={subMenuListener(entry)}>
                 <i class={entry.visible.map(icon => s"fa fa-caret-${if(icon) "down" else "right"}")}></i>
                 {entry.name}
+                <span class={Style.subMenuHosts.htmlClass}>{entry.subMenu.map(_.size)}</span>
               </a>
 
               <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>

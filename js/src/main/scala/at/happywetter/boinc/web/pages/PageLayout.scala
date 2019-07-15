@@ -32,7 +32,7 @@ object PageLayout {
       backgroundColor(c"#222"),
       color(c"#F2F2F2"),
       boxShadow := "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
-      zIndex :=! "2",
+      zIndex :=! "100",
 
       media.maxWidth(690 px)(
         height(100 px)
@@ -78,7 +78,7 @@ object PageLayout {
     */
 
     val clientContainer = style(
-      marginLeft(218 px),
+      marginLeft(229 px),
 
       media.maxWidth(690 px)(
         marginLeft(5 px)
@@ -86,10 +86,9 @@ object PageLayout {
     )
   }
 
-  private var curNav: TopNavigation = _
   val nav: Var[Node] = Var("")
 
-  val hamburgerMenuAction: (Event) => Unit = (event) => {
+  val hamburgerMenuAction: Event => Unit = event => {
     val menu = dom.document.getElementById("dashboard-menu").asInstanceOf[HTMLElement]
 
     if (menu.style.display == "none") showMenu()
@@ -99,7 +98,7 @@ object PageLayout {
   val heading: Elem = {
     <header class={Style.heading.htmlClass}>
       <h1 class={Style.headerText.htmlClass}>
-        <i class="fa fa-bars" stlye="margin-right:13px;cursor:pointer" onclick={hamburgerMenuAction}></i>
+        <i class="fa fa-bars" style="margin-right:5px" aria-hidden="true" onclick={hamburgerMenuAction}/>
         Boinc Webmanager
       </h1>
       <div id="navigation">{nav}</div>
@@ -113,7 +112,7 @@ object PageLayout {
     menu.style.display = "block"
 
     if (dom.window.outerWidth > 690)
-      content.style.marginLeft = "218px"
+      content.style.marginLeft = "229px"
   }
 
   def hideMenu(): Unit = {

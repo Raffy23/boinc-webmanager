@@ -72,6 +72,10 @@ object TableTheme extends StyleSheet.Inline {
     unsafeChild("tbody>tr>td:last-of-type")(
       width(8 em),
 
+      unsafeChild("div")(
+          textAlign.center
+      ),
+
       unsafeChild("a > i")(
         width(1 em)
       )

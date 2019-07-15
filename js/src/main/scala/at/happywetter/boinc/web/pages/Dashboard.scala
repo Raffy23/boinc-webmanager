@@ -188,14 +188,14 @@ object Dashboard extends Layout {
             <tr>
               <td><b>{"sum".localize}</b></td>
               <td class={Style.centeredText.htmlClass}>{clientsDataSum.currentCPUs.map(c => s"$c / ${clientsDataSum.sumCPUs.now}")}</td>
-              <td class={Style.centeredText.htmlClass}>-- / --</td>
+              <td class={Style.centeredText.htmlClass}></td>
               <td class={Style.centeredText.htmlClass}>
                 {clientsDataSum.networkUpload.map(u => BoincFormater.convertSize(u))} /
                 {clientsDataSum.networkDownload.map(d => BoincFormater.convertSize(d))}
               </td>
               <td class={Style.centeredText.htmlClass}>{clientsDataSum.runtime.map(r => BoincFormater.convertTime(r))}</td>
-              <td class={Style.centeredText.htmlClass}>-- / --</td>
-              <td class={Style.centeredText.htmlClass}>-- / --</td>
+              <td class={Style.centeredText.htmlClass}></td>
+              <td class={Style.centeredText.htmlClass}></td>
             </tr>
           </tbody>
         </table>

@@ -3,6 +3,7 @@ package at.happywetter.boinc.web.util
 import at.happywetter.boinc.shared.webrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLElement
 
 import scala.xml.Node
 
@@ -25,17 +26,25 @@ object I18N {
     def save(lang: String = current): Unit = {
       current = lang
       dom.window.localStorage.setItem("language", lang)
+      setDocumentLanguage(lang)
     }
 
     def load: String = {
       val sessionLang = dom.window.localStorage.getItem("language")
-      if (sessionLang == null)
+      if (sessionLang == null) {
+        setDocumentLanguage(getDefault)
+
         current
-      else {
+      } else {
+        setDocumentLanguage(sessionLang)
         current = sessionLang
+
         current
       }
     }
+
+    def setDocumentLanguage(lang: String): Unit =
+      dom.document.getElementsByTagName("html")(0).asInstanceOf[HTMLElement].setAttribute("lang", lang)
 
   }
 

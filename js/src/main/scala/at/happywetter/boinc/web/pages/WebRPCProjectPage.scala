@@ -112,7 +112,7 @@ object WebRPCProjectPage extends Layout {
           <select class={LoginPage.Style.input.htmlClass} style="margin:0" id="project" onchange={jsOnChangeListener}>
             <option disabled={true} selected="selected">{selectorPlaceholder}</option>
             {
-              projects.map(_.toList.sortBy(_._2).map(project => <option value={project._1}>{project._2}</option>))
+              projects.map(_.toList.sortBy(_._2.toLowerCase()).map(project => <option value={project._1}>{project._2}</option>))
             }
           </select>
         }
