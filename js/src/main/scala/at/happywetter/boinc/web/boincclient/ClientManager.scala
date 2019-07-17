@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.boincclient
 
 import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
-import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig}
+import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig, WebSocketClient}
 import org.scalajs.dom
 import upickle.default._
 
@@ -11,6 +11,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.websocket
 
 /**
   * Created by: 
@@ -23,6 +24,10 @@ object ClientManager {
   private val baseURI = "/api/boinc"
   private def cacheTimeout = ServerConfig.get.map(_.hostNameCacheTimeout)
 
+  private val CACHE_CLIENTS = "clientmanager/clients"
+  private val CACHE_GROUPS  = "clientmanager/groups"
+  private val CACHE_REFRESH_TIME = "clientmanager/lastrefresh"
+
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
@@ -30,26 +35,33 @@ object ClientManager {
 
   init()
   private def init(): Unit = {
-    val cachedClients = dom.window.localStorage.getItem("clientmanager/clients")
-    if (cachedClients != null)
-      read[List[String]](cachedClients).foreach(c => clients += (c -> new BoincClient(c)))
+    loadFromLocalStorage[List[String]](CACHE_CLIENTS).foreach(_.foreach(c => clients += (c -> new BoincClient(c))))
+    loadFromLocalStorage[Map[String, List[String]]](CACHE_GROUPS).foreach(groups = _)
+
+    WebSocketClient.send(websocket.SubscribeToGroupChanges)
+    WebSocketClient.listener.append{
+      case websocket.HostInformationChanged(newHosts, newGroups) =>
+        groups = newGroups
+        clients.clear()
+        newHosts.foreach(c => clients += (c -> new BoincClient(c)))
+
+      case _ => /* Do nothing, other messages ... */
+    }
 
   }
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
     cacheTimeout.foreach(cacheTimeout => {
-      val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
+      val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
       timestamp.fold(
-        ex => {
-          dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-          dom.window.localStorage.setItem("clientmanager/clients", write(clients))
-          dom.console.log("Clientmanager: Could not read timestamp, persist current Clientlist")
+        _ => {
+          saveToCache(clients)
+          dom.console.log("Clientmanager: Could not read timestamp, persisting current dataset")
         },
         date => {
           val current = new Date()
           if (current.getTime() - date.getTime() > cacheTimeout) {
-            dom.window.localStorage.setItem("clientmanager/lastrefresh", new Date().toUTCString())
-            dom.window.localStorage.setItem("clientmanager/clients", write(clients))
+            saveToCache(clients)
             dom.console.log("Clientmanager: Updated Clientlist")
           }
         }
@@ -57,23 +69,27 @@ object ClientManager {
     })
   }
 
+  private def saveToCache(clients: List[String]): Unit = {
+    dom.window.localStorage.setItem(CACHE_REFRESH_TIME, new Date().toUTCString())
+    dom.window.localStorage.setItem(CACHE_CLIENTS, write(clients))
+    dom.window.localStorage.setItem(CACHE_GROUPS, write(groups))
+  }
+
   private def readClientsFromServer(): Future[List[String]] = {
-    val timestamp = Try(new Date(dom.window.localStorage.getItem("clientmanager/lastrefresh")))
+    val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
 
     cacheTimeout.flatMap(cacheTimeout => {
       timestamp.map(date => {
         val current = new Date()
 
         if (current.getTime() - date.getTime() > cacheTimeout) {
+          println("Old Cache, reloading groups and clients ...")
           queryGroups.flatMap(data => {
             groups = data
             queryClientsFromServer()
           })
         } else {
-          queryGroups.flatMap(data => {
-            groups = data
-            queryClientsFromCache()
-          })
+          Future { clients.keys.toList }
         }
 
       }).recover{ case _: Exception => queryClientsFromServer() }.get
@@ -117,7 +133,13 @@ object ClientManager {
     FetchHelper.get[List[String]](baseURI)
 
   private def queryClientsFromCache(): Future[List[String]] = Future {
-    read[List[String]](dom.window.localStorage.getItem("clientmanager/clients"))
+    read[List[String]](dom.window.localStorage.getItem(CACHE_CLIENTS))
+  }
+
+  private def loadFromLocalStorage[T](name: String)(implicit r: Reader[T]): Option[T] = {
+    val cachedClients = dom.window.localStorage.getItem(name)
+    if (cachedClients != null) Some(read[T](cachedClients))
+    else None
   }
 
 }

@@ -46,13 +46,13 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] =
     FetchHelper.post[WorkunitRequestBody, Boolean](
-      uri(BoincRPC.Command.GetActiveResults, name),
+      uri(BoincRPC.Command.GetActiveResults),
       WorkunitRequestBody(project, action.toString)
     )
 
   override def project(name: String, action: ProjectAction): Future[Boolean] =
     FetchHelper.post[ProjectRequestBody, Boolean](
-      uri(BoincRPC.Command.GetProjectStatus, name),
+      uri(BoincRPC.Command.GetProjectStatus),
       ProjectRequestBody(name, action.toString)
     )
 

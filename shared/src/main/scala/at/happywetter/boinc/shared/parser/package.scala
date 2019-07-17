@@ -49,7 +49,4 @@ package object parser {
 
   implicit val hwSensorsParser = macroRW[extension.HardwareData.SensorsRow]
 
-
-
-
 }

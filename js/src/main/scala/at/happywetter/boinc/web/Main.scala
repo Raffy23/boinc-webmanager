@@ -1,21 +1,20 @@
 package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.shared.websocket.{SubscribeToGroupChanges, WebSocketMessage}
 import at.happywetter.boinc.web.css.AppCSS
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
-import at.happywetter.boinc.web.routes.AppRouter._
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
-import upack.{MsgPackReader, Readable}
-import upickle.core.Visitor
+import org.scalajs.dom.raw.{Blob, FileReader, WebSocket}
 
-import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.scalajs.js.typedarray.{ArrayBuffer, DataView, Uint8Array}
 import scala.util.Try
 
 /**

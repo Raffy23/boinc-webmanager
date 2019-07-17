@@ -22,7 +22,7 @@ object BasicModalDialog {
     val modal = style(
       display.none,
       position.fixed,
-      zIndex(5),
+      zIndex(101),
       paddingTop(100 px),
       left.`0`,
       top.`0`,

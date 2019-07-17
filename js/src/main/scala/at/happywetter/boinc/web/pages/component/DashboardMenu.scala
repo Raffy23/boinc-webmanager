@@ -40,7 +40,7 @@ object DashboardMenu {
       width(207 px),
       border :=! "1px solid #EEE",
       boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
-      zIndex :=! "99",
+      zIndex :=! "98",
 
       media.maxWidth(690 px)(
         top(100 px)
@@ -62,7 +62,8 @@ object DashboardMenu {
         ),
 
         unsafeChild("i")(
-          marginRight(menuMargin px)
+          marginRight(menuMargin px),
+          width(1 em)
         )
       )
     )
@@ -93,28 +94,29 @@ object DashboardMenu {
   private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)
   processSeverConfig()
 
-  trait MenuEntry
-  case class TopLevelEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
-  case class SublistEntry(name: String, href: String, visible: Var[Boolean] = Var(false),
+  class MenuEntry(val name: String, val href: String)
+  case class TopLevelEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
+  case class SublistEntry(override val name: String, override val href: String, visible: Var[Boolean] = Var(false),
                           subMenuRef: String, reference: Option[String]=None,
-                          subMenu: Var[List[SubMenuEntry]] = Var(List.empty)) extends MenuEntry
-  case class SubMenuEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
+                          subMenu: Var[List[SubMenuEntry]] = Var(List.empty)) extends MenuEntry(name, href)
+  case class SubMenuEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
 
-  private val menuEntries: Var[List[MenuEntry]] = Var(List.empty[MenuEntry])
+  private val menuComputers: Var[List[MenuEntry]] = Var(List.empty)
+  private val menuGroups: Var[List[MenuEntry]] = Var(List.empty)
 
   def component: Elem = {
     <ul class={Style.menu.htmlClass} id="dashboard-menu" style={viewState}>
       <li class={Style.elem.htmlClass}>
         <a href={Dashboard.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="dashboard">
-          <i class="fa fa-tachometer"></i>
+          <i class="fa fa-tachometer" aria-hidden="true"></i>
           {"dashboard_menu_home".localize}
         </a>
       </li>
       <li class={Style.elem.htmlClass}>
         <a href={BoincSwarmPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="swarm_control">
-          <i class="fa fa-industry"></i>
+          <i class="fa fa-industry" aria-hidden="true"></i>
           {"dashboard_swarm_control".localize}
         </a>
       </li>
@@ -124,7 +126,7 @@ object DashboardMenu {
       <li class={Style.elem.htmlClass}>
         <a href={SettingsPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="settings">
-          <i class="fa fa-cog"></i>
+          <i class="fa fa-cog" aria-hidden="true"></i>
           {"dashboard_menu_settings".localize}
         </a>
       </li>
@@ -132,22 +134,58 @@ object DashboardMenu {
       <li class={Style.elem.htmlClass}>
         <a href={WebRPCProjectPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="dashboard_webrpc">
-          <i class="fa fa-cloud"></i>
+          <i class="fa fa-cloud" aria-hidden="true"></i>
           {"dashboard_webrpc".localize}
         </a>
       </li>
-
 
     <li><hr id="menu-entry-spliter"/></li>
 
       <li class={Style.elem.htmlClass}>
         <h2 style="padding-left:5px">
-          <i class="fa fa-cubes"  style="margin-right:8px"></i>
+          <i class="fa fa-desktop" aria-hidden="true" style="margin-right:8px"></i>
           {"dashboard_menu_computers".localize}
         </h2>
       </li>
       {
-        menuEntries.map(_.map {
+        menuComputers.map(_.sortBy(_.name).map {
+          case entry: TopLevelEntry =>
+            <li class={Style.elem.htmlClass}>
+              <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
+                 onclick={selectionListener}>
+                {entry.name}
+              </a>
+            </li>
+
+          case entry: SublistEntry =>
+            <li class={Seq(Style.elem.htmlClass, Style.clickable.htmlClass).mkString(" ")}>
+              <a class={ Style.clickable.htmlClass} data-menu-id={entry.reference}
+                 data-menu-ref={entry.subMenuRef} onclick={subMenuListener(entry)}>
+                <i class={entry.visible.map(icon => s"fa fa-caret-${if(icon) "down" else "right"}")}></i>
+                {entry.name}
+                <span class={Style.subMenuHosts.htmlClass}>{entry.subMenu.map(_.size)}</span>
+              </a>
+
+              <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>
+                {entry.subMenu.map(_.map(entry =>
+                <li class={Style.elem.htmlClass}>
+                  <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener} style="width:unset">
+                    {entry.name}
+                  </a>
+                </li>
+              ))}
+              </ul>
+            </li>
+        })
+      }
+      <li class={Style.elem.htmlClass}>
+        <h2 style="padding-left:5px">
+          <i class="fa fa-cubes" aria-hidden="true" style="margin-right:8px"></i>
+          {"dashboard_menu_groups".localize}
+        </h2>
+      </li>
+      {
+        menuGroups.map(_.sortBy(_.name).map {
           case entry: TopLevelEntry =>
             <li class={Style.elem.htmlClass}>
               <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
@@ -232,19 +270,19 @@ object DashboardMenu {
     }
   }
 
-  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None): Unit =
-    menuEntries.update(_ :+ TopLevelEntry(elementName, linkUrl, reference))
+  def addComputer(linkUrl: String, elementName: String, reference: Option[String] = None): Unit =
+    menuComputers.update(_ :+ TopLevelEntry(elementName, linkUrl, reference))
 
-  def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None): Unit =
-    menuEntries.update(_ :+ SublistEntry(elementName, "#", Var(false), menuReference, reference))
+  def addGroup(elementName: String, menuReference: String, reference: Option[String] = None): Unit =
+    menuGroups.update(_ :+ SublistEntry(elementName, "#", Var(false), menuReference, reference))
 
-  def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None): Unit = {
+  def addComputerToGroup(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None): Unit = {
     def find(menu: List[MenuEntry]): SublistEntry =
       menu.find(x =>
         x.isInstanceOf[SublistEntry] && x.asInstanceOf[SublistEntry].subMenuRef == submenu
       ).get.asInstanceOf[SublistEntry]
 
-    menuEntries.update(menu => {
+    menuGroups.update(menu => {
       find(menu).subMenu.update(_ :+ SubMenuEntry(elementName, linkUrl, reference))
       menu
     })

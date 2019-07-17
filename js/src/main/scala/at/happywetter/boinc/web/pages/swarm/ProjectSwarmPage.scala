@@ -53,11 +53,21 @@ object ProjectSwarmPage {
       color(c"#333"),
       textDecoration := "none",
       fontSize(28 px),
-      marginRight(5 px)
+      marginRight(5 px),
+
+      unsafeChild("a > i")(
+        margin(5 px)
+      )
     )
 
     val last_row_small = style(
       width(1.5 em)
+    )
+
+    val floatingMenu = style(
+      position.absolute,
+      top(80 px),
+      right(20 px),
     )
   }
 }
@@ -96,46 +106,48 @@ class ProjectSwarmPage extends SwarmPageLayout {
     <div id="swarm-project-content">
       <div style="position:absolute;top:80px;right:20px">
         {
-          new Tooltip(
-            Var("project_swarm_play".localize),
-            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
-               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
-              <i class="fa fa-play-circle-o"></i>
-            </a>,
-            textOrientation = Tooltip.Style.topText
-          ).toXML
-          new Tooltip(
-            Var("project_swarm_pause".localize),
-            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
-               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
-              <i class="fa fa-pause-circle-o"></i>
-            </a>,
-            textOrientation = Tooltip.Style.topText
-          ).toXML
-          new Tooltip(
-            Var("project_swarm_refresh".localize),
-            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
-               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
-              <i class="fa fa-refresh"></i>
-            </a>,
-            textOrientation = Tooltip.Style.topText
-          ).toXML
-          new Tooltip(
-            Var("project_swarm_trash".localize),
-            <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
-               onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
-              <i class="fa fa-trash-o"></i>
-            </a>,
-            textOrientation = Tooltip.Style.topText
-          ).toXML
-          new Tooltip(
-            Var("project_new_tooltip".localize),
-            <a class={Style.top_nav_action.htmlClass} href="#add-project" style="font-size:30px"
-               onclick={jsAddNewProjectAction}>
-              <i class="fa fa-plus-square"></i>
-            </a>,
-            textOrientation = Tooltip.Style.topText
-          ).toXML
+          Seq(
+            new Tooltip(
+              Var("project_swarm_play".localize),
+              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+                 onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
+                <i class="fa fa-play-circle-o"></i>
+              </a>,
+              textOrientation = Tooltip.Style.topText
+            ).toXML,
+            new Tooltip(
+              Var("project_swarm_pause".localize),
+              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+                 onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
+                <i class="fa fa-pause-circle-o"></i>
+              </a>,
+              textOrientation = Tooltip.Style.topText
+            ).toXML,
+            new Tooltip(
+              Var("project_swarm_refresh".localize),
+              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+                 onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
+                <i class="fa fa-refresh"></i>
+              </a>,
+              textOrientation = Tooltip.Style.topText
+            ).toXML,
+            new Tooltip(
+              Var("project_swarm_trash".localize),
+              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+                 onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
+                <i class="fa fa-trash-o"></i>
+              </a>,
+              textOrientation = Tooltip.Style.topText
+            ).toXML,
+            new Tooltip(
+              Var("project_new_tooltip".localize),
+              <a class={Style.top_nav_action.htmlClass} href="#add-project"
+                 onclick={jsAddNewProjectAction}>
+                <i class="fa fa-plus-square"></i>
+              </a>,
+              textOrientation = Tooltip.Style.topText
+            ).toXML
+          )
         }
       </div>
       <table class={TableTheme.table.htmlClass} id="swarm-project-data-table">
@@ -157,7 +169,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
         <tbody>
           {
             dataset.map(projects => {
-              projects.map { case (url, data) =>
+              projects.toList.sortBy(entry => entry._2.headOption.map(_._2.name).getOrElse(entry._1)).map { case (url, data) =>
                 val project = data.head._2
                 val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit) }
                 val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
@@ -183,7 +195,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
                     }
                   </td>
                 </tr>
-              }.toList // Iterable is not compatible with mthml
+              }
             })
           }
         </tbody>

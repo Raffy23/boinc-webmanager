@@ -29,16 +29,20 @@ object FetchHelper {
   }
 
   def get[A](uri: String)(implicit decoder: Reader[A]): Future[A] = {
-    dom.console.log("Fetch ", uri)
+    dom.console.log("GET", uri)
+
     Fetch
       .fetch(uri, requestGetParameters)
       .mapData(data => readBinary[A](data))
   }
 
-  def post[A,R](uri: String, data: A)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] =
+  def post[A,R](uri: String, data: A)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] = {
+    dom.console.log("POST", uri)
+
     Fetch
       .fetch(uri, requestPostParameters(write(data)))
       .mapData(data => readBinary[R](data))
+  }
 
   def patch[A](uri: String)(implicit decoder: Reader[A]): Future[A] =
     Fetch

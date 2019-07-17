@@ -17,18 +17,20 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.09.2017
   */
-class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(implicit val scheduler: ScheduledExecutorService) extends Logger {
+class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit val scheduler: ScheduledExecutorService) extends Logger {
 
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted)
 
   def beginSearch(): Unit =
     if (config.autoDiscovery.enabled)
-      discoveryCompleted( autoDiscovery.search )
+      discoveryCompleted( autoDiscovery.search() )
+
+  def stopSearch(): Unit =
+    autoDiscovery.destroy()
 
   private def discoveryCompleted(data: Future[List[IP]]): Unit = {
     data.foreach{ hosts =>
-      LOG.debug("Completed Discovery: " + hosts)
-      LOG.debug("Following Hosts can be added: " + hosts.diff(getUsedIPs))
+      LOG.info("Following Hosts can be added: " + hosts.diff(getUsedIPs))
 
       hosts.diff(getUsedIPs).foreach( ip => {
         Future {
@@ -50,7 +52,7 @@ class BoincHostSettingsResolver(config: Config, boincManager: BoincManager)(impl
           }).find{ case (succ, _, _) => succ }
             .foreach{ case (_, domainName, pw) =>
               domainName.foreach( domainName => {
-                LOG.debug(s"Found usable Core Client at $ip")
+                LOG.info(s"Found usable core client ($domainName) at $ip")
 
                 boincManager.add(
                   domainName,

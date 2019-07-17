@@ -26,7 +26,7 @@ object Tooltip {
       color.white,
       textAlign.center,
       padding(5 px, 5 px, 5 px, 5 px),
-      zIndex(9),
+      zIndex(101),
       boxShadow := " 0 12px 18px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.22)",
     )
 

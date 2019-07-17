@@ -18,7 +18,7 @@ git.gitTagToVersionNumber := { tag: String =>
 }
 
 //scalaJSUseMainModuleInitializer := true
-val http4sVersion = "0.21.0-M1"
+val http4sVersion = "0.21.0-M2"
 val circeVersion = "0.12.0-M4"
 val uPickleVersion = "0.7.5"
 

@@ -1,10 +1,9 @@
 package at.happywetter.boinc
 
-import java.util.concurrent.{Executors, ScheduledExecutorService}
-
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.util.{BoincHostSettingsResolver, ConfigurationChecker, Logger}
+import at.happywetter.boinc.util.IOAppTimer.scheduler
+import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, IOAppTimer, Logger}
 import cats.effect._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.io._
@@ -21,13 +20,11 @@ import scala.io.StdIn
   * @version 19.07.2017
   */
 object WebServer extends IOApp with Logger {
-  private implicit val scheduler: ScheduledExecutorService =
-    Executors.newScheduledThreadPool(Runtime.getRuntime.availableProcessors())
 
   private lazy val config = AppConfig.conf
   private lazy val projects = new XMLProjectStore(config.boinc.projects.xmlSource)
   private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
-  private val autoDiscovery = new BoincHostSettingsResolver(config, hostManager)
+  private val autoDiscovery = new BoincHostFinder(config, hostManager)
 
   ConfigurationChecker.checkConfiguration(config)
 
@@ -59,17 +56,18 @@ object WebServer extends IOApp with Logger {
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, projects)),
     "/api/webrpc"    -> authService.protectedService(WebRPCRoutes(config.webRPC)),
     "/api/hardware"  -> hw,
+    "/api/ws"        -> WebsocketRoutes(authService, hostManager),
     "/auth"          -> authService.authService,
     "/language"      -> GZip(LanguageService())
   )
 
   override def run(args: List[String]): IO[ExitCode] = {
     LOG.info("Boinc-Webmanager: current Version: " + BuildInfo.version)
-    LOG.info(s"Using scheduler with ${Runtime.getRuntime.availableProcessors()} cores")
+    LOG.info(s"Using scheduler with ${IOAppTimer.cores} cores as pool size")
 
     import cats.implicits._
     BlazeServerBuilder[IO]
-      .enableHttp2(true) // h2spec check fails in 0.18
+      .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
       .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
       .bindHttp(config.server.port, config.server.address)
       .withHttpApp(routes.orNotFound)

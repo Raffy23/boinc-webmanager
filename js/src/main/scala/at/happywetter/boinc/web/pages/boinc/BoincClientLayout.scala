@@ -12,6 +12,7 @@ import org.scalajs.dom
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.util.Try
+import at.happywetter.boinc.web.hacks.Implicits._
 
 /**
   * Created by: 
@@ -28,7 +29,7 @@ abstract class BoincClientLayout extends Layout {
       if(boincClientName != null) boincClientName
       else ":client"
 
-    s"/view/boinc-client/$name/$path"
+    s"/view/boinc-client/${dom.window.encodeURI(name)}/$path"
   }
 
   protected implicit var boinc: BoincClient = _

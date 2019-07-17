@@ -27,14 +27,14 @@ object DashboardMenuBuilder {
       val ungroupedClients = clients.diff(clientsInGroup)
 
       ungroupedClients.foreach(client =>
-        DashboardMenu.addMenu(BoincClientLayout.link(client),client, Some("boinc-client-entry"))
+        DashboardMenu.addComputer(BoincClientLayout.link(client),client, Some("boinc-client-entry"))
       )
 
       groups.keys.foreach( groupHeader => {
-        DashboardMenu.addSubMenu(groupHeader, s"group-$groupHeader", Some("boinc-client-entry"))
+        DashboardMenu.addGroup(groupHeader, s"group-$groupHeader", Some("boinc-client-entry"))
         groups(groupHeader).foreach(client =>
           if (clients.contains(client))
-            DashboardMenu.addSubMenuItem(BoincClientLayout.link(client), client, s"group-$groupHeader")
+            DashboardMenu.addComputerToGroup(BoincClientLayout.link(client), client, s"group-$groupHeader")
         )
       })
 

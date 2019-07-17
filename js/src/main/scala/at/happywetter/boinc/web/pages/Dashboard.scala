@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.helper.{AuthClient, WebSocketClient}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
@@ -85,6 +85,9 @@ object Dashboard extends Layout {
     NProgress.start()
 
     DashboardMenu.selectByMenuId("dashboard")
+    if (!WebSocketClient.isOpend) {
+      WebSocketClient.start()
+    }
 
     ClientManager.readClients().map(clients => {
       DashboardMenuBuilder.renderClients(clients)
@@ -167,7 +170,7 @@ object Dashboard extends Layout {
           </thead>
           <tbody>
             {
-              clients.map(_.map(c => {
+              clients.map(_.toList.sortBy(_._1).map(c => {
                 implicit val data: Rx[Option[Either[HostData, Exception]]] = c._2.data
                 val client = ClientManager.clients(c._1)
 
