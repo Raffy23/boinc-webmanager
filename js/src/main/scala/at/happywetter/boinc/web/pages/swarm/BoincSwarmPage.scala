@@ -90,13 +90,13 @@ class BoincSwarmPage extends SwarmPageLayout {
           <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
             <th>
               <a class={Style.masterCheckbox.htmlClass} onclick={jsSelectAllListener}>
-                <i class={checkAllState.map( state => s"fa fa${ if (state) "-check" else ""}-square-o")} href="#select-all"></i>
+                <i class={checkAllState.map( state => s"far fa${ if (state) "-check" else ""}-square")} href="#select-all"></i>
                 {"table_host".localize}
               </a>
             </th>
             <th><i class="fa fa-tasks"></i>{"table_status_cpu".localize}</th>
-            <th><i class="fa fa-television"></i>{"table_status_gpu".localize}</th>
-            <th><i class="fa fa-exchange"></i>{"table_status_net".localize}</th>
+            <th><i class="fa fa-tv"></i>{"table_status_gpu".localize}</th>
+            <th><i class="fa fa-exchange-alt"></i>{"table_status_net".localize}</th>
           </tr>
         </thead>
         <tbody>
@@ -123,13 +123,13 @@ class BoincSwarmPage extends SwarmPageLayout {
             <td><a class={Style.button.htmlClass} onclick={jsAction(RunMode, Modes.Never)}>{"never".localize}</a></td>
           </tr>
           <tr>
-            <td><i class="fa fa-television" aria-hidden="true"></i>{"boinc_info_gpu_mode".localize}</td>
+            <td><i class="fa fa-tv" aria-hidden="true"></i>{"boinc_info_gpu_mode".localize}</td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(GPU, Modes.Always)}>{"always".localize}</a></td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(GPU, Modes.Auto)}>{"auto".localize}</a></td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(GPU, Modes.Never)}>{"never".localize}</a></td>
           </tr>
           <tr>
-            <td><i class="fa fa-exchange" aria-hidden="true"></i>{"boinc_info_network_mode".localize}</td>
+            <td><i class="fa fa-exchange-alt" aria-hidden="true"></i>{"boinc_info_network_mode".localize}</td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(Network, Modes.Always)}>{"always".localize}</a></td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(Network, Modes.Auto)}>{"auto".localize}</a></td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(Network, Modes.Never)}>{"never".localize}</a></td>

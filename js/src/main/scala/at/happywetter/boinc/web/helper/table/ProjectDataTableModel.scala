@@ -57,21 +57,21 @@ object ProjectDataTableModel {
             new Tooltip(
               project.dontRequestWork.mapBoolean("project_allow_more_work".localize, "project_dont_allow_more_work".localize),
               <a href="#change-project-state" onclick={jsToggleWorkAction}>
-                <i class={project.dontRequestWork.mapBoolean("lock", "unlock").map(x => s"fa fa-$x")} style="font-size:20px"></i>
+                <i class={project.dontRequestWork.mapBoolean("lock", "unlock").map(x => s"fas fa-$x")} style="font-size:20px"></i>
               </a>
             ).toXML
           }{
             new Tooltip(
               project.suspended.mapBoolean("project_running".localize, "project_suspended".localize),
               <a href="#refresh-project" onclick={jsPauseAction}>
-                <i class={project.suspended.mapBoolean("play", "pause").map(x => s"fa fa-$x-circle-o")}></i>
+                <i class={project.suspended.mapBoolean("play", "pause").map(x => s"fas fa-$x-circle")}></i>
               </a>
             ).toXML
           }{
           new Tooltip(
             Var("project_refresh".localize),
             <a href="#pause-project" onclick={jsRefreshAction}>
-              <i class="fa fa-fw fa-refresh" style="font-size:20px"></i>
+              <i class="fa fa-fw fa-sync" style="font-size:20px"></i>
             </a>
           ).toXML
           }{

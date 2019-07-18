@@ -109,7 +109,7 @@ object DashboardMenu {
       <li class={Style.elem.htmlClass}>
         <a href={Dashboard.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="dashboard">
-          <i class="fa fa-tachometer" aria-hidden="true"></i>
+          <i class="fa fa-tachometer-alt" aria-hidden="true"></i>
           {"dashboard_menu_home".localize}
         </a>
       </li>

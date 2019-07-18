@@ -13,7 +13,7 @@ object SwarmTopNavigation extends TopNavigation {
   override protected var selected = "boinc"
 
   override protected val links = List(
-    ("boinc", "head_menu_boinc", "fa fa-id-card-o"),
+    ("boinc", "head_menu_boinc", "fas fa-address-card"),
     ("projects", "head_menu_projects", "fa fa-tag"),
 
     //TODO: Implement Pages:

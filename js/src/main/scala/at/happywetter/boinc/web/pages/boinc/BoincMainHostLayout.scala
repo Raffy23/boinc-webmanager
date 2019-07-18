@@ -65,7 +65,7 @@ class BoincMainHostLayout extends BoincClientLayout {
   override def render: Elem = {
     <div id="host-info">
       <h2 class={Style.pageHeader.htmlClass}>
-        <i class="fa fa-id-card-o" aria-hidden="true"></i>
+        <i class="fas fa-address-card" aria-hidden="true"></i>
         {"boinc_info_header".localize}
       </h2>
 

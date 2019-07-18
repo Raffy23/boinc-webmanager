@@ -92,7 +92,7 @@ object WuDataTableModel {
             new Tooltip(
               result.supsended.map(v => if(v) "state_continue".localize else "state_stop".localize),
               <a href="#" onclick={jsPauseAction}>
-                <i class={result.supsended.map(v => if(v) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
+                <i class={result.supsended.map(v => if(v) "play" else "pause").map(x => s"fas fa-$x-circle")}></i>
               </a>
             ).toXML
           }{
@@ -102,7 +102,7 @@ object WuDataTableModel {
                 event.preventDefault()
                 cancelDialog.renderToBody().show()
               }}>
-                <i class="fa fa-stop-circle-o"></i>
+                <i class="fas fa-stop-circle"></i>
               </a>
             ).toXML
           }{
@@ -112,7 +112,7 @@ object WuDataTableModel {
                 event.preventDefault()
                 projectPropertiesDialog.renderToBody().show()
               }}>
-                <i class="fa fa-info-circle"></i>
+                <i class="fas fa-info-circle"></i>
               </a>
             ).toXML
           }

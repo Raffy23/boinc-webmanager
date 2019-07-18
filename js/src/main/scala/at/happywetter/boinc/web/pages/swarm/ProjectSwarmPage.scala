@@ -53,11 +53,7 @@ object ProjectSwarmPage {
       color(c"#333"),
       textDecoration := "none",
       fontSize(28 px),
-      marginRight(5 px),
-
-      unsafeChild("a > i")(
-        margin(5 px)
-      )
+      paddingLeft(8 px)
     )
 
     val last_row_small = style(
@@ -78,7 +74,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
   private val dataset: Var[Map[String, List[(BoincClient, Project)]]] = Var(Map.empty)
   private case class Account(userName: String, teamName: String, credits: Double)
 
-  override val header: String = "project_header"
+  override val header: String = "project_header".localize
 
   override def already(): Unit = onRender()
 
@@ -111,7 +107,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
               Var("project_swarm_play".localize),
               <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
-                <i class="fa fa-play-circle-o"></i>
+                <i class="fas fa-play-circle"></i>
               </a>,
               textOrientation = Tooltip.Style.topText
             ).toXML,
@@ -119,7 +115,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
               Var("project_swarm_pause".localize),
               <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
-                <i class="fa fa-pause-circle-o"></i>
+                <i class="fas fa-pause-circle"></i>
               </a>,
               textOrientation = Tooltip.Style.topText
             ).toXML,
@@ -127,7 +123,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
               Var("project_swarm_refresh".localize),
               <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
-                <i class="fa fa-refresh"></i>
+                <i class="fas fa-sync"></i>
               </a>,
               textOrientation = Tooltip.Style.topText
             ).toXML,
@@ -135,7 +131,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
               Var("project_swarm_trash".localize),
               <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
-                <i class="fa fa-trash-o"></i>
+                <i class="fas fa-trash"></i>
               </a>,
               textOrientation = Tooltip.Style.topText
             ).toXML,
@@ -155,7 +151,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
           <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
             <th>
               <a class={Style.masterCheckbox.htmlClass} href="#" onclick={jsSelectAllListener}>
-                <i class="fa fa-check-square-o"></i>
+                <i class="far fa-check-square"></i>
                 {"table_project".localize}
               </a>
             </th>

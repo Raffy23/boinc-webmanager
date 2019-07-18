@@ -29,10 +29,9 @@ abstract class SwarmPageLayout extends Layout {
   override def render: Elem = {
     <div id="swarm">
       <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-industry">
-          {"swarm_header".localize + " - "}
-          <small id="subheader">{header.localize}</small>
-        </i>
+        <i class="fa fa-industry" aria-hidden="true"></i>
+        {"swarm_header".localize + " - "}
+        <small id="subheader">{header}</small>
       </h2>
 
       {renderChildView}

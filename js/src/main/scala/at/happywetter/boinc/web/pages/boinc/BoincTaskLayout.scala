@@ -91,7 +91,7 @@ class BoincTaskLayout extends BoincClientLayout {
               Var("tasks_in_transfer".localize),
               <span>
                 {headBarData.map(_.inTransfer)}
-                <i class="fa fa-exchange" style="margin-left:2px"></i>
+                <i class="fa fa-exchange-alt" style="margin-left:2px"></i>
               </span>
             ).toXML
           }
