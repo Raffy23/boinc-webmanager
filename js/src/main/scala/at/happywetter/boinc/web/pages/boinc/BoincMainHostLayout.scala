@@ -92,19 +92,19 @@ class BoincMainHostLayout extends BoincClientLayout {
           </thead>
           <tbody>
             <tr>
-              <td> <i class="fa fa-tasks"></i> {"boinc_info_run_mode".localize} </td>
+              <td> <i class="fa fa-tasks" aria-hidden="true" style="display:inline-block;width:1em;padding-right:1em"></i> {"boinc_info_run_mode".localize} </td>
               <td> <input type="radio" name="run_mode" value="always" checked={clientCC.map(_.taskMode == 1)} onclick={action(boinc.setRun, Modes.Always)}></input> </td>
               <td> <input type="radio" name="run_mode" value="auto"   checked={clientCC.map(_.taskMode == 2)} onclick={action(boinc.setRun, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="run_mode" value="never"  checked={clientCC.map(_.taskMode == 3)} onclick={action(boinc.setRun, Modes.Never)}></input> </td>
             </tr>
             <tr>
-              <td> <i class="fa fa-television"></i> {"boinc_info_gpu_mode".localize} </td>
+              <td> <i class="fa fa-tv" aria-hidden="true" style="display:inline-block;width:1em;padding-right:1em"></i> {"boinc_info_gpu_mode".localize} </td>
               <td> <input type="radio" name="gpu_mode" value="always" checked={clientCC.map(_.gpuMode == 1)} onclick={action(boinc.setGpu, Modes.Always)}></input> </td>
               <td> <input type="radio" name="gpu_mode" value="auto"   checked={clientCC.map(_.gpuMode == 2)} onclick={action(boinc.setGpu, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="gpu_mode" value="never"  checked={clientCC.map(_.gpuMode == 3)} onclick={action(boinc.setGpu, Modes.Never)}></input> </td>
             </tr>
             <tr>
-              <td> <i class="fa fa-exchange"></i> {"boinc_info_network_mode".localize} </td>
+              <td> <i class="fa fa-exchange-alt" aria-hidden="true" style="display:inline-block;width:1em;padding-right:1em"></i> {"boinc_info_network_mode".localize} </td>
               <td> <input type="radio" name="network_mode" value="always" checked={clientCC.map(_.networkMode == 1)} onclick={action(boinc.setNetwork, Modes.Always)}></input> </td>
               <td> <input type="radio" name="network_mode" value="auto"   checked={clientCC.map(_.networkMode == 2)} onclick={action(boinc.setNetwork, Modes.Auto)}></input> </td>
               <td> <input type="radio" name="network_mode" value="never"  checked={clientCC.map(_.networkMode == 3)} onclick={action(boinc.setNetwork, Modes.Never)}></input> </td>

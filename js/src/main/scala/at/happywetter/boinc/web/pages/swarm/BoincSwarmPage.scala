@@ -79,7 +79,7 @@ class BoincSwarmPage extends SwarmPageLayout {
           }
       )
     ).foreach { x =>
-      Future.sequence(x).foreach(x => NProgress.done(true))
+      Future.sequence(x).foreach(_ => NProgress.done(true))
     }
   }
 
@@ -90,9 +90,14 @@ class BoincSwarmPage extends SwarmPageLayout {
           <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
             <th>
               <a class={Style.masterCheckbox.htmlClass} onclick={jsSelectAllListener}>
-                <i class={checkAllState.map( state => s"far fa${ if (state) "-check" else ""}-square")} href="#select-all"></i>
-                {"table_host".localize}
+                {
+                  new Tooltip(
+                    checkAllState.map(status => if (status) "check_all".localize else "uncheck_all".localize),
+                    <i class={checkAllState.map( state => s"far fa${ if (state) "-check" else ""}-square")} href="#select-all"></i>
+                  ).toXML
+                }
               </a>
+              <span style="float:left">{"table_host".localize}</span>
             </th>
             <th><i class="fa fa-tasks"></i>{"table_status_cpu".localize}</th>
             <th><i class="fa fa-tv"></i>{"table_status_gpu".localize}</th>

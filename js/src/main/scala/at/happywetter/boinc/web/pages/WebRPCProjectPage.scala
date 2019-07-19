@@ -5,6 +5,7 @@ import at.happywetter.boinc.shared.webrpc.ServerStatus
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.hacks.Implicits.RichWindow
+import at.happywetter.boinc.web.helper.FetchHelper.FetchRequest
 import at.happywetter.boinc.web.helper.{AuthClient, FetchHelper}
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DashboardMenu
@@ -39,6 +40,8 @@ object WebRPCProjectPage extends Layout {
   private val projects: Var[Map[String, String]] = Var(Map.empty)
   private val currentSelection: Var[Option[Either[ServerStatus, Exception]]] = Var(None)
   private val selectorPlaceholder: Var[String] = Var("fetching_projects".localize)
+
+  private var currentRequest: Option[FetchRequest[ServerStatus]] = None
 
   def uri(projectUrl: String) = s"/api/webrpc/status?server=${dom.window.encodeURIComponent(projectUrl)}"
 
@@ -151,17 +154,24 @@ object WebRPCProjectPage extends Layout {
   private lazy val jsOnChangeListener: Event => Unit = event => {
     NProgress.start()
     currentSelection := None
+    currentRequest.foreach(_.controller.abort())
 
-    FetchHelper
-      .get[ServerStatus](uri(event.target.asInstanceOf[HTMLSelectElement].value))
-      .map { status =>
-        currentSelection := Some(Left(status))
+    val resp = FetchHelper.getCancelable[ServerStatus](uri(event.target.asInstanceOf[HTMLSelectElement].value))
+    currentRequest = Some(resp)
+
+    resp.future.map { status =>
+      currentRequest = None
+      currentSelection := Some(Left(status))
+      NProgress.done(true)
+    }.recover {
+      case _: js.JavaScriptException =>
+        // Do nothing since new request already started
+        dom.console.log("Aborted fetch request ...")
+
+      case ex: Exception =>
         NProgress.done(true)
-      }.recover {
-        case ex: Exception =>
-          NProgress.done(true)
-          currentSelection := Some(Right(ex))
-      }
+        currentSelection := Some(Right(ex))
+    }
 
   }
 

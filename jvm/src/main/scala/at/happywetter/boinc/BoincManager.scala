@@ -98,7 +98,7 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   def getVersion: Long = version.get()
 
   private def updateVersion(): Unit = {
-    version.incrementAndGet()
+    version.set(System.currentTimeMillis())
     versionChangeListeners.forEach(_(this))
   }
 

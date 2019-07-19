@@ -6,7 +6,7 @@ import org.scalajs.dom.experimental._
 import org.scalajs.dom.raw.{Blob, BlobPropertyBag}
 import upickle.default._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 import scala.scalajs.js.annotation.JSGlobal
@@ -32,8 +32,20 @@ object FetchHelper {
     dom.console.log("GET", uri)
 
     Fetch
-      .fetch(uri, requestGetParameters)
+      .fetch(uri, requestGetParameters())
       .mapData(data => readBinary[A](data))
+  }
+
+  def getCancelable[A](uri: String)(implicit decoder: Reader[A]): FetchRequest[A] = {
+    dom.console.log("GET", uri)
+
+    val controller = new AbortController()
+    new FetchRequest(
+      controller,
+      Fetch
+        .fetch(uri, requestGetParameters(controller.signal))
+        .mapData(data => readBinary[A](data))
+    )
   }
 
   def post[A,R](uri: String, data: A)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] = {
@@ -49,7 +61,12 @@ object FetchHelper {
       .fetch(uri, requestPatchParameters())
       .mapData(data => readBinary[A](data))
 
-  private def requestGetParameters: RequestInit = new RequestInit {
+  class FetchRequest[T](val controller: AbortController, val future: Future[T]) {
+    def mapToFuture[S](f: (AbortController, T) => S)(implicit executor: ExecutionContext): Future[S] =
+      future.map(data => f(controller, data))
+  }
+
+  private def requestGetParameters(_signal: UndefOr[AbortSignal] = js.undefined): RequestInit = new RequestInit {
     override var method: UndefOr[HttpMethod] = HttpMethod.GET
     override var headers: UndefOr[HeadersInit] = header
     override var body: UndefOr[BodyInit] = js.undefined
@@ -61,7 +78,7 @@ object FetchHelper {
     override var redirect: UndefOr[RequestRedirect] = js.undefined
     override var integrity: UndefOr[String] = js.undefined
     override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = js.undefined
+    override var signal: UndefOr[AbortSignal] = _signal
     override var window: UndefOr[Null] = js.undefined
   }
 

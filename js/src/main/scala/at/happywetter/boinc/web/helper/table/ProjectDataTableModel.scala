@@ -57,7 +57,12 @@ object ProjectDataTableModel {
             new Tooltip(
               project.dontRequestWork.mapBoolean("project_allow_more_work".localize, "project_dont_allow_more_work".localize),
               <a href="#change-project-state" onclick={jsToggleWorkAction}>
-                <i class={project.dontRequestWork.mapBoolean("lock", "unlock").map(x => s"fas fa-$x")} style="font-size:20px"></i>
+                {
+                  project.dontRequestWork.mapBoolean(
+                    <i class="fas fa-lock" style="color:#dc5050;font-size:20px"></i>,
+                    <i class="fas fa-unlock" style="color:#2bab41;font-size:20px"></i>
+                  )
+                }
               </a>
             ).toXML
           }{

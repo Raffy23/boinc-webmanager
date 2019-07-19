@@ -12,6 +12,7 @@ import scala.scalajs.js.Date
 import scala.util.Try
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.websocket
+import upickle.default
 
 /**
   * Created by: 
@@ -27,6 +28,7 @@ object ClientManager {
   private val CACHE_CLIENTS = "clientmanager/clients"
   private val CACHE_GROUPS  = "clientmanager/groups"
   private val CACHE_REFRESH_TIME = "clientmanager/lastrefresh"
+  private val CACHE_VERSION = "clientmanager/version"
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
@@ -46,6 +48,16 @@ object ClientManager {
         newHosts.foreach(c => clients += (c -> new BoincClient(c)))
 
       case _ => /* Do nothing, other messages ... */
+    }
+
+    val serverVersion = FetchHelper.get[Long]("/api/groups/version")
+    serverVersion.foreach { serverVersion =>
+      if (loadFromLocalStorage[Long](CACHE_VERSION).getOrElse(0L) != serverVersion) {
+        dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
+        readClientsFromServer().foreach { _ =>
+          dom.window.localStorage.setItem(CACHE_VERSION, write(serverVersion))
+        }
+      }
     }
 
   }

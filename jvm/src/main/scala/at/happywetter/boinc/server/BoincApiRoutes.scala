@@ -34,6 +34,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     case request @ GET -> Root / "health" => Ok(hostManager.checkHealth, request)
     case request @ GET -> Root / "config" => Ok(AppConfig.sharedConf, request)
     case request @ GET -> Root / "groups" => Ok(hostManager.getSerializableGroups, request)
+    case request @ GET -> Root / "groups" / "version" => Ok(hostManager.getVersion, request)
     case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects, request)
 
     // Main route for Boinc Data
