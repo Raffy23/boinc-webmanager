@@ -1,4 +1,7 @@
+// (5) shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtbuildinfo.BuildInfoPlugin.autoImport.buildInfoPackage
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.CrossType
 
 enablePlugins(GitVersioning)
 
@@ -22,7 +25,6 @@ val http4sVersion = "0.21.0-M2"
 val circeVersion = "0.12.0-M4"
 val uPickleVersion = "0.7.5"
 
-
 lazy val root = project.in(file(".")).
   aggregate(clientJS, serverJVM).
   settings(
@@ -30,33 +32,41 @@ lazy val root = project.in(file(".")).
     publishLocal := {}
   )
 
-lazy val shared = (project in file("shared"))
-  .enablePlugins(ScalaJSPlugin)
+lazy val shared = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .disablePlugins(AssemblyPlugin)
   .settings(
-    aggregate in assembly := false,
-
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "upickle" % uPickleVersion,
     )
   )
 
+lazy val sharedJVM = shared.jvm
+lazy val sharedJS  = shared.js
+
 lazy val serverJVM = (project in file ("jvm"))
   .enablePlugins(BuildInfoPlugin)
-  .settings(mainClass in assembly := Some("at.happywetter.boinc.WebServer"), test in assembly := {})
-  .dependsOn(shared)
+  .disablePlugins(ScalaJSPlugin)
+  .dependsOn(sharedJVM)
   .settings(
+    name := "Boinc-Webmanager (Server)",
+    mainClass := Some("at.happywetter.boinc.WebServer"),
+
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
+
+    test in assembly := {},
     assemblyMergeStrategy in assembly := {
-      case PathList("at", "happywetter", "boinc", "shared", xs @ _*) => MergeStrategy.first
-      case PathList("at", "happywetter", "boinc", "BuildInfo$.class") => MergeStrategy.first
+      case PathList("ch", "qos", "logback", "core", xs @ _*) => println(xs); MergeStrategy.first
+      //case PathList("at", "happywetter", "boinc", "shared", xs @ _*) => MergeStrategy.first
+      //case PathList("at", "happywetter", "boinc", "BuildInfo$.class") => MergeStrategy.first
       case x => (assemblyMergeStrategy in assembly).value(x)
     },
 
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "ch.qos.logback" % "logback-core" % "1.2.3",
 
       "org.http4s" %% "http4s-dsl" % http4sVersion,
       //"org.http4s" %% "http4s-circe" % http4sVersion,
@@ -86,9 +96,9 @@ lazy val clientJS = (project in file ("js"))
   .enablePlugins(ScalaJSPlugin)
   .enablePlugins(BuildInfoPlugin)
   .settings(mainClass := Some("at.happywetter.boinc.web.Main"))
-  .dependsOn(shared)
+  .dependsOn(sharedJS)
   .settings(
-    name := "Boinc-Webmanager",
+    name := "Boinc-Webmanager (Client)",
     scalacOptions += "-P:scalajs:sjsDefinedByDefault",
 
     buildInfoKeys := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
