@@ -105,7 +105,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     val result = this.xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
     authenticated = (result \ "_").xml_==(<authorized/>)
-    logger.trace("Client connection is " + (if(authenticated) "" else " *NOT* authenticated!"))
+    logger.trace(s"Client connection is ${if(authenticated) "" else "*NOT*"} authenticated!")
 
     authenticated
   }

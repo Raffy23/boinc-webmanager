@@ -74,6 +74,13 @@ object BoincFormater {
     value
   }
 
+  def convertFromSpeedValue(size: Double, step: Int): Double = {
+    var value = size
+
+    (0 until step).foreach(_ => value = value*1024)
+    value
+  }
+
   object Implicits {
 
     implicit class BoincFormatNumber(double: Double) {
@@ -81,6 +88,7 @@ object BoincFormater {
       def toSize: String = convertSize(double)
       def toSpeed: String = convertSpeed(double)
       def toSpeedValue(step: Int): Double = convertSpeedValue(double, step)
+      def fromSpeedValue(step: Int): Double = convertFromSpeedValue(double, step)
       def toTime: String = convertTime(double)
       def toDate: String = convertDate(double)
 

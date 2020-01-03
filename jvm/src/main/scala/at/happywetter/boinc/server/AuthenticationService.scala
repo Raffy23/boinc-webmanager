@@ -15,8 +15,8 @@ import at.happywetter.boinc.shared.parser._
 import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import cats.data.Kleisli
-
 import at.happywetter.boinc.util.http4s.Implicits._
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 
 /**
   * Created by: 
@@ -24,7 +24,7 @@ import at.happywetter.boinc.util.http4s.Implicits._
   * @author Raphael
   * @version 18.08.2017
   */
-class AuthenticationService(config: Config) {
+class AuthenticationService(config: Config) extends ResponseEncodingHelper {
 
   import AuthenticationService.toDate
   import cats.effect._
@@ -34,13 +34,15 @@ class AuthenticationService(config: Config) {
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
+  // TODO: Error handling response json/messagepack ...
+
   def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case GET -> Root => Ok(writeBinary(AuthenticationService.nonce))
+    case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
 
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
         validate(header.value) match {
-          case Success(true) => Ok(writeBinary(refreshToken(header.value)))
+          case Success(true) => Ok(refreshToken(header.value), request)
           case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_invalid_token"))))
         }
 
@@ -52,7 +54,7 @@ class AuthenticationService(config: Config) {
       request.decodeJson[User]{ user =>
         if (config.server.username.equals(user.username)
           && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
-          Ok(writeBinary(buildToken(user.username)))
+          Ok(buildToken(user.username), request)
         else
           BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
       }

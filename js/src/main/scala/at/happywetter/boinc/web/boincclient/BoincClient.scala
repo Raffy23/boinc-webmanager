@@ -111,6 +111,6 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
     FetchHelper.get[List[Notice]](uri(BoincRPC.Command.GetNotices + "?seqno=" + seqno))
 
   override def readGlobalPrefsOverride: Future[Boolean] =
-    FetchHelper.get[Boolean](uri(BoincRPC.Command.ReadGlobalPrefsOverride))
+    FetchHelper.patch[Boolean](uri(BoincRPC.Command.ReadGlobalPrefsOverride))
 
 }

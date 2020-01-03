@@ -97,19 +97,23 @@ object WebResourcesRoute {
     case _ => NotFound(/* TODO: Implement Default 404-Page */)
   }
 
+  // TODO: Rename static resources, a change in build.sbt has renamed them
   private def appJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-fastopt.js"
-    else "boinc-webmanager-opt.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager-client--fastopt.js"
+    else "boinc-webmanager-client--opt.js"
 
   private def appDeptJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-jsdeps.js"
-    else "boinc-webmanager-jsdeps.min.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager-client--jsdeps.js"
+    else "boinc-webmanager-client--jsdeps.min.js"
 
   private def fromResource(file: String, request: Request[IO]) =
     StaticFile.fromResource("/web-root/" + file, blocker, Some(request))
 
-  private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
+  private def fromFile(file: String, request: Request[IO])(implicit config: Config) = {
+    println(s"fromString(${config.server.webroot + file}")
     StaticFile.fromString(config.server.webroot + file, blocker, Some(request))
+  }
+
 
   private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) = {
     lazy val zipFile =
@@ -120,7 +124,6 @@ object WebResourcesRoute {
       if (config.development.getOrElse(false)) fromFile(file, request)
       else fromResource(file, request)
 
-
     val cType = contentTypes.get(file.substring(file.lastIndexOf("."), file.length))
 
     zipFile
@@ -130,7 +133,11 @@ object WebResourcesRoute {
           cType.map(x => Header("Content-Type", x)).getOrElse(Header("", ""))
         )
       ).getOrElseF(
-        normalFile.getOrElseF(NotFound())
+        normalFile.getOrElseF{
+           println(s"Could not load $file")
+
+          NotFound()
+        }
       )
   }
 

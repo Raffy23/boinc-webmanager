@@ -20,9 +20,11 @@ import scala.scalajs.js.typedarray.{TypedArray, Uint8Array}
   */
 object FetchHelper {
 
+  private val USE_MESSAGE_PACK_FORMAT = true
+
   val header = new Headers()
   header.append("Content-Type", "application/json")
-  header.set("Accept", "application/messagepack")
+  header.set("Accept", if(USE_MESSAGE_PACK_FORMAT) "application/messagepack" else "application/json")
 
   def setToken(token: String): Unit = {
     header.set("X-Authorization", token)
@@ -33,7 +35,7 @@ object FetchHelper {
 
     Fetch
       .fetch(uri, requestGetParameters())
-      .mapData(data => readBinary[A](data))
+      .mapData(data => readData[A](data))
   }
 
   def getCancelable[A](uri: String)(implicit decoder: Reader[A]): FetchRequest[A] = {
@@ -44,7 +46,7 @@ object FetchHelper {
       controller,
       Fetch
         .fetch(uri, requestGetParameters(controller.signal))
-        .mapData(data => readBinary[A](data))
+        .mapData(data => readData[A](data))
     )
   }
 
@@ -53,13 +55,20 @@ object FetchHelper {
 
     Fetch
       .fetch(uri, requestPostParameters(write(data)))
-      .mapData(data => readBinary[R](data))
+      .mapData(data => readData[R](data))
   }
 
-  def patch[A](uri: String)(implicit decoder: Reader[A]): Future[A] =
+  def patch[A](uri: String)(implicit decoder: Reader[A]): Future[A] = {
+    dom.console.log("PATCH", uri)
+
     Fetch
       .fetch(uri, requestPatchParameters())
-      .mapData(data => readBinary[A](data))
+      .mapData(data => readData[A](data))
+  }
+
+  @inline
+  private def readData[T](s: Array[Byte])(implicit decoder: Reader[T]): T =
+    if (USE_MESSAGE_PACK_FORMAT) readBinary[T](s) else read[T](s)
 
   class FetchRequest[T](val controller: AbortController, val future: Future[T]) {
     def mapToFuture[S](f: (AbortController, T) => S)(implicit executor: ExecutionContext): Future[S] =
