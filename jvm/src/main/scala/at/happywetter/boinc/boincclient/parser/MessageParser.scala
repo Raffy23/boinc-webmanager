@@ -20,7 +20,7 @@ object MessageParser {
         element.getElementsByTag("pri").first().text().toInt,
         element.getElementsByTag("seqno").first().text().toLong,
         element.getElementsByTag("time").first().text().toLong,
-        element.textNodes().asScala.mkString("\n")
+        element.textNodes().asScala.map(_.getWholeText).mkString("\n")
       )
     )
 
