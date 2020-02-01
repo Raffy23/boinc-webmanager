@@ -4,6 +4,7 @@ import at.happywetter.boinc.shared.extension.HardwareData.SensorsData
 import at.happywetter.boinc.web.helper.FetchHelper
 import upickle.default._
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -30,6 +31,9 @@ object HardwareStatusClient {
 
   def queryClients: Future[List[HardwareStatusClient]] =
     FetchHelper.get[List[String]]("/api/hardware")
-      .map(_.map(new HardwareStatusClient(_)))
+      .map(_
+        .sorted(ord = StringLengthAlphaOrdering)
+        .map(new HardwareStatusClient(_))
+      )
 
 }
