@@ -11,6 +11,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
 import upickle.default
 
@@ -112,7 +113,8 @@ object ClientManager {
     readClientsFromServer().map(data => {
       data.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
       persistClientsIntoStorage(data)
-      data
+
+      data.sorted(ord = StringLengthAlphaOrdering)
     })
   }
 

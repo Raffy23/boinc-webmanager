@@ -27,7 +27,7 @@ import scalacss.internal.mutable.StyleSheet
 
 import scala.util.Try
 import BoincFormater.Implicits._
-import at.happywetter.boinc.shared.util.LexicographicStringOrdering
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 
 /**
   * Created by: 
@@ -171,7 +171,7 @@ object Dashboard extends Layout {
           </thead>
           <tbody>
             {
-              clients.map(_.toList.sortBy(_._1)(ord = LexicographicStringOrdering).map(c => {
+              clients.map(_.toList.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(c => {
                 implicit val data: Rx[Option[Either[HostData, Exception]]] = c._2.data
                 val client = ClientManager.clients(c._1)
 
@@ -222,7 +222,7 @@ object Dashboard extends Layout {
             </thead>
             <tbody>
               {
-                clients.map(_.toList.sortBy(_._1)(ord = LexicographicStringOrdering).map(client => {
+                clients.map(_.toList.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(client => {
                   <tr id={s"dashboard_${client._1}_details"}>
                     <td>{injectErrorTooltip(client._1)(client._2.data)}</td>
                     {

@@ -84,12 +84,12 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
     val allIcons = target.parentNode.asInstanceOf[HTMLElement].querySelectorAll("i[data-sort-icon]")
     allIcons.forEach((node, _, _ ) => node.asInstanceOf[HTMLElement].setAttribute("class","fa fa-sort"))
 
-    if (sortState == "fa fa-sort" || sortState == "fa fa-sort-desc") {
+    if (sortState == "fa fa-sort" || sortState == "fa fa-sort-up") {
       reactiveData.update(_.sortBy(_.columns(idx)))
-      icon.setAttribute("class","fa fa-sort-asc")
+      icon.setAttribute("class","fa fa-sort-down")
     } else {
       reactiveData.update(_.sortBy(_.columns(idx)).reverse)
-      icon.setAttribute("class","fa fa-sort-desc")
+      icon.setAttribute("class","fa fa-sort-up")
     }
   }
 }

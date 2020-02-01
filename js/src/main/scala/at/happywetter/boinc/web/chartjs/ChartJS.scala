@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.chartjs
 import org.scalajs.dom.CanvasRenderingContext2D
 
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
+import scala.scalajs.js.{UndefOr, |}
 import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
 
 /**
@@ -70,8 +70,8 @@ abstract class ChartData extends js.Object {
 abstract class Dataset extends js.Object {
   var label: String = ""
   var data: js.Array[js.Any] = js.Array(0)
-  var backgroundColor: js.UndefOr[js.Array[String]] = js.undefined
-  var borderColor: js.UndefOr[js.Array[String]] = js.undefined
+  var backgroundColor: js.UndefOr[String | js.Array[String]] = js.undefined
+  var borderColor: js.UndefOr[String] = js.undefined
   var borderWidth: Double = 1D
   var fill: String = "origin"
 }
