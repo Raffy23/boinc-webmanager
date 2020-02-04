@@ -3,10 +3,9 @@ package at.happywetter.boinc.web.helper.table
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{App, Result, Task}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
-import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
@@ -19,6 +18,7 @@ import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
 /**
   * Created by: 
@@ -64,7 +64,7 @@ object WuDataTableModel {
     override val columns = List(
       new StringColumn(result.project),
       new TableColumn( Rx {
-        <span class={BoincClientLayout.Style.progressBar.htmlClass}>
+        <span class={BoincClientStyle.progressBar.htmlClass}>
           <progress value={result.progress.map(_.toString)} max="1"></progress>
           <span>
             {

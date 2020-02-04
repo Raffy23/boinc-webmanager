@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
-import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.helper.{AuthClient, WebSocketClient}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
@@ -21,13 +21,13 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scala.xml.{Elem, Node, UnprefixedAttribute}
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
+import scala.xml.{Elem, Node}
+import at.happywetter.boinc.web.css.definitions.{Misc => Style}
 
 import scala.util.Try
 import BoincFormater.Implicits._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
+import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 
 /**
   * Created by: 
@@ -38,14 +38,6 @@ import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 object Dashboard extends Layout {
 
   override val path = "dashboard"
-
-  object Style extends StyleSheet.Inline {
-    import dsl._
-
-    val centeredText: StyleA = style(
-      textAlign.center.important
-    )
-  }
 
   import at.happywetter.boinc.shared.boincrpc.App
   private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty,
@@ -152,7 +144,7 @@ object Dashboard extends Layout {
         </a>
       </div>
 
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-tachometer-alt" aria-hidden="true"></i>
         {"dashboard_overview".localize}
       </h2>
@@ -182,7 +174,7 @@ object Dashboard extends Layout {
                   <td class={Style.centeredText.htmlClass}>{getNetwork()}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.time)}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.deadline)}</td>
-                  <td style="width:240px" class={BoincClientLayout.Style.progressBar.htmlClass}>
+                  <td style="width:240px" class={BoincClientStyle.progressBar.htmlClass}>
                     <progress style="width:calc(100% - 5em);margin-right:20px" value={getDataAttr(_.disk_value)} max={getDataAttr(_.disk_max)}/>
                     <span>{getData(_.disk)}</span>
                   </td>
@@ -204,13 +196,13 @@ object Dashboard extends Layout {
           </tbody>
         </table>
         <div id="workunits_table_container">
-          <table class={Seq(TableTheme.table.htmlClass, TableTheme.no_border.htmlClass).mkString(" ")} style="display:none" id="dashboard_workunits_table">
+          <table class={Seq(TableTheme.table.htmlClass, TableTheme.noBorder.htmlClass).mkString(" ")} style="display:none" id="dashboard_workunits_table">
             <thead>
               <tr id="dashbord_project_header">
                 <th style="width:220px;text-align:left">{"table_host".localize}</th>
                 {
                   projects.map(_.map(project => {
-                    <th class={TableTheme.vertical_table_text.htmlClass}>
+                    <th class={TableTheme.verticalText.htmlClass}>
                       <div>
                         <span>{project._2}</span>
                       </div>
@@ -260,18 +252,6 @@ object Dashboard extends Layout {
   }
 
   private def injectErrorTooltip(name: String)(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Seq[Node]] = {
-    def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle", color: String = "#FF8181"): Node = {
-      val tooltip = new Tooltip(
-        Var(label.localize),
-        <i class={`class`} aria-hidden="true"></i>
-      ).toXML.asInstanceOf[Elem]
-
-      tooltip.copy(
-        attributes1 = UnprefixedAttribute("style", s"float:right;color:$color", tooltip.attributes1)
-      )
-    }
-
-
     data.map { dataOption =>
 
       dataOption.map { data =>
@@ -280,15 +260,15 @@ object Dashboard extends Layout {
           ex =>
             Seq(
               ex match {
-                case _: FetchResponseException => buildTooltip("offline")
-                case _ => buildTooltip("error".localize)
+                case _: FetchResponseException => Tooltip.warningTriangle("offline").toXML
+                case _ => Tooltip.warningTriangle("error".localize).toXML
               },
               name.toXML
             )
         )
       }.getOrElse(
         Seq(
-          buildTooltip("loading", "fa fa-spinner fa-pulse", "#428bca"),
+          Tooltip.loadingSpinner("loading").toXML,
           name.toXML
         )
       )

@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.routes
 
+import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.{Layout, PageLayout}
 import mhtml.Var
@@ -29,7 +30,7 @@ object LayoutManager {
     mhtml.mount(rootElement,
       <main>
         {DashboardMenu.component}
-        <div id="client-container" class={PageLayout.Style.clientContainer.htmlClass}>
+        <div id="client-container" class={PageLayoutStyle.clientContainer.htmlClass}>
           {mainContent}
         </div>
       </main>

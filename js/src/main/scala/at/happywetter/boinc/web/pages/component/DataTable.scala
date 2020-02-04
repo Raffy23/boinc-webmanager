@@ -1,6 +1,8 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.CSSIdentifier
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
@@ -42,18 +44,18 @@ object DataTable {
 
 class DataTable[T <: TableRow](headers: List[(String, Boolean)],
                                val tableData: List[T] = List.empty,
-                               tableStyle: List[String] = List(TableTheme.table, TableTheme.table_lastrowsmall)) {
+                               tableStyle: List[CSSIdentifier] = List(TableTheme.table, TableTheme.lastRowSmall)) {
 
   val reactiveData: Var[List[T]] = Var(tableData)
 
   lazy val component: Elem = {
-    <table class={tableStyle.mkString(" ")}>
+    <table class={tableStyle.map(_.htmlClass).mkString(" ")}>
       <thead>
         <tr>
           {
             headers.zipWithIndex.map { case ((header, sortable), idx) =>
               if (sortable)
-                <th class={BoincClientLayout.Style.in_text_icon.htmlClass}
+                <th class={BoincClientStyle.inTextIcon.htmlClass}
                     style="cursor:pointer" onclick={tableSortFunction(idx)}>
                   <i class="fa fa-sort" data-sort-icon="icon" aria-hidden="true"></i>
                   {header}

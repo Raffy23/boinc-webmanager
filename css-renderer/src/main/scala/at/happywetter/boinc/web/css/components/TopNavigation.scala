@@ -1,18 +1,19 @@
-package at.happywetter.boinc.web.css
+package at.happywetter.boinc.web.css.components
 
-import scalacss.ProdDefaults._
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import scala.language.postfixOps
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 02.08.2017
   */
-object TopNavigation extends StyleSheet.Inline {
+object TopNavigation extends StyleSheet.Standalone {
+  import at.happywetter.boinc.web.css.definitions.components.TopNavigation._
   import dsl._
 
-  val nav = style(
+  nav.cssName - (
     listStyleType := "none",
     margin.`0`,
     padding.`0`,
@@ -42,13 +43,13 @@ object TopNavigation extends StyleSheet.Inline {
     ),
   )
 
-  val invisible_on_small_screen = style(
+  bigScreenOnly.cssName - (
     media.maxWidth(1220 px)(
       display.none
     )
   )
 
-  val active = style(
+  active.cssName - (
     backgroundColor(c"#666666")
   )
 

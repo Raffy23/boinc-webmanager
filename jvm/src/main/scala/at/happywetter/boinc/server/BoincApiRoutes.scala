@@ -24,7 +24,7 @@ import scala.util.Try
   * @version 17.08.2017
   */
 object BoincApiRoutes extends ResponseEncodingHelper {
-  private def getIntParameter(name: String)(implicit params: Map[String,Seq[String]]): Int =
+  private def getIntParameter(name: String)(implicit params: Map[String, collection.Seq[String]]): Int =
     Try { params(name).head.toInt }.toOption.getOrElse(0)
 
   def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpRoutes[IO] = HttpRoutes.of[IO] {
@@ -40,7 +40,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     // Main route for Boinc Data
     case request @ GET -> Root / "boinc" / name / action :? requestParams =>
       hostManager.get(name).map(client => {
-        implicit val params: Map[String, Seq[String]] = requestParams
+        implicit val params: Map[String, collection.Seq[String]] = requestParams
 
         action match {
           case "tasks" => Ok(client.getTasks(), request)

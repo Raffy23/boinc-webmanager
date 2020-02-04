@@ -2,13 +2,14 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.FileTransfer
 import at.happywetter.boinc.web.boincclient.BoincFormater
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 
 import scala.util.Try
 import scala.xml.Elem
 import BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
 /**
   * Created by: 
@@ -27,7 +28,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
     boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
 
     <div id="file_transfer">
-      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h3 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-exchange-alt" aria-hidden="true"></i>
         {"file_transfer_header".localize}
       </h3>

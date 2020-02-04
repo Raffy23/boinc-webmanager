@@ -1,10 +1,11 @@
 package at.happywetter.boinc.web.pages
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
@@ -59,7 +60,7 @@ object HardwarePage extends Layout {
 
   override def render: Elem = {
     <div id="hardware">
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-microchip" aria-hidden="true"></i>
         {"hardware_header".localize}
       </h2>

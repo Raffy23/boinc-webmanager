@@ -1,5 +1,7 @@
 package at.happywetter.boinc.web.pages.boinc
+
 import at.happywetter.boinc.shared.boincrpc.Result
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
@@ -73,7 +75,7 @@ class BoincTaskLayout extends BoincClientLayout {
 
   override def render: Elem = {
     <div id="workunits">
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-tasks" aria-hidden="true"></i>
         {"workunit_header".localize}
         <span style="font-size:16px">

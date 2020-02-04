@@ -1,26 +1,24 @@
-package at.happywetter.boinc.web.css
+package at.happywetter.boinc.web.css.components
 
-import scalacss.internal.mutable.StyleSheet
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import scala.language.postfixOps
 
 /**
-  * Created by: 
-  *
-  * @author Raphael
-  * @version 01.08.2017
-  */
-import scalacss.ProdDefaults._
-object TableTheme extends StyleSheet.Inline {
+ * Created by: 
+ *
+ * @author Raphael
+ * @version 03.02.2020
+ */
+object TableTheme extends StyleSheet.Standalone {
+  import at.happywetter.boinc.web.css.definitions.components.TableTheme._
   import dsl._
 
-  val table = style(
+  table.cssName - (
     width :=! s"calc(100% - 20px)",
-    //maxWidth :=! s"calc(100% - 20px)",
     marginBottom(20 px),
     border :=! "1px solid #DDD",
     borderSpacing.`0`,
     borderCollapse.collapse,
-
 
     unsafeChild("thead>tr>th")(
       border :=! "1px solid #DDD",
@@ -68,7 +66,7 @@ object TableTheme extends StyleSheet.Inline {
     )
   )
 
-  val table_lastrowsmall = style(
+  lastRowSmall.cssName -
     unsafeChild("tbody>tr>td:last-of-type")(
       width(8 em),
 
@@ -80,9 +78,8 @@ object TableTheme extends StyleSheet.Inline {
         width(1 em)
       )
     )
-  )
 
-  val vertical_table_text = style(
+  verticalText.cssName - (
     width(95 px),
     border.none.important,
     borderBottom :=! "2px #DDD solid",
@@ -101,7 +98,7 @@ object TableTheme extends StyleSheet.Inline {
     )
   )
 
-  val no_border = style(
+  noBorder.cssName - (
     border.none,
 
     unsafeChild("thead>tr>th")(

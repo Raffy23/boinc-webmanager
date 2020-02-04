@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.helper
 
-import scala.xml.{Node, Text, XmlAttributeEmbeddable}
-import scalacss.internal.StyleA
+import scala.xml.{Node, Text}
 
 /**
   * Created by: 

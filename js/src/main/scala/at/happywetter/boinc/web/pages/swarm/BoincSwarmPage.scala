@@ -2,11 +2,12 @@ package at.happywetter.boinc.web.pages.swarm
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.shared.boincrpc.CCState
-import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager, FetchResponseException}
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseException}
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.{BoincSwarmPageStyle => Style}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
@@ -15,18 +16,12 @@ import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLInputElement
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.xml.{Elem, Node, UnprefixedAttribute}
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
-
 import scala.collection.mutable
-import scala.scalajs.js.Dictionary
-import at.happywetter.boinc.shared.boincrpc.CCState.State
-import at.happywetter.boinc.shared.boincrpc.CCState.State.Value
-
+import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Dictionary
+import scala.xml.{Elem, Node}
 
 /**
   * Created by: 
@@ -34,6 +29,47 @@ import scala.language.implicitConversions
   * @author Raphael
   * @version 13.09.2017
   */
+object BoincSwarmPage {
+
+  def link = "/view/swarm/boinc"
+
+  private sealed trait ComputingMode
+  private object GPU extends ComputingMode
+  private object CPU extends ComputingMode
+  private object Network extends ComputingMode
+  private object RunMode extends ComputingMode
+
+  private object UICCState extends Enumeration {
+    val Enabled: UICCState.Value  = Value(CCState.State.Enabled.id)
+    val Auto: UICCState.Value     = Value(CCState.State.Auto.id)
+    val Disabled: UICCState.Value = Value(CCState.State.Disabled.id)
+    val Loading: UICCState.Value  = Value(-1)
+    val Error: UICCState.Value    = Value(-2)
+  }
+
+  private def stateToText(state: UICCState.Value): String = state match {
+    //case UICCState.Always  => "always".localize
+    case UICCState.Auto     => "auto".localize
+    case UICCState.Enabled  => "always".localize
+    case UICCState.Disabled => "never".localize
+    case a => a.toString
+  }
+
+  private implicit def integerToCCState(value: Int): UICCState.Value = UICCState.apply(value)
+
+  private implicit def convertModetoUIState(mode: Modes.Value): UICCState.Value = mode match {
+    case Modes.Auto => UICCState.Auto
+    case Modes.Always => UICCState.Enabled
+    case Modes.Never => UICCState.Disabled
+    case Modes.Restore => UICCState.Auto
+  }
+
+  private implicit class RichMode(val state: UICCState.Value) extends AnyVal {
+    def toState: String = stateToText(state)
+  }
+
+}
+
 class BoincSwarmPage extends SwarmPageLayout {
   import BoincSwarmPage._
 
@@ -87,7 +123,7 @@ class BoincSwarmPage extends SwarmPageLayout {
     <div>
       <table class={TableTheme.table.htmlClass} id="swarm-host-choose-table" style="width:auto">
         <thead>
-          <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+          <tr class={BoincClientStyle.inTextIcon.htmlClass}>
             <th>
               <a class={Style.masterCheckbox.htmlClass} onclick={jsSelectAllListener}>
                 {
@@ -118,9 +154,9 @@ class BoincSwarmPage extends SwarmPageLayout {
         </tbody>
       </table>
 
-      <h4 class={BoincClientLayout.Style.h4_without_line.htmlClass}>{"swarm_boinc_net_state".localize}</h4>
+      <h4 class={BoincClientStyle.h4WithoutLine.htmlClass}>{"swarm_boinc_net_state".localize}</h4>
       <table class={TableTheme.table.htmlClass} style="width:auto!important">
-        <tbody class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+        <tbody class={BoincClientStyle.inTextIcon.htmlClass}>
           <tr>
             <td><i class="fa fa-tasks" aria-hidden="true"></i>{"boinc_info_run_mode".localize}</td>
             <td><a class={Style.button.htmlClass} onclick={jsAction(RunMode, Modes.Always)}>{"always".localize}</a></td>
@@ -146,17 +182,6 @@ class BoincSwarmPage extends SwarmPageLayout {
 
   // TODO: Code duplication with Dashboard, should move to own utility
   private def injectErrorTooltip(client: (String, Var[Option[Either[ClientEntry, Exception]]])): Rx[Seq[Node]] = {
-    def buildTooltip(label: String, `class`: String = "fa fa-exclamation-triangle", color: String = "#FF8181"): Node = {
-      val tooltip = new Tooltip(
-        Var(label.localize),
-        <i class={`class`} aria-hidden="true"></i>
-      ).toXML.asInstanceOf[Elem]
-
-      tooltip.copy(
-        attributes1 = UnprefixedAttribute("style", s"float:right;color:$color", tooltip.attributes1)
-      )
-    }
-
     val data = client._2
     val name = client._1
 
@@ -167,15 +192,17 @@ class BoincSwarmPage extends SwarmPageLayout {
           ex =>
             Seq(
               ex match {
-                case _: FetchResponseException => buildTooltip("offline")
-                case _ => buildTooltip("error".localize)
+                case _: FetchResponseException => Tooltip.warningTriangle("offline").toXML
+                case _ => Tooltip.warningTriangle("error".localize).toXML
               },
               name.toXML
             )
         )
       }.getOrElse(
         Seq(
-          <span style="padding-left:1em">{buildTooltip("loading", "fa fa-spinner fa-pulse", "#428bca")}</span>,
+          <span style="padding-left:1em">
+            {Tooltip.loadingSpinner("loading").toXML}
+          </span>,
           name.toXML
         )
       )
@@ -244,83 +271,6 @@ class BoincSwarmPage extends SwarmPageLayout {
       case None              => None
       case Some(Left(entry)) => println(f(entry)); Some(Left(f(entry)))
       case Some(Right(_))    => None
-  }
-
-}
-
-object BoincSwarmPage {
-
-  object Style extends StyleSheet.Inline {
-
-    import dsl._
-
-    import scala.language.postfixOps
-
-    val checkbox = style(
-      marginRight(10 px)
-    )
-
-    val masterCheckbox = style(
-      textDecoration := "none",
-      color(c"#333"),
-      float.left,
-      marginLeft(5 px)
-    )
-
-    val center = style(
-      textAlign.center.important
-    )
-
-    val button = style(
-      outline.`0`,
-      backgroundColor(c"#428bca"),
-      border.`0`,
-      padding(10 px),
-      color(c"#FFFFFF").important,
-      cursor.pointer,
-      margin(6 px, 6 px),
-
-      &.hover(
-        backgroundColor(c"#74a9d8")
-      )
-    )
-  }
-
-  def link = "/view/swarm/boinc"
-
-  private sealed trait ComputingMode
-  private object GPU extends ComputingMode
-  private object CPU extends ComputingMode
-  private object Network extends ComputingMode
-  private object RunMode extends ComputingMode
-
-  private object UICCState extends Enumeration {
-    val Enabled: UICCState.Value  = Value(CCState.State.Enabled.id)
-    val Auto: UICCState.Value     = Value(CCState.State.Auto.id)
-    val Disabled: UICCState.Value = Value(CCState.State.Disabled.id)
-    val Loading: UICCState.Value  = Value(-1)
-    val Error: UICCState.Value    = Value(-2)
-  }
-
-  private def stateToText(state: UICCState.Value): String = state match {
-    //case UICCState.Always  => "always".localize
-    case UICCState.Auto     => "auto".localize
-    case UICCState.Enabled  => "always".localize
-    case UICCState.Disabled => "never".localize
-    case a => a.toString
-  }
-
-  private implicit def integerToCCState(value: Int): UICCState.Value = UICCState.apply(value)
-
-  private implicit def convertModetoUIState(mode: Modes.Value): UICCState.Value = mode match {
-    case Modes.Auto => UICCState.Auto
-    case Modes.Always => UICCState.Enabled
-    case Modes.Never => UICCState.Disabled
-    case Modes.Restore => UICCState.Auto
-  }
-
-  private implicit class RichMode(val state: UICCState.Value) extends AnyVal {
-    def toState: String = stateToText(state)
   }
 
 }

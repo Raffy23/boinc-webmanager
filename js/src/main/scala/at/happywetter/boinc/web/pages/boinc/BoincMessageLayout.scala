@@ -2,8 +2,8 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.{Message, Notice}
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
-import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.pages.boinc.BoincMessageLayout.Style
+import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincMessageStyle => Style}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
@@ -15,8 +15,6 @@ import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.xml.Elem
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
 
 /**
   * Created by: 
@@ -24,63 +22,6 @@ import scalacss.internal.mutable.StyleSheet
   * @author Raphael
   * @version 18.09.2017
   */
-object BoincMessageLayout {
-
-  object Style extends StyleSheet.Inline {
-  import dsl._
-
-  import scala.language.postfixOps
-
-    val dateCol = style(
-      whiteSpace.nowrap
-    )
-
-    val tableRow = style(
-      &.attr("data-prio", "2")(
-        //fontWeight.bold,
-        color(c"#ff1a1a")
-      ),
-      &.attr("data-prio", "3")(
-        fontWeight.bold,
-        color(c"#ff1a1a")
-      )
-    )
-
-    val noticeList = style(
-      padding.`0`,
-      listStyle := "none",
-
-      unsafeChild("li")(
-        unsafeChild("h4")(
-          BoincClientLayout.Style.pageHeader_small,
-          fontSize(21 px)
-        ),
-
-        unsafeChild("p")(
-          lineHeight(1.4923),
-          marginTop(-2 px),
-
-          unsafeChild("a")(
-            color(c"#0039e6")
-          )
-        ),
-
-        unsafeChild("small")(
-          color(c"#888"),
-
-          unsafeChild("a")(
-            color(c"#0039e6"),
-            marginLeft(7 px)
-          )
-        )
-      )
-    )
-
-  }
-
-}
-
-
 class BoincMessageLayout extends BoincClientLayout {
 
   override val path: String = "messages"
@@ -137,7 +78,7 @@ class BoincMessageLayout extends BoincClientLayout {
         </a>
       </div>
 
-      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h3 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-envelope" aria-hidden="true"></i>
         {"messages_header".localize}
       </h3>
@@ -150,11 +91,15 @@ class BoincMessageLayout extends BoincClientLayout {
                   {
                     notice.category match {
                       case "client" =>
-                        <h4>
+                        <h4 class={BoincClientStyle.pageHeaderSmall.htmlClass}>
                           {if (notice.project.nonEmpty) notice.project + ": " else ""}
                           {"notice_from_boinc".localize}
                         </h4>
-                      case _ => <h4>{notice.title}</h4>
+
+                      case _ =>
+                        <h4 class={BoincClientStyle.pageHeaderSmall.htmlClass}>
+                          {notice.title}
+                        </h4>
                     }
                   }
                   <p mhtml-onmount={jsOnContentMountAction(notice.description)}></p>

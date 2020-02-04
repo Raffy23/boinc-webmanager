@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.web.css.AppCSS
+import at.happywetter.boinc.web.css.AppCSSRegistry
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
@@ -32,7 +32,9 @@ object Main {
     dom.console.log("Current Version: " + BuildInfo.version)
 
     NProgress.start()
-    AppCSS.load()
+    val registeredStyles = AppCSSRegistry.registerCSSNames()
+    dom.console.log(s"Registered $registeredStyles css classes")
+
     AuthClient.loadFromLocalStorage()
     dom.console.log("Early load Locale from SessionStorage: " + Locale.load)
 

@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.ServerConfig
 import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
+import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
@@ -12,7 +13,6 @@ import org.scalajs.dom.raw.HTMLElement
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
 import scala.xml.Elem
-import scalacss.ProdDefaults._
 
 /**
   * Created by: 
@@ -21,74 +21,6 @@ import scalacss.ProdDefaults._
   * @version 25.07.2017
   */
 object DashboardMenu {
-
-  object Style extends StyleSheet.Inline {
-
-    import dsl._
-
-    private val menuMargin = 10
-
-    val menu = style(
-      position.fixed,
-      overflowX.auto,
-      bottom.`0`,
-      top(50 px),
-      listStyleType := "none",
-      margin.`0`,
-      padding(15 px, 0 px, 0 px, 0 px),
-      backgroundColor(c"#e6e6e6"),
-      width(207 px),
-      border :=! "1px solid #EEE",
-      boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
-      zIndex :=! "98",
-
-      media.maxWidth(690 px)(
-        top(100 px)
-      )
-    )
-
-    val elem = style(
-      unsafeChild("a")(
-        display.block,
-        width(207 px),
-        textDecoration := "none",
-        padding(menuMargin px, 15 px),
-        boxSizing.borderBox,
-        color(c"#333"),
-
-        &.hover(
-          backgroundColor(c"#74a9d8"),
-          color.white
-        ),
-
-        unsafeChild("i")(
-          marginRight(menuMargin px),
-          width(1 em)
-        )
-      )
-    )
-
-    val active = style(
-      backgroundColor(c"#428bca"),
-      color :=! "white !important"
-    )
-
-    val clickable = style(
-      cursor.pointer
-    )
-
-    val subMenuHosts = style(
-      float.right,
-      margin(0 px, (-1 * menuMargin + 5) px, 0 px, 0 px),
-      fontSize.smaller,
-      backgroundColor(c"#757575"),
-      color.white,
-      minWidth(20 px),
-      border(1 px, solid, c"#757575"),
-      borderRadius(6 px),
-      textAlign.center
-    )
-  }
 
   private val viewState: Var[String] = Var("display:block")
   private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)

@@ -1,18 +1,15 @@
 package at.happywetter.boinc.web.pages.swarm
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.shared.boincrpc.Project
-import at.happywetter.boinc.shared.boincrpc.BoincRPC
-import at.happywetter.boinc.shared.webrpc.ServerStatus
+import at.happywetter.boinc.shared.boincrpc.{BoincRPC, Project}
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
-import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.helper.FetchHelper
+import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Tooltip => TooltipStyle}
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, ProjectSwarmPageStyle => Style}
+import at.happywetter.boinc.web.css.definitions.components.{Dialog => DialogStyle}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
-import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.pages.component.dialog._
-import at.happywetter.boinc.web.pages.swarm.ProjectSwarmPage.Style
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
@@ -25,11 +22,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
-import at.happywetter.boinc.web.hacks.Implicits.RichWindow
-
-import scala.util.Try
 
 /**
   * Created by: 
@@ -37,37 +29,6 @@ import scala.util.Try
   * @author Raphael
   * @version 14.09.2017
   */
-object ProjectSwarmPage {
-  object Style extends StyleSheet.Inline {
-    import dsl._
-
-    import scala.language.postfixOps
-
-    val masterCheckbox = BoincSwarmPage.Style.masterCheckbox
-    val checkbox = BoincSwarmPage.Style.checkbox
-    val center = BoincSwarmPage.Style.center
-    val button = BoincSwarmPage.Style.button
-    val link = BoincProjectLayout.Style.link
-
-    val top_nav_action = style(
-      color(c"#333"),
-      textDecoration := "none",
-      fontSize(28 px),
-      paddingLeft(8 px)
-    )
-
-    val last_row_small = style(
-      width(1.5 em)
-    )
-
-    val floatingMenu = style(
-      position.absolute,
-      top(80 px),
-      right(20 px),
-    )
-  }
-}
-
 class ProjectSwarmPage extends SwarmPageLayout {
   override val path: String = "projects"
 
@@ -80,8 +41,6 @@ class ProjectSwarmPage extends SwarmPageLayout {
 
   override def onRender(): Unit = {
     NProgress.start()
-
-    import at.happywetter.boinc.shared.parser._
     ClientManager.getClients.foreach(clients => {
       Future.sequence(
         clients
@@ -105,50 +64,50 @@ class ProjectSwarmPage extends SwarmPageLayout {
           Seq(
             new Tooltip(
               Var("project_swarm_play".localize),
-              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
                 <i class="fas fa-play-circle"></i>
               </a>,
-              textOrientation = Tooltip.Style.topText
+              textOrientation = TooltipStyle.topText
             ).toXML,
             new Tooltip(
               Var("project_swarm_pause".localize),
-              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
                 <i class="fas fa-pause-circle"></i>
               </a>,
-              textOrientation = Tooltip.Style.topText
+              textOrientation = TooltipStyle.topText
             ).toXML,
             new Tooltip(
               Var("project_swarm_refresh".localize),
-              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
                 <i class="fas fa-sync"></i>
               </a>,
-              textOrientation = Tooltip.Style.topText
+              textOrientation = TooltipStyle.topText
             ).toXML,
             new Tooltip(
               Var("project_swarm_trash".localize),
-              <a class={Style.top_nav_action.htmlClass} href="#apply-to_all-project"
+              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
                 <i class="fas fa-trash"></i>
               </a>,
-              textOrientation = Tooltip.Style.topText
+              textOrientation = TooltipStyle.topText
             ).toXML,
             new Tooltip(
               Var("project_new_tooltip".localize),
-              <a class={Style.top_nav_action.htmlClass} href="#add-project"
+              <a class={Style.topNavigationAtion.htmlClass} href="#add-project"
                  onclick={jsAddNewProjectAction}>
                 <i class="fa fa-plus-square"></i>
               </a>,
-              textOrientation = Tooltip.Style.topText
+              textOrientation = TooltipStyle.topText
             ).toXML
           )
         }
       </div>
       <table class={TableTheme.table.htmlClass} id="swarm-project-data-table">
         <thead>
-          <tr class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+          <tr class={BoincClientStyle.inTextIcon.htmlClass}>
             <th>
               <a class={Style.masterCheckbox.htmlClass} href="#" onclick={jsSelectAllListener}>
                 <i class="far fa-check-square"></i>
@@ -159,7 +118,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
             <th>{"table_account".localize}</th>
             <th>{"table_team".localize}</th>
             <th>{"table_credits".localize}</th>
-            <th class={Style.last_row_small.htmlClass}></th>
+            <th class={Style.lastRowSmall.htmlClass}></th>
           </tr>
         </thead>
         <tbody>
@@ -186,7 +145,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
                         <a href="#project-properties" onclick={jsShowProjectProperties(url, data)}>
                           <i class="fa fa-info-circle"></i>
                         </a>,
-                        textOrientation = Tooltip.Style.leftText
+                        textOrientation = TooltipStyle.leftText
                       ).toXML
                     }
                   </td>
@@ -247,7 +206,9 @@ class ProjectSwarmPage extends SwarmPageLayout {
 
     new SimpleModalDialog(
       <p>{"project_resume_dialog_content".localize}</p>,
-      <h4 class={Dialog.Style.header.htmlClass}>{"are_you_sure".localize}</h4>,
+      <h4 class={Seq(DialogStyle.header.htmlClass, BoincClientStyle.pageHeaderSmall).mkString(" ")}>
+        {"are_you_sure".localize}
+      </h4>,
       (dialog) => {
         dialog.close()
         NProgress.start()

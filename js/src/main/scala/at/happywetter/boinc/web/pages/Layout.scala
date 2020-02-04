@@ -29,5 +29,6 @@ trait Layout {
   def already(): Unit = {}
 
   def onRender(): Unit = {}
-  def beforeRender(params: js.Dictionary[String])
+  def beforeRender(params: js.Dictionary[String]): Unit
+
 }

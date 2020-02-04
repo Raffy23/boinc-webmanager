@@ -3,11 +3,12 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc.ServerStatus
 import at.happywetter.boinc.web.boincclient.ClientManager
-import at.happywetter.boinc.web.css.{FloatingMenu, TableTheme}
+import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle
 import at.happywetter.boinc.web.hacks.Implicits.RichWindow
 import at.happywetter.boinc.web.helper.FetchHelper.FetchRequest
 import at.happywetter.boinc.web.helper.{AuthClient, FetchHelper}
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
@@ -75,13 +76,13 @@ object WebRPCProjectPage extends Layout {
 
   def convertDaemonStatus(status: ServerStatus): Elem =
     <table class={TableTheme.table.htmlClass}>
-      <thead class={BoincClientLayout.Style.in_text_icon.htmlClass}><tr><th>Host</th><th>Command</th><th>Status</th></tr></thead>
+      <thead class={BoincClientStyle.inTextIcon.htmlClass}><tr><th>Host</th><th>Command</th><th>Status</th></tr></thead>
       <tbody>{ status.daemon_status.map{ daemon => <tr><td>{daemon.host}</td><td>{daemon.command}</td><td>{daemon.status}</td></tr>} }</tbody>
     </table>
 
   def convertTasks(status: ServerStatus): Elem =
     <table class={TableTheme.table.htmlClass}>
-      <thead class={BoincClientLayout.Style.in_text_icon.htmlClass}><tr><th>Task</th><th>In progress</th><th>Unsent</th></tr></thead>
+      <thead class={BoincClientStyle.inTextIcon.htmlClass}><tr><th>Task</th><th>In progress</th><th>Unsent</th></tr></thead>
       <tbody>{ status.tasks_by_app.map { tasks => <tr><td>{tasks.name}</td><td>{tasks.in_progress}</td><td>{tasks.unsent}</td></tr>} }</tbody>
     </table>
 
@@ -94,7 +95,6 @@ object WebRPCProjectPage extends Layout {
         <tr><td>{"hosts_with_recent_credit".localize}</td><td>{status.database_file_states.hosts_with_recent_credit}</td></tr>
         <tr><td>{"users_registered_24h".localize}</td><td>{status.database_file_states.users_registered_in_past_24_hours}</td></tr>
         <tr><td>{"users_with_credit".localize}</td><td>{status.database_file_states.users_with_credit}</td></tr>
-        <tr><td>{"computing_power".localize}</td><td>{status.database_file_states.current_floating_point_speed}</td></tr>
         <tr><td>{"users_with_recent_credit".localize}</td><td>{status.database_file_states.users_with_recent_credit}</td></tr>
         <tr><td>{"results_in_progess".localize}</td><td>{status.database_file_states.results_in_progress}</td></tr>
         <tr><td>{"results_ready_to_send".localize}</td><td>{status.database_file_states.results_ready_to_send}</td></tr>
@@ -112,7 +112,7 @@ object WebRPCProjectPage extends Layout {
 
       <div class={FloatingMenu.root.htmlClass} style="border-left:solid 1px #AAA;border-right:solid 1px #AAA;border-top:solid 1px #AAA;margin-top:-6px">
         {
-          <select class={LoginPage.Style.input.htmlClass} style="margin:0" id="project" onchange={jsOnChangeListener}>
+          <select class={LoginPageStyle.input.htmlClass} style="margin:0" id="project" onchange={jsOnChangeListener}>
             <option disabled={true} selected="selected">{selectorPlaceholder}</option>
             {
               projects.map(_.toList.sortBy(_._2.toLowerCase()).map(project => <option value={project._1}>{project._2}</option>))
@@ -121,7 +121,7 @@ object WebRPCProjectPage extends Layout {
         }
       </div>
 
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-cloud" aria-hidden="true"></i>
         {"project_overview_header".localize}
       </h2>

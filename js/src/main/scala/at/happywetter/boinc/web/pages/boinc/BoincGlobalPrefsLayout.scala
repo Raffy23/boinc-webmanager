@@ -2,12 +2,11 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
-import at.happywetter.boinc.web.css.FloatingMenu
+import at.happywetter.boinc.web.css.definitions.components.FloatingMenu
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincSwarmPageStyle, BoincGlobalPrefsStyle => Style}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
-import at.happywetter.boinc.web.pages.boinc.BoincGlobalPrefsLayout.Style
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
@@ -18,8 +17,6 @@ import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.language.postfixOps
 import scala.xml.{Elem, Node}
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
 
 /**
   * Created by: 
@@ -27,36 +24,6 @@ import scalacss.internal.mutable.StyleSheet
   * @author Raphael
   * @version 26.08.2017
   */
-object BoincGlobalPrefsLayout {
-
-  object Style extends StyleSheet.Inline {
-    import dsl._
-
-    val root_pane = style(
-      unsafeChild("label")(
-        marginLeft(15 px)
-      )
-    )
-
-    val input = style(
-      outline.`0`,
-      backgroundColor(c"#FFF"),
-      width(4 em),
-      border :=! "1px #AAA solid",
-      margin(3 px, 6 px),
-      padding(6 px, 8 px),
-      boxSizing.borderBox,
-      fontSize(14 px)
-    )
-
-    val h4 = style(
-      BoincClientLayout.Style.h4_without_line,
-      marginTop(30 px)
-    )
-  }
-
-}
-
 class BoincGlobalPrefsLayout extends BoincClientLayout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -73,20 +40,20 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
     def b[T](x: (GlobalPrefsOverride) => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
 
 
-    <div id="global_prefs" class={Style.root_pane.htmlClass}>
-      <div class={Seq(FloatingMenu.root.htmlClass, BoincClientLayout.Style.in_text_icon).mkString(" ")}>
-        <a class={BoincSwarmPage.Style.button.htmlClass} onclick={jsOnSubmitListener}>
+    <div id="global_prefs" class={Style.rootPane.htmlClass}>
+      <div class={Seq(FloatingMenu.root.htmlClass, BoincClientStyle.inTextIcon).mkString(" ")}>
+        <a class={BoincSwarmPageStyle.button.htmlClass} onclick={jsOnSubmitListener}>
           <i class="fa fa-check" aria-hidden="true"></i>
           {"submit".localize}
         </a>
       </div>
 
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-cogs" aria-hidden="true"></i>
         {"global_prefs".localize}
       </h2>
 
-      <h4 class={BoincClientLayout.Style.h4_without_line.htmlClass}>{"global_prefs_computing".localize}</h4>
+      <h4 class={BoincClientStyle.h4WithoutLine.htmlClass}>{"global_prefs_computing".localize}</h4>
       <label for="NcpuPct">{"global_prefs_cpu_cores".localize}</label>
       <input class={Style.input.htmlClass} id="NcpuPct" value={v(_.maxNCpuPct)}></input>
       <br/>
@@ -97,7 +64,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <input class={Style.input.htmlClass} id="shedPeriod" value={v(_.cpuSchedulingPeriodMinutes)}></input>
       <br/>
 
-      <h4 class={Style.h4.htmlClass}>{"global_prefs_pause".localize}</h4>
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"global_prefs_pause".localize}
+      </h4>
       <label>
         <input type="checkbox" checked={b(!_.runOnBatteries)} id="run_on_batteries"></input>
         {"global_prefs_on_batteries".localize}
@@ -114,7 +83,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       </label>
       <br/>
 
-      <h4 class={Style.h4.htmlClass}>{"global_prefs_save_time".localize}</h4>
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"global_prefs_save_time".localize}
+      </h4>
       <label for="workBufferDays">{"global_prefs_workbuffer_days".localize}</label>
       <input class={Style.input.htmlClass} id="workBufferDays" value={v(_.workBufferMinDays)}></input>
       <br/>
@@ -125,7 +96,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <input class={Style.input.htmlClass} id="diskInterval" value={v(_.diskInterval)}></input>
       <br/>
 
-      <h4 class={Style.h4.htmlClass}>{"global_prefs_network".localize}</h4>
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"global_prefs_network".localize}
+      </h4>
       <label for="maxBytesDown">{"global_prefs_max_bytes_down".localize}</label>
       <input class={Style.input.htmlClass} id="maxBytesDown" value={v(_.maxBytesSecDownload.toSpeedValue(1))}></input>
       <br/>
@@ -149,7 +122,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       </label>
       <br/>
 
-      <h4 class={Style.h4.htmlClass}>{"global_prefs_disk".localize}</h4>
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"global_prefs_disk".localize}
+      </h4>
       <label for="min_disk_free">{"global_prefs_min_disk_free".localize}</label>
       <input class={Style.input.htmlClass} id="min_disk_free" value={v(_.diskMinFreeGB)}></input>
       <br/>
@@ -160,7 +135,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       <input class={Style.input.htmlClass} id="max_disk_usage_pct" value={v(_.diskMaxUsedPct)}></input>
       <br/>
 
-      <h4 class={Style.h4.htmlClass}>{"global_prefs_memory".localize}</h4>
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"global_prefs_memory".localize}
+      </h4>
       <label for="ram_used_busy">{"global_prefs_ram_used_busy".localize}</label>
       <input class={Style.input.htmlClass} id="ram_used_busy" value={v(_.ramUsedBusyPct)}></input>
       <br/>

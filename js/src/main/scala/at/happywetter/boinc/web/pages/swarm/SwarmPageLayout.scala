@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.swarm
 
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.SwarmTopNavigation
 import at.happywetter.boinc.web.pages.{Layout, PageLayout}
@@ -28,7 +28,7 @@ abstract class SwarmPageLayout extends Layout {
 
   override def render: Elem = {
     <div id="swarm">
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-industry" aria-hidden="true"></i>
         {"swarm_header".localize + " - "}
         <small id="subheader">{header}</small>

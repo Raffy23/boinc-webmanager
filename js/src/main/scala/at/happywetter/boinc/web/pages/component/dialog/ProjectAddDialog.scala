@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
 import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
-import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.LoginPage
+import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Dialog => DialogStyle}
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, LoginPageStyle}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
@@ -38,7 +38,7 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
           <tr>
             <td style="width:125px">{"table_project".localize}</td>
             <td>
-              <select class={LoginPage.Style.input.htmlClass} style="margin:0" id="pad-project" onchange={jsOnChangeListener}>
+              <select class={LoginPageStyle.input.htmlClass} style="margin:0" id="pad-project" onchange={jsOnChangeListener}>
                 <option disabled={true} selected="selected">{"project_new_default_select".localize}</option>
                 {
                   projectData.map(project =>
@@ -64,13 +64,13 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
           <tr>
             <td>{"login_username".localize}</td>
             <td>
-              <input class={LoginPage.Style.input.htmlClass} placeholder="example@boinc-user.com" style="margin:0" id="pad-username"></input>
+              <input class={LoginPageStyle.input.htmlClass} placeholder="example@boinc-user.com" style="margin:0" id="pad-username"></input>
             </td>
           </tr>
           <tr>
             <td>{"login_password".localize}</td>
             <td>
-              <input class={LoginPage.Style.input.htmlClass} placeholder={"login_password".localize} style="margin:0" id="pad-password" type="password"></input>
+              <input class={LoginPageStyle.input.htmlClass} placeholder={"login_password".localize} style="margin:0" id="pad-password" type="password"></input>
             </td>
           </tr>
         </tbody>
@@ -78,7 +78,9 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
       <br/>
       <br/>
     </div>,
-    <h2 class={Dialog.Style.header.htmlClass}>{"project_new_addbtn".localize}</h2>,
+    <h2 class={Seq(DialogStyle.header.htmlClass, BoincClientStyle.pageHeaderSmall).mkString(" ")}>
+      {"project_new_addbtn".localize}
+    </h2>,
     (dialog: SimpleModalDialog) => {
       NProgress.start()
 
