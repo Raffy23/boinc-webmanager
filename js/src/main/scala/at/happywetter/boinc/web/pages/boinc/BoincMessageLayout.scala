@@ -5,6 +5,7 @@ import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincMessageStyle => Style}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
+import at.happywetter.boinc.web.storage.MessageCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
@@ -35,16 +36,41 @@ class BoincMessageLayout extends BoincClientLayout {
   override def onRender(): Unit = {
     NProgress.start()
 
-    boinc
-      .getMessages()
-      .map(msg => messages := msg)
-      .flatMap(_ =>
-        boinc
-          .getNotices()
-          .map(notice => notices := notice)
-      )
-      .recover(ErrorDialogUtil.showDialog)
-      .map(_ => NProgress.done(true))
+
+    MessageCache.getLastSeqNo(boincClientName).map{ seqno =>
+
+      boinc
+        .getMessages(seqno)
+        .map{msg =>
+
+
+          // DEBUGGING STUFF
+          MessageCache.save(boincClientName, (seqno+1), msg.map(_.msg)).recover {
+            case ex: Throwable => ex.printStackTrace()
+          }
+
+          dom.window.setTimeout(
+            () => MessageCache.get(boincClientName, 0, 10).map(println).recover {
+              case ex: Throwable => ex.printStackTrace()
+            },
+            2500
+          )
+
+          messages := msg
+
+        }
+        .flatMap(_ =>
+          boinc
+            .getNotices()
+            .map(notice => notices := notice)
+        )
+        .recover(ErrorDialogUtil.showDialog)
+        .map(_ => NProgress.done(true))
+
+    }
+    .recover(ErrorDialogUtil.showDialog)
+    .map(_ => NProgress.done(true))
+
   }
 
   override def render: Elem = {

@@ -20,6 +20,7 @@ package object parser {
   implicit val projectGuiURLParser = macroRW[boincrpc.ProjectGuiURL]
   implicit val projectParser = macroRW[boincrpc.Project]
   implicit val netstatsParser = macroRW[boincrpc.NetStats]
+  implicit val timeStatsParser = macroRW[boincrpc.TimeStats]
   implicit val boincStateParser = macroRW[boincrpc.BoincState]
   implicit val ccStateParser = macroRW[boincrpc.CCState]
   implicit val ccStatusParser = macroRW[boincrpc.CCStatus]

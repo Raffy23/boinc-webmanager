@@ -1,16 +1,24 @@
 package at.happywetter.boinc.web
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeBuilder
+
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.web.boincclient.ClientCacheHelper
 import at.happywetter.boinc.web.css.AppCSSRegistry
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
+import at.happywetter.boinc.web.storage.AppSettingsStorage
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import org.scalajs.dom
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.util.Try
 
@@ -37,6 +45,8 @@ object Main {
 
     AuthClient.loadFromLocalStorage()
     dom.console.log("Early load Locale from SessionStorage: " + Locale.load)
+
+    ClientCacheHelper.init()
 
     // Load Languages before jumping to UI
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue

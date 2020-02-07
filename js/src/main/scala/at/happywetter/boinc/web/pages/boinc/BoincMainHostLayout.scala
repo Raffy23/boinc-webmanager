@@ -32,13 +32,7 @@ class BoincMainHostLayout extends BoincClientLayout {
   override val path = "boinc"
 
   private val clientCC: Var[CCState] = Var(CCState(0,0,0,0,0,0D,0,0,0,0D,0,0,0,0D,true,true,0))
-  private val clientData: Var[HostInfoCache.CacheEntry] = Var(
-    HostInfoCache.CacheEntry(
-      HostInfo("","","",0,"","",List.empty,0D,0D,0D,0D,0D,0D,0D,0D,"","",List.empty,None),
-      "",
-      ""
-    )
-  )
+  private val clientData: Var[HostInfoCache.CacheEntry] = Var(HostInfoCache.CacheEntry.empty())
 
   override def already(): Unit = onRender()
 

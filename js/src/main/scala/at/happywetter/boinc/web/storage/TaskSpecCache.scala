@@ -20,20 +20,14 @@ import upickle.default._
 object TaskSpecCache extends DatabaseProvider {
   import at.happywetter.boinc.shared.parser._
 
-  private implicit val objStore: String = "task_cache"
-  private implicit val storeNames = js.Array("task_cache")
+  private[storage] implicit val objStore: String = "task_cache"
+  private implicit val storeNames: js.Array[String] = js.Array(objStore)
 
   def save(boincName: String, appName: String, app: App): Future[Unit] =
-    if (CompatibilityTester.isFirefox)
-      firefoxTransaction(_.add(write(app), boincName+"/"+appName))
-    else
-      transaction.map(f => f.add(write(app), boincName+"/"+appName))
+    transaction(f => f.add(write(app), boincName+"/"+appName))
 
   def get(boincName: String, appName: String): Future[Option[App]] =
-    if (CompatibilityTester.isFirefox)
-      firefoxTransactionAsync(f => unpack(f.get(boincName + "/" + appName)))
-    else
-      transaction.flatMap(f => unpack(f.get(boincName + "/" + appName)))
+    transactionAsync(f => unpack(f.get(boincName + "/" + appName)))
 
   def updateCacheTimeStamp(boincName: String): Unit = {
     dom.window.localStorage.setItem("TaskSpecCache/"+boincName, new Date().toJSON())
@@ -44,7 +38,6 @@ object TaskSpecCache extends DatabaseProvider {
 
     if (data != null) new Date(dom.window.localStorage.getItem("TaskSpecCache/"+boincName))
     else new Date(0D)
-
   }
 
   def isCacheValid(boincName: String): Boolean =
@@ -55,4 +48,5 @@ object TaskSpecCache extends DatabaseProvider {
     request.onsuccess = _ => resolve(request.result.asInstanceOf[js.UndefOr[String]].toOption.map(a => read[App](a)))
     request.onerror   = reject
   }).toFuture
+
 }

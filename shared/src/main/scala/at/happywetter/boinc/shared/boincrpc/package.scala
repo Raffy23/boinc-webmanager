@@ -158,26 +158,27 @@ package object boincrpc {
 
   final case class ProjectGuiURL(name: String,desc: String,url: String)
 
-  final case class App(name: String
-                       ,userFriendlyName: String
-                       ,nonCpuIntensive: Boolean
-                       ,version: AppVersion
-                       ,project: String)
+  final case class App(name: String,
+                       userFriendlyName: String,
+                       nonCpuIntensive: Boolean,
+                       version: AppVersion,
+                       project: String)
 
-  final case class AppVersion(version: Int
-                              ,platform: String
-                              ,flops: Double
-                              ,avgCpus: Double
-                              ,maxCpus: Double)
+  final case class AppVersion(version: Int,
+                              platform: String,
+                              flops: Double,
+                              avgCpus: Double,
+                              maxCpus: Double)
 
-  final case class BoincState(hostInfo: HostInfo
-                              ,projects: List[Project]
-                              ,apps: Map[String,App]
-                              ,workunits: List[Workunit]
-                              ,boincVersion: String
-                              ,platform: String
-                              ,results: List[Result]
-                              ,net_stats: NetStats)
+  final case class BoincState(hostInfo: HostInfo,
+                              projects: List[Project],
+                              apps: Map[String,App],
+                              workunits: List[Workunit],
+                              boincVersion: String,
+                              platform: String,
+                              results: List[Result],
+                              netStats: NetStats,
+                              timeStats: TimeStats)
 
   final case class Workunit(name: String
                             ,appName: String
@@ -192,6 +193,21 @@ package object boincrpc {
                             bwdowm: Double,
                             avgDownload: Double,
                             avgDownloadTime: Double)
+
+  final case class TimeStats(on: Double,
+                             connected: Double,
+                             cpuAndNetworkAvailable: Double,
+                             active: Double,
+                             gpuActive: Double,
+                             clientStartTime: Double,
+                             totalStartTime: Double,
+                             totalDuration: Double,
+                             totalActiveDuration: Double,
+                             totalGPUActiveDuration: Double,
+                             now: Double,
+                             prevUpdate: Double,
+                             sessionActiveDuration: Double,
+                             sessionGPUActiveDuration: Double)
 
   //TODO: Convert Magic Numbers to "Magic" Scala Structures
   final case class CCState(networkStatus: Int, //CCState.State.Value,
