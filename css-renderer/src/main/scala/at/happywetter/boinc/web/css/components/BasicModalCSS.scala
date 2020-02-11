@@ -59,6 +59,7 @@ object BasicModalCSS extends StyleSheet.Standalone {
   )
 
   button.cssName - (
+    userSelect :=! "none",
     outline.`0`,
     backgroundColor(c"#428bca"),
     border.`0`,

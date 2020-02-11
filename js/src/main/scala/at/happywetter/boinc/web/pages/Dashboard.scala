@@ -7,7 +7,7 @@ import at.happywetter.boinc.web.helper.{AuthClient, WebSocketClient}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
@@ -28,6 +28,7 @@ import scala.util.Try
 import BoincFormater.Implicits._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
+import at.happywetter.boinc.web.helper.table.StringTableRow
 
 /**
   * Created by: 

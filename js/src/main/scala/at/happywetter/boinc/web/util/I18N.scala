@@ -48,16 +48,33 @@ object I18N {
 
   }
 
-
-  implicit class TranslatableString(str: String) {
+  implicit class TranslatableString(private val str: String) extends AnyVal {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, {println(s"[Warning]: Could not translate: $str into ${Locale.current}"); str})
+    def localizeTags(nodes: Node*): Seq[Node] = {
+      val captureGroup = "(\\$\\d+)".r
+
+      val indexNodes = nodes.toIndexedSeq
+      val fmtString  = str.localize
+      val nodeList   = captureGroup.findAllMatchIn(fmtString).map{ matchResult =>
+        (matchResult.start, indexNodes(matchResult.group(1).drop(1).toInt), matchResult.end)
+      }.foldLeft((0, List.empty[Node])) { case ((start, nodeList), (mStart, node, mEnd)) =>
+        (mEnd, node :: xml.Text(fmtString.slice(start, mStart)) :: nodeList)
+      }
+
+      (
+        if (nodeList._1 < fmtString.length)
+          xml.Text(fmtString.substring(nodeList._1)) :: nodeList._2
+        else
+          nodeList._2
+      ).reverse
+    }
   }
 
-  implicit class TranslatableBoolean(bool: Boolean) {
+  implicit class TranslatableBoolean(private val bool: Boolean) extends AnyVal {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(bool.toString, bool.toString)
   }
 
-  implicit class HtmlString(str: String) {
+  implicit class HtmlString(private val str: String) extends AnyVal {
     import at.happywetter.boinc.web.helper.XMLHelper._
 
     def toTags: Seq[Node] =
@@ -68,11 +85,11 @@ object I18N {
       }
   }
 
-  implicit class TranslatableAppError(e: ApplicationError) {
+  implicit class TranslatableAppError(private val e: ApplicationError) extends AnyVal {
     def localize: String = e.reason.localize
   }
 
-  implicit class TranslatableFetchException(ex: FetchResponseException) {
+  implicit class TranslatableFetchException(private val ex: FetchResponseException) extends AnyVal {
     def localize: String = s"${ex.statusCode}: ${ex.reason.localize}"
   }
 

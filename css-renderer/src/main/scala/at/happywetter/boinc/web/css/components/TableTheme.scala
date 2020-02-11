@@ -1,6 +1,8 @@
 package at.happywetter.boinc.web.css.components
 
 import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
+import at.happywetter.boinc.web.css.components.BasicModalCSS.&
+
 import scala.language.postfixOps
 
 /**
@@ -12,6 +14,38 @@ import scala.language.postfixOps
 object TableTheme extends StyleSheet.Standalone {
   import at.happywetter.boinc.web.css.definitions.components.TableTheme._
   import dsl._
+
+  container.cssName - (
+    unsafeChild("div:first-child")(
+      width :=! "calc(100% - 20px)",
+      marginBottom(10 px),
+      fontWeight.bold,
+    ),
+
+    unsafeChild("div:last-child")(
+      width :=! "max-content",
+      float.right,
+      marginRight(15 px),
+      marginBottom(20 px),
+
+      unsafeChild("input")(
+        width(3 em)
+      ),
+
+      unsafeChild("a")(
+        userSelect :=! "none",
+        cursor.pointer,
+        outline.`0`,
+        border :=! "1px solid #AAA",
+        padding(7 px),
+        margin(4 px, 4 px),
+
+        &.hover(
+          backgroundColor(c"#B3D0E9")
+        )
+      )
+    )
+  )
 
   table.cssName - (
     width :=! s"calc(100% - 20px)",
@@ -105,6 +139,19 @@ object TableTheme extends StyleSheet.Standalone {
       border.none
     ),
 
+  )
+
+  sortable.cssName - (
+    cursor.pointer,
+
+    unsafeChild("i")(
+      float.right,
+      marginLeft(10 px)
+    ),
+
+    unsafeChild("i.fa-sort")(
+      color.gray
+    )
   )
 
 }
