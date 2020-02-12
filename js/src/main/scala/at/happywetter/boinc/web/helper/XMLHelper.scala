@@ -14,7 +14,8 @@ object XMLHelper {
 
   implicit def toXMLTextNode(str: String): Node = Text(str)
 
-  implicit class RichTextXMLNode(str: String) {
+  implicit class RichTextXMLNode(private val str: String) extends AnyVal {
     def toXML: Node = Text(str)
   }
+
 }

@@ -75,7 +75,7 @@ object AuthClient {
       .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
       .toFuture
       .map(buffer => {
-        val hex = StringBuilder.newBuilder
+        val hex = new StringBuilder()
         val view = new DataView(buffer.asInstanceOf[ArrayBuffer])
         for (i <- 0 until view.byteLength by 2) {
           hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)

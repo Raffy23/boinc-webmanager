@@ -78,7 +78,7 @@ object HardwareTableModel {
                 sensors.value.get.get.toList.sortBy(_._1).map { case (name, row) =>
                   <tr>
                     <td>{name}</td>
-                    <td>{row.value + " " + row.unit}</td>
+                    <td>{s"${row.value}  ${row.unit}"}</td>
                     <td>{row.flags}</td>
                   </tr>
                 }

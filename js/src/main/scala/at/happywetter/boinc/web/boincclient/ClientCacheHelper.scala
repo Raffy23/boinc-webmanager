@@ -49,6 +49,9 @@ object ClientCacheHelper {
       case true =>
         println(s"Client $name has been restarted, clearing message cache ...")
         MessageCache.delete(name).foreach(count => s"Deleted $count entries for $name")
+
+      case _ =>
+        /* Do nothing, client has not been restarted since last page cache update  */
     }
 
     HostInfoCache.saveFromState(name, state)

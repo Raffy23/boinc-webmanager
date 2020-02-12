@@ -17,6 +17,7 @@ import org.scalajs.dom.raw.HTMLCanvasElement
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.xml.Elem
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 

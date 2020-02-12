@@ -29,6 +29,7 @@ import BoincFormater.Implicits._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.table.StringTableRow
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 

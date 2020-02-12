@@ -14,6 +14,7 @@ import mhtml.Var
 import org.scalajs.dom
 
 import scala.xml.Elem
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 

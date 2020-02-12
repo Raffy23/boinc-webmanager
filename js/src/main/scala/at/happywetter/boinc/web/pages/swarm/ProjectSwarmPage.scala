@@ -22,6 +22,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 
@@ -137,7 +138,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
                   <td style="text-align:center">{data.size}</td>
                   <td>{accounts.map(t => t.userName).distinct.flatMap(t => List(t.toXML, <br/>))}</td>
                   <td>{accounts.map(t => t.teamName).distinct.flatMap(t => List(t.toXML, <br/>))}</td>
-                  <td>{creditsRange._1 + " - " + creditsRange._2}</td>
+                  <td>{s"${creditsRange._1} - ${creditsRange._2}"}</td>
                   <td>
                     {
                       new Tooltip(

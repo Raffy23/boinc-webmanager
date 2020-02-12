@@ -20,6 +20,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.JSConverters._
 import scala.xml.Elem
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 

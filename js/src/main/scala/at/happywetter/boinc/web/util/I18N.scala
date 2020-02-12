@@ -5,6 +5,7 @@ import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.collection.immutable.ArraySeq
 import scala.xml.Node
 
 /**
@@ -51,22 +52,21 @@ object I18N {
   implicit class TranslatableString(private val str: String) extends AnyVal {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, {println(s"[Warning]: Could not translate: $str into ${Locale.current}"); str})
     def localizeTags(nodes: Node*): Seq[Node] = {
+      import at.happywetter.boinc.web.helper.XMLHelper._
       val captureGroup = "(\\$\\d+)".r
 
       val indexNodes = nodes.toIndexedSeq
       val fmtString  = str.localize
       val nodeList   = captureGroup.findAllMatchIn(fmtString).map{ matchResult =>
         (matchResult.start, indexNodes(matchResult.group(1).drop(1).toInt), matchResult.end)
-      }.foldLeft((0, List.empty[Node])) { case ((start, nodeList), (mStart, node, mEnd)) =>
-        (mEnd, node :: xml.Text(fmtString.slice(start, mStart)) :: nodeList)
+      }.foldLeft((0, Vector.empty[Node])) { case ((start, nodeList), (mStart, node, mEnd)) =>
+        (mEnd, nodeList :+ fmtString.slice(start, mStart).toXML :+ node)
       }
 
-      (
-        if (nodeList._1 < fmtString.length)
-          xml.Text(fmtString.substring(nodeList._1)) :: nodeList._2
-        else
-          nodeList._2
-      ).reverse
+      if (nodeList._1 < fmtString.length)
+        nodeList._2 :+ fmtString.substring(nodeList._1).toXML
+      else
+        nodeList._2
     }
   }
 
@@ -79,7 +79,7 @@ object I18N {
 
     def toTags: Seq[Node] =
       if (str.contains("\n")) {
-        str.split("\n").flatMap(data => Seq(data.toXML, <br/>))
+        ArraySeq.unsafeWrapArray(str.split("\n")).flatMap(data => Seq(data.toXML, <br/>))
       } else {
         Seq(str)
       }
