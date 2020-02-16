@@ -40,7 +40,7 @@ class BoincTaskLayout extends BoincClientLayout {
 
   private var refreshHandle: Int = _
   private var fullSyncHandle: Int = _
-  private val dataTable: DataTable[WuTableRow] = new DataTable[WuTableRow](tableHeaders)
+  private val dataTable: DataTable[WuTableRow] = new DataTable[WuTableRow](tableHeaders, paged = true)
 
   private class HeaderBarData {
     var toCompute: Int = 0

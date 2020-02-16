@@ -32,7 +32,6 @@ class BoincMessageLayout extends BoincClientLayout {
 
   override val path: String = "messages"
 
-  private val messages = Var(List.empty[Message])
   private val notices = Var(List.empty[Notice])
 
   private val messageTable = new DataTable[MessageTableRow](
@@ -57,18 +56,24 @@ class BoincMessageLayout extends BoincClientLayout {
         .flatMap { messages =>
           MessageCache.save(boincClientName, messages)
         }.map { _ =>
-          MessageCache.get(boincClientName).toRx(List.empty).map(messageTable.reactiveData := _)
-       }.flatMap(_ =>
+          MessageCache
+            .get(boincClientName)
+            .map(messageTable.reactiveData := _.toList)
+            .foreach { _ =>
+              messageTable.currentPage :=
+                (messageTable.reactiveData.now.length / messageTable.curPageSize.now) + 1
+            }
+        }.flatMap { _ =>
           boinc
             .getNotices()
             .map(notice => notices := notice)
-        )
+        }
         .recover(ErrorDialogUtil.showDialog)
         .map(_ => NProgress.done(true))
 
     }
-    .recover(ErrorDialogUtil.showDialog)
-    .map(_ => NProgress.done(true))
+      .recover(ErrorDialogUtil.showDialog)
+      .map(_ => NProgress.done(true))
 
   }
 

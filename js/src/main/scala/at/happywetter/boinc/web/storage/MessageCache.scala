@@ -1,13 +1,15 @@
 package at.happywetter.boinc.web.storage
 
 import at.happywetter.boinc.shared.boincrpc.Message
-import org.scalajs.dom.raw.{IDBCursorWithValue, IDBKeyRange, IDBRequest}
-
-import scala.concurrent.{Future, Promise}
-import scala.scalajs.js
-
 import at.happywetter.boinc.shared.parser.messageParser
+import at.happywetter.boinc.web.storage.IDBCursorRequest.IDBRequestConverter
+import org.scalajs.dom
+import org.scalajs.dom.raw.IDBKeyRange
 import upickle.default._
+
+import scala.concurrent.Future
+import scala.scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
  * Created by: 
@@ -18,6 +20,9 @@ import upickle.default._
 object MessageCache extends DatabaseProvider {
 
   private[storage] implicit val objStore: String = "messages"
+
+  private[storage] val ID_INDEX = "boincId_idx"
+
   private implicit val storeNames: js.Array[String] = js.Array(objStore)
 
   @js.native
@@ -29,6 +34,8 @@ object MessageCache extends DatabaseProvider {
 
   def save(boincName: String, messages: List[Message]): Future[Unit] =
     transaction { transaction =>
+      dom.console.log(s"[MessageCache] Save ${messages.size} messages for $boincName")
+
       messages.foreach { msg =>
         transaction.put(
           js.Dynamic.literal(
@@ -40,96 +47,51 @@ object MessageCache extends DatabaseProvider {
       }
     }
 
-  def get(boincName: String, lower: Int, upper: Int): Future[List[Message]] =
+  def get(boincName: String, lower: Int, upper: Int): Future[Seq[Message]] =
     transactionAsync { transaction =>
 
       val lowerBound = js.Array[js.Any](boincName, lower)
       val upperBound = js.Array[js.Any](boincName, upper)
       val keyRange = IDBKeyRange.bound(lowerBound, upperBound)
 
-      val cursor   = transaction.openCursor(keyRange)
-      val promise  = Promise[List[Message]]
-      var tmpQuery = List.empty[Message]
+      transaction
+        .openCursor(keyRange)
+        .toCursor[StorageObject]
+        .map(storageObject => read[Message](storageObject.msg))
 
-      cursor.onsuccess = { event =>
-        val cursorResult = event.target.asInstanceOf[IDBRequest].result
-        if (cursorResult != null) {
-          val cursor = cursorResult.asInstanceOf[IDBCursorWithValue]
-          val result = cursor.value.asInstanceOf[js.UndefOr[StorageObject]]
-
-          result.toOption.foreach { result =>
-            tmpQuery = read[Message](result.msg) :: tmpQuery
-          }
-
-          cursor.continue()
-        }
-      }
-
-      cursor.transaction.oncomplete = { _ =>
-        promise.success(tmpQuery)
-      }
-
-      cursor.transaction.onerror = { event =>
-        promise.failure(new RuntimeException(s"${event.message} in ${event.filename}:${event.lineno}"))
-      }
-
-      promise.future
     }
 
-  def get(name: String): Future[List[Message]] = ???
+  def get(name: String): Future[Seq[Message]] =
+    transactionAsync {
+      _
+        .index(ID_INDEX)
+        .openCursor(IDBKeyRange.only(name))
+        .toCursor[StorageObject]
+        .map(storageObject => read[Message](storageObject.msg))
+        .map(_.reverse)
+    }
 
   def delete(name: String): Future[Int] =
-    transactionAsync { tx =>
-      val keyRange = IDBKeyRange.only(name)
-      val cursor   = tx.index("boincId_idx").openCursor(keyRange)
-      val promise  = Promise[Int]
-      var count    = 0
-
-      cursor.onsuccess = { event =>
-        val cursorResult = event.target.asInstanceOf[IDBRequest].result
-        if (cursorResult != null) {
-          val cursor = cursorResult.asInstanceOf[IDBCursorWithValue]
-          count += 1
-
+    transactionAsync {
+      _
+        .index(ID_INDEX)
+        .openCursor(IDBKeyRange.only(name))
+        .toCursor[Any]
+        .fold(0) { case (count, cursor, _) =>
           cursor.delete()
-          cursor.continue()
+          count + 1
         }
-      }
-
-      cursor.transaction.oncomplete = { _ =>
-        promise.success(count)
-      }
-
-      cursor.transaction.onerror = { event =>
-        promise.failure(new RuntimeException(s"${event.message} in ${event.filename}:${event.lineno}"))
-      }
-
-      promise.future
     }
 
   def getLastSeqNo(name: String): Future[Int] =
-    transactionAsync { tx =>
-      val keyRange = IDBKeyRange.only(name)
-      val cursor   = tx.index("boincId_idx").openCursor(keyRange, "prev")
-      val promise  = Promise[Int]
-
-      cursor.onsuccess = { event =>
-        val cursorResult = event.target.asInstanceOf[IDBRequest].result
-        if (cursorResult != null) {
-          val cursor = cursorResult.asInstanceOf[IDBCursorWithValue]
-          val result = cursor.value.asInstanceOf[js.UndefOr[StorageObject]]
-
-          result.toOption.foreach { result =>
-            promise.success(result.seqno)
-          }
-        }
-      }
-
-      cursor.transaction.onerror = { event =>
-        promise.failure(new RuntimeException(s"${event.message} in ${event.filename}:${event.lineno}"))
-      }
-
-      promise.future
+    transactionAsync {
+      _
+        .index(ID_INDEX)
+        .openCursor(IDBKeyRange.only(name), direction = "prev")
+        .toCursor[StorageObject]
+        .head { case (_, storageObject) =>
+          storageObject.seqno
+        }.map(_.getOrElse(0))
     }
 
 }

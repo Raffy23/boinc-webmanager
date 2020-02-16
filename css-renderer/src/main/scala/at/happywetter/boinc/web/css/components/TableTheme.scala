@@ -16,13 +16,13 @@ object TableTheme extends StyleSheet.Standalone {
   import dsl._
 
   container.cssName - (
-    unsafeChild("div:first-child")(
+    unsafeChild("> div:first-child")(
       width :=! "calc(100% - 20px)",
       marginBottom(10 px),
       fontWeight.bold,
     ),
 
-    unsafeChild("div:last-child")(
+    unsafeChild("> div:last-child")(
       width :=! "max-content",
       float.right,
       marginRight(15 px),

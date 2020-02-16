@@ -31,7 +31,7 @@ object DataTable {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 
-  val PageSizes       = List(10, 20, 30, 40, 50, 100, 200)
+  val PageSizes: List[Int] = List(10, 20, 30, 40, 50, 100, 200)
   val DefaultPageSize = 30
 
   abstract class TableRow {
@@ -118,7 +118,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
               </a>
               {
               currentPage.zip(pages).map { case (page, pages) =>
-                <input type="number" value={page.toString} onchange={onPageChange} min="1" max={pages.toString}></input>
+                <input type="number" value={page.toString} onchange={onPageChange} min="1" max={(pages+1).toString}></input>
               }
               }
               / { pages }
