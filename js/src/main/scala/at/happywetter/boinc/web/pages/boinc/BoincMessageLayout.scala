@@ -2,8 +2,11 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.{Message, Notice}
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincMessageStyle => Style}
+import at.happywetter.boinc.web.helper.table.MessageTableModel.MessageTableRow
+import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.MessageCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
@@ -16,6 +19,8 @@ import org.scalajs.dom.raw.{DOMParser, HTMLElement}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.xml.Elem
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.table.DataModelConverter._
 
 /**
   * Created by: 
@@ -30,36 +35,30 @@ class BoincMessageLayout extends BoincClientLayout {
   private val messages = Var(List.empty[Message])
   private val notices = Var(List.empty[Notice])
 
+  private val messageTable = new DataTable[MessageTableRow](
+    headers = List(
+      ("table_project".localize, true),
+      ("table_time".localize, true),
+      ("table_msg_content".localize, false)
+    ),
+    tableStyle = List(TableTheme.table),
+    paged = true
+  )
+
 
   override def already(): Unit = onRender()
 
   override def onRender(): Unit = {
     NProgress.start()
 
-
-    MessageCache.getLastSeqNo(boincClientName).map{ seqno =>
-
+    MessageCache.getLastSeqNo(boincClientName).map { lastSavedSeqNo =>
       boinc
-        .getMessages(seqno)
-        .map{msg =>
-
-
-          // DEBUGGING STUFF
-          MessageCache.save(boincClientName, (seqno+1), msg.map(_.msg)).recover {
-            case ex: Throwable => ex.printStackTrace()
-          }
-
-          dom.window.setTimeout(
-            () => MessageCache.get(boincClientName, 0, 10).map(println).recover {
-              case ex: Throwable => ex.printStackTrace()
-            },
-            2500
-          )
-
-          messages := msg
-
-        }
-        .flatMap(_ =>
+        .getMessages(lastSavedSeqNo)
+        .flatMap { messages =>
+          MessageCache.save(boincClientName, messages)
+        }.map { _ =>
+          MessageCache.get(boincClientName).toRx(List.empty).map(messageTable.reactiveData := _)
+       }.flatMap(_ =>
           boinc
             .getNotices()
             .map(notice => notices := notice)
@@ -150,26 +149,9 @@ class BoincMessageLayout extends BoincClientLayout {
         </ul>
       </div>
       <div id="client-messages" style="display:none">
-        <table class={TableTheme.table.htmlClass}>
-          <thead>
-            <tr>
-              <th>{"table_project".localize}</th>
-              <th>{"table_time".localize}</th>
-              <th>{"table_msg_content".localize}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              messages.map(_.map(message =>
-                <tr class={Style.tableRow.htmlClass} data-prio={message.priority.toString}>
-                  <td>{message.project}</td>
-                  <td class={Style.dateCol.htmlClass}>{message.time.toDate}</td>
-                  <td>{message.msg}</td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
+        {
+          messageTable.component
+        }
       </div>
     </div>
   }

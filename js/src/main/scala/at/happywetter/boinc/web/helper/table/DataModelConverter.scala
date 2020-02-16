@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.boincrpc.{Project, Result}
+import at.happywetter.boinc.shared.boincrpc.{Message, Project, Result}
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
@@ -24,5 +24,8 @@ object DataModelConverter {
 
   implicit def hwClientConverter(data: List[HardwareStatusClient]): List[HardwareTableRow] =
     HardwareTableModel.convert(data)
+
+  implicit def messagesConvert(data: List[Message]): List[MessageTableModel.MessageTableRow] =
+    data.map(MessageTableModel.convert)
 
 }

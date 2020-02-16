@@ -1,9 +1,13 @@
 package at.happywetter.boinc.web.storage
 
+import at.happywetter.boinc.shared.boincrpc.Message
 import org.scalajs.dom.raw.{IDBCursorWithValue, IDBKeyRange, IDBRequest}
 
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
+
+import at.happywetter.boinc.shared.parser.messageParser
+import upickle.default._
 
 /**
  * Created by: 
@@ -23,20 +27,20 @@ object MessageCache extends DatabaseProvider {
     val msg: String = js.native
   }
 
-  def save(boincName: String, startSeqNo: Int, messages: List[String]): Future[Unit] =
+  def save(boincName: String, messages: List[Message]): Future[Unit] =
     transaction { transaction =>
-      messages.zipWithIndex.foreach { case (msg, idx) =>
+      messages.foreach { msg =>
         transaction.put(
           js.Dynamic.literal(
             "boincId" -> boincName,
-            "seqno" -> (idx+startSeqNo),
-            "msg" -> msg
+            "seqno" -> msg.seqno.toInt,
+            "msg" -> write(msg)
           )
         )
       }
     }
 
-  def get(boincName: String, lower: Int, upper: Int): Future[List[(Int, String)]] =
+  def get(boincName: String, lower: Int, upper: Int): Future[List[Message]] =
     transactionAsync { transaction =>
 
       val lowerBound = js.Array[js.Any](boincName, lower)
@@ -44,8 +48,8 @@ object MessageCache extends DatabaseProvider {
       val keyRange = IDBKeyRange.bound(lowerBound, upperBound)
 
       val cursor   = transaction.openCursor(keyRange)
-      val promise  = Promise[List[(Int,String)]]
-      var tmpQuery = List.empty[(Int,String)]
+      val promise  = Promise[List[Message]]
+      var tmpQuery = List.empty[Message]
 
       cursor.onsuccess = { event =>
         val cursorResult = event.target.asInstanceOf[IDBRequest].result
@@ -54,7 +58,7 @@ object MessageCache extends DatabaseProvider {
           val result = cursor.value.asInstanceOf[js.UndefOr[StorageObject]]
 
           result.toOption.foreach { result =>
-            tmpQuery = (result.seqno, result.msg) :: tmpQuery
+            tmpQuery = read[Message](result.msg) :: tmpQuery
           }
 
           cursor.continue()
@@ -71,6 +75,8 @@ object MessageCache extends DatabaseProvider {
 
       promise.future
     }
+
+  def get(name: String): Future[List[Message]] = ???
 
   def delete(name: String): Future[Int] =
     transactionAsync { tx =>
