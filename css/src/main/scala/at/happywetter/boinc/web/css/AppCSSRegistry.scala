@@ -34,7 +34,7 @@ object AppCSSRegistry {
       BoincStatisticsStyle,
       ProjectSwarmPageStyle,
       DashboardMenuStyle
-    )(GlobalRegistry.ProdMode)
+    )(GlobalRegistry.DevMode)
   }
 
 }

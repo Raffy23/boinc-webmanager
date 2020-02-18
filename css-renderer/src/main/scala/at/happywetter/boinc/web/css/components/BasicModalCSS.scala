@@ -35,11 +35,13 @@ object BasicModalCSS extends StyleSheet.Standalone {
     minWidth(300 px),
     maxWidth(60 %%),
     maxHeight :=! "calc(100% - 200px)",
-    overflow.auto
+    overflow.hidden
   )
 
   body.cssName - (
-    padding(2 px, 16 px)
+    padding(2 px, 16 px),
+    overflow.auto,
+    marginBottom(4 px)
     )
 
   header.cssName - (
@@ -53,8 +55,10 @@ object BasicModalCSS extends StyleSheet.Standalone {
   )
 
   footer.cssName - (
+    paddingTop(4 px),
     paddingBottom(4 px),
     paddingRight(10 px),
+    borderTop :=! "1px solid #DDD",
     textAlign.right
   )
 
@@ -67,6 +71,7 @@ object BasicModalCSS extends StyleSheet.Standalone {
     color(c"#FFFFFF"),
     cursor.pointer,
     margin(6 px, 6 px),
+    textDecoration := none,
 
     &.hover(
       backgroundColor(c"#74a9d8")

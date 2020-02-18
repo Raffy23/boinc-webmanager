@@ -2,8 +2,8 @@ package at.happywetter.boinc.web.helper.table
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
-import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientManager}
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
@@ -19,6 +19,7 @@ import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -37,8 +38,8 @@ object ProjectDataTableModel {
     val suspended: Var[Boolean] = Var(data.suspended)
   }
 
-  class ProjectTableRow(val project: ReactiveProject)(implicit boinc: BoincClient) extends DataTable.TableRow {
-    
+  class ProjectTableRow(val project: ReactiveProject)(implicit boinc: BoincClient, table: DataTable[ProjectTableRow]) extends DataTable.TableRow {
+
     override val columns: List[DataTable.TableColumn] = List(
       new TableColumn(Var(
         <a href={project.data.url} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
@@ -92,7 +93,6 @@ object ProjectDataTableModel {
       ), this) {
         override def compare(that: TableColumn): Int = ???
       }
-
     )
 
     override val contextMenuHandler: (Event) => Unit = (event) => {
@@ -155,7 +155,7 @@ object ProjectDataTableModel {
       }).recover(ErrorDialogUtil.showDialog)
     }
 
-    private lazy val jsShowDetailsAction: (Event) => Unit = (event) => {
+    private lazy val jsShowDetailsAction: (Event) => Unit = { event =>
       event.preventDefault()
 
       new OkDialog("workunit_dialog_properties".localize + " " + project.data.name,
@@ -204,13 +204,34 @@ object ProjectDataTableModel {
               <tr><td><b>{"project_dialog_credits_host".localize}</b></td><td>{project.data.hostTotalCredit}</td></tr>
               <tr><td><b>{"project_dialog_credits_havg".localize}</b></td><td>{project.data.hostAvgCredit}</td></tr>
             </tbody>
-          </table>
+          </table>,
+          <h4 class={BoincClientStyle.h4.htmlClass}>{"project_actions".localize}</h4>,
+          <div>
+            <a class={BasicModalStyle.button.htmlClass} href="#deleteProject"
+               onclick={jsDeleteProjectAction}>
+              {"delete".localize}
+            </a>
+          </div>
         )
       ).renderToBody().show()
     }
+
+    private lazy val jsDeleteProjectAction: Event => Unit = { event =>
+      NProgress.start()
+
+      boinc.project(project.data.url, action = ProjectAction.Remove).map { result =>
+        if (!result)
+          new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+            .renderToBody().show()
+        else
+          table.reactiveData.update(_.filterNot(_ eq this))
+
+        NProgress.done(true)
+      }
+    }
   }
 
-  def convert(project: Project)(implicit boinc: BoincClient): ProjectTableRow =
+  def convert(project: Project)(implicit boinc: BoincClient, table: DataTable[ProjectTableRow]): ProjectTableRow =
     new ProjectTableRow(new ReactiveProject(project))
 
   private[this] def updateCache(project: Project): String = {

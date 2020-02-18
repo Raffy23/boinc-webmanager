@@ -4,6 +4,7 @@ import at.happywetter.boinc.shared.boincrpc.{Message, Project, Result}
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
+import at.happywetter.boinc.web.pages.component.DataTable
 
 /**
   * Created by: 
@@ -19,7 +20,7 @@ object DataModelConverter {
     data.map(WuDataTableModel.convert)
 
   implicit def projectConverter
-  (data: List[Project])(implicit boinc: BoincClient): List[ProjectDataTableModel.ProjectTableRow] =
+  (data: List[Project])(implicit boinc: BoincClient, table: DataTable[ProjectDataTableModel.ProjectTableRow]): List[ProjectDataTableModel.ProjectTableRow] =
     data.map(ProjectDataTableModel.convert)
 
   implicit def hwClientConverter(data: List[HardwareStatusClient]): List[HardwareTableRow] =

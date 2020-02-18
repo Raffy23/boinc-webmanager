@@ -16,7 +16,11 @@ object BoincProjectCSS extends StyleSheet.Standalone {
   link.cssName -(
     cursor.pointer,
     textDecoration := none,
-    color(c"#333")
+    color(c"#333"),
+
+    &.hover (
+      textDecoration := "underline #333"
+    )
   )
 
   firstRowFixedWith.cssName -(

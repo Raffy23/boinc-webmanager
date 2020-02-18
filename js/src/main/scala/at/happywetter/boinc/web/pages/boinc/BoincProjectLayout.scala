@@ -16,6 +16,8 @@ import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.table.DataModelConverter
 
 import scala.xml.Elem
 
@@ -46,8 +48,8 @@ class BoincProjectLayout extends BoincClientLayout {
     )
   )
 
-
   override def render: Elem = {
+    implicit val implicitDataTable: DataTable[ProjectTableRow] = dataTable
     boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
 
     <div id="projects">
@@ -77,23 +79,29 @@ class BoincProjectLayout extends BoincClientLayout {
 
       //TODO: Use some cache ...
       ClientManager.queryCompleteProjectList().foreach(data => {
-        new ProjectAddDialog(data, (url, username, password, name) => {
+        lazy val projectAddDialog: ProjectAddDialog = new ProjectAddDialog(data, (url, username, password, name) => {
+
           boinc.attachProject(url, username, password, name).map(result => {
             NProgress.done(true)
 
             if(!result)
               new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
-                dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                projectAddDialog.focusUsernameFiled()
               }).renderToBody().show()
-            else
+            else {
+              implicit val implicitDataTable: DataTable[ProjectTableRow] = dataTable
               boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
+            }
 
             result
           }).recover{
-            case e => ErrorDialogUtil.showDialog(e); false
+            case e =>
+              ErrorDialogUtil.showDialog(e);
+              false
           }
-        }).renderToBody().show()
+        })
 
+        projectAddDialog.renderToBody().show()
         NProgress.done(true)
     })
   }

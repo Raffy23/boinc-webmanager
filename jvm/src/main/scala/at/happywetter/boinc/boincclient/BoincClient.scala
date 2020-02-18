@@ -172,9 +172,9 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     (this.execAction(s"<${action.toString}><project_url>$project</project_url><name>$name</name></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
-  override def project(name: String, action: ProjectAction): Future[Boolean] = Future {
+  override def project(url: String, action: ProjectAction): Future[Boolean] = Future {
     logger.trace("Set Project state at " + address + ":" + port)
-    (this.execAction(s"<${action.toString}><project_url>$name</project_url></${action.toString}>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<${action.toString}><project_url>$url</project_url></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
   override def getCCState: Future[CCState] = Future {
