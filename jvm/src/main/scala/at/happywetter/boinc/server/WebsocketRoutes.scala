@@ -89,7 +89,7 @@ object WebsocketRoutes {
   private implicit def convertWebSocketMessageToWebSocketFrame[T <: WebSocketMessage](msg: T)(implicit writer: Writer[T]): WebSocketFrame =
     Binary(ByteVector(writeBinary[T](msg)))
 
-  private val CloseGracefully = Close(1000).right.get
-  private val CloseWithUnknownRequst = Close(1008).right.get
+  private val CloseGracefully = Close(1000).toOption.get
+  private val CloseWithUnknownRequst = Close(1008).toOption.get
 
 }

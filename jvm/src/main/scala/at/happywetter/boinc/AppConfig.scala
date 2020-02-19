@@ -76,7 +76,7 @@ object AppConfig {
 
     import pureconfig._
     import pureconfig.generic.auto._
-    loadConfigOrThrow[Config](hocon)
+    ConfigSource.fromConfig(hocon).loadOrThrow[Config]
   }
 
   lazy val sharedConf = ServerSharedConfig(

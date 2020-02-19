@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.pages.swarm
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.shared.boincrpc.CCState
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseException}
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
@@ -58,9 +59,9 @@ object BoincSwarmPage {
   private implicit def integerToCCState(value: Int): UICCState.Value = UICCState.apply(value)
 
   private implicit def convertModetoUIState(mode: Modes.Value): UICCState.Value = mode match {
-    case Modes.Auto => UICCState.Auto
-    case Modes.Always => UICCState.Enabled
-    case Modes.Never => UICCState.Disabled
+    case Modes.Auto    => UICCState.Auto
+    case Modes.Always  => UICCState.Enabled
+    case Modes.Never   => UICCState.Disabled
     case Modes.Restore => UICCState.Auto
   }
 
@@ -82,8 +83,10 @@ class BoincSwarmPage extends SwarmPageLayout {
 
   override def beforeRender(params: Dictionary[String]): Unit = {
     super.beforeRender(params)
-    clients := ClientManager.clients.keys.map(name => (name, Var(None.asInstanceOf[Option[Either[ClientEntry, Exception]]]))).toMap
-    println(clients)
+
+    clients := ClientManager.clients.keys.map(name =>
+      (name, Var(Option.empty[Either[ClientEntry, Exception]]))
+    ).toMap
   }
 
   override def already(): Unit = onRender()
@@ -98,8 +101,9 @@ class BoincSwarmPage extends SwarmPageLayout {
           .getCCState
           .map { state =>
             clients.map { clients =>
-              val data: Option[Either[ClientEntry, Exception]] = Some(Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode)))
-              println(data)
+              val data: Option[Either[ClientEntry, Exception]] = Some(
+                Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode))
+              )
 
               if (clients.contains(boinc.hostname)) clients(boinc.hostname) := data
               else this.clients.update(v => v.updated(boinc.hostname, Var(data)))
@@ -142,7 +146,7 @@ class BoincSwarmPage extends SwarmPageLayout {
         </thead>
         <tbody>
           {
-            clients.map(_.map(client => {
+            clients.map(_.toSeq.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(client => {
                 <tr>
                   <td><input class={Style.checkbox.htmlClass} type="checkbox" data-client={client._1}></input>{injectErrorTooltip(client)}</td>
                   <td>{client._2.map(_.map(_.fold(_.run.toState, _ => "")).getOrElse("offline".localize))}</td>
@@ -269,8 +273,8 @@ class BoincSwarmPage extends SwarmPageLayout {
 
   private def transformToLoading(entry: Option[Either[ClientEntry, Exception]], f: ClientEntry => ClientEntry): Option[Either[ClientEntry, Exception]] = entry match {
       case None              => None
-      case Some(Left(entry)) => println(f(entry)); Some(Left(f(entry)))
       case Some(Right(_))    => None
+      case Some(Left(entry)) => Some(Left(f(entry)))
   }
 
 }

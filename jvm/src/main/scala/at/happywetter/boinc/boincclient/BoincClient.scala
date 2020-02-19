@@ -70,7 +70,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   private def readHMTL(): Document =
     Jsoup.parse(new String(readStringFromSocket().getBytes(encoding), "UTF-8"))
 
-  private def readStringFromSocket(): String = Stream.continually(read).takeWhile(_ != '\u0003').mkString
+  private def readStringFromSocket(): String = LazyList.continually(read).takeWhile(_ != '\u0003').mkString
 
   private def read: Char = {
     val c = reader.read()

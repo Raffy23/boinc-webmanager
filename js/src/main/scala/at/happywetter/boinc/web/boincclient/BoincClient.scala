@@ -6,6 +6,8 @@ import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.shared.webrpc.{AddProjectBody, BoincModeChange, ProjectRequestBody, WorkunitRequestBody}
 import at.happywetter.boinc.web.helper.FetchHelper
+import org.scalajs.dom
+import at.happywetter.boinc.web.hacks.Implicits._
 
 import scala.concurrent.Future
 
@@ -18,7 +20,7 @@ import scala.concurrent.Future
 class BoincClient(val hostname: String) extends BoincCoreClient {
   import at.happywetter.boinc.shared.parser._
 
-  private val baseURI = "/api/boinc/" + hostname + "/"
+  private val baseURI = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
   @inline def uri(cmd: BoincRPC.Command.Command): String = baseURI + cmd
   @inline def uri(cmd: BoincRPC.Command.Command, p: String) = baseURI + cmd + "/" + p
   @inline def uri(cmd: String): String = baseURI + cmd

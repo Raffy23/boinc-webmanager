@@ -18,11 +18,17 @@ object Implicits {
   object UriEncoderProvider extends js.Object {
     def encodeURI(str: String): String = js.native
     def encodeURIComponent(str: String): String = js.native
+
+    def decodeURI(str: String): String = js.native
+    def decodeURIComponent(str: String): String = js.native
   }
 
   implicit class RichWindow(val window: raw.Window) extends AnyVal {
     @inline def encodeURI(str: String): String = UriEncoderProvider.encodeURI(str)
     @inline def encodeURIComponent(str: String): String = UriEncoderProvider.encodeURIComponent(str)
+
+    @inline def decodeURI(str: String): String = UriEncoderProvider.decodeURI(str)
+    @inline def decodeURIComponent(str: String): String = UriEncoderProvider.decodeURIComponent(str)
   }
 
 }

@@ -22,9 +22,9 @@ import scala.util.Try
   */
 object BoincClientLayout {
 
-  def link(client: String, path: String): String = s"/view/boinc-client/$client/$path"
+  def link(client: String, path: String): String = s"/view/boinc-client/${dom.window.encodeURIComponent(client)}/$path"
 
-  def link(client: String): String = s"/view/boinc-client/$client"
+  def link(client: String): String = s"/view/boinc-client/${dom.window.encodeURIComponent(client)}"
 
 }
 
@@ -32,18 +32,16 @@ abstract class BoincClientLayout extends Layout {
 
   implicit var boincClientName: String = _
 
-  override def link: String = {
-    val name =
-      if(boincClientName != null) boincClientName
-      else ":client"
-
-    s"/view/boinc-client/${dom.window.encodeURI(name)}/$path"
-  }
+  override def link: String =
+    if(boincClientName != null)
+      s"/view/boinc-client/${dom.window.encodeURIComponent(boincClientName)}/$path"
+    else
+      s"/view/boinc-client/:client/$path"
 
   protected implicit var boinc: BoincClient = _
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    println(s"BoincClientLayout.beforeRender(${params.toList})")
+    //println(s"BoincClientLayout.beforeRender(${params.toList})")
 
     if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]]) {
       dom.console.error("Unable to instantiate Boinc Client Layout without params!")

@@ -3,7 +3,7 @@ package at.happywetter.boinc.boincclient.parser
 import at.happywetter.boinc.shared.boincrpc.Message
 import org.jsoup.nodes.Document
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Created by: 

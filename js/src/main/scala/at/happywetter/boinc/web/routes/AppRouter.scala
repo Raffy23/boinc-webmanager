@@ -26,7 +26,7 @@ object AppRouter {
   }
 
   def addLayout(layout: Layout): Unit = {
-    println(s"addLayout($layout) => ${layout.link}")
+    //println(s"addLayout($layout) => ${layout.link}")
 
     routes.add(layout)
     router.on(
@@ -47,7 +47,7 @@ object AppRouter {
 
   def navigate(layout: Layout): Unit = this.navigate(layout.link)
   def navigate(page: String): Unit = {
-    println(s"AppRouter.navigate($page)")
+    //println(s"AppRouter.navigate($page)")
     router.navigate(page, absolute = true)
   }
 
