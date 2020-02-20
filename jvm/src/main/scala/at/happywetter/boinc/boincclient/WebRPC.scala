@@ -1,15 +1,13 @@
 package at.happywetter.boinc.boincclient
 
-import at.happywetter.boinc.AppConfig
-import at.happywetter.boinc.AppConfig.WebRPCRule
-import at.happywetter.boinc.boincclient.webrpc.{ProjectRules, ServerStatusParser}
+import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
 import at.happywetter.boinc.shared.webrpc._
+import scalaj.http.{Http, HttpOptions, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
 import scala.xml.{NodeSeq, XML}
-import scalaj.http.{Http, HttpOptions, HttpRequest}
 
 /**
   * Created by: 
@@ -43,19 +41,20 @@ object WebRPC {
   //}
 
   //TODO:
-  def getServerStatus(url: String)(implicit config: AppConfig.WebRPC): Future[ServerStatus] = Future {
+  def getServerStatus(url: String)(/*implicit config: AppConfig.WebRPC*/): Future[ServerStatus] = Future {
     val request =
       Http(s"$url/server_status.php?xml=1")
         .header("Accept", "application/xml")
         .timeout(connTimeoutMs = 30000, readTimeoutMs = 60000)
         .option(HttpOptions.followRedirects(true))
 
-    config.rules.getOrElse(url, WebRPCRule(config.parser.default)).serverStatus match {
-      case ProjectRules.UseXMLParserForEmbeddedXML => ServerStatusParser.fromHtmlXML(request.asXML)
-      case ProjectRules.UseXMLParser               => ServerStatusParser.fromXML(request.asXML)
-      case ProjectRules.UseHtmlParser              => null
-    }
+    //config.rules.getOrElse(url, WebRPCRule(config.parser.default)).serverStatus match {
+    //  case ProjectRules.UseXMLParserForEmbeddedXML => ServerStatusParser.fromHtmlXML(request.asXML)
+    //  case ProjectRules.UseXMLParser               => ServerStatusParser.fromXML(request.asXML)
+    //  case ProjectRules.UseHtmlParser              => null
+    //}
 
+    ServerStatusParser.fromXML(request.asXML)
   }
 
   def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {

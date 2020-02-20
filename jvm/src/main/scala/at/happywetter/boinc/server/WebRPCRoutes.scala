@@ -19,7 +19,7 @@ object WebRPCRoutes extends ResponseEncodingHelper {
 
   object ServerParamDecoder extends QueryParamDecoderMatcher[String]("server")
 
-  def apply(implicit conf: AppConfig.WebRPC): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(/*implicit conf: AppConfig.WebRPC*/): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case request @ GET -> Root => NotAcceptable()
 

@@ -96,6 +96,10 @@ object TableTheme extends StyleSheet.Standalone {
     unsafeChild("tbody>tr")(
       &.hover(
         backgroundColor(c"#d7e6f4")
+      ),
+
+      unsafeChild("td[data-type=number]")(
+        textAlign.right
       )
     )
   )

@@ -24,7 +24,7 @@ object AppConfig {
                     hostGroups: Map[String, List[String]],
                     hardware: Option[Hardware],
                     serviceMode: Boolean,
-                    webRPC: WebRPC)
+                    /*webRPC: WebRPC*/)
 
   case class Server(address: String,
                     port: Short,
@@ -58,9 +58,9 @@ object AppConfig {
                       cacheTimeout: Long
   )
 
-  case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])
-  case class Parser(default: Int = ProjectRules.UseXMLParser)
-  case class WebRPCRule(serverStatus: Int)
+  //case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])
+  //case class Parser(default: Int = ProjectRules.UseXMLParser)
+  //case class WebRPCRule(serverStatus: Int)
 
 
   val conf: Config = {

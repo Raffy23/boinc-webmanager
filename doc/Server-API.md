@@ -10,7 +10,7 @@ If the client does support gzip compression it will used to compress the `/langu
 
 ### Authentication
 To be able to use all REST functions the client has to login and retrieve a JWT-Token.
-The Token is valid 1 hour and should be refreshed soon enough to avoid the Forbidden error-code
+The Token is valid 1 hour and should be refreshed periodically.
 
 * **GET** `/auth`: Returns a nonce which should be used to hash the Password with
 * **POST** `/auth`: Returns the JWT-Token, POST Parameters must be: `username, passwordHash, nonce`
@@ -21,13 +21,9 @@ After acquiring a Token make sure to set the HTTP-Header `X-Authorization` and s
 REST-Call otherwise the Server might not return the expected results 
 
 ### BOINC RPC
-The URL Root of all BOINC REST-Class is `/api/boinc` and needs the `X-Authorization` Header populated 
-with a JWT-Token. Most of the Calls do mirror the XML Interface of the BOINC RPC 
-calls and provice the data as JSON. 
-
-*Please not that the BOINC Client in the Background can only sequentially process 
-Requests. This leads sometimes to the issue that some Requests are stalled a couple of
-seconds. The Server will not open a new Connection to the Core Client!* 
+The URL root of all BOINC REST endpoint is `/api/boinc` and requires the `X-Authorization` Header 
+to be populated with a JWT-Token. Most of the calls do mirror the XML Interface of the BOINC RPC 
+calls and provide the data as JSON or messapack depending on the requested encoding HTTP header.
 
 * **GET** `/`: This call will return a List of Clients
 * **GET** `/config`: Some Settings from the `application.conf` 
@@ -57,14 +53,22 @@ seconds. The Server will not open a new Connection to the Core Client!*
   * `cpu`: Change the mode of the CPU 
   * `gpu`: Change the mode of the GPU
   * `network`: Change the mode of the Network usage
-  * `global_prefs_override`: Sets the Settings of the Core Client _(Core Client will not automatically apply it!)_
+  * `global_prefs_override`: Sets the Settings of the Core Client 
+    _(Core Client will not automatically apply it! Reload the client settings with an additional 
+      *PATCH* request)_
   
 * **POST** `/:client/tasks/:task`: Change the state of the given Task
 
 * **PATCH** `/:client/global_prefs_override`: Let's the client reload the Settings file
   
 ### BOINC WebRPC
-*This is currently not exported by the Webserver!*
+*Note: WebRPC is currently under heavy development and not all endpoints are implemendted or work with
+every project*
+
+The URL root of the WebRPC endpoint is `/api/webrpc/` and does follow the same rules as the BOINC RPC
+endpoint.
+
+* **GET** `statu?server=:project_uri`: Requests the project server status, content may vary depending on the project
 
 ### Extensions
-* The Hardware Extensions is found at `/api/hardware`. ([Documentation](doc/extension/Hardware.md))
+* The Hardware Extensions is found at `/api/hardware`. ([Documentation](extension/Hardware.md))

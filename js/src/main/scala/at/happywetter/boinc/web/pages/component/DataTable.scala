@@ -23,11 +23,12 @@ import scala.xml.{Elem, Node, Text}
   */
 object DataTable {
 
-  abstract class TableColumn(val content: Rx[Node], val datasource: TableRow) extends Ordered[TableColumn] {}
+  abstract class TableColumn(val content: Rx[Node], val datasource: TableRow, val dataEntry: Option[String] = None) extends Ordered[TableColumn] {}
+
   class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
-  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map(d => d.toString), null) {
+  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map("%.4f".format(_)), null, dataEntry = Some("number")) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 
@@ -41,7 +42,7 @@ object DataTable {
 
     lazy val htmlRow: Elem = {
       <tr oncontextmenu={contextMenuHandler}>
-        {columns.map(column => <td>{column.content}</td>)}
+        {columns.map(column => <td data-type={column.dataEntry}>{column.content}</td>)}
       </tr>
     }
   }
