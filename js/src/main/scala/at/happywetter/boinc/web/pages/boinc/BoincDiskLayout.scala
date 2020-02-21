@@ -1,9 +1,12 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.DiskUsage
+import at.happywetter.boinc.shared.boincrpc.DiskUsage
 import at.happywetter.boinc.web.boincclient.BoincFormater
+import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.chartjs._
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}
@@ -11,12 +14,10 @@ import org.scalajs.dom
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom.raw.HTMLCanvasElement
 
-import scala.collection.mutable
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.xml.Elem
-import BoincFormater.Implicits._
-import at.happywetter.boinc.web.helper.RichRx._
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 
@@ -48,8 +49,8 @@ class BoincDiskLayout extends BoincClientLayout {
     })
 
     <div>
-      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-pie-chart"></i>
+      <h3 class={BoincClientStyle.pageHeader.htmlClass}>
+        <i class="fas fa-chart-pie" aria-hidden="true"></i>
         {"disk_usage".localize}
       </h3>
 

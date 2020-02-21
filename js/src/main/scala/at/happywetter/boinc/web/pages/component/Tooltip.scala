@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.pages.component.Tooltip.Style
+import at.happywetter.boinc.web.css.definitions.components.{Tooltip => Style}
+import at.happywetter.boinc.web.css.CSSIdentifier
 import mhtml.{Rx, Var}
 
 import scala.language.postfixOps
 import scala.xml.{Elem, Node}
-import scalacss.ProdDefaults._
+import at.happywetter.boinc.web.util.I18N._
 
 /**
   * Created by: 
@@ -15,52 +16,26 @@ import scalacss.ProdDefaults._
   */
 object Tooltip {
 
-  object Style extends StyleSheet.Inline {
-    import dsl._
-
-    val tooltipText = style(
-      position.absolute,
-      visibility.hidden,
-      width(100 px),
-      backgroundColor :=! "rgba(3,3,3,0.80)",
-      color.white,
-      textAlign.center,
-      padding(5 px, 5 px, 5 px, 5 px),
-      zIndex(9),
-      boxShadow := " 0 12px 18px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.22)",
+  def warningTriangle(label: String): Tooltip =
+    new Tooltip(
+      Var(label.localize),
+      <i class={"fa fa-exclamation-triangle"} aria-hidden="true"></i>,
+      style = Some(Style.errorIcon)
     )
 
-    val topText = style(
-      bottom(100 %%),
-      left(50 %%),
-      marginLeft(-50 px),
-      marginBottom(4 px)
+  def loadingSpinner(label: String): Tooltip =
+    new Tooltip(
+      Var(label.localize),
+      <i class={"fa fa-spinner fa-pulse"} aria-hidden="true"></i>,
+      style = Some(Style.loadingIcon)
     )
-
-    val leftText = style(
-      bottom.auto,
-      right(128 %%),
-      top(-5 px)
-    )
-
-    val tooltip = style(
-      position.relative,
-      display.inlineBlock,
-
-      &.hover(
-        unsafeChild(s".${tooltipText.htmlClass}")(
-          visibility.visible
-        )
-      )
-    )
-  }
 
 }
-
-class Tooltip(text: Rx[String], parent: Elem, textOrientation: StyleA = Style.topText, tooltipId: Option[String] = None) {
+class Tooltip(text: Rx[String], parent: Elem, textOrientation: CSSIdentifier = Style.topText,
+              tooltipId: Option[String] = None, val style: Option[CSSIdentifier] = None) {
 
   val component: Elem = {
-    <div class={Style.tooltip.htmlClass}>
+    <div class={Seq(Some(Style.tooltip.htmlClass), style.map(_.htmlClass)).flatten.mkString(" ")}>
       <span class={Style.tooltipText.htmlClass + " " + textOrientation.htmlClass}>{text}</span>
       {parent}
     </div>

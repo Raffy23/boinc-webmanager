@@ -1,15 +1,16 @@
 package at.happywetter.boinc.web.helper
 
-import at.happywetter.boinc.shared.User
+import at.happywetter.boinc.shared.webrpc.User
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.hacks.TextEncoder
-import at.happywetter.boinc.web.helper.ResponseHelper.ErrorResponseFeature
+import at.happywetter.boinc.web.pages.LoginPage
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
-import org.scalajs.dom.experimental.{Fetch, HttpMethod, RequestInit}
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
 
@@ -21,15 +22,16 @@ import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
   */
 object AuthClient {
 
+  import at.happywetter.boinc.shared.parser._
+  type AuthToken = String
+
   private val TOKEN_VALID_TIME = 58*60*1000
   private var refreshTimeoutHandler: Int = -1
 
   def validate(username: String, password: String): Future[Boolean] = {
     var n = ""
 
-    Fetch.fetch("/auth", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .toFuture
-      .flatMap(_.tryGet)
+    FetchHelper.get[String]("/auth")
       .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
@@ -50,24 +52,30 @@ object AuthClient {
       }
   }
 
-  private def requestToken(user: User): Future[String] = {
-    import io.circe.generic.auto._
-    import io.circe.syntax._
+  def validateAction(done: js.Function0[Unit]): Unit = {
+    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+    AuthClient.tryLogin.foreach {
+      case true => done()
+      case false => AppRouter.navigate(LoginPage.link)
+    }
+  }
+
+  private def requestToken(user: User): Future[AuthToken] = {
 
     if (user == null || user.username == null || user.passwordHash == null || user.nonce == null)
       return Future.failed(new RuntimeException("User case class is not valid! ("+user+")"))
 
-    Fetch.fetch("/auth", RequestInit(method = HttpMethod.POST, headers = FetchHelper.header, body = user.asJson.noSpaces))
-      .toFuture
-      .flatMap(_.tryGet)
+    import upickle.default._
+    FetchHelper.post[User, AuthToken]("/auth", user)
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {
     dom.crypto.crypto.subtle
       .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
       .toFuture
-      .map((buffer) => {
-        val hex = StringBuilder.newBuilder
+      .map(buffer => {
+        val hex = new StringBuilder()
         val view = new DataView(buffer.asInstanceOf[ArrayBuffer])
         for (i <- 0 until view.byteLength by 2) {
           hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
@@ -93,10 +101,8 @@ object AuthClient {
     }
   }
 
-  def refreshToken(): Future[String] = {
-    Fetch.fetch("/auth/refresh", RequestInit(method = HttpMethod.GET, headers = FetchHelper.header))
-      .toFuture
-      .flatMap(_.tryGet)
+  def refreshToken(): Future[AuthToken] = {
+    FetchHelper.get[AuthToken]("/auth/refresh")
       .map(token => {
         saveToken(token)
         token

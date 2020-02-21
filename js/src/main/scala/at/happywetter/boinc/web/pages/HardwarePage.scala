@@ -1,13 +1,13 @@
 package at.happywetter.boinc.web.pages
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
 
@@ -26,11 +26,9 @@ object HardwarePage extends Layout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    PageLayout.clearNav()
+    AuthClient.validateAction(done)
   }
 
   private var clients: Future[List[HardwareStatusClient]] = _
@@ -62,8 +60,8 @@ object HardwarePage extends Layout {
 
   override def render: Elem = {
     <div id="hardware">
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-microchip"></i>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
+        <i class="fa fa-microchip" aria-hidden="true"></i>
         {"hardware_header".localize}
       </h2>
 

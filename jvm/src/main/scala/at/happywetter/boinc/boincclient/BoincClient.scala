@@ -1,24 +1,19 @@
 package at.happywetter.boinc.boincclient
 
 import java.io.InputStream
-import java.math.BigInteger
 import java.net.{InetAddress, Socket}
-import java.security.MessageDigest
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction.ProjectAction
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared.{BoincRPC, _}
+import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.{NodeSeq, XML}
-import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-
-import scala.util.Try
 
 /**
   * Basic Class for the BOINC Communication
@@ -75,7 +70,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   private def readHMTL(): Document =
     Jsoup.parse(new String(readStringFromSocket().getBytes(encoding), "UTF-8"))
 
-  private def readStringFromSocket(): String = Stream.continually(read).takeWhile(_ != '\u0003').mkString
+  private def readStringFromSocket(): String = LazyList.continually(read).takeWhile(_ != '\u0003').mkString
 
   private def read: Char = {
     val c = reader.read()
@@ -110,7 +105,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     val result = this.xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
     authenticated = (result \ "_").xml_==(<authorized/>)
-    logger.trace("Client connection is " + (if(authenticated) "" else " *NOT* authenticated!"))
+    logger.trace(s"Client connection is ${if(authenticated) "" else "*NOT*"} authenticated!")
 
     authenticated
   }
@@ -177,9 +172,9 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     (this.execAction(s"<${action.toString}><project_url>$project</project_url><name>$name</name></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
-  override def project(name: String, action: ProjectAction): Future[Boolean] = Future {
+  override def project(url: String, action: ProjectAction): Future[Boolean] = Future {
     logger.trace("Set Project state at " + address + ":" + port)
-    (this.execAction(s"<${action.toString}><project_url>$name</project_url></${action.toString}>") \ "success").xml_==(<success/>)
+    (this.execAction(s"<${action.toString}><project_url>$url</project_url></${action.toString}>") \ "success").xml_==(<success/>)
   }
 
   override def getCCState: Future[CCState] = Future {

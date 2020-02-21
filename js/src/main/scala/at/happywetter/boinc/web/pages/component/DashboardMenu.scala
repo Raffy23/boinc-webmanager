@@ -1,18 +1,18 @@
 package at.happywetter.boinc.web.pages.component
 
 import at.happywetter.boinc.web.helper.ServerConfig
-import at.happywetter.boinc.web.routes.AppRouter.{DashboardLocation, HardwareLocation, SettingsLocation, SwarmControlLocation}
+import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
+import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
 import scala.xml.Elem
-import scalacss.ProdDefaults._
 
 /**
   * Created by: 
@@ -22,84 +22,33 @@ import scalacss.ProdDefaults._
   */
 object DashboardMenu {
 
-  object Style extends StyleSheet.Inline {
-
-    import dsl._
-
-    val menu = style(
-      position.fixed,
-      overflowX.auto,
-      bottom.`0`,
-      top(50 px),
-      listStyleType := "none",
-      margin.`0`,
-      padding(15 px, 0 px, 0 px, 0 px),
-      backgroundColor(c"#e6e6e6"),
-      width(207 px),
-      border :=! "1px solid #EEE",
-      boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
-
-      media.maxWidth(690 px)(
-        top(100 px)
-      )
-    )
-
-    val elem = style(
-      unsafeChild("a")(
-        display.block,
-        width(207 px),
-        textDecoration := "none",
-        padding(10 px, 15 px),
-        boxSizing.borderBox,
-        color(c"#333"),
-
-        &.hover(
-          backgroundColor(c"#74a9d8"),
-          color.white
-        ),
-
-        unsafeChild("i")(
-          marginRight(10 px)
-        )
-      )
-    )
-
-    val active = style(
-      backgroundColor(c"#428bca"),
-      color :=! "white !important"
-    )
-
-    val clickable = style(
-      cursor.pointer
-    )
-  }
-
   private val viewState: Var[String] = Var("display:block")
-  private val hwMenuEntry: Var[Elem] = Var(<span id="config-hardware-disabled"></span>)
+  private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)
   processSeverConfig()
 
-  trait MenuEntry
-  case class TopLevelEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
-  case class SublistEntry(name: String, href: String, visible: Var[Boolean] = Var(false),
+  class MenuEntry(val name: String, val href: String)
+  case class TopLevelEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
+  case class SublistEntry(override val name: String, override val href: String, visible: Var[Boolean] = Var(false),
                           subMenuRef: String, reference: Option[String]=None,
-                          subMenu: Var[List[SubMenuEntry]] = Var(List.empty)) extends MenuEntry
-  case class SubMenuEntry(name: String, href: String, reference: Option[String]=None) extends MenuEntry
+                          subMenu: Var[List[SubMenuEntry]] = Var(List.empty)) extends MenuEntry(name, href)
+  case class SubMenuEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
 
-  private val menuEntries: Var[List[MenuEntry]] = Var(List.empty[MenuEntry])
+  private val menuComputers: Var[List[MenuEntry]] = Var(List.empty)
+  private val menuGroups: Var[List[MenuEntry]] = Var(List.empty)
 
   def component: Elem = {
     <ul class={Style.menu.htmlClass} id="dashboard-menu" style={viewState}>
       <li class={Style.elem.htmlClass}>
-        <a href={DashboardLocation.link} onclick={masterSelectionListener}
+        <a href={Dashboard.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="dashboard">
-          <i class="fa fa-tachometer"></i>
+          <i class="fa fa-tachometer-alt" aria-hidden="true"></i>
           {"dashboard_menu_home".localize}
         </a>
       </li>
       <li class={Style.elem.htmlClass}>
-        <a href={SwarmControlLocation().link} onclick={masterSelectionListener}
+        <a href={BoincSwarmPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="swarm_control">
-          <i class="fa fa-industry"></i>
+          <i class="fa fa-industry" aria-hidden="true"></i>
           {"dashboard_swarm_control".localize}
         </a>
       </li>
@@ -107,23 +56,31 @@ object DashboardMenu {
       {hwMenuEntry}
 
       <li class={Style.elem.htmlClass}>
-        <a href={SettingsLocation.link} onclick={masterSelectionListener}
+        <a href={SettingsPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="settings">
-          <i class="fa fa-cog"></i>
+          <i class="fa fa-cog" aria-hidden="true"></i>
           {"dashboard_menu_settings".localize}
         </a>
       </li>
 
-      <hr id="menu-entry-spliter"/>
+      <li class={Style.elem.htmlClass}>
+        <a href={WebRPCProjectPage.link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="dashboard_webrpc">
+          <i class="fa fa-cloud" aria-hidden="true"></i>
+          {"dashboard_webrpc".localize}
+        </a>
+      </li>
+
+    <li><hr id="menu-entry-spliter"/></li>
 
       <li class={Style.elem.htmlClass}>
         <h2 style="padding-left:5px">
-          <i class="fa fa-cubes"  style="margin-right:8px"></i>
+          <i class="fa fa-desktop" aria-hidden="true" style="margin-right:8px"></i>
           {"dashboard_menu_computers".localize}
         </h2>
       </li>
       {
-        menuEntries.map(_.map {
+        menuComputers.map(_.sortBy(_.name).map {
           case entry: TopLevelEntry =>
             <li class={Style.elem.htmlClass}>
               <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
@@ -138,12 +95,50 @@ object DashboardMenu {
                  data-menu-ref={entry.subMenuRef} onclick={subMenuListener(entry)}>
                 <i class={entry.visible.map(icon => s"fa fa-caret-${if(icon) "down" else "right"}")}></i>
                 {entry.name}
+                <span class={Style.subMenuHosts.htmlClass}>{entry.subMenu.map(_.size)}</span>
+              </a>
+
+              <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>
+                {entry.subMenu.map(_.map(entry =>
+                <li class={Style.elem.htmlClass}>
+                  <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener} style="width:unset">
+                    {entry.name}
+                  </a>
+                </li>
+              ))}
+              </ul>
+            </li>
+        })
+      }
+      <li class={Style.elem.htmlClass}>
+        <h2 style="padding-left:5px">
+          <i class="fa fa-cubes" aria-hidden="true" style="margin-right:8px"></i>
+          {"dashboard_menu_groups".localize}
+        </h2>
+      </li>
+      {
+        menuGroups.map(_.sortBy(_.name).map {
+          case entry: TopLevelEntry =>
+            <li class={Style.elem.htmlClass}>
+              <a href={entry.href} data-menu-id={entry.reference} data-navigo={true}
+                 onclick={selectionListener}>
+                {entry.name}
+              </a>
+            </li>
+
+          case entry: SublistEntry =>
+            <li class={Seq(Style.elem.htmlClass, Style.clickable.htmlClass).mkString(" ")}>
+              <a class={ Style.clickable.htmlClass} data-menu-id={entry.reference}
+                 data-menu-ref={entry.subMenuRef} onclick={subMenuListener(entry)}>
+                <i class={entry.visible.map(icon => s"fa fa-caret-${if(icon) "down" else "right"}")}></i>
+                {entry.name}
+                <span class={Style.subMenuHosts.htmlClass}>{entry.subMenu.map(_.size)}</span>
               </a>
 
               <ul data-submenu-id={entry.subMenuRef} style={entry.visible.map(v => s"display:${if(v) "block" else "none"}")}>
                 {entry.subMenu.map(_.map(entry =>
                   <li class={Style.elem.htmlClass}>
-                    <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener}>
+                    <a href={entry.href} data-menu-id={entry.reference} data-navigo={true} onclick={selectionListener} style="width:unset">
                       {entry.name}
                     </a>
                   </li>
@@ -166,7 +161,7 @@ object DashboardMenu {
       if (config.hardware) {
         hwMenuEntry :=
           <li class={Style.elem.htmlClass}>
-            <a href={HardwareLocation.link} onclick={masterSelectionListener}
+            <a href={HardwarePage.link} onclick={masterSelectionListener}
                data-navigo={true} data-menu-id="dashboard_hardware">
               <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
             </a>
@@ -207,19 +202,19 @@ object DashboardMenu {
     }
   }
 
-  def addMenu(linkUrl: String, elementName: String, reference: Option[String] = None): Unit =
-    menuEntries.update(_ :+ TopLevelEntry(elementName, linkUrl, reference))
+  def addComputer(linkUrl: String, elementName: String, reference: Option[String] = None): Unit =
+    menuComputers.update(_ :+ TopLevelEntry(elementName, linkUrl, reference))
 
-  def addSubMenu(elementName: String, menuReference: String, reference: Option[String] = None): Unit =
-    menuEntries.update(_ :+ SublistEntry(elementName, "#", Var(false), menuReference, reference))
+  def addGroup(elementName: String, menuReference: String, reference: Option[String] = None): Unit =
+    menuGroups.update(_ :+ SublistEntry(elementName, "#", Var(false), menuReference, reference))
 
-  def addSubMenuItem(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None): Unit = {
+  def addComputerToGroup(linkUrl: String, elementName: String, submenu: String, reference: Option[String] = None): Unit = {
     def find(menu: List[MenuEntry]): SublistEntry =
       menu.find(x =>
         x.isInstanceOf[SublistEntry] && x.asInstanceOf[SublistEntry].subMenuRef == submenu
       ).get.asInstanceOf[SublistEntry]
 
-    menuEntries.update(menu => {
+    menuGroups.update(menu => {
       find(menu).subMenu.update(_ :+ SubMenuEntry(elementName, linkUrl, reference))
       menu
     })

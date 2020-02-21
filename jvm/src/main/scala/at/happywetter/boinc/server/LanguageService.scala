@@ -1,10 +1,14 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.util.ResourceWalker
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
-import scala.io.{Codec, Source}
+import scala.io.{Source, Codec => IOCodec}
 import scala.util.Try
+import upickle.default._
+import cats.effect._
+import org.http4s._, org.http4s.dsl.io._
 
 /**
   * Created by: 
@@ -12,7 +16,7 @@ import scala.util.Try
   * @author Raphael
   * @version 29.08.2017
   */
-object LanguageService {
+object LanguageService extends ResponseEncodingHelper {
 
   val languages: List[(String, String, String)] =
     ResourceWalker
@@ -24,20 +28,10 @@ object LanguageService {
         (language, lang("language_name"), lang("language_icon"))
       })
 
-  import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-  import org.http4s.circe._
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
-  def apply(): HttpService[IO] = HttpService[IO] {
-
-    case GET -> Root => Ok(languages.asJson)
-    case GET -> Root / lang =>
-      Try(
-        Ok(
-          load(lang).asJson
-        )
-      ).getOrElse(NotFound())
+    case request @ GET -> Root => Ok(languages, request)
+    case request @ GET -> Root / lang => Try(Ok(load(lang), request)).getOrElse(NotFound())
 
   }
 
@@ -45,7 +39,7 @@ object LanguageService {
     val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
     val ins  = ResourceWalker.getStream(path)
 
-    val confString: String = Source.fromInputStream(ins)(Codec.UTF8).getLines().mkString("\n")
+    val confString: String = Source.fromInputStream(ins)(IOCodec.UTF8).getLines().mkString("\n")
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._

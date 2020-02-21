@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.ApplicationError
+import at.happywetter.boinc.shared.webrpc.ApplicationError
 
 /**
   * Created by: 

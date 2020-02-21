@@ -1,9 +1,9 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.Message
+import at.happywetter.boinc.shared.boincrpc.Message
 import org.jsoup.nodes.Document
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Created by: 
@@ -20,7 +20,7 @@ object MessageParser {
         element.getElementsByTag("pri").first().text().toInt,
         element.getElementsByTag("seqno").first().text().toLong,
         element.getElementsByTag("time").first().text().toLong,
-        element.textNodes().asScala.mkString("\n")
+        element.textNodes().asScala.map(_.getWholeText).mkString("\n").trim
       )
     )
 

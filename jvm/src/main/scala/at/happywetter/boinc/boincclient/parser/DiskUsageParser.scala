@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.DiskUsage
+import at.happywetter.boinc.shared.boincrpc.DiskUsage
 
 import scala.collection.mutable
 import scala.xml.NodeSeq
@@ -15,9 +15,7 @@ object DiskUsageParser {
   def fromXML(node: NodeSeq): DiskUsage = {
     val data: mutable.HashMap[String,Double] = new mutable.HashMap[String,Double]
 
-    (node \ "project") foreach {
-      case(child) => data += ((child \ "master_url").text -> (child \ "disk_usage").text.toDouble)
-    }
+    (node \ "project") foreach (child => data += ((child \ "master_url").text -> (child \ "disk_usage").text.toDouble))
 
     DiskUsage(data.toMap
       ,(node \ "d_total").text.toDouble

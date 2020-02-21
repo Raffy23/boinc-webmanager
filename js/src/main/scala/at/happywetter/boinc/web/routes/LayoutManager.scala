@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.routes
 
+import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.{Layout, PageLayout}
 import mhtml.Var
@@ -22,16 +23,19 @@ object LayoutManager {
   private val mainContent = Var[Elem](<div>{childLayout.map(_.render)}</div>)
 
   def init(): Unit = {
+    dom.console.log("LayoutManager.init()")
     rootElement.innerHTML = ""
     mhtml.mount(rootElement, PageLayout.heading)
+    dom.console.log("LayoutManager.intt(): after mhtml.mount rootelement")
     mhtml.mount(rootElement,
       <main>
         {DashboardMenu.component}
-        <div id="client-container" class={PageLayout.Style.clientContainer.htmlClass}>
+        <div id="client-container" class={PageLayoutStyle.clientContainer.htmlClass}>
           {mainContent}
         </div>
       </main>
     )
+    dom.console.log("LayoutManager.init(): finished")
   }
 
   def renderLayout(params: js.Dictionary[String], page: Layout): Unit = {

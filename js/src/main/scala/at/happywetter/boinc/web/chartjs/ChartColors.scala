@@ -8,7 +8,7 @@ package at.happywetter.boinc.web.chartjs
   */
 object ChartColors {
 
-  lazy val stream: Stream[String] = Stream.continually(colors.toStream).flatten
+  lazy val stream: LazyList[String] = colors.to(LazyList) #::: stream
 
   val colors = List(
     "#CF631D",

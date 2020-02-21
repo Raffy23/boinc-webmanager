@@ -1,12 +1,11 @@
 package at.happywetter.boinc.web.storage
 
-import at.happywetter.boinc.shared.Workunit
-import at.happywetter.boinc.web.helper.CompatibilityTester
-import org.scalajs.dom.raw.IDBRequest
+import at.happywetter.boinc.shared.boincrpc.Workunit
+import org.scalajs.dom.raw.{IDBCursorWithValue, IDBRequest}
 
 import scala.concurrent.Future
 import scala.scalajs.js
-import scala.scalajs.js.Promise
+import scala.scalajs.js.{Date, Promise}
 
 /**
   * Created by: 
@@ -15,33 +14,52 @@ import scala.scalajs.js.Promise
   * @version 04.08.2017
   */
 object AppSettingsStorage extends DatabaseProvider {
-  private implicit val objStore: String = "workunit_storage"
-  private implicit val storeNames = js.Array("workunit_storage")
 
-  import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  private[storage] implicit val objStore: String = "workunit_storage"
+  private implicit val storeNames: js.Array[String] = js.Array(objStore)
 
   @js.native
   private trait StorageObject extends js.Object {
     val appName: String = js.native
     val client: String = js.native
     val wuname: String = js.native
+    val timestamp: Double = js.native
   }
 
   def save(boincName: String, wu: Workunit): Future[Unit] =
-    if (CompatibilityTester.isFirefox) firefoxTransaction(_.put(toJSLiteral(boincName, wu)))
-    else transaction.map(f => f.put(toJSLiteral(boincName, wu)))
+    transaction(_.put(toJSLiteral(boincName, wu)))
 
-  def get(boincName: String, wuName: String): Future[Option[Workunit]] = {
-    val key = new js.Array[String]
-    key.push(boincName)
-    key.push(wuName)
+  def get(boincName: String, wuName: String): Future[Option[Workunit]] =
+    transactionAsync(f => unpack(f.get(js.Array[String](boincName, wuName))))
 
-    if (CompatibilityTester.isFirefox) firefoxTransactionAsync(f => unpack(f.get(key)))
-    else transaction.flatMap(f => unpack(f.get(key)))
-  }
+  def delete(before: js.Date): Future[Unit] =
+    transaction { transaction =>
+      val cursor     = transaction.openCursor()
+
+      cursor.onsuccess = { event =>
+        val cursorResult = event.target.asInstanceOf[IDBRequest].result
+        if (cursorResult != null) {
+          val cursor = cursorResult.asInstanceOf[IDBCursorWithValue]
+          val result = cursor.value.asInstanceOf[js.UndefOr[StorageObject]]
+
+          result.toOption.foreach { result =>
+            if (result.timestamp < before.getTime()) {
+              cursor.delete()
+            }
+          }
+
+          cursor.continue()
+        }
+      }
+    }
 
   private def toJSLiteral(boincName: String, wu: Workunit) =
-    js.Dynamic.literal("appName" -> wu.appName,"client"->boincName, "wuname"->wu.name)
+    js.Dynamic.literal(
+      "appName" -> wu.appName,
+      "client" -> boincName,
+      "wuname" -> wu.name,
+      "timestamp" -> new Date().getTime()
+    )
 
   private def toScala(value: js.UndefOr[StorageObject]): Option[Workunit] = {
     value.toOption.map(any => Workunit(any.wuname,any.appName,0D,0D,0D,0D))
@@ -49,7 +67,9 @@ object AppSettingsStorage extends DatabaseProvider {
 
   private def unpack(request: IDBRequest): Future[Option[Workunit]] =
     new Promise[Option[Workunit]]((resolve, reject) => {
-      request.onsuccess = (_) => resolve(toScala(request.result.asInstanceOf[js.UndefOr[StorageObject]]))
+      request.onsuccess = (_) => resolve(
+        toScala(request.result.asInstanceOf[js.UndefOr[StorageObject]])
+      )
       request.onerror = reject
     }).toFuture
 }

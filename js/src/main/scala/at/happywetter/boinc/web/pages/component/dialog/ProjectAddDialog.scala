@@ -1,17 +1,21 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
-import at.happywetter.boinc.shared.BoincProjectMetaData
-import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.LoginPage
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
+import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
+import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Dialog => DialogStyle}
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, LoginPageStyle}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
+import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLInputElement, HTMLSelectElement}
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.Random
 import scala.xml.{Elem, Node}
+import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -21,14 +25,12 @@ import scala.xml.{Elem, Node}
   */
 class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAction: (String, String, String, String) => Future[Boolean]) extends Dialog("modal-dialog") {
 
+  private val selected: Var[Option[BoincProjectMetaData]] = Var(None)
+  private val dialogID = Random.alphanumeric.take(5).mkString
+
   //TODO: convert to mthml.Rx stuff:
   private lazy val jsOnChangeListener: (Event) => Unit = (event) => {
-    val element = projectData(event.target.asInstanceOf[HTMLSelectElement].value)
-    dom.document.getElementById("pad-url").textContent = element.url
-    dom.document.getElementById("pad-url").setAttribute("href", element.url)
-    dom.document.getElementById("pad-general_area").textContent = element.general_area
-    dom.document.getElementById("pad-description").textContent = element.description
-    dom.document.getElementById("pad-home").textContent = element.home
+    selected := Some(projectData(event.target.asInstanceOf[HTMLSelectElement].value))
   }
 
   val dialog = new SimpleModalDialog(
@@ -38,11 +40,11 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
           <tr>
             <td style="width:125px">{"table_project".localize}</td>
             <td>
-              <select class={LoginPage.Style.input.htmlClass} style="margin:0" id="pad-project" onchange={jsOnChangeListener}>
+              <select class={LoginPageStyle.input.htmlClass} style="margin:0" id="pad-project" onchange={jsOnChangeListener}>
                 <option disabled={true} selected="selected">{"project_new_default_select".localize}</option>
                 {
-                  projectData.map(project =>
-                    <option value={project._1}>{project._1}</option>
+                  projectData.keys.toSeq.sorted.map(projectName =>
+                    <option value={projectName}>{projectName}</option>
                   ).toList
                 }
               </select>
@@ -50,11 +52,15 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
           </tr>
           <tr>
             <td>{"project_new_url".localize}</td>
-            <td><a id="pad-url" onclick={AppRouter.openExternal}></a></td>
+            <td>
+              <a onclick={AppRouter.openExternal} href={selected.map(_.map(_.url))}>
+                {selected.map(_.map(_.url))}
+              </a>
+            </td>
           </tr>
-          <tr><td>{"project_new_general_area".localize}</td><td id="pad-general_area"></td></tr>
-          <tr><td>{"project_new_desc".localize}</td><td id="pad-description"></td></tr>
-          <tr><td>{"project_new_home".localize}</td><td id="pad-home"></td></tr>
+          <tr><td>{"project_new_general_area".localize}</td><td>{selected.map(_.map(_.general_area))}</td></tr>
+          <tr><td>{"project_new_desc".localize}</td><td>{selected.map(_.map(_.description))}</td></tr>
+          <tr><td>{"project_new_home".localize}</td><td>{selected.map(_.map(_.home))}</td></tr>
         </tbody>
       </table>
       <br/>
@@ -64,13 +70,22 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
           <tr>
             <td>{"login_username".localize}</td>
             <td>
-              <input class={LoginPage.Style.input.htmlClass} placeholder="example@boinc-user.com" style="margin:0" id="pad-username"></input>
+              <input class={LoginPageStyle.input.htmlClass}
+                     placeholder="example@boinc-user.com"
+                     style="margin:0"
+                     id={s"$dialogID-username"}>
+              </input>
             </td>
           </tr>
           <tr>
             <td>{"login_password".localize}</td>
             <td>
-              <input class={LoginPage.Style.input.htmlClass} placeholder={"login_password".localize} style="margin:0" id="pad-password" type="password"></input>
+              <input class={LoginPageStyle.input.htmlClass}
+                     placeholder={"login_password".localize}
+                     style="margin:0"
+                     id={s"$dialogID-password"}
+                     type="password">
+              </input>
             </td>
           </tr>
         </tbody>
@@ -78,22 +93,31 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
       <br/>
       <br/>
     </div>,
-    <h2 class={Dialog.Style.header.htmlClass}>{"project_new_addbtn".localize}</h2>,
+    <h2 class={Seq(DialogStyle.header.htmlClass, BoincClientStyle.pageHeaderSmall).mkString(" ")}>
+      {"project_new_addbtn".localize}
+    </h2>,
     (dialog: SimpleModalDialog) => {
-      NProgress.start()
 
-      val select = dom.document.getElementById("pad-project").asInstanceOf[HTMLSelectElement]
-      val element = projectData(select.value)
-      val username = dom.document.getElementById("pad-username").asInstanceOf[HTMLInputElement].value
-      val password = dom.document.getElementById("pad-password").asInstanceOf[HTMLInputElement].value
+      selected.now.foreach { element =>
+        NProgress.start()
 
-      submitAction(element.url, username, password, element.name).foreach( state => {
-        if (state)
-          dialog.hide()
-      })
+        val username = dom.document.getElementById(s"$dialogID-username").asInstanceOf[HTMLInputElement].value
+        val password = dom.document.getElementById(s"$dialogID-password").asInstanceOf[HTMLInputElement].value
+
+        submitAction(element.url, username, password, element.name).foreach( state => {
+          if (state)
+            dialog.hide()
+        })
+
+      }
+
     },
     (dialog: SimpleModalDialog) => {dialog.hide()}
   )
+
+  def focusUsernameFiled(): Unit = {
+    dom.document.getElementById(s"$dialogID-username").asInstanceOf[HTMLInputElement].focus()
+  }
 
   override def render(): Elem = dialog.render()
 

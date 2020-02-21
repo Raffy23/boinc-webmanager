@@ -1,9 +1,10 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.{DailyStatistic, Statistics}
+import at.happywetter.boinc.shared.boincrpc.{DailyStatistic, Statistics}
 import at.happywetter.boinc.web.chartjs._
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.{BoincStatisticsStyle => Style}
 import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.pages.boinc.BoincStatisticsLayout.Style
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
@@ -14,13 +15,12 @@ import org.scalajs.dom.raw.{HTMLCanvasElement, HTMLInputElement}
 import org.scalajs.dom.{CanvasRenderingContext2D, Event}
 
 import scala.collection.mutable
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.JSConverters._
 import scala.xml.Elem
-import scalacss.ProdDefaults._
-import scalacss.internal.mutable.StyleSheet
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import Ordering.Double.TotalOrdering
 
 /**
   * Created by: 
@@ -28,39 +28,10 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 02.09.2017
   */
-object BoincStatisticsLayout {
-  object Style extends StyleSheet.Inline {
-    import dsl._
-
-    import scala.language.postfixOps
-
-    val button = style(
-      textDecoration := "none",
-      outline.`0`,
-      width(100 %%),
-      border.`0`,
-      padding(14 px),
-      color(c"#333"),
-      cursor.pointer,
-
-      borderTop :=! "1px #AAA solid",
-      borderRight :=! "1px #AAA solid",
-
-      &.hover(
-        backgroundColor(c"#c3daee")
-      )
-    )
-
-    val active = style(
-      backgroundColor(c"#c3daee")
-    )
-  }
-}
-
 class BoincStatisticsLayout extends BoincClientLayout {
 
   override val path = "statistics"
-  private val DAY = 24*60*60
+  private val DAY   = BigDecimal(24*60*60)
 
   private sealed trait State
   private case object USER_TOTAL extends State
@@ -96,8 +67,8 @@ class BoincStatisticsLayout extends BoincClientLayout {
 
   override def render: Elem = {
     <div id="boinc_statistics">
-      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-area-chart"></i>
+      <h3 class={BoincClientStyle.pageHeader.htmlClass}>
+        <i class="fas fa-chart-area" aria-hidden="true"></i>
         {"statistics_header".localize}
       </h3>
 
@@ -194,16 +165,17 @@ class BoincStatisticsLayout extends BoincClientLayout {
 
   private def transformDataset(dataset: List[DailyStatistic], min: Double, max: Double): Seq[(Double, DailyStatistic)] = {
     var lastEntry = dataset.minBy(_.day)
-    (min to max by DAY).map(time => {
+
+    (BigDecimal(min) to max by DAY).iterator.map(time => {
       lastEntry = dataset.find(_.day == time).getOrElse(lastEntry)
-      (time, lastEntry)
-    })
+      (time.toDouble, lastEntry)
+    }).toSeq
   }
 
   private def getData(s: DailyStatistic): Double = currentDataSet match {
-    case USER_AVG => s.userAvg
+    case USER_AVG   => s.userAvg
     case USER_TOTAL => s.userTotal
-    case HOST_AVG => s.hostAvg
+    case HOST_AVG   => s.hostAvg
     case HOST_TOTAL => s.hostTotal
   }
 
@@ -222,8 +194,8 @@ class BoincStatisticsLayout extends BoincClientLayout {
       val chartData = new Dataset {
         data = tData.map{ case (_, data) => getData(data) }.toJSArray.asInstanceOf[js.Array[js.Any]]
         label = projectNameCache(project)
-        borderColor = List(projectColors(project)).toJSArray
-        backgroundColor = List(projectColors(project)).toJSArray
+        borderColor = projectColors(project)
+        backgroundColor = projectColors(project)
 
         fill = false.toString
         borderWidth = 3D
@@ -234,7 +206,7 @@ class BoincStatisticsLayout extends BoincClientLayout {
     } else {
       this.chart.data.datasets
         .filter(_.label == projectNameCache(project))
-        .map(chart.data.datasets.indexOf)
+        .map(chart.data.datasets.indexOf(_))
         .map(chart.data.datasets.remove)
 
       val minMax = getMinMax()
@@ -263,16 +235,16 @@ class BoincStatisticsLayout extends BoincClientLayout {
   private def toggleActiveBtnClass(newState: State): Unit = {
     currentDataSet match {
       case USER_TOTAL => dom.document.getElementById("user_total").classList.remove(Style.active.htmlClass)
-      case USER_AVG => dom.document.getElementById("user_avg").classList.remove(Style.active.htmlClass)
+      case USER_AVG   => dom.document.getElementById("user_avg").classList.remove(Style.active.htmlClass)
       case HOST_TOTAL => dom.document.getElementById("host_total").classList.remove(Style.active.htmlClass)
-      case HOST_AVG => dom.document.getElementById("host_avg").classList.remove(Style.active.htmlClass)
+      case HOST_AVG   => dom.document.getElementById("host_avg").classList.remove(Style.active.htmlClass)
     }
 
     newState match {
       case USER_TOTAL => dom.document.getElementById("user_total").classList.add(Style.active.htmlClass)
-      case USER_AVG => dom.document.getElementById("user_avg").classList.add(Style.active.htmlClass)
+      case USER_AVG   => dom.document.getElementById("user_avg").classList.add(Style.active.htmlClass)
       case HOST_TOTAL => dom.document.getElementById("host_total").classList.add(Style.active.htmlClass)
-      case HOST_AVG => dom.document.getElementById("host_avg").classList.add(Style.active.htmlClass)
+      case HOST_AVG   => dom.document.getElementById("host_avg").classList.add(Style.active.htmlClass)
     }
   }
 }

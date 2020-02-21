@@ -1,9 +1,14 @@
 package at.happywetter.boinc.server
 
+import java.util.concurrent.{Executors, ThreadFactory}
+
 import at.happywetter.boinc.AppConfig.Config
+import at.happywetter.boinc.web.css.CSSRenderer
 import cats.effect._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
+
+import scala.concurrent.ExecutionContext
 
 /**
   * Created by: 
@@ -14,6 +19,22 @@ import org.http4s.implicits._
 object WebResourcesRoute {
 
   import org.http4s._
+
+  private val blockingPool = ExecutionContext.fromExecutor(
+    Executors.newFixedThreadPool(
+      Runtime.getRuntime.availableProcessors,
+      (r: Runnable) => {
+        val t = new Thread(r)
+        t.setDaemon(true)
+        t.setName("web-resources-blocking-pool-thread")
+
+        t
+      }
+    )
+  )
+  private val blocker      = Blocker.liftExecutionContext(blockingPool)
+
+  private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   // Workaround of content encoding Bugs
   private val contentTypes = Map[String, String](
@@ -36,6 +57,7 @@ object WebResourcesRoute {
 
         link( rel := "stylesheet", `type` := "text/css", href := "/files/css/font-awesome.min.css"),
         link( rel := "stylesheet", `type` := "text/css", href := "/files/css/nprogress.css"),
+        link( rel := "stylesheet", `type` := "text/css", href := "/files/css/app.css"),
 
         script( `type` := "text/javascript", src := "/files/app-jsdeps.js")
       ),
@@ -50,6 +72,9 @@ object WebResourcesRoute {
       )
     ).render
   }
+
+  // TODO: Render into file and serve from there ...
+  private lazy val cssContent: String = CSSRenderer.render()
 
   private lazy val launchScript =
     """
@@ -67,7 +92,7 @@ object WebResourcesRoute {
       Header("Content-Type", "text/html; charset=UTF-8")
     )
 
-  def apply(implicit config: Config): HttpService[IO] = HttpService[IO] {
+  def apply(implicit config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Normal index Page which is served
     case GET -> Root => indexPage
@@ -77,6 +102,11 @@ object WebResourcesRoute {
     case request@GET -> Root / "files" / "app-jsdeps.js" => completeWithGipFile(appDeptJS, request)
 
     case request@GET -> Root / "favicon.ico" => completeWithGipFile("favicon.ico", request)
+
+    case request@GET -> Root / "files" / "css" / "app.css" =>
+      Ok(cssContent).map { reponse =>
+        reponse.putHeaders(Header("Content-Type", "text/css; charset=UTF-8"))
+      }
 
     // Static File content from Web root
     case request@GET -> "files" /: file => completeWithGipFile(file.toList.mkString("/"), request)
@@ -88,19 +118,23 @@ object WebResourcesRoute {
     case _ => NotFound(/* TODO: Implement Default 404-Page */)
   }
 
+  // TODO: Rename static resources, a change in build.sbt has renamed them
   private def appJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-fastopt.js"
-    else "boinc-webmanager-opt.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager-client--fastopt.js"
+    else "boinc-webmanager-client--opt.js"
 
   private def appDeptJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-jsdeps.js"
-    else "boinc-webmanager-jsdeps.min.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager-client--jsdeps.js"
+    else "boinc-webmanager-client--jsdeps.min.js"
 
   private def fromResource(file: String, request: Request[IO]) =
-    StaticFile.fromResource("/web-root/" + file, Some(request))
+    StaticFile.fromResource("/web-root/" + file, blocker, Some(request))
 
-  private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
-    StaticFile.fromString(config.server.webroot + file, Some(request))
+  private def fromFile(file: String, request: Request[IO])(implicit config: Config) = {
+    println(s"fromString(${config.server.webroot + file}")
+    StaticFile.fromString(config.server.webroot + file, blocker, Some(request))
+  }
+
 
   private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) = {
     lazy val zipFile =
@@ -111,7 +145,6 @@ object WebResourcesRoute {
       if (config.development.getOrElse(false)) fromFile(file, request)
       else fromResource(file, request)
 
-
     val cType = contentTypes.get(file.substring(file.lastIndexOf("."), file.length))
 
     zipFile
@@ -121,7 +154,11 @@ object WebResourcesRoute {
           cType.map(x => Header("Content-Type", x)).getOrElse(Header("", ""))
         )
       ).getOrElseF(
-        normalFile.getOrElseF(NotFound())
+        normalFile.getOrElseF{
+           println(s"Could not load $file")
+
+          NotFound()
+        }
       )
   }
 

@@ -1,8 +1,10 @@
 package at.happywetter.boinc.server
 
-import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.extensions.linux.HWStatusService
-import scala.concurrent.ExecutionContext.Implicits.global
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+import at.happywetter.boinc.shared.parser._
+import upickle.default._
+import scala.language.implicitConversions
 
 /**
   * Created by: 
@@ -10,26 +12,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @author Raphael
   * @version 02.11.2017
   */
-object HardwareAPIRoutes {
+object HardwareAPIRoutes extends ResponseEncodingHelper {
 
   import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-  import org.http4s.circe._
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  import org.http4s._
+  import org.http4s.dsl.io._
 
+  def apply(hosts: Set[String], hwStatusService: HWStatusService): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
-  def apply(hosts: Set[String], hwStatusService: HWStatusService): HttpService[IO] = HttpService[IO] {
+    case request @ GET -> Root => Ok(hosts.toList, request)
 
-    case GET -> Root => Ok(hosts.toList.asJson)
-
-    case GET -> Root / name / "cpufrequency" =>
+    case request @ GET -> Root / name / "cpufrequency" =>
       hosts.find(_ == name).map(_ => {
-        Ok(hwStatusService.query(name).map(_._1).map(_.asJson))
+        Ok(hwStatusService.query(name).map(_._1), request)
       }).getOrElse(BadRequest())
 
-    case GET -> Root / name / "sensors" =>
+    case request @ GET -> Root / name / "sensors" =>
       hosts.find(_ == name).map(_ => {
-        Ok(hwStatusService.query(name).map(_._2.toMap).map(_.asJson))
+        Ok(hwStatusService.query(name).map(_._2.toMap), request)
       }).getOrElse(BadRequest())
   }
 

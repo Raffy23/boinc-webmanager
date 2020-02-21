@@ -12,7 +12,9 @@ object BoincFormater {
 
   def convertDate(date: Date): String = date.toLocaleDateString() + " " + date.toLocaleTimeString()
 
-  def convertDate(unixtimestamp: Double): String = convertDate(new Date(unixtimestamp*1000))
+  def convertDate(unixtimestamp: Double): String =
+    if(unixtimestamp > 0) convertDate(new Date(unixtimestamp*1000))
+    else ""
 
   def convertTime(time: Double): String = {
     val day  = time.toInt / 86400
@@ -20,8 +22,8 @@ object BoincFormater {
     val min  = (time.toInt / 60) % 60
     val sec  = time.toInt % 60
 
-    (if(day >0) s"$day T, " else "") ++
-      s"${hour.formatted("%02d")}:${min.formatted("%02d")}:${sec.formatted("%02d")}"
+    (if(day >0) s"$day T, ${(hour - day*24).formatted("%02d")}" else s"${hour.formatted("%02d")}") ++
+      s":${min.formatted("%02d")}:${sec.formatted("%02d")}"
   }
 
   def convertTime(time: String): Int = {
@@ -72,6 +74,13 @@ object BoincFormater {
     value
   }
 
+  def convertFromSpeedValue(size: Double, step: Int): Double = {
+    var value = size
+
+    (0 until step).foreach(_ => value = value*1024)
+    value
+  }
+
   object Implicits {
 
     implicit class BoincFormatNumber(double: Double) {
@@ -79,6 +88,7 @@ object BoincFormater {
       def toSize: String = convertSize(double)
       def toSpeed: String = convertSpeed(double)
       def toSpeedValue(step: Int): Double = convertSpeedValue(double, step)
+      def fromSpeedValue(step: Int): Double = convertFromSpeedValue(double, step)
       def toTime: String = convertTime(double)
       def toDate: String = convertDate(double)
 

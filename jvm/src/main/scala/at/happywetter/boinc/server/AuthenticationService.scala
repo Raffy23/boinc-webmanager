@@ -4,14 +4,19 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.{ApplicationError, User}
-import cats.data.OptionT
+import at.happywetter.boinc.shared.webrpc.{ApplicationError, User}
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import org.http4s.util.CaseInsensitiveString
 
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
+import at.happywetter.boinc.shared.parser._
+import upickle.default.writeBinary
+import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
+import cats.data.Kleisli
+import at.happywetter.boinc.util.http4s.Implicits._
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 
 /**
   * Created by: 
@@ -19,56 +24,48 @@ import scala.language.implicitConversions
   * @author Raphael
   * @version 18.08.2017
   */
-class AuthenticationService(config: Config) {
+class AuthenticationService(config: Config) extends ResponseEncodingHelper {
 
   import AuthenticationService.toDate
   import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._, org.http4s.implicits._
-  import org.http4s.circe._
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+  import org.http4s._, org.http4s.dsl.io._
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
-  def authService: HttpService[IO] = HttpService[IO] {
-    case GET -> Root => Ok(AuthenticationService.nonce)
+  // TODO: Error handling response json/messagepack ...
+
+  def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
 
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
         validate(header.value) match {
-          case Success(true) => Ok(refreshToken(header.value))
-          case _ => new Response[IO]()
-            .withBody(ApplicationError("error_invalid_token").asJson)
-            .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
+          case Success(true) => Ok(refreshToken(header.value), request)
+          case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_invalid_token"))))
         }
 
       }).getOrElse(
-        new Response[IO]()
-          .withBody(ApplicationError("error_no_token").asJson)
-          .map(_.withStatus(Unauthorized))  // .withStatus(Unauthorized) [Compiler Error?]
+        IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
       )
 
     case request @ POST -> Root =>
-      request.decode[String] { body =>
-        decode[User](body).toOption.map(user => {
-          if (config.server.username.equals(user.username)
-            && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
-            Ok(buildToken(user.username))
-          else
-            BadRequest(ApplicationError("error_invalid_credentials").asJson)
-        }).getOrElse(BadRequest(ApplicationError("error_invalid_request").asJson))
+      request.decodeJson[User]{ user =>
+        if (config.server.username.equals(user.username)
+          && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
+          Ok(buildToken(user.username), request)
+        else
+          BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
       }
+
   }
 
-  private def denyService(errorText: String): HttpService[IO] = HttpService[IO] {
-    case _ =>
-      new Response[IO]()
-        .withBody(ApplicationError(errorText).asJson)
-        .map(_.withStatus(Unauthorized))
+  private def denyService(errorText: String): HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError(errorText))))
   }
 
-  def protectedService(service: HttpService[IO]): HttpService[IO] = Service.lift { req: Request[IO] =>
+  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
       validate(header.value) match {
         case Success(true) => service(req)

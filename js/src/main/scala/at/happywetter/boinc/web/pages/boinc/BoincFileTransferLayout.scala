@@ -1,13 +1,15 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.FileTransfer
+import at.happywetter.boinc.shared.boincrpc.FileTransfer
 import at.happywetter.boinc.web.boincclient.BoincFormater
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 
 import scala.util.Try
 import scala.xml.Elem
+import BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
 /**
   * Created by: 
@@ -26,14 +28,15 @@ class BoincFileTransferLayout extends BoincClientLayout {
     boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
 
     <div id="file_transfer">
-      <h3 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-exchange"></i>
+      <h3 class={BoincClientStyle.pageHeader.htmlClass}>
+        <i class="fa fa-exchange-alt" aria-hidden="true"></i>
         {"file_transfer_header".localize}
       </h3>
       <table class={TableTheme.table.htmlClass}>
         <thead>
           <tr>
             <th>{"table_project".localize}</th><th>{"table_task".localize}</th>
+            <th>{"table_transfer_size".localize}</th>
             <th>{"table_transfer".localize}</th> <th>{"table_speed".localize}</th>
             <th>{"table_transfer_time".localize}</th> <th>{"table_status".localize}</th>
           </tr>
@@ -44,9 +47,10 @@ class BoincFileTransferLayout extends BoincClientLayout {
               <tr>
                 <td>{transfer.projectName}</td>
                 <td>{transfer.name}</td>
-                <td>{BoincFormater.convertSize(transfer.fileXfer.bytesXfered)}</td>
-                <td>{BoincFormater.convertSize(transfer.fileXfer.xferSpeed) + " /s"}</td>
-                <td>{BoincFormater.convertTime(transfer.xfer.timeSoFar)}</td>
+                <td>{transfer.byte.toSize}</td>
+                <td>{transfer.fileXfer.bytesXfered.toSize}</td>
+                <td>{transfer.fileXfer.xferSpeed.toSpeed}</td>
+                <td>{transfer.xfer.timeSoFar.toTime}</td>
                 <td>{buildStatusField(transfer)}</td>
               </tr>
             }))

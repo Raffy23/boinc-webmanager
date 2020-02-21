@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.{CoProcessor, HostInfo}
+import at.happywetter.boinc.shared.boincrpc.{CoProcessor, HostInfo}
 
 import scala.xml.NodeSeq
 

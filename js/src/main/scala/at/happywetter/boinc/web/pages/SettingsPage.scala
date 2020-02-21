@@ -1,11 +1,11 @@
 package at.happywetter.boinc.web.pages
+
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientManager
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.routes.AppRouter.LoginPageLocation
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
@@ -13,7 +13,6 @@ import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, Lan
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
 import scala.xml.Elem
-
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
@@ -28,13 +27,13 @@ object SettingsPage extends Layout {
 
   override def render: Elem = {
     <div id="settings">
-      <h2 class={BoincClientLayout.Style.pageHeader.htmlClass}>
-        <i class="fa fa-cog"></i>
+      <h2 class={BoincClientStyle.pageHeader.htmlClass}>
+        <i class="fa fa-cog" aria-hidden="true"></i>
         {"settings_header".localize}
       </h2>
 
       <div>
-        <h3 class={BoincClientLayout.Style.h4_without_line.htmlClass}>
+        <h3 class={BoincClientStyle.h4WithoutLine.htmlClass}>
           {"settings_version_group".localize}
         </h3>
         <table class={TableTheme.table.htmlClass}>
@@ -46,7 +45,7 @@ object SettingsPage extends Layout {
           </tbody>
         </table>
 
-        <h3 class={BoincClientLayout.Style.h4_without_line.htmlClass}>
+        <h3 class={BoincClientStyle.h4WithoutLine.htmlClass}>
           {"settings_language_group".localize}
         </h3>
         <div style="margin-top:25px">
@@ -73,11 +72,9 @@ object SettingsPage extends Layout {
     </div>
   }
 
-  override def before(done: js.Function0[Unit]): Unit = {
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPageLocation)
-    }
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+    PageLayout.clearNav()
+    AuthClient.validateAction(done)
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {

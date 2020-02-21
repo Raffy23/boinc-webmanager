@@ -17,35 +17,20 @@ import scala.util.Try
   */
 object AppRouter {
 
-  trait Page {
-    def link: String = AppRouter.href(this)
-  }
-  case object LoginPageLocation extends Page
-  case object DashboardLocation extends Page{
-    override def link: String = "/view/dashboard"
-  }
-  case object BoincHomeLocation extends Page
-
-  case object BoincClientLocation extends Page {
-    override def link: String = "/view/boinc-client"
-  }
-  case object SettingsLocation extends Page {
-    override def link: String = "/view/settings"
-  }
-  case class SwarmControlLocation(path: String = "") extends Page {
-    override def link: String = "/view/swarm"
-  }
-  case object HardwareLocation extends Page {
-    override def link: String = "/view/hardware"
-  }
-
-  val routes: mutable.Map[Page, (String,Layout)] = new mutable.HashMap[Page, (String,Layout)]()
+  val routes: mutable.Set[Layout] = new mutable.HashSet[Layout]()
   val router = new Navigo(root = s"${dom.window.location.protocol}//${dom.window.location.host}")
 
-  def addRoute(page: Page, path: String, layout: Layout): Unit = {
-    routes.put(page, (path,layout))
+  def +=[T <: Layout](layout: T): T = {
+    addLayout(layout)
+    layout
+  }
+
+  def addLayout(layout: Layout): Unit = {
+    //println(s"addLayout($layout) => ${layout.link}")
+
+    routes.add(layout)
     router.on(
-      path,
+      layout.link,
 
       (params: js.Dictionary[String]) => {
         LayoutManager.renderLayout(params, layout)
@@ -53,23 +38,26 @@ object AppRouter {
 
       new Hook {
         override def already(params: js.Dictionary[String]): Unit = layout.already()
-        override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = layout.before(done)
+        override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = layout.before(done, params)
         override def leave(params: js.Dictionary[String]): Unit = layout.leave()
         override def after(params: js.Dictionary[String]): Unit = layout.after()
       }
     )
   }
 
-  def navigate(page: Page): Unit = router.navigate(routes(page)._1, absolute = true)
-  def navigate(page: String): Unit = router.navigate(page, absolute = true)
+  def navigate(layout: Layout): Unit = this.navigate(layout.link)
+  def navigate(page: String): Unit = {
+    //println(s"AppRouter.navigate($page)")
+    router.navigate(page, absolute = true)
+  }
 
-  def navigate(e: Event, page: Page): Unit = {
-    this.navigate(page)
+  def navigate(e: Event, layout: Layout): Unit = {
+    this.navigate(layout)
     e.preventDefault()
   }
 
 
-  def href(page: Page): String = routes(page)._1.replaceAll("\\/:\\w*[$]?","")
+  def href(page: Layout): String = page.link.replaceAll("\\/:\\w*[$]?","")
 
   def openExternalLink(link: String): Unit = {
     dom.window.open(link, "_blank")
@@ -81,7 +69,5 @@ object AppRouter {
   }
 
   def current: String = dom.window.location.pathname
-
-  def isOn(page: Page): Boolean = current == page.link
 
 }

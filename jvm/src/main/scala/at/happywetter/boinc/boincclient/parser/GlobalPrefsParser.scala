@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.GlobalPrefsOverride
+import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
 
 import scala.util.Try
 import scala.xml.{NodeSeq, Text}

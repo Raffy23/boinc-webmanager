@@ -1,9 +1,9 @@
 package at.happywetter.boinc
 
-import java.util.concurrent.{ScheduledExecutorService, TimeUnit}
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.{ConcurrentLinkedQueue, ScheduledExecutorService, TimeUnit}
 
-import at.happywetter.boinc.util.PooledBoincClient
-import org.slf4j.{Logger, LoggerFactory}
+import at.happywetter.boinc.util.{Logger, PooledBoincClient}
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
@@ -19,12 +19,15 @@ import scala.language.postfixOps
   * @version 19.07.2017
   */
 
-class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) {
+class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) extends Logger {
 
   private val timeout      = 5 minutes
   private val lastUsed     = new TrieMap[String, Long]()
   private val boincClients = new TrieMap[String, PooledBoincClient]()
   private val clientGroups = new TrieMap[String, ListBuffer[String]]()
+
+  private val version = new AtomicLong(0L)
+  val versionChangeListeners = new ConcurrentLinkedQueue[BoincManager => Unit]()
 
   // Close connections periodically
   scheduler.scheduleWithFixedDelay(() => {
@@ -32,7 +35,7 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
 
     lastUsed.foreach { case (name, time) =>
       if (time < curTime && boincClients(name).hasOpenConnections) {
-        BoincManager.logger.debug("Close Socket Connection from " + name)
+        LOG.info("Close Socket Connection from " + name)
         boincClients(name).closeOpen(timeout.toMillis)
       }
     }
@@ -48,8 +51,12 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
 
   def add(name: String, client: PooledBoincClient): Unit = {
     if (!boincClients.keys.exists(_ == name)) {
+      LOG.debug(s"Adding new client $name")
+
       lastUsed += (name -> System.currentTimeMillis())
       boincClients += (name -> client)
+
+      updateVersion()
     }
   }
 
@@ -78,13 +85,21 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
 
   def getSerializableGroups: Map[String, List[String]] = getGroups.map{ case (key, value) => (key, value.toList)}.toMap
 
-  def addGroup(group: String, hostname: String): Unit =
+  def addGroup(group: String, hostname: String): Unit = {
     clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) += hostname
+    updateVersion()
+  }
 
-  def addGroup(group: String, hosts: List[String]): Unit =
+  def addGroup(group: String, hosts: List[String]): Unit = {
     clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) ++= hosts
+    updateVersion()
+  }
 
-}
-object BoincManager {
-  protected val logger: Logger = LoggerFactory.getLogger(BoincManager.getClass.getCanonicalName)
+  def getVersion: Long = version.get()
+
+  private def updateVersion(): Unit = {
+    version.set(System.currentTimeMillis())
+    versionChangeListeners.forEach(_(this))
+  }
+
 }

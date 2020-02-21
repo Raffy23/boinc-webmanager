@@ -1,9 +1,9 @@
 package at.happywetter.boinc.web.util
 
 import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.routes.AppRouter.{BoincClientLocation, DashboardLocation}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -27,14 +27,14 @@ object DashboardMenuBuilder {
       val ungroupedClients = clients.diff(clientsInGroup)
 
       ungroupedClients.foreach(client =>
-        DashboardMenu.addMenu(s"${BoincClientLocation.link}/$client",client, Some("boinc-client-entry"))
+        DashboardMenu.addComputer(BoincClientLayout.link(client),client, Some("boinc-client-entry"))
       )
 
       groups.keys.foreach( groupHeader => {
-        DashboardMenu.addSubMenu(groupHeader, s"group-$groupHeader", Some("boinc-client-entry"))
+        DashboardMenu.addGroup(groupHeader, s"group-$groupHeader", Some("boinc-client-entry"))
         groups(groupHeader).foreach(client =>
           if (clients.contains(client))
-            DashboardMenu.addSubMenuItem(s"${BoincClientLocation.link}/$client", client, s"group-$groupHeader")
+            DashboardMenu.addComputerToGroup(BoincClientLayout.link(client), client, s"group-$groupHeader")
         )
       })
 

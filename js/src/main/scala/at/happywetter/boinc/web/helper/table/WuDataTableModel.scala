@@ -1,12 +1,11 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.BoincRPC.WorkunitAction
-import at.happywetter.boinc.shared.{App, Result, Task}
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
+import at.happywetter.boinc.shared.boincrpc.{App, Result, Task}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
-import at.happywetter.boinc.web.css.TableTheme
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
@@ -19,6 +18,7 @@ import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import BoincFormater.Implicits._
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
 /**
   * Created by: 
@@ -64,9 +64,9 @@ object WuDataTableModel {
     override val columns = List(
       new StringColumn(result.project),
       new TableColumn( Rx {
-        <span class={BoincClientLayout.Style.progressBar.htmlClass}>
+        <span class={BoincClientStyle.progressBar.htmlClass}>
           <progress value={result.progress.map(_.toString)} max="1"></progress>
-          <span style="flot:right">
+          <span>
             {
               result.progress.map(value => (value*100D).toString.split("\\.")(0) + " %")
             }
@@ -92,7 +92,7 @@ object WuDataTableModel {
             new Tooltip(
               result.supsended.map(v => if(v) "state_continue".localize else "state_stop".localize),
               <a href="#" onclick={jsPauseAction}>
-                <i class={result.supsended.map(v => if(v) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
+                <i class={result.supsended.map(v => if(v) "play" else "pause").map(x => s"fas fa-$x-circle")}></i>
               </a>
             ).toXML
           }{
@@ -102,7 +102,7 @@ object WuDataTableModel {
                 event.preventDefault()
                 cancelDialog.renderToBody().show()
               }}>
-                <i class="fa fa-stop-circle-o"></i>
+                <i class="fas fa-stop-circle"></i>
               </a>
             ).toXML
           }{
@@ -112,7 +112,7 @@ object WuDataTableModel {
                 event.preventDefault()
                 projectPropertiesDialog.renderToBody().show()
               }}>
-                <i class="fa fa-info-circle"></i>
+                <i class="fas fa-info-circle"></i>
               </a>
             ).toXML
           }
@@ -169,7 +169,7 @@ object WuDataTableModel {
                 <tr><td><b>{"wu_dialog_cpu_time".localize}</b></td><td>{task.cpuTime.toTime}</td></tr>,
                 <tr><td><b>{"wu_dialog_run_time".localize}</b></td><td>{task.time.toTime}</td></tr>,
                 <tr><td><b>{"wu_dialog_progress".localize}</b></td><td>{(task.done*100).formatted("%.4f %%")}</td></tr>,
-                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{task.workingSet.toTime}</td></tr>,
+                <tr><td><b>{"wu_dialog_used_ram".localize}</b></td><td>{task.workingSet.toSize}</td></tr>,
                 <tr><td><b>{"wu_dialog_used_disk".localize}</b></td><td>{task.swapSize.toSize}</td></tr>,
                 <tr><td><b>{"wu_dialog_slot".localize}</b></td><td>{task.slot}</td></tr>,
                 <tr><td><b>{"wu_dialog_pid".localize}</b></td><td>{task.pid}</td></tr>,

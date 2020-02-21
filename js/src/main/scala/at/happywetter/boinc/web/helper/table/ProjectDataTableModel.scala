@@ -1,10 +1,12 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.shared.BoincRPC.ProjectAction
-import at.happywetter.boinc.shared.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
-import at.happywetter.boinc.web.css.TableTheme
-import at.happywetter.boinc.web.pages.boinc.{BoincClientLayout, BoincProjectLayout}
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.Project
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientManager}
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, TableTheme}
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
+import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.{DoubleColumn, StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{ContextMenu, DataTable, Tooltip}
@@ -12,14 +14,12 @@ import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{ErrorDialogUtil, StatisticPlatforms}
-import mhtml.Var
+import mhtml.{Rx, Var}
 import org.scalajs.dom.MouseEvent
 import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -29,16 +29,20 @@ import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
   */
 object ProjectDataTableModel {
 
+  private implicit class BoolVar(_var: Var[Boolean]) {
+    def mapBoolean[T](_true: T, _false: T): Rx[T] = _var.map(x => if(x) _true else _false)
+  }
 
   class ReactiveProject(val data: Project) {
     val dontRequestWork: Var[Boolean] = Var(data.dontRequestWork)
+    val suspended: Var[Boolean] = Var(data.suspended)
   }
 
-  class ProjectTableRow(val project: ReactiveProject)(implicit boinc: BoincClient) extends DataTable.TableRow {
-    
+  class ProjectTableRow(val project: ReactiveProject)(implicit boinc: BoincClient, table: DataTable[ProjectTableRow]) extends DataTable.TableRow {
+
     override val columns: List[DataTable.TableColumn] = List(
       new TableColumn(Var(
-        <a href={project.data.url} onclick={AppRouter.openExternal} class={BoincProjectLayout.Style.link.htmlClass}>
+        <a href={project.data.url} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
           {updateCache(project.data)}
         </a>
       ), this) {
@@ -52,19 +56,30 @@ object ProjectDataTableModel {
         <div>
           {
             new Tooltip(
-              project.dontRequestWork.map(x => if(x) "project_allow_more_work".localize else "project_dont_allow_more_work".localize),
-              <a href="#change-project-state" data-pause-work={project.dontRequestWork.map(_.toString)}
-                 onclick={jsToggleWorkAction}>
-                <i class={project.dontRequestWork.map(x => if(x) "play" else "pause").map(x => s"fa fa-$x-circle-o")}></i>
+              project.dontRequestWork.mapBoolean("project_allow_more_work".localize, "project_dont_allow_more_work".localize),
+              <a href="#change-project-state" onclick={jsToggleWorkAction}>
+                {
+                  project.dontRequestWork.mapBoolean(
+                    <i class="fas fa-lock" style="color:#dc5050;font-size:20px"></i>,
+                    <i class="fas fa-unlock" style="color:#2bab41;font-size:20px"></i>
+                  )
+                }
               </a>
             ).toXML
           }{
             new Tooltip(
-              Var("project_refresh".localize),
-              <a href="#refresh-project" onclick={jsRefreshAction}>
-                <i class="fa fa-fw fa-refresh" style="font-size:20px"></i>
+              project.suspended.mapBoolean("project_running".localize, "project_suspended".localize),
+              <a href="#refresh-project" onclick={jsPauseAction}>
+                <i class={project.suspended.mapBoolean("play", "pause").map(x => s"fas fa-$x-circle")}></i>
               </a>
             ).toXML
+          }{
+          new Tooltip(
+            Var("project_refresh".localize),
+            <a href="#pause-project" onclick={jsRefreshAction}>
+              <i class="fa fa-fw fa-sync" style="font-size:20px"></i>
+            </a>
+          ).toXML
           }{
             new Tooltip(
               Var("project_properties".localize),
@@ -78,7 +93,6 @@ object ProjectDataTableModel {
       ), this) {
         override def compare(that: TableColumn): Int = ???
       }
-
     )
 
     override val contextMenuHandler: (Event) => Unit = (event) => {
@@ -123,18 +137,36 @@ object ProjectDataTableModel {
       }).recover(ErrorDialogUtil.showDialog)
     }
 
-    private lazy val jsShowDetailsAction: (Event) => Unit = (event) => {
+    private lazy val jsPauseAction: (Event) => Unit = (event) => {
+      event.preventDefault()
+      NProgress.start()
+
+      val action = project.suspended.mapBoolean(ProjectAction.Resume, ProjectAction.Suspend).now
+
+      boinc.project(project.data.url, action).map(result => {
+        NProgress.done(true)
+
+        if (!result)
+          new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+            .renderToBody().show()
+        else
+          project.suspended.update(!_)
+
+      }).recover(ErrorDialogUtil.showDialog)
+    }
+
+    private lazy val jsShowDetailsAction: (Event) => Unit = { event =>
       event.preventDefault()
 
       new OkDialog("workunit_dialog_properties".localize + " " + project.data.name,
         List(
-          <h4 class={BoincClientLayout.Style.h4.htmlClass}>{"project_dialog_general_header".localize}</h4>,
+          <h4 class={BoincClientStyle.h4.htmlClass}>{"project_dialog_general_header".localize}</h4>,
           <table class={TableTheme.table.htmlClass}>
             <tbody>
               <tr>
                 <td><b>{"project_dialog_url".localize}</b></td>
                 <td>
-                  <a class={BoincProjectLayout.Style.link.htmlClass} href={project.data.url} onclick={AppRouter.openExternal}>
+                  <a class={BoincProjectStyle.link.htmlClass} href={project.data.url} onclick={AppRouter.openExternal}>
                     {project.data.url}
                   </a>
                 </td>
@@ -164,7 +196,7 @@ object ProjectDataTableModel {
               <tr><td><b>{"project_dialog_jobs_err".localize}</b></td><td>{project.data.jobErrors}</td></tr>
             </tbody>
           </table>,
-          <h4 class={BoincClientLayout.Style.h4.htmlClass}>{"project_dialog_credits_header".localize}</h4>,
+          <h4 class={BoincClientStyle.h4.htmlClass}>{"project_dialog_credits_header".localize}</h4>,
           <table class={TableTheme.table.htmlClass}>
             <tbody>
               <tr><td><b>{"project_dialog_credits_user".localize}</b></td><td>{project.data.userTotalCredit}</td></tr>
@@ -172,13 +204,34 @@ object ProjectDataTableModel {
               <tr><td><b>{"project_dialog_credits_host".localize}</b></td><td>{project.data.hostTotalCredit}</td></tr>
               <tr><td><b>{"project_dialog_credits_havg".localize}</b></td><td>{project.data.hostAvgCredit}</td></tr>
             </tbody>
-          </table>
+          </table>,
+          <h4 class={BoincClientStyle.h4.htmlClass}>{"project_actions".localize}</h4>,
+          <div>
+            <a class={BasicModalStyle.button.htmlClass} href="#deleteProject"
+               onclick={jsDeleteProjectAction}>
+              {"delete".localize}
+            </a>
+          </div>
         )
       ).renderToBody().show()
     }
+
+    private lazy val jsDeleteProjectAction: Event => Unit = { event =>
+      NProgress.start()
+
+      boinc.project(project.data.url, action = ProjectAction.Remove).map { result =>
+        if (!result)
+          new OkDialog("dialog_error_header".localize, List("not_succ_action".localize))
+            .renderToBody().show()
+        else
+          table.reactiveData.update(_.filterNot(_ eq this))
+
+        NProgress.done(true)
+      }
+    }
   }
 
-  def convert(project: Project)(implicit boinc: BoincClient): ProjectTableRow =
+  def convert(project: Project)(implicit boinc: BoincClient, table: DataTable[ProjectTableRow]): ProjectTableRow =
     new ProjectTableRow(new ReactiveProject(project))
 
   private[this] def updateCache(project: Project): String = {

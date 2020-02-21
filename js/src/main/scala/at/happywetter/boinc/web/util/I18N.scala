@@ -1,9 +1,11 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.ApplicationError
+import at.happywetter.boinc.shared.webrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLElement
 
+import scala.collection.immutable.ArraySeq
 import scala.xml.Node
 
 /**
@@ -25,45 +27,69 @@ object I18N {
     def save(lang: String = current): Unit = {
       current = lang
       dom.window.localStorage.setItem("language", lang)
+      setDocumentLanguage(lang)
     }
 
     def load: String = {
       val sessionLang = dom.window.localStorage.getItem("language")
-      if (sessionLang == null)
+      if (sessionLang == null) {
+        setDocumentLanguage(getDefault)
+
         current
-      else {
+      } else {
+        setDocumentLanguage(sessionLang)
         current = sessionLang
+
         current
       }
     }
 
+    def setDocumentLanguage(lang: String): Unit =
+      dom.document.getElementsByTagName("html")(0).asInstanceOf[HTMLElement].setAttribute("lang", lang)
+
   }
 
+  implicit class TranslatableString(private val str: String) extends AnyVal {
+    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, {println(s"[Warning]: Could not translate: $str into ${Locale.current}"); str})
+    def localizeTags(nodes: Node*): Seq[Node] = {
+      import at.happywetter.boinc.web.helper.XMLHelper._
+      val captureGroup = "(\\$\\d+)".r
 
-  implicit class TranslatableString(str: String) {
-    def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, str)
+      val indexNodes = nodes.toIndexedSeq
+      val fmtString  = str.localize
+      val nodeList   = captureGroup.findAllMatchIn(fmtString).map{ matchResult =>
+        (matchResult.start, indexNodes(matchResult.group(1).drop(1).toInt), matchResult.end)
+      }.foldLeft((0, Vector.empty[Node])) { case ((start, nodeList), (mStart, node, mEnd)) =>
+        (mEnd, nodeList :+ fmtString.slice(start, mStart).toXML :+ node)
+      }
+
+      if (nodeList._1 < fmtString.length)
+        nodeList._2 :+ fmtString.substring(nodeList._1).toXML
+      else
+        nodeList._2
+    }
   }
 
-  implicit class TranslatableBoolean(bool: Boolean) {
+  implicit class TranslatableBoolean(private val bool: Boolean) extends AnyVal {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(bool.toString, bool.toString)
   }
 
-  implicit class HtmlString(str: String) {
+  implicit class HtmlString(private val str: String) extends AnyVal {
     import at.happywetter.boinc.web.helper.XMLHelper._
 
     def toTags: Seq[Node] =
       if (str.contains("\n")) {
-        str.split("\n").flatMap(data => Seq(data.toXML, <br/>))
+        ArraySeq.unsafeWrapArray(str.split("\n")).flatMap(data => Seq(data.toXML, <br/>))
       } else {
         Seq(str)
       }
   }
 
-  implicit class TranslatableAppError(e: ApplicationError) {
+  implicit class TranslatableAppError(private val e: ApplicationError) extends AnyVal {
     def localize: String = e.reason.localize
   }
 
-  implicit class TranslatableFetchException(ex: FetchResponseException) {
+  implicit class TranslatableFetchException(private val ex: FetchResponseException) extends AnyVal {
     def localize: String = s"${ex.statusCode}: ${ex.reason.localize}"
   }
 

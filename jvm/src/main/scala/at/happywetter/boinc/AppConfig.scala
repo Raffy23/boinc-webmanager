@@ -2,7 +2,8 @@ package at.happywetter.boinc
 
 import java.util.concurrent.TimeUnit
 
-import at.happywetter.boinc.shared.ServerSharedConfig
+import at.happywetter.boinc.boincclient.webrpc.ProjectRules
+import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.concurrent.duration.FiniteDuration
@@ -22,7 +23,8 @@ object AppConfig {
                     autoDiscovery: AutoDiscovery,
                     hostGroups: Map[String, List[String]],
                     hardware: Option[Hardware],
-                    serviceMode: Boolean)
+                    serviceMode: Boolean,
+                    /*webRPC: WebRPC*/)
 
   case class Server(address: String,
                     port: Short,
@@ -56,12 +58,25 @@ object AppConfig {
                       cacheTimeout: Long
   )
 
+  //case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])
+  //case class Parser(default: Int = ProjectRules.UseXMLParser)
+  //case class WebRPCRule(serverStatus: Int)
+
+
   val conf: Config = {
-    val confString: String = Source.fromFile("./application.conf").getLines().mkString("\n")
+    val confString: String = {
+      val source = Source.fromFile("./application.conf")
+      val result = source.getLines().mkString("\n")
+      source.close()
+
+      result
+    }
+
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._
-    loadConfigOrThrow[Config](hocon)
+    import pureconfig.generic.auto._
+    ConfigSource.fromConfig(hocon).loadOrThrow[Config]
   }
 
   lazy val sharedConf = ServerSharedConfig(

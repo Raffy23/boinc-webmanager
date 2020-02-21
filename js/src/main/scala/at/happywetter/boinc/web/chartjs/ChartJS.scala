@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.chartjs
 import org.scalajs.dom.CanvasRenderingContext2D
 
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
+import scala.scalajs.js.{UndefOr, |}
 import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
 
 /**
@@ -59,39 +59,39 @@ class ChartJS(ctx: CanvasRenderingContext2D, config: ChartConfig) extends js.Obj
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartData extends js.Object {
   var labels: js.Array[String] = new js.Array(0)
   val datasets: js.Array[Dataset]
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class Dataset extends js.Object {
   var label: String = ""
   var data: js.Array[js.Any] = js.Array(0)
-  var backgroundColor: js.UndefOr[js.Array[String]] = js.undefined
-  var borderColor: js.UndefOr[js.Array[String]] = js.undefined
+  var backgroundColor: js.UndefOr[String | js.Array[String]] = js.undefined
+  var borderColor: js.UndefOr[String] = js.undefined
   var borderWidth: Double = 1D
   var fill: String = "origin"
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartOptions extends js.Object {
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   trait Legend extends js.Object {
     var display: Boolean
   }
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   //http://www.chartjs.org/docs/latest/configuration/tooltip.html
   trait Tooltips extends js.Object {
     var display: Boolean
     val callbacks: TooltipCallbacks
   }
 
-  @ScalaJSDefined
+  //@ScalaJSDefined
   trait TooltipCallbacks extends js.Object {
     var label: js.Function2[TooltipItem, ChartData, String]
   }
@@ -111,7 +111,7 @@ abstract class ChartOptions extends js.Object {
 
 }
 
-@ScalaJSDefined
+//@ScalaJSDefined
 abstract class ChartConfig extends js.Object {
 
   val `type`: String

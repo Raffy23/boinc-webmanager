@@ -5,7 +5,7 @@ import java.net.{URI, URL}
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.Collections
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Created by: 

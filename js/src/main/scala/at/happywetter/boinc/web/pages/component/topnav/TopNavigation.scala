@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
-import at.happywetter.boinc.web.css.TopNavigation
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
+import at.happywetter.boinc.web.css.definitions.components.{TopNavigation => Style}
 import at.happywetter.boinc.web.pages.PageLayout
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Rx
@@ -28,10 +28,10 @@ trait TopNavigation {
 
   def select(elem: String): Unit = {
     val cur = dom.document.querySelector(s"#$componentId a[data-nav=$selected]")
-    cur.classList.remove(TopNavigation.nav.htmlClass)
+    cur.classList.remove(Style.nav.htmlClass)
 
     val next = dom.document.querySelector(s"#$componentId a[data-nav=$elem]")
-    next.classList.add(TopNavigation.nav.htmlClass)
+    next.classList.add(Style.nav.htmlClass)
 
     selected = elem
   }
@@ -42,14 +42,14 @@ trait TopNavigation {
     selected = select
 
     PageLayout.nav :=
-      <ul class={TopNavigation.nav.htmlClass} id={componentId} mhtml-onmount={jsUpdatePageLinksAction}>
+      <ul class={Style.nav.htmlClass} id={componentId} mhtml-onmount={jsUpdatePageLinksAction}>
         {
         links.map { case (nav, name, icon) =>
-          <li class={BoincClientLayout.Style.in_text_icon.htmlClass}>
+          <li class={BoincClientStyle.inTextIcon.htmlClass}>
             <a href={link(nav)} data-navigo={true} data-nav={nav}
-               class={if(selected == nav) Some(TopNavigation.active.htmlClass) else None}>
-              <i class={icon}></i>
-              <span class={TopNavigation.invisible_on_small_screen.htmlClass}>{name.localize}</span>
+               class={if(selected == nav) Some(Style.active.htmlClass) else None}>
+              <i class={icon} aria-hidden="true"></i>
+              <span class={Style.bigScreenOnly.htmlClass}>{name.localize}</span>
             </a>
           </li>
         }

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.helper.table
 
-import at.happywetter.boinc.web.css.TableTheme
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
@@ -67,7 +67,7 @@ object HardwareTableModel {
       new OkDialog(
         "hardware_header".localize + " " + client.hostname,
         List(
-          <table class={Seq(TableTheme.table.htmlClass, TableTheme.table_lastrowsmall.htmlClass).mkString(" ")}>
+          <table class={Seq(TableTheme.table.htmlClass, TableTheme.lastRowSmall.htmlClass).mkString(" ")}>
             <thead>
               <tr>
                 <th>{"table_name".localize}</th><th>{"table_value".localize}</th><th></th>
@@ -78,7 +78,7 @@ object HardwareTableModel {
                 sensors.value.get.get.toList.sortBy(_._1).map { case (name, row) =>
                   <tr>
                     <td>{name}</td>
-                    <td>{row.value + " " + row.unit}</td>
+                    <td>{s"${row.value}  ${row.unit}"}</td>
                     <td>{row.flags}</td>
                   </tr>
                 }

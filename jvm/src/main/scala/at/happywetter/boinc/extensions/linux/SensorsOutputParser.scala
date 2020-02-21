@@ -1,6 +1,6 @@
 package at.happywetter.boinc.extensions.linux
 
-import at.happywetter.boinc.shared.HardwareData.{SensorsData, SensorsRow}
+import at.happywetter.boinc.shared.extension.HardwareData.{SensorsData, SensorsRow}
 
 /**
   * Utility which can parse the Output of the Sensors program under linux
