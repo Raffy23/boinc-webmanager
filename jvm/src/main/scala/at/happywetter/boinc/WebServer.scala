@@ -3,6 +3,7 @@ package at.happywetter.boinc
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
 import at.happywetter.boinc.util.IOAppTimer.scheduler
+import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, IOAppTimer, Logger}
 import cats.effect._
 import org.http4s.HttpRoutes
@@ -68,7 +69,7 @@ object WebServer extends IOApp with Logger {
     import cats.implicits._
     BlazeServerBuilder[IO]
       .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
-      .withSSL(StoreInfo(config.server.ssl.keystore, config.server.ssl.password), config.server.ssl.password)
+      .withOptionalSSL(config)
       .bindHttp(config.server.port, config.server.address)
       .withHttpApp(routes.orNotFound)
       .resource

@@ -41,7 +41,7 @@ object AppConfig {
 
   case class ProjectEntry(url: String, generalArea: String, description: String, organization: String)
 
-  case class SSLConfig(keystore: String, password: String)
+  case class SSLConfig(enabled: Boolean, keystore: String, password: String)
 
   case class AutoDiscovery(startIp: String,
                            endIp: String,

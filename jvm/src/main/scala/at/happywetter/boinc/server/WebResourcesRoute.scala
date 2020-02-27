@@ -120,12 +120,12 @@ object WebResourcesRoute {
 
   // TODO: Rename static resources, a change in build.sbt has renamed them
   private def appJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-client--fastopt.js"
-    else "boinc-webmanager-client--opt.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager_client-fastopt.js"
+    else "boinc-webmanager_client-opt.js"
 
   private def appDeptJS(implicit config: Config): String =
-    if (config.development.getOrElse(false)) "boinc-webmanager-client--jsdeps.js"
-    else "boinc-webmanager-client--jsdeps.min.js"
+    if (config.development.getOrElse(false)) "boinc-webmanager_client-jsdeps.js"
+    else "boinc-webmanager_client-jsdeps.min.js"
 
   private def fromResource(file: String, request: Request[IO]) =
     StaticFile.fromResource("/web-root/" + file, blocker, Some(request))

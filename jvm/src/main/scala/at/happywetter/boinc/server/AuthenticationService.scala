@@ -52,8 +52,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
 
     case request @ POST -> Root =>
       request.decodeJson[User]{ user =>
-        if (config.server.username.equals(user.username)
-          && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
+        if (config.server.username.equals(user.username) && checkPassword(user) )
           Ok(buildToken(user.username), request)
         else
           BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
@@ -75,13 +74,29 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
     }).getOrElse(denyService("error_no_token")(req))
   }
 
-  def validate(token: String): Try[Boolean] = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date()))
-  def buildToken(user: String): String = jwtBuilder.withClaim("user", user).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm)
+  def validate(token: String): Try[Boolean] = Try(
+    jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())
+  )
+
+  def buildToken(user: String): String =
+    jwtBuilder
+      .withClaim("user", user)
+      .withExpiresAt(LocalDateTime.now().plusHours(1))
+      .sign(algorithm)
+
   def refreshToken(token: String): String = {
     val jwtToken = jwtVerifyer.build().verify(token)
     val curUser  = jwtToken.getClaim("user")
 
     buildToken(curUser.asString())
+  }
+
+  def checkPassword(user: User): Boolean = {
+    if (config.server.ssl.enabled) {
+      user.passwordHash == AuthenticationService.sha256Hash(user.nonce + config.server.password)
+    } else {
+      user.passwordHash == config.server.password
+    }
   }
 }
 

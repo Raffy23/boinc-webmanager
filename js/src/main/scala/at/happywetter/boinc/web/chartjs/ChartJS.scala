@@ -3,8 +3,8 @@ package at.happywetter.boinc.web.chartjs
 import org.scalajs.dom.CanvasRenderingContext2D
 
 import scala.scalajs.js
-import scala.scalajs.js.{UndefOr, |}
-import scala.scalajs.js.annotation.{JSGlobal, ScalaJSDefined}
+import scala.scalajs.js.annotation.JSGlobal
+import scala.scalajs.js.|
 
 /**
   * Created by: 

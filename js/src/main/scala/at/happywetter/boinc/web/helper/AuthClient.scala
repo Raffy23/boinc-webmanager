@@ -25,6 +25,8 @@ object AuthClient {
   import at.happywetter.boinc.shared.parser._
   type AuthToken = String
 
+  val isSecureEndpoint: Boolean = dom.window.location.protocol == "https"
+
   private val TOKEN_VALID_TIME = 58*60*1000
   private var refreshTimeoutHandler: Int = -1
 
@@ -71,18 +73,21 @@ object AuthClient {
   }
 
   private def hashPassword(password: String, nonce: String): Future[String] = {
-    dom.crypto.crypto.subtle
-      .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
-      .toFuture
-      .map(buffer => {
-        val hex = new StringBuilder()
-        val view = new DataView(buffer.asInstanceOf[ArrayBuffer])
-        for (i <- 0 until view.byteLength by 2) {
-          hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
-        }
+    if (isSecureEndpoint)
+      dom.crypto.crypto.subtle
+        .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
+        .toFuture
+        .map(buffer => {
+          val hex = new StringBuilder()
+          val view = new DataView(buffer.asInstanceOf[ArrayBuffer])
+          for (i <- 0 until view.byteLength by 2) {
+            hex.append(view.getUint16(i).toHexString.reverse.padTo(4, '0').reverse)
+          }
 
-        hex.toString()
-      })
+          hex.toString()
+        })
+    else
+      Future { password }
   }
 
   def hasToken: Boolean = {
@@ -92,6 +97,7 @@ object AuthClient {
 
   def tryLogin: Future[Boolean] = {
     if (!hasToken) {
+      // Bad
       val username = dom.window.sessionStorage.getItem("username")
       val password = dom.window.sessionStorage.getItem("password")
 
@@ -115,6 +121,10 @@ object AuthClient {
   }
 
   def loadFromLocalStorage(): Boolean = {
+    if (!isSecureEndpoint) {
+      dom.console.warn("Server endpoint is not secure, crypto API will be disabled ...")
+    }
+
     val tokenDate = dom.window.localStorage.getItem("auth/time")
     val token     = dom.window.localStorage.getItem("auth/token")
     if (tokenDate == null || token == null) return false
