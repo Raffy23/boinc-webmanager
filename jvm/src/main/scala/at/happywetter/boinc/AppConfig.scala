@@ -30,8 +30,10 @@ object AppConfig {
                     port: Short,
                     username: String,
                     password: String,
+                    secureEndpoint: Boolean,
                     webroot: String = "",
-                    secret: String, ssl: SSLConfig)
+                    secret: String,
+                    ssl: SSLConfig)
 
   case class Host(address: String, port: Short, password: String)
 

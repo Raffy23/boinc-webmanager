@@ -92,7 +92,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
   }
 
   def checkPassword(user: User): Boolean = {
-    if (config.server.ssl.enabled) {
+    if (config.server.secureEndpoint) {
       user.passwordHash == AuthenticationService.sha256Hash(user.nonce + config.server.password)
     } else {
       user.passwordHash == config.server.password
