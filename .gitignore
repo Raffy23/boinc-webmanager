@@ -12,7 +12,7 @@ shared/target
 /target
 
 # Ignore custom configuration files
-application.conf
+/application.conf
 all_projects_list.xml
 /web
 /conf
