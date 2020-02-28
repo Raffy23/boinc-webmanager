@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.chartjs
 import org.scalajs.dom.CanvasRenderingContext2D
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import scala.scalajs.js.annotation.{JSGlobal, JSImport}
 import scala.scalajs.js.|
 
 /**
@@ -13,7 +13,7 @@ import scala.scalajs.js.|
   * @version 01.09.2017
   */
 @js.native
-@JSGlobal("Chart")
+@JSGlobal("Chart")//@JSImport("chart.js", JSImport.Namespace)
 object ChartJS extends js.Object {
 
   val defaults: GlobalChartOptions = js.native
@@ -37,7 +37,7 @@ trait GlobalChartOptions extends js.Object {
 
 
 @js.native
-@JSGlobal("Chart")
+@JSGlobal("Chart")//@JSImport("chart.js", JSImport.Namespace)
 class ChartJS(ctx: CanvasRenderingContext2D, config: ChartConfig) extends js.Object {
 
   val data: ChartData = js.native
@@ -59,14 +59,12 @@ class ChartJS(ctx: CanvasRenderingContext2D, config: ChartConfig) extends js.Obj
 
 }
 
-//@ScalaJSDefined
 abstract class ChartData extends js.Object {
   var labels: js.Array[String] = new js.Array(0)
   val datasets: js.Array[Dataset]
 
 }
 
-//@ScalaJSDefined
 abstract class Dataset extends js.Object {
   var label: String = ""
   var data: js.Array[js.Any] = js.Array(0)
@@ -76,15 +74,12 @@ abstract class Dataset extends js.Object {
   var fill: String = "origin"
 }
 
-//@ScalaJSDefined
 abstract class ChartOptions extends js.Object {
 
-  //@ScalaJSDefined
   trait Legend extends js.Object {
     var display: Boolean
   }
 
-  //@ScalaJSDefined
   //http://www.chartjs.org/docs/latest/configuration/tooltip.html
   trait Tooltips extends js.Object {
     var display: Boolean
@@ -111,7 +106,6 @@ abstract class ChartOptions extends js.Object {
 
 }
 
-//@ScalaJSDefined
 abstract class ChartConfig extends js.Object {
 
   val `type`: String

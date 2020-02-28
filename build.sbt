@@ -40,7 +40,6 @@ lazy val sharedJS  = shared.js
 lazy val serverJVM = (project in file ("jvm"))
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaServerAppPackaging)
-  //.enablePlugins(SbtWeb)
   .disablePlugins(ScalaJSPlugin)
   .dependsOn(sharedJVM, cssRenderer)
   .settings(
@@ -50,9 +49,6 @@ lazy val serverJVM = (project in file ("jvm"))
     buildInfoKeys    := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
-
-    //scalaJSProjects          := Seq(clientJS),
-    //pipelineStages in Assets := Seq(scalaJSPipeline),
 
     libraryDependencies ++= Seq(
       "ch.qos.logback"         %  "logback-classic"     % "1.2.3",
@@ -78,15 +74,10 @@ lazy val clientJS = (project in file ("js"))
   .enablePlugins(ScalaJSPlugin)
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JSDependenciesPlugin)
-  //.enablePlugins(SbtWeb)
-  //.enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(sharedJS, clientCssJS)
   .settings(
     name := "Boinc-Webmanager_client",
     mainClass := Some("at.happywetter.boinc.web.Main"),
-
-    //scalaJSUseMainModuleInitializer := true,
-    //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
 
     buildInfoKeys    := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
@@ -102,15 +93,6 @@ lazy val clientJS = (project in file ("js"))
       // Note: local published artifact build against ScalaJS 1.0.0
       "in.nvilla"    %%% "monadic-html"      % "0.4.1-SNAPSHOT",
     ),
-
-    //version in webpack := "4.41.6",
-
-    // Additional Javascript dependencies
-    //npmDependencies in Compile ++= Seq(
-    //  "navigo"    -> "7.1.0",
-    //  "nprogress" -> "0.2.0",
-    //  "chart.js"  -> "2.9.3"
-    //)
 
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",
     jsDependencies ++= Seq(

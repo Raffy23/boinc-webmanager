@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.routes
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import scala.scalajs.js.annotation.{JSGlobal, JSImport}
 
 /**
   * For Navigo Version 5.3.1
@@ -12,7 +12,7 @@ import scala.scalajs.js.annotation.JSGlobal
   */
 
 @js.native
-@JSGlobal
+@JSGlobal//@JSImport("navigo", JSImport.Namespace)
 object Navigo extends js.Object {
 
   val PARAMETER_REGEXP: String = js.native
@@ -25,7 +25,7 @@ object Navigo extends js.Object {
 }
 
 @js.native
-@JSGlobal
+@JSGlobal//@JSImport("navigo", JSImport.Namespace)
 class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") extends js.Object {
 
   //Doesn't work but is in Docs
@@ -69,7 +69,6 @@ class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") 
 
 }
 
-//@ScalaJSDefined
 abstract class Hook extends js.Object {
 
   def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit
@@ -82,7 +81,6 @@ abstract class Hook extends js.Object {
 
 }
 
-//@ScalaJSDefined
 abstract class GenericHook extends js.Object {
 
   def before(done: js.Function0[Unit], params: String): Unit
