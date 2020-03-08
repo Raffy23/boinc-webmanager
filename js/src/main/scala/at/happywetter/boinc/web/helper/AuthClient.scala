@@ -27,7 +27,7 @@ object AuthClient {
 
   val isSecureEndpoint: Boolean = dom.window.location.protocol == "https"
 
-  private val TOKEN_VALID_TIME = 58*60*1000
+  private val TOKEN_VALID_TIME = 20*60*1000
   private var refreshTimeoutHandler: Int = -1
 
   def validate(username: String, password: String): Future[Boolean] = {
@@ -55,16 +55,15 @@ object AuthClient {
   }
 
   def validateAction(done: js.Function0[Unit]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-    AuthClient.tryLogin.foreach {
-      case true => done()
-      case false => AppRouter.navigate(LoginPage.link)
+    if (!FetchHelper.hasToken) {
+      AppRouter.navigate(LoginPage.link)
+    } else {
+      enableTokenRefresh()
+      done()
     }
   }
 
   private def requestToken(user: User): Future[AuthToken] = {
-
     if (user == null || user.username == null || user.passwordHash == null || user.nonce == null)
       return Future.failed(new RuntimeException("User case class is not valid! ("+user+")"))
 
@@ -90,23 +89,6 @@ object AuthClient {
       Future { password }
   }
 
-  def hasToken: Boolean = {
-    val token = FetchHelper.header.get("X-Authorization")
-    token != null && token.toOption.nonEmpty
-  }
-
-  def tryLogin: Future[Boolean] = {
-    if (!hasToken) {
-      // Bad
-      val username = dom.window.sessionStorage.getItem("username")
-      val password = dom.window.sessionStorage.getItem("password")
-
-      validate(username, password)
-    } else {
-      Future { true }
-    }
-  }
-
   def refreshToken(): Future[AuthToken] = {
     FetchHelper.get[AuthToken]("/auth/refresh")
       .map(token => {
@@ -121,16 +103,16 @@ object AuthClient {
   }
 
   def loadFromLocalStorage(): Boolean = {
-    if (!isSecureEndpoint) {
-      dom.console.warn("Server endpoint is not secure, crypto API will be disabled ...")
-    }
-
     val tokenDate = dom.window.localStorage.getItem("auth/time")
     val token     = dom.window.localStorage.getItem("auth/token")
     if (tokenDate == null || token == null) return false
 
-    if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime())
+    if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime()) {
+      dom.window.localStorage.removeItem("auth/time")
+      dom.window.localStorage.removeItem("auth/token")
+
       return false
+    }
 
     FetchHelper.setToken(token)
     true

@@ -23,10 +23,8 @@ object LayoutManager {
   private val mainContent = Var[Elem](<div>{childLayout.map(_.render)}</div>)
 
   def init(): Unit = {
-    dom.console.log("LayoutManager.init()")
     rootElement.innerHTML = ""
     mhtml.mount(rootElement, PageLayout.heading)
-    dom.console.log("LayoutManager.intt(): after mhtml.mount rootelement")
     mhtml.mount(rootElement,
       <main>
         {DashboardMenu.component}
@@ -35,7 +33,6 @@ object LayoutManager {
         </div>
       </main>
     )
-    dom.console.log("LayoutManager.init(): finished")
   }
 
   def renderLayout(params: js.Dictionary[String], page: Layout): Unit = {
@@ -50,7 +47,10 @@ object LayoutManager {
 
   class BootstrapLayout extends Layout {
     override val path: String = "/"
-    override def render: Elem = {<div>__BOOTSTRAP_LAYAOUT__</div>}
+    override def render: Elem =
+      <div>
+        Boinc Webmanager is loading ...
+      </div>
 
     override def beforeRender(params: Dictionary[String]): Unit = {}
   }

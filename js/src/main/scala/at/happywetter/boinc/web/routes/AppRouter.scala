@@ -7,7 +7,6 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
 import scala.scalajs.js
-import scala.util.Try
 
 /**
   * Created by: 
@@ -45,9 +44,11 @@ object AppRouter {
     )
   }
 
-  def navigate(layout: Layout): Unit = this.navigate(layout.link)
+  def navigate(layout: Layout): Unit = {
+    this.navigate(layout.link)
+  }
+
   def navigate(page: String): Unit = {
-    //println(s"AppRouter.navigate($page)")
     router.navigate(page, absolute = true)
   }
 
@@ -55,7 +56,6 @@ object AppRouter {
     this.navigate(layout)
     e.preventDefault()
   }
-
 
   def href(page: Layout): String = page.link.replaceAll("\\/:\\w*[$]?","")
 

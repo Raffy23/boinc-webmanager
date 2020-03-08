@@ -36,6 +36,9 @@ object Main {
     val registeredStyles = AppCSSRegistry.registerCSSNames()
     dom.console.log(s"Registered $registeredStyles css classes")
 
+    if (!AuthClient.isSecureEndpoint)
+      dom.console.warn("Server endpoint is not secure, crypto API will be disabled ...")
+
     AuthClient.loadFromLocalStorage()
     dom.console.log("Early load Locale from SessionStorage: " + Locale.load)
 

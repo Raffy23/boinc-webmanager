@@ -32,9 +32,12 @@ abstract class BoincClientLayout extends Layout {
 
   implicit var boincClientName: String = _
 
+  def linkForHost(host: String) =
+    s"/view/boinc-client/${dom.window.encodeURIComponent(host)}/$path"
+
   override def link: String =
     if(boincClientName != null)
-      s"/view/boinc-client/${dom.window.encodeURIComponent(boincClientName)}/$path"
+      linkForHost(boincClientName)
     else
       s"/view/boinc-client/:client/$path"
 

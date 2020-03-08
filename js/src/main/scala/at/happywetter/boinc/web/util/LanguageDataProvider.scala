@@ -23,7 +23,6 @@ object LanguageDataProvider {
   var available = new ListBuffer[(String, String, String)]
 
   def bootstrap: Future[Map[String,String]] = {
-    dom.console.log("LanguageDataProvider.bootstrap(): BEGIN")
     fetchAvailableLanguages
       .flatMap(languages => {
         languages.foreach(available += _)

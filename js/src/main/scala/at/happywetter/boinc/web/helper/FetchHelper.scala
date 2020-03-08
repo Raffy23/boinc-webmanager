@@ -30,6 +30,10 @@ object FetchHelper {
     header.set("X-Authorization", token)
   }
 
+  def hasToken: Boolean = {
+    header.get("X-Authorization") != null && header.get("X-Authorization").map(_.nonEmpty).getOrElse(false)
+  }
+
   def get[A](uri: String)(implicit decoder: Reader[A]): Future[A] = {
     dom.console.log("GET", uri)
 
