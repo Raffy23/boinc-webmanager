@@ -29,7 +29,9 @@ import BoincFormater.Implicits._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.helper.table.StringTableRow
+
 import Ordering.Double.TotalOrdering
+import scala.collection.mutable
 
 /**
   * Created by: 
@@ -227,7 +229,6 @@ object Dashboard extends Layout {
                           .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
                         val time = rData.map(r => r.remainingCPU).sum / active
 
-
                         <td>
                           {
                             if (time > 0 || active > 0) {
@@ -246,6 +247,40 @@ object Dashboard extends Layout {
                   </tr>
                 }).toSeq)
               }
+              <tr>
+                <td>{"sum".localize}</td>
+                {
+                  projects.zip(clients).map { case (projects, clients) =>
+                    projects.map { case (projectUrl, _) =>
+                      val data = clients.foldLeft((0, 0, 0D)) { case (x@(active, size, time), data) =>
+                        data._2.details.now.map { details =>
+                          val rData  = details.projects.getOrElse(projectUrl, List.empty)
+                          val activeClient = rData
+                            .filter(p => p.activeTask.nonEmpty)
+                            .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+                          val timeClient = rData.map(r => r.remainingCPU).sum / active
+
+                          (active + activeClient, size + rData.length, time + timeClient)
+                        }.getOrElse(x)
+                      }
+
+                      <td>
+                        {
+                          if (data._3 > 0 || data._1 > 0) {
+                            Seq(
+                              <span>{data._1} / {data._2}</span>,
+                              <br/>,
+                              <small>{BoincFormater.convertTime(data._3)}</small>
+                            )
+                          } else {
+                            Seq("".toXML)
+                          }
+                        }
+                      </td>
+                    }
+                  }
+                }
+              </tr>
             </tbody>
           </table>
         </div>
