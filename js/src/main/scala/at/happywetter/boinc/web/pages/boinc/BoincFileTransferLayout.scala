@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.boincrpc.FileTransfer
+import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
 import at.happywetter.boinc.web.boincclient.BoincFormater
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.util.I18N._
@@ -22,10 +22,18 @@ class BoincFileTransferLayout extends BoincClientLayout {
 
   override val path = "transfers"
 
-  private val data = Var(List.empty[FileTransfer])
+  private val data    = Var(List.empty[FileTransfer])
+  private val ccState: Var[Option[CCState]] = Var(Option.empty)
+
+  private def loadData(): Unit = {
+    boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
+    boinc.getCCState.foreach(state => ccState := Some(state))
+  }
+
+  override def already(): Unit = loadData()
 
   override def render: Elem = {
-    boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
+    loadData()
 
     <div id="file_transfer">
       <h3 class={BoincClientStyle.pageHeader.htmlClass}>
@@ -51,7 +59,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
                 <td>{transfer.fileXfer.bytesXfered.toSize}</td>
                 <td>{transfer.fileXfer.xferSpeed.toSpeed}</td>
                 <td>{transfer.xfer.timeSoFar.toTime}</td>
-                <td>{buildStatusField(transfer)}</td>
+                <td>{ccState.map(state => buildStatusField(transfer, state))}</td>
               </tr>
             }))
           }
@@ -60,7 +68,7 @@ class BoincFileTransferLayout extends BoincClientLayout {
     </div>
   }
 
-  def buildStatusField(transfer: FileTransfer): String = {
+  def buildStatusField(transfer: FileTransfer, state: Option[CCState]): String = {
     val builder = new StringBuilder()
 
     if (transfer.xfer.isUpload) builder.append("upload".localize)
@@ -83,6 +91,11 @@ class BoincFileTransferLayout extends BoincClientLayout {
       case e: Exception =>
         e.printStackTrace()
         builder.append(", Status: " + transfer.status)
+    }
+
+    if (state.map(state => CCState.State(state.networkStatus)).getOrElse(CCState.State.Disabled) == CCState.State.Disabled) {
+      builder.append(", ")
+      builder.append("disabled".localize)
     }
 
     builder.toString()

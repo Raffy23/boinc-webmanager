@@ -120,6 +120,7 @@ package object boincrpc {
       val GiveUpDownload: Status.Value = Value(-114)
       val GiveUpUpload: Status.Value = Value(-115)
       val Normal: Status.Value = Value(1)
+      val Default: Status.Value = Value(0)
     }
   }
 
@@ -130,7 +131,7 @@ package object boincrpc {
                                       ,lastBytesXfered: Double
                                       ,isUpload: Boolean)
 
-  final case class FileXfer(bytesXfered: Double,xferSpeed: Double,url: String)
+  final case class FileXfer(bytesXfered: Double, xferSpeed: Double, url: String)
 
   final case class NetworkStatus(isNetworkAvailable: Boolean)
 

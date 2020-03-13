@@ -13,6 +13,7 @@ import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 /**
   * Created by: 
@@ -43,15 +44,25 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
 
   private def connection[R](extractor: BoincClient => Future[R]): Future[R] =
     takeConnection()
-      .map(client => (client, extractor(client)))
-      .flatMap{ case (client, result) => pool.offer(client); result }
-      .recover{ case e: Exception => deathCounter.incrementAndGet(); throw e }
-
+      .map { client =>
+        (
+          client,
+          Try(extractor(client))
+            .recover{ case e: Throwable =>
+              pool.offer(client)
+              deathCounter.incrementAndGet()
+              throw e
+            }
+        )
+      }
+      .flatMap{ case (client, result) => pool.offer(client); result.get }
 
   def checkConnection(): Future[Boolean] =
     connection(_.getCCState)
-      .map(_ => true)
-      .recover{ case _: Exception =>
+      .map{_ =>
+        deathCounter.set(0)
+        true
+      }.recover{ case _: Exception =>
         deathCounter.incrementAndGet()
         false
       }
