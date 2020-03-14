@@ -25,7 +25,7 @@ object AuthClient {
   import at.happywetter.boinc.shared.parser._
   type AuthToken = String
 
-  val isSecureEndpoint: Boolean = dom.window.location.protocol == "https"
+  val isSecureEndpoint: Boolean = dom.window.location.protocol == "https:"
 
   private val TOKEN_VALID_TIME = 20*60*1000
   private var refreshTimeoutHandler: Int = -1

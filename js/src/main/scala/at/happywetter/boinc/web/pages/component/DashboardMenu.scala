@@ -175,7 +175,11 @@ object DashboardMenu {
     if( element != null)
       element.setAttribute("class", "")
 
-    val me = event.target.asInstanceOf[HTMLElement]
+    var me = event.target.asInstanceOf[HTMLElement]
+    while (me.nodeName != "li") {
+      me = me.parentElement
+    }
+
     me.setAttribute("class", Style.active.htmlClass)
   }
 

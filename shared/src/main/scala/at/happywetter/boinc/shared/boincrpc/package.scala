@@ -232,8 +232,9 @@ package object boincrpc {
   object CCState {
 
     object State extends Enumeration {
-      val Enabled: State.Value = Value(1)
-      val Auto: State.Value = Value(2)
+      val Default: State.Value  = Value(0)
+      val Enabled: State.Value  = Value(1)
+      val Auto: State.Value     = Value(2)
       val Disabled: State.Value = Value(3)
     }
 
