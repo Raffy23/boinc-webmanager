@@ -34,8 +34,6 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
-  // TODO: Error handling response json/messagepack ...
-
   def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
 
@@ -43,11 +41,11 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
       request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
         validate(header.value) match {
           case Success(true) => Ok(refreshToken(header.value), request)
-          case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_invalid_token"))))
+          case _ => encode(status = Unauthorized, body = ApplicationError("error_invalid_token"), request)
         }
 
       }).getOrElse(
-        IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
+        encode(status = Unauthorized, body = ApplicationError("error_no_token"), request)
       )
 
     case request @ POST -> Root =>
@@ -55,23 +53,23 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
         if (config.server.username.equals(user.username) && checkPassword(user) )
           Ok(buildToken(user.username), request)
         else
-          BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
+          encode(status = BadRequest, body = ApplicationError("error_invalid_credentials"), request)
       }
 
   }
 
-  private def denyService(errorText: String): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError(errorText))))
+  private def denyService(errorText: String, request: Request[IO]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case _ => encode(status = Unauthorized, body = ApplicationError(errorText), request)
   }
 
   def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
     req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
       validate(header.value) match {
         case Success(true) => service(req)
-        case Success(false) => denyService("error_invalid_token")(req)
-        case Failure(_) => denyService("error_invalid_token")(req)
+        case Success(false) => denyService("error_invalid_token", req)(req)
+        case Failure(_) => denyService("error_invalid_token", req)(req)
       }
-    }).getOrElse(denyService("error_no_token")(req))
+    }).getOrElse(denyService("error_no_token", req)(req))
   }
 
   def validate(token: String): Try[Boolean] = Try(
