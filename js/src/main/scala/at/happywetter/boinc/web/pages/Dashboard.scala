@@ -224,18 +224,22 @@ object Dashboard extends Layout {
                     {
                       projects.map(_.map(project => {
                         val rData = client._2.details.map(_.map(_.projects.getOrElse(project._1, List.empty)).getOrElse(List.empty)).now
+
                         val active = rData
                           .filter(p => p.activeTask.nonEmpty)
                           .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
-                        val time = rData.map(r => r.remainingCPU).sum / active
+
+                        val time = rData
+                          .filter(r => !r.plan.contains("nci"))
+                          .map(r => r.remainingCPU).sum / (if(active == 0) 1 else active)
 
                         <td>
                           {
-                            if (time > 0 || active > 0) {
+                            if (rData.nonEmpty) {
                               Seq(
                                 <span>{active} / {rData.size}</span>,
                                 <br/>,
-                                <small>{BoincFormater.convertTime(time)}</small>
+                                <small>{if (time > 0) Some(BoincFormater.convertTime(time)) else None}</small>
                               )
                             } else {
                               Seq("".toXML)
@@ -248,17 +252,21 @@ object Dashboard extends Layout {
                 }).toSeq)
               }
               <tr>
-                <td>{"sum".localize}</td>
+                <td><b>{"sum".localize}</b></td>
                 {
                   projects.zip(clients).map { case (projects, clients) =>
                     projects.map { case (projectUrl, _) =>
                       val data = clients.foldLeft((0, 0, 0D)) { case (x@(active, size, time), data) =>
                         data._2.details.now.map { details =>
                           val rData  = details.projects.getOrElse(projectUrl, List.empty)
+
                           val activeClient = rData
                             .filter(p => p.activeTask.nonEmpty)
                             .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
-                          val timeClient = rData.map(r => r.remainingCPU).sum / active
+
+                          val timeClient = rData
+                            .filter(r => !r.plan.contains("nci"))
+                            .map(r => r.remainingCPU).sum / (if(active == 0) 1 else active)
 
                           (active + activeClient, size + rData.length, time + timeClient)
                         }.getOrElse(x)
@@ -266,18 +274,19 @@ object Dashboard extends Layout {
 
                       <td>
                         {
-                          if (data._3 > 0 || data._1 > 0) {
+                          println(projectUrl, data)
+                          if (data._2 > 0) {
                             Seq(
                               <span>{data._1} / {data._2}</span>,
                               <br/>,
-                              <small>{BoincFormater.convertTime(data._3)}</small>
+                              <small>{if (data._3 > 0) Some(BoincFormater.convertTime(data._3)) else None}</small>
                             )
                           } else {
                             Seq("".toXML)
                           }
                         }
                       </td>
-                    }
+                    }.toSeq
                   }
                 }
               </tr>
