@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.pages
 
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
-import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
@@ -41,10 +42,15 @@ object HardwarePage extends Layout {
     ("table_cpu_12v".localize, true),
     ("", false)
   )
-  private var dataTable: DataTable[HardwareTableRow] = new DataTable[HardwareTableRow](tableHeaders)
+  private val dataTable: DataTable[HardwareTableRow] = new DataTable[HardwareTableRow](tableHeaders)
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    clients = HardwareStatusClient.queryClients.map(_.sortBy(_.hostname))
+    clients = HardwareStatusClient.queryClients
+  }
+
+  override def already(): Unit = {
+    clients = HardwareStatusClient.queryClients
+    clients.foreach(clients => dataTable.reactiveData := clients)
   }
 
   override def onRender(): Unit = {
