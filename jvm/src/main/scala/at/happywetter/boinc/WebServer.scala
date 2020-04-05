@@ -66,6 +66,7 @@ object WebServer extends IOApp with Logger {
     LOG.info("Boinc-Webmanager: current Version: " + BuildInfo.version)
     LOG.info(s"Using scheduler with ${IOAppTimer.cores} cores as pool size")
 
+    // TODO: Use resource management ...
     import cats.implicits._
     BlazeServerBuilder[IO]
       .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
@@ -73,16 +74,25 @@ object WebServer extends IOApp with Logger {
       .bindHttp(config.server.port, config.server.address)
       .withHttpApp(routes.orNotFound)
       .resource
-      .use(_ => IO {
-        projects.importFrom(config)
-        autoDiscovery.beginSearch()
+      .use(_ =>
+        IO {
+          projects.importFrom(config)
+          autoDiscovery.beginSearch()
+        }.flatMap(_ =>
+          if (config.serviceMode)
+            IO {
+              println("Running in service mode, waiting for signal ...")
+            }.flatMap(_ => IO.never)
+          else
+            IO {
+              println("Press ENTER to exit the server ...")
+              StdIn.readLine()
 
-        println("Press ENTER to exit the server ...")
-        StdIn.readLine()
-
-        scheduler.shutdownNow()
-        hostManager.destroy()
-      })
+              scheduler.shutdownNow()
+              hostManager.destroy()
+            }
+        )
+      )
       .as(ExitCode.Success)
   }
 }

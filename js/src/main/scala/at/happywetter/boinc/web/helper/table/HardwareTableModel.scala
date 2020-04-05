@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.helper.table
 
+import at.happywetter.boinc.shared.extension.HardwareData.SensorsRow
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.helper.RichRx._
@@ -52,8 +53,23 @@ object HardwareTableModel {
       }
     )
 
+    private def renderValue(row: SensorsRow): Node = {
+      if (row.flags.contains("ALARM")) {
+        <span>
+          {
+           Seq(
+             row.toValueUnitString.toXML,
+             Tooltip.warningTriangle("alarm".localize).toXML
+           )
+          }
+        </span>
+      } else {
+        row.toValueUnitString.toXML
+      }
+    }
+
     private def newColumn(label: String, defaultValue: Node): TableColumn = {
-      new TableColumn(sensors.map(c => c(label).toValueUnitString.toXML).toRx(defaultValue),this) {
+      new TableColumn(sensors.map(c => renderValue(c(label))).toRx(defaultValue),this) {
         override def compare(that: TableColumn): Int =
           sensors.value.get.toOption.map(_(label).value).getOrElse(0D).compare(
             that.datasource.asInstanceOf[HardwareTableRow].sensors.value.get.toOption.map(_(label).value).getOrElse(0D)
@@ -70,7 +86,7 @@ object HardwareTableModel {
           <table class={Seq(TableTheme.table.htmlClass, TableTheme.lastRowSmall.htmlClass).mkString(" ")}>
             <thead>
               <tr>
-                <th>{"table_name".localize}</th><th>{"table_value".localize}</th><th></th>
+                <th>{"table_sensor".localize}</th><th>{"table_value".localize}</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -78,7 +94,9 @@ object HardwareTableModel {
                 sensors.value.get.get.toList.sortBy(_._1).map { case (name, row) =>
                   <tr>
                     <td>{name}</td>
-                    <td>{s"${row.value}  ${row.unit}"}</td>
+                    <td style={if(row.flags.contains("ALARM")) Some("color:red") else None}>
+                      {row.toValueUnitString}
+                    </td>
                     <td>{row.flags}</td>
                   </tr>
                 }
