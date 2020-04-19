@@ -45,7 +45,8 @@ class BoincProjectLayout extends BoincClientLayout {
     List(
       TableTheme.table,
       TableTheme.lastRowSmall
-    )
+    ),
+    paged = true
   )
 
   override def render: Elem = {

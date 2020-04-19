@@ -3,10 +3,11 @@ package at.happywetter.boinc.web.pages.component
 import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.Misc
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, Dialog, TableTheme}
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N
 import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement, HTMLInputElement}
@@ -25,9 +26,20 @@ object DataTable {
 
   abstract class TableColumn(val content: Rx[Node], val datasource: TableRow, val dataEntry: Option[String] = None) extends Ordered[TableColumn] {}
 
+  class LinkColumn(val source: Rx[(String, String)]) extends TableColumn(
+    source.map( data =>
+      <a href={data._2} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
+        {data._1}
+      </a>
+    ), null
+  ) {
+    override def compare(that: TableColumn): Int = source.now._1.compareTo(that.asInstanceOf[LinkColumn].source.now._1)
+  }
+
   class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
+
   class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map("%.4f".format(_)), null, dataEntry = Some("number")) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }

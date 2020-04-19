@@ -23,7 +23,7 @@ import scala.xml.Node
   */
 object HardwareTableModel {
 
-  class HardwareTableRow(client: HardwareStatusClient)extends DataTable.TableRow {
+  class HardwareTableRow(client: HardwareStatusClient) extends DataTable.TableRow {
     private val cpuFrequ = client.getCpuFrequency
     private val sensors  = client.getSensorsData
 

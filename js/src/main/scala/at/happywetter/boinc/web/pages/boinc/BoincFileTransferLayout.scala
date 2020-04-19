@@ -10,6 +10,11 @@ import scala.util.Try
 import scala.xml.Elem
 import BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.helper.table.FileTransferTableModel.FileTransferTableRow
+import at.happywetter.boinc.web.helper.table.WuDataTableModel.WuTableRow
+import at.happywetter.boinc.web.pages.component.DataTable
+import at.happywetter.boinc.web.util.GlobalOptions
+import org.scalajs.dom
 
 /**
   * Created by: 
@@ -22,83 +27,54 @@ class BoincFileTransferLayout extends BoincClientLayout {
 
   override val path = "transfers"
 
-  private val data    = Var(List.empty[FileTransfer])
-  private val ccState: Var[Option[CCState]] = Var(Option.empty)
+  private def tableHeaders = List(
+    ("table_project".localize, true),
+    ("table_task".localize, true),
+    ("table_transfer_size".localize, true),
+    ("table_transfer".localize, true),
+    ("table_remain_time".localize, true),
+    ("table_speed".localize, true),
+    ("table_transfer_time".localize, true),
+    ("table_status".localize, false)
+  )
 
-  private def loadData(): Unit = {
-    boinc.getFileTransfer.foreach(fileTransfer => data := fileTransfer)
-    boinc.getCCState.foreach(state => ccState := Some(state))
+  private val ccState: Var[Option[CCState]] = Var(Option.empty)
+  private val dataTable = new DataTable[FileTransferTableRow](tableHeaders, paged = true)
+
+  private var syncTimerID: Int = _
+
+  private def loadData(refresh: Boolean = true): Unit = {
+    if (!refresh)
+      boinc.getCCState.foreach(state => ccState := Some(state))
+
+    boinc.getFileTransfer.foreach{ fileTransfers =>
+      dataTable.reactiveData := fileTransfers.map(new FileTransferTableRow(_, ccState))
+    }
   }
 
-  override def already(): Unit = loadData()
+  override def already(): Unit = {
+    loadData(false)
+  }
+
+  override def leave(): Unit = {
+    dom.window.clearInterval(syncTimerID)
+  }
+
+  override def after(): Unit = {
+    syncTimerID = dom.window.setTimeout(() => loadData(), GlobalOptions.refreshDetailPageTimeout)
+  }
 
   override def render: Elem = {
-    loadData()
+    loadData(false)
 
     <div id="file_transfer">
       <h3 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-exchange-alt" aria-hidden="true"></i>
         {"file_transfer_header".localize}
       </h3>
-      <table class={TableTheme.table.htmlClass}>
-        <thead>
-          <tr>
-            <th>{"table_project".localize}</th><th>{"table_task".localize}</th>
-            <th>{"table_transfer_size".localize}</th>
-            <th>{"table_transfer".localize}</th> <th>{"table_speed".localize}</th>
-            <th>{"table_transfer_time".localize}</th> <th>{"table_status".localize}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            data.map(_.map(transfer => {
-              <tr>
-                <td>{transfer.projectName}</td>
-                <td>{transfer.name}</td>
-                <td>{transfer.byte.toSize}</td>
-                <td>{transfer.fileXfer.bytesXfered.toSize}</td>
-                <td>{transfer.fileXfer.xferSpeed.toSpeed}</td>
-                <td>{transfer.xfer.timeSoFar.toTime}</td>
-                <td>{ccState.map(state => buildStatusField(transfer, state))}</td>
-              </tr>
-            }))
-          }
-        </tbody>
-      </table>
+      { dataTable.component }
     </div>
   }
 
-  def buildStatusField(transfer: FileTransfer, state: Option[CCState]): String = {
-    val builder = new StringBuilder()
-
-    if (transfer.xfer.isUpload) builder.append("upload".localize)
-    else builder.append("download".localize)
-
-    if (transfer.projectBackoff > 0) {
-      builder.append(", ")
-      builder.append("retry_at".localize.format(BoincFormater.convertDate(transfer.xfer.nextRequest)))
-    }
-
-    Try(
-      builder.append(
-        FileTransfer.Status(transfer.status) match {
-          case FileTransfer.Status.GiveUpDownload => s", ${"failed".localize}"
-          case FileTransfer.Status.GiveUpUpload => s", ${"failed".localize}"
-          case _ => ""
-        }
-      )
-    ).recover{
-      case e: Exception =>
-        e.printStackTrace()
-        builder.append(", Status: " + transfer.status)
-    }
-
-    if (state.map(state => CCState.State(state.networkStatus)).getOrElse(CCState.State.Disabled) == CCState.State.Disabled) {
-      builder.append(", ")
-      builder.append("disabled".localize)
-    }
-
-    builder.toString()
-  }
 
 }

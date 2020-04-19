@@ -1,14 +1,14 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.Result
-import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle => BoincClientStyle}
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.table.DataModelConverter._
 import at.happywetter.boinc.web.helper.table.WuDataTableModel.WuTableRow
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
-import at.happywetter.boinc.web.util.ErrorDialogUtil
+import at.happywetter.boinc.web.util.{ErrorDialogUtil, GlobalOptions}
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
@@ -192,8 +192,8 @@ class BoincTaskLayout extends BoincClientLayout {
   override def after(): Unit = {
     loadResults()
 
-    refreshHandle = dom.window.setInterval(() => updateActiveTasks(), 5000)
-    fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), 600000)
+    refreshHandle = dom.window.setInterval(() => updateActiveTasks(), GlobalOptions.refreshDetailPageTimeout)
+    fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), GlobalOptions.refreshDetailPageFullSyncTimeout)
   }
 
   override def leave(): Unit = {
