@@ -2,6 +2,7 @@ package at.happywetter.boinc.web.helper
 
 import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
 import at.happywetter.boinc.shared.parser._
+import mhtml.Var
 
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -13,20 +14,15 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @version 20.09.2017
   */
 object ServerConfig {
+  val config: Var[ServerSharedConfig] = Var(
+    ServerSharedConfig(12 * 60 * 60 * 1000, hardware = false)
+  )
 
-  private var populated = false
-  private var serverConfig = ServerSharedConfig(12 * 60 * 60 * 1000, hardware = false)
-
-  def get: Future[ServerSharedConfig] =
-    if (!populated)
-      queryFromServer.map(config => {
-        serverConfig = config
-        populated = true
-
-        config
-      })
-    else
-      Future { serverConfig }
+  def query: Future[ServerSharedConfig] =
+    queryFromServer.map(config => {
+      this.config := config
+      config
+    })
 
   def queryFromServer: Future[ServerSharedConfig] =
     FetchHelper.get[ServerSharedConfig]("/api/config")

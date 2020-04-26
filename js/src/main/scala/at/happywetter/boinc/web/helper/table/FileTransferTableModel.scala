@@ -32,7 +32,9 @@ object FileTransferTableModel {
       new TableColumn(content = Var(Text(entry.fileXfer.xferSpeed.toSpeed)), this, dataEntry = Some("number")) {
         override def compare(that: TableColumn): Int = entry.fileXfer.xferSpeed.compareTo(that.datasource.asInstanceOf[FileTransferTableRow].entry.fileXfer.xferSpeed)
       },
-      new StringColumn(Var(entry.xfer.timeSoFar.toTime)),
+      new TableColumn(content = Var(Text(entry.xfer.timeSoFar.toTime)), this, dataEntry = Some("number")) {
+        override def compare(that: TableColumn): Int = entry.xfer.timeSoFar.compareTo(that.datasource.asInstanceOf[FileTransferTableRow].entry.xfer.timeSoFar)
+      },
       new StringColumn(Var(entry.name)),
       new StringColumn(ccstate.map(ccstate => buildStatusField(entry, ccstate)))
     )

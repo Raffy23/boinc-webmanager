@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
-import at.happywetter.boinc.web.helper.{AuthClient, WebSocketClient}
+import at.happywetter.boinc.web.helper.{AuthClient, ServerConfig, WebSocketClient}
 import at.happywetter.boinc.web.helper.RichRx._
 import at.happywetter.boinc.web.helper.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
@@ -72,7 +72,9 @@ object Dashboard extends Layout {
     PageLayout.showMenu()
     PageLayout.clearNav()
 
-    AuthClient.validateAction(done)
+    if (AuthClient.validateAction(done)) {
+      ServerConfig.query
+    }
   }
 
   override def already(): Unit = onRender()

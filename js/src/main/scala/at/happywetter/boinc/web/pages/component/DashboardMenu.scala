@@ -5,7 +5,7 @@ import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, We
 import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.Var
+import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -23,8 +23,19 @@ import scala.xml.Elem
 object DashboardMenu {
 
   private val viewState: Var[String] = Var("display:block")
-  private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)
-  processSeverConfig()
+  private val hwMenuEntry: Rx[Elem] =
+    ServerConfig.config.map { config =>
+      if (config.hardware) {
+        <li class={Style.elem.htmlClass}>
+          <a href={HardwarePage.link} onclick={masterSelectionListener}
+             data-navigo={true} data-menu-id="dashboard_hardware">
+            <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
+          </a>
+        </li>
+      } else {
+        <li><span id="config-hardware-disabled"></span></li>
+      }
+    }
 
   class MenuEntry(val name: String, val href: String)
   case class TopLevelEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
@@ -152,23 +163,6 @@ object DashboardMenu {
 
   def show(): Unit = viewState := "display:block"
   def hide(): Unit = viewState := "display:none"
-
-  def processSeverConfig(): Unit = {
-    ServerConfig.get.foreach(config => {
-      if (config == null)
-        dom.console.error("ServerConfig is null!")
-
-      if (config.hardware) {
-        hwMenuEntry :=
-          <li class={Style.elem.htmlClass}>
-            <a href={HardwarePage.link} onclick={masterSelectionListener}
-               data-navigo={true} data-menu-id="dashboard_hardware">
-              <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
-            </a>
-          </li>
-      }
-    })
-  }
 
   def onMenuItemClick(event: Event): Unit = {
     val element = dom.document.querySelector(s"ul[id='dashboard-menu'] a[class='${Style.active.htmlClass}']")

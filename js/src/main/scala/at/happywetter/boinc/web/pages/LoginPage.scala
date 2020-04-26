@@ -18,6 +18,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.web.helper.ServerConfig
 
 /**
   * Created by: 
@@ -87,7 +88,7 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
         AppRouter.navigate(event, Dashboard)
 
         PageLayout.showMenu()
-        DashboardMenu.processSeverConfig()
+        ServerConfig.query
 
       case _ =>
         new OkDialog(

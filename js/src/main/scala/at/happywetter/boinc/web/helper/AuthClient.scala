@@ -54,12 +54,14 @@ object AuthClient {
       }
   }
 
-  def validateAction(done: js.Function0[Unit]): Unit = {
+  def validateAction(done: js.Function0[Unit]): Boolean = {
     if (!FetchHelper.hasToken) {
       AppRouter.navigate(LoginPage.link)
+      false
     } else {
       enableTokenRefresh()
       done()
+      true
     }
   }
 

@@ -32,7 +32,6 @@ class BoincFileTransferLayout extends BoincClientLayout {
     ("table_task".localize, true),
     ("table_transfer_size".localize, true),
     ("table_transfer".localize, true),
-    ("table_remain_time".localize, true),
     ("table_speed".localize, true),
     ("table_transfer_time".localize, true),
     ("table_status".localize, false)

@@ -75,17 +75,19 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
         if(paged) {
           Some(
             <div>
-              {
-                "table_page_size_select".localizeTags(
-                  <select onchange={onPageSizeChange}>
-                    {
-                    DataTable.PageSizes.map(s =>
-                      <option value={s.toString} selected={if(s == curPageSize.now) Some("") else None}>{s.toString}</option>
-                    )
-                    }
-                  </select>
-                )
-              }
+              <label>
+                {
+                  "table_page_size_select".localizeTags(
+                    <select onchange={onPageSizeChange}>
+                      {DataTable.PageSizes.map(s =>
+                      <option value={s.toString} selected={if (s == curPageSize.now) Some("") else None}>
+                        {s.toString}
+                      </option>
+                    )}
+                    </select>
+                  )
+                }
+              </label>
             </div>
           )
         } else None
@@ -131,7 +133,9 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
               </a>
               {
               currentPage.zip(pages).map { case (page, pages) =>
-                <input type="number" value={page.toString} onchange={onPageChange} min="1" max={(pages+1).toString}></input>
+                <input type="number" value={page.toString} onchange={onPageChange}
+                       min="1" max={(pages+1).toString} aria-label={"current_page".localize}>
+                </input>
               }
               }
               / { pages }

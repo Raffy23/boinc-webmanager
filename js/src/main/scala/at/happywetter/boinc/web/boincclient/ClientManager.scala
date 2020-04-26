@@ -13,7 +13,7 @@ import scala.util.Try
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
-import upickle.default
+import at.happywetter.boinc.web.helper.RichRx._
 
 /**
   * Created by: 
@@ -24,7 +24,7 @@ import upickle.default
 object ClientManager {
 
   private val baseURI = "/api/boinc"
-  private def cacheTimeout = ServerConfig.get.map(_.hostNameCacheTimeout)
+  private val cacheTimeout = ServerConfig.config.map(_.hostNameCacheTimeout)
 
   private val CACHE_CLIENTS = "clientmanager/clients"
   private val CACHE_GROUPS  = "clientmanager/groups"
@@ -64,23 +64,22 @@ object ClientManager {
   }
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
-    cacheTimeout.foreach(cacheTimeout => {
-      val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
-      timestamp.fold(
-        _ => {
+    val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
+    timestamp.fold(
+      _ => {
+        saveToCache(clients)
+        dom.console.log("Clientmanager: Could not read timestamp, persisting current dataset")
+      },
+      date => {
+        val current = new Date()
+        if (current.getTime() - date.getTime() > cacheTimeout.now) {
           saveToCache(clients)
-          dom.console.log("Clientmanager: Could not read timestamp, persisting current dataset")
-        },
-        date => {
-          val current = new Date()
-          if (current.getTime() - date.getTime() > cacheTimeout) {
-            saveToCache(clients)
-            dom.console.log("Clientmanager: Updated Clientlist")
-          }
+          dom.console.log("Clientmanager: Updated Clientlist")
         }
-      )
-    })
+      }
+    )
   }
+
 
   private def saveToCache(clients: List[String]): Unit = {
     dom.window.localStorage.setItem(CACHE_REFRESH_TIME, new Date().toUTCString())
@@ -91,23 +90,24 @@ object ClientManager {
   private def readClientsFromServer(): Future[List[String]] = {
     val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
 
-    cacheTimeout.flatMap(cacheTimeout => {
-      timestamp.map(date => {
-        val current = new Date()
+    timestamp.map(date => {
+      val current = new Date()
 
-        if (current.getTime() - date.getTime() > cacheTimeout) {
-          println("Old Cache, reloading groups and clients ...")
-          queryGroups.flatMap(data => {
-            groups = data
-            queryClientsFromServer()
-          })
-        } else {
-          Future { clients.keys.toList }
-        }
+      if (current.getTime() - date.getTime() > cacheTimeout.now) {
+        println("Old Cache, reloading groups and clients ...")
+        queryGroups.flatMap(data => {
+          groups = data
+          queryClientsFromServer()
+        })
+      } else {
+        Future { clients.keys.toList }
+      }
 
-      }).recover{ case _: Exception => queryClientsFromServer() }.get
-    }).map(_.sorted)
+    }).recover{ case _: Exception => queryClientsFromServer() }
+      .get
+      .map(_.sorted)
   }
+
 
   def readClients(): Future[List[String]] = {
     readClientsFromServer().map(data => {
