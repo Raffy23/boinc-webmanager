@@ -217,7 +217,7 @@ class BoincSwarmPage extends SwarmPageLayout {
     event.preventDefault()
     NProgress.start()
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
     val changeList = new mutable.ArrayBuffer[Future[(String, ComputingMode, Boolean)]](boxes.length)
 
@@ -265,7 +265,7 @@ class BoincSwarmPage extends SwarmPageLayout {
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
     val checked = checkAllState.now
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => node.asInstanceOf[HTMLInputElement].checked = checked)
 
     checkAllState.update(!_)

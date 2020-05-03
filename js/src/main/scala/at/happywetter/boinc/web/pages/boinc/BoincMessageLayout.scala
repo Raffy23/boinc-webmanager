@@ -187,7 +187,7 @@ class BoincMessageLayout extends BoincClientLayout {
   }
 
   private def jsOnSelectionChangeAction(newSelection: String): Event => Unit = event => {
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
+    import at.happywetter.boinc.web.facade.NodeListConverter._
 
     event.target.asInstanceOf[HTMLElement].parentNode.childNodes.forEach((node,_,_) => {
       if (!js.isUndefined(node.asInstanceOf[HTMLElement].classList))
@@ -214,7 +214,7 @@ class BoincMessageLayout extends BoincClientLayout {
   }
 
   private def convertContent(content: String) = {
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
+    import at.happywetter.boinc.web.facade.NodeListConverter._
 
     // Parse HTML Input
     val root = new DOMParser().parseFromString(

@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.helper
 
 import at.happywetter.boinc.shared.webrpc.User
 import at.happywetter.boinc.web.boincclient.FetchResponseException
-import at.happywetter.boinc.web.hacks.TextEncoder
+import at.happywetter.boinc.web.facade.TextEncoder
 import at.happywetter.boinc.web.pages.LoginPage
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._

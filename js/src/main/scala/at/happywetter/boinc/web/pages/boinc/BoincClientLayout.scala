@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
-import at.happywetter.boinc.web.hacks.Implicits._
+import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.BoincTopNavigation

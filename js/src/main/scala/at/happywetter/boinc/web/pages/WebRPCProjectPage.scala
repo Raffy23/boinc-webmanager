@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle
-import at.happywetter.boinc.web.hacks.Implicits.RichWindow
+import at.happywetter.boinc.web.facade.Implicits.RichWindow
 import at.happywetter.boinc.web.helper.FetchHelper.FetchRequest
 import at.happywetter.boinc.web.helper.{AuthClient, FetchHelper}
 import at.happywetter.boinc.web.pages.component.DashboardMenu

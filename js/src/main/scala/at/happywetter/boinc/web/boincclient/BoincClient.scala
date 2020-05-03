@@ -7,7 +7,7 @@ import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.shared.webrpc.{AddProjectBody, BoincModeChange, ProjectRequestBody, WorkunitRequestBody}
 import at.happywetter.boinc.web.helper.FetchHelper
 import org.scalajs.dom
-import at.happywetter.boinc.web.hacks.Implicits._
+import at.happywetter.boinc.web.facade.Implicits._
 
 import scala.concurrent.Future
 

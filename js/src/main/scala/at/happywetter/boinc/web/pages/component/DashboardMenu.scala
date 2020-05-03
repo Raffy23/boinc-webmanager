@@ -170,7 +170,7 @@ object DashboardMenu {
       element.setAttribute("class", "")
 
     var me = event.target.asInstanceOf[HTMLElement]
-    while (me.nodeName != "li") {
+    while (me.nodeName.toLowerCase() != "a") {
       me = me.parentElement
     }
 
@@ -193,7 +193,7 @@ object DashboardMenu {
     val elements = dom.document.querySelectorAll("ul[id='dashboard-menu'] a[data-menu-id='"+reference+"']")
 
     if(elements != null) {
-      import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+      import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
       elements.forEach((node, _, _) => {
         menuNode.removeChild(node.parentNode)
       })
@@ -228,7 +228,7 @@ object DashboardMenu {
     val rootElement = dom.document.getElementById("dashboard-menu")
     var marked = false
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     rootElement.childNodes.forEach((li, _, _) => {
       if (li.firstChild != null && li.firstChild.textContent == content) {
         li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)

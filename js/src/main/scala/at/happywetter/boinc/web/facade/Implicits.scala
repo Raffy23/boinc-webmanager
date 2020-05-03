@@ -1,4 +1,4 @@
-package at.happywetter.boinc.web.hacks
+package at.happywetter.boinc.web.facade
 
 import org.scalajs.dom.raw
 

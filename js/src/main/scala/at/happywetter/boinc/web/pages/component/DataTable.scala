@@ -179,7 +179,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
   }
 
   private def tableSortFunction(idx: Int): (Event) => Unit = (event) => {
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
 
     var target = event.target.asInstanceOf[HTMLElement]
     while (target.nodeName != "TH") {

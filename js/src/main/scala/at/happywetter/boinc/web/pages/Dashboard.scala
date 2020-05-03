@@ -118,7 +118,7 @@ object Dashboard extends Layout {
 
 
   override def render: Elem = {
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
+    import at.happywetter.boinc.web.facade.NodeListConverter._
 
     <div>
       <div class={FloatingMenu.root.htmlClass}>
@@ -347,7 +347,7 @@ object Dashboard extends Layout {
   }
 
   private def calculateOffsetOfWoruntsTable(): Unit = {
-    import at.happywetter.boinc.web.hacks.NodeListConverter._
+    import at.happywetter.boinc.web.facade.NodeListConverter._
 
     var max = 0D
     dom.document.querySelectorAll("#workunits_table_container > table > thead > tr span").forEach((node, _, _) => {

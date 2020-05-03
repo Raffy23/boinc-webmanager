@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.helper
 
-import at.happywetter.boinc.web.hacks.Navigator
+import at.happywetter.boinc.web.facade.Navigator
 
 /**
   * Created by: 

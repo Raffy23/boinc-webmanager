@@ -239,7 +239,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
     val result = new ListBuffer[String]()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => {
       if (node.asInstanceOf[HTMLInputElement].checked)
         result += node.asInstanceOf[HTMLInputElement].value
@@ -253,7 +253,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
     event.preventDefault()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => node.asInstanceOf[HTMLInputElement].checked = true)
   }
 
