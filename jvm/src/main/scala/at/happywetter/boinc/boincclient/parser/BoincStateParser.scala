@@ -71,13 +71,26 @@ object BoincStateParser {
               throw new RuntimeException("Unable get get app_version for " + (n \ "app_name").text)
 
             val app = curApp.dequeue()
-            apps.put((app \ "name").text
-              , App((app \ "name").text, (app \ "user_friendly_name").text, toBool(app \ "non_cpu_intensive")
-                , AppVersion((n \ "version_num").text.toInt
-                  , (n \ "platform").text
-                  , (n \ "flops").text.toDouble
-                  , (n \ "avg_ncpus").text.toDouble
-                  , (n \ "max_ncpus").text.toDouble)
+            println(n)
+            apps.put((app \ "name").text,
+              App(
+                (app \ "name").text,
+                (app \ "user_friendly_name").text,
+                toBool(app \ "non_cpu_intensive"),
+                AppVersion(
+                  (n \ "version_num").text.toInt,
+                  (n \ "platform").text,
+                  (n \ "flops").text.toDouble,
+                  (n \ "avg_ncpus").text.toDouble,
+                  (n \ "max_ncpus").toOptionDouble,
+                  (n \ "api_version").text,
+                  (n \ "plan_class").optionalText,
+                  List.empty, // TODO: Implement FileRef parsing
+                  None, // TODO: Implement co-proc parsing
+                  (n \ "gpu_ram").toOptionDouble,
+                  (n \ "dont_throttle").existsNode,
+                  (n \ "needs_network").existsNode
+                )
                 , curProject.url
               )
             )

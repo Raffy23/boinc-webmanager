@@ -169,7 +169,21 @@ package object boincrpc {
                               platform: String,
                               flops: Double,
                               avgCpus: Double,
-                              maxCpus: Double)
+                              maxCpus: Option[Double],
+                              apiVersion: String,
+                              planClass: Option[String],
+                              files: List[FileRef],
+                              coproc: Option[AppVersionCoProc],
+                              gpuRam: Option[Double],
+                              dontThrottle: Boolean,
+                              needsNetwork: Boolean)
+
+  final case class FileRef(fileName: String,
+                           openName: Option[String],
+                           mainProgram: Boolean,
+                           copyFile: Boolean)
+
+  final case class AppVersionCoProc(`type`: String, count: Double)
 
   final case class BoincState(hostInfo: HostInfo,
                               projects: List[Project],

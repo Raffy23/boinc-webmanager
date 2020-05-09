@@ -57,6 +57,24 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   var reader: InputStream = _
   var authenticated = false
 
+  /**
+   * TODO: Implement exchange Version:
+   * SEND:
+   * <exchange_versions>
+   * <major>7</major>
+   * <minor>16</minor>
+   * <release>6</release>
+   * <name>BOINC Manager 7.16.6</name>
+   * </exchange_versions>
+   *
+   * GET:
+   * <server_version>
+   * <major>7</major>
+   * <minor>16</minor>
+   * <release>6</release>
+   * </server_version>
+   */
+
   protected val logger: Logger = LoggerFactory.getLogger(BoincClient.getClass.getCanonicalName)
 
   private def connect(): Unit = {

@@ -9,6 +9,8 @@ package at.happywetter.boinc.shared
 package object parser {
   import upickle.default._
 
+  implicit val fileRefParser = macroRW[boincrpc.FileRef]
+  implicit val appVersionCoProcParser = macroRW[boincrpc.AppVersionCoProc]
   implicit val appVersionParser = macroRW[boincrpc.AppVersion]
   implicit val appParser = macroRW[boincrpc.App]
   implicit val coProcGlParser = macroRW[boincrpc.CoProcessorOpenCL]
