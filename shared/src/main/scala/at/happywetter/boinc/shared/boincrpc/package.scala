@@ -22,17 +22,20 @@ package object boincrpc {
                         ,workingSet: Double
                         ,progress: Double)
 
-  final case class Result(name: String
-                          ,wuName: String
-                          ,platfrom: String
-                          ,version: String
-                          ,plan: String
-                          ,project: String
-                          ,state: Int
-                          ,supsended: Boolean
-                          ,activeTask: Option[Task]
-                          ,remainingCPU: Double
-                          ,reportDeadline: Double) {
+  final case class Result(name: String,
+                          wuName: String,
+                          platfrom: String,
+                          version: String, // version_num
+                          plan: String, // plan_class
+                          project: String,
+                          state: Int,
+                          supsended: Boolean,
+                          activeTask: Option[Task],
+                          remainingCPU: Double, // estimated_cpu_time_remaining
+                          reportDeadline: Double,
+                          finalCPUTime: Double,
+                          finalElapsedTime: Double,
+                          exitStatus: Int) {
 
     override def equals(obj: scala.Any): Boolean = obj.asInstanceOf[Result].wuName.equals(wuName)
     override def hashCode(): Int = wuName.hashCode
@@ -44,7 +47,7 @@ package object boincrpc {
       val Result_File_Downloading = Value(1)
       val Result_Files_Downloaded = Value(2)
       val Result_Compute_Error = Value(3)
-      val Result_Files_Uploading = Value(4)
+      val Result_Files_Uploading = Value(4) // aka. Task finished computing
       val Result_Files_Uploaded = Value(5)
       val Result_Aborted = Value(6)
       val Result_Upload_Failed = Value(7)
@@ -344,6 +347,7 @@ package object boincrpc {
       val GetFileTransfer = Value("filetransfers")
       val ReadGlobalPrefsOverride = Value("global_prefs_override")
       val GetNotices = Value("notices")
+      val RetryFileTransfer = Value("retry_file_transfer")
 
       import scala.language.implicitConversions
       implicit def unapply(arg: Command): String = arg.toString

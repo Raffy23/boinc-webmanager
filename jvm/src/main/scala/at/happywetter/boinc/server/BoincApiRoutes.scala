@@ -112,6 +112,11 @@ object BoincApiRoutes extends ResponseEncodingHelper {
         Ok(client.readGlobalPrefsOverride, request)
       }).getOrElse(BadRequest())
 
+    case request @ POST -> Root / "boinc" / name / "retry_file_transfer" =>
+      executeForClient[RetryFileTransferBody, Boolean](hostManager, name, request, (client, requestBody) => {
+        client.retryFileTransfer(requestBody.project, requestBody.file)
+      })
+
     case _ => NotAcceptable()
   }
 

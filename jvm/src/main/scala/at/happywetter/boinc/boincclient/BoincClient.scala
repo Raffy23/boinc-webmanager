@@ -271,6 +271,17 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     ).toNotices
   }
 
+
+  override def retryFileTransfer(project: String, file: String): Future[Boolean] = Future {
+    logger.trace(s"Retry file transfer for $project ($file)")
+    (this.execAction(
+      <retry_file_transfer>
+        <project_url>{project}</project_url>
+        <filename>{file}</filename>
+      </retry_file_transfer>
+    ) \ "success").xml_==(<success/>)
+  }
+
   override def getStatistics: Future[Statistics] = Future {
     logger.trace("Getting Statistics from " + address + ":" + port)
     execCommand(BoincClient.Command.GetStatistics).toStatistics

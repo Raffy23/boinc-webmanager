@@ -37,6 +37,7 @@ package object parser {
   implicit val noticeParser = macroRW[boincrpc.Notice]
 
 
+  implicit val retryFileTransferParser = macroRW[webrpc.RetryFileTransferBody]
   implicit val wuRBodyParser = macroRW[webrpc.WorkunitRequestBody]
   implicit val projRBodyParser = macroRW[webrpc.ProjectRequestBody]
   implicit val addProjectParser = macroRW[webrpc.AddProjectBody]

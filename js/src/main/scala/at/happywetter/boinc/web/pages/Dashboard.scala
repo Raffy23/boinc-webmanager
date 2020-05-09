@@ -383,7 +383,7 @@ object Dashboard extends Layout {
               state.workunits
                 .find(wu => wu.name == p.wuName)
                 .flatMap(wu => state.apps.get(wu.appName))
-                .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.ceil.toInt)
+                .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.getOrElse(1.0D).ceil.toInt)
                 .getOrElse(0)
             ).sum
 

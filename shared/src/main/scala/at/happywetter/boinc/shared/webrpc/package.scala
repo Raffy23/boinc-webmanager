@@ -39,6 +39,8 @@ package object webrpc {
 
   final case class BoincModeChange(mode: String, duration: Double)
 
+  final case class RetryFileTransferBody(project: String, file: String)
+
   final case class AddProjectBody(projectUrl: String, projectName: String, user: String, password: String)
 
   final case class ApplicationError(reason: String)

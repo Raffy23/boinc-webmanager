@@ -34,7 +34,8 @@ class BoincFileTransferLayout extends BoincClientLayout {
     ("table_transfer".localize, true),
     ("table_speed".localize, true),
     ("table_transfer_time".localize, true),
-    ("table_status".localize, false)
+    ("table_status".localize, false),
+    ("", false)
   )
 
   private val ccState: Var[Option[CCState]] = Var(Option.empty)

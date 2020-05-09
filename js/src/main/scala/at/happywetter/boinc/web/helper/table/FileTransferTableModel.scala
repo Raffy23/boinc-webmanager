@@ -1,12 +1,15 @@
 package at.happywetter.boinc.web.helper.table
 
 import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
-import at.happywetter.boinc.web.boincclient.BoincFormater
-import at.happywetter.boinc.web.pages.component.DataTable
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
+import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.pages.component.DataTable.{DoubleColumn, LinkColumn, StringColumn, TableColumn}
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
-import mhtml.Var
+import mhtml.{Rx, Var}
 import at.happywetter.boinc.web.util.I18N._
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import scala.util.Try
 import scala.xml.Text
@@ -19,7 +22,7 @@ import scala.xml.Text
  */
 object FileTransferTableModel {
 
-  class FileTransferTableRow(private val entry: FileTransfer, ccstate: Var[Option[CCState]]) extends DataTable.TableRow {
+  class FileTransferTableRow(private val entry: FileTransfer, ccstate: Var[Option[CCState]])(implicit boinc: BoincClient) extends DataTable.TableRow {
     override val columns: List[DataTable.TableColumn] = List(
       new LinkColumn(Var((entry.projectName, entry.projectUrl))),
       new StringColumn(Var(entry.name)),
@@ -35,9 +38,32 @@ object FileTransferTableModel {
       new TableColumn(content = Var(Text(entry.xfer.timeSoFar.toTime)), this, dataEntry = Some("number")) {
         override def compare(that: TableColumn): Int = entry.xfer.timeSoFar.compareTo(that.datasource.asInstanceOf[FileTransferTableRow].entry.xfer.timeSoFar)
       },
-      new StringColumn(ccstate.map(ccstate => buildStatusField(entry, ccstate)))
+      new StringColumn(ccstate.map(ccstate => buildStatusField(entry, ccstate))),
+      new TableColumn(Rx{
+        <div>
+          {
+            new Tooltip(Var("retry_file_transfer".localize),
+              <a href="#" onclick={jsRetryAction}>
+                <i class="fas fa-redo"></i>
+              </a>
+            ).toXML
+          }
+        </div>
+      }, this) {
+        override def compare(that: TableColumn): Int = 0
+      }
     )
+
+    private lazy val jsRetryAction: Event => Unit = _ => {
+      boinc.retryFileTransfer(entry.projectUrl, entry.name).foreach { result =>
+        if (!result)
+          dom.console.error(s"retryFileTransfer for ${entry.projectUrl} (${entry.name}) failed!")
+      }
+    }
+
   }
+
+
 
   private def buildStatusField(transfer: FileTransfer, state: Option[CCState]): String = {
     val builder = new StringBuilder()

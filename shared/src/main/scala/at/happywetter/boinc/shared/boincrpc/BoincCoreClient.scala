@@ -34,6 +34,7 @@ trait BoincCoreClient {
   def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean]
   def project(url: String, action: ProjectAction): Future[Boolean]
   def attachProject(url: String, authenticator: String, name: String): Future[Boolean]
+  def retryFileTransfer(project: String, file: String): Future[Boolean]
 
   // Change Run Modes
   def setCpu(mode: BoincRPC.Modes.Value, duration: Double = 0): Future[Boolean]

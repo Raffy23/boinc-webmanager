@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 import at.happywetter.boinc.shared.boincrpc._
-import at.happywetter.boinc.shared.webrpc.{AddProjectBody, BoincModeChange, ProjectRequestBody, WorkunitRequestBody}
+import at.happywetter.boinc.shared.webrpc.{AddProjectBody, BoincModeChange, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
 import at.happywetter.boinc.web.helper.FetchHelper
 import org.scalajs.dom
 import at.happywetter.boinc.web.facade.Implicits._
@@ -48,7 +48,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
 
   override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] =
     FetchHelper.post[WorkunitRequestBody, Boolean](
-      uri(BoincRPC.Command.GetActiveResults),
+      uri(BoincRPC.Command.GetActiveResults, name),
       WorkunitRequestBody(project, action.toString)
     )
 
@@ -114,5 +114,11 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
 
   override def readGlobalPrefsOverride: Future[Boolean] =
     FetchHelper.patch[Boolean](uri(BoincRPC.Command.ReadGlobalPrefsOverride))
+
+  override def retryFileTransfer(project: String, file: String): Future[Boolean] =
+    FetchHelper.post[RetryFileTransferBody, Boolean](
+      uri(BoincRPC.Command.RetryFileTransfer),
+      RetryFileTransferBody(project, file)
+    )
 
 }

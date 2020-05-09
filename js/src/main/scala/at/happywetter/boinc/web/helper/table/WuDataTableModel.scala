@@ -45,8 +45,8 @@ object WuDataTableModel {
     val remainingCPU: Var[Double] = Var(result.remainingCPU)
     val reportDeadline: Var[Double] = Var(result.reportDeadline)
 
-    val progress: Rx[Double] = activeTask.map(_.map(_.done).getOrElse(0D))
-    val pastTime: Rx[Double] = activeTask.map(_.map(_.time).getOrElse(0D))
+    val progress: Rx[Double] = activeTask.map(_.map(_.done).getOrElse(if (result.state >= 4) 1.0D else 0.0D))
+    val pastTime: Rx[Double] = activeTask.map(_.map(_.time).getOrElse(result.finalElapsedTime))
 
     val appName: Var[String] = Var("")
     val app: Rx[Option[App]] =
@@ -57,6 +57,8 @@ object WuDataTableModel {
 
     val uiStatus: Rx[String] =
       Var(prettyPrintStatus(result)).zip(app.map(x => prettyPrintAppStatus(x))).map(x => x._1 + x._2)
+
+    val exitStatus: Int = result.exitStatus
   }
 
   class WuTableRow(val result: ReactiveResult)(implicit boinc: BoincClient) extends DataTable.TableRow {
@@ -68,7 +70,9 @@ object WuDataTableModel {
           <progress value={result.progress.map(_.toString)} max="1"></progress>
           <span>
             {
-              result.progress.map(value => (value*100D).toString.split("\\.")(0) + " %")
+              result.progress.map { value =>
+                (value*100D).toString.split("\\.")(0) + " %"
+              }
             }
           </span>
         </span>
@@ -178,6 +182,7 @@ object WuDataTableModel {
               }))
             }
             <tr><td><b>{"wu_dialog_plan_class".localize}</b></td><td>{result.plan}</td></tr>
+            <tr><td><b>{"wu_dialog_exist_status".localize}</b></td><td>{result.exitStatus}</td></tr>
           </tbody>
         </table>
       )

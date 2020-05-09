@@ -71,7 +71,6 @@ object BoincStateParser {
               throw new RuntimeException("Unable get get app_version for " + (n \ "app_name").text)
 
             val app = curApp.dequeue()
-            println(n)
             apps.put((app \ "name").text,
               App(
                 (app \ "name").text,

@@ -128,4 +128,8 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
   override def getNotices(seqno: Int): Future[List[Notice]] = connection(_.getNotices(seqno))
 
   override def readGlobalPrefsOverride: Future[Boolean] = connection(_.readGlobalPrefsOverride)
+
+  override def retryFileTransfer(project: String, file: String): Future[Boolean] =
+    connection(_.retryFileTransfer(project, file))
+
 }
