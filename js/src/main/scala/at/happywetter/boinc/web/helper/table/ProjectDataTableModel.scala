@@ -50,8 +50,8 @@ object ProjectDataTableModel {
       },
       new StringColumn(Var(project.data.userName)),
       new StringColumn(Var(project.data.teamName)),
-      new DoubleColumn(Var(project.data.hostAvgCredit)),
       new DoubleColumn(Var(project.data.userTotalCredit)),
+      new DoubleColumn(Var(project.data.hostAvgCredit)),
       new TableColumn( Var(
         <div>
           {

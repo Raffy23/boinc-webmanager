@@ -13,6 +13,7 @@ import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement, HTMLInputElement}
 import at.happywetter.boinc.web.util.I18N._
 
+import scala.scalajs.js
 import scala.util.Random
 import scala.xml.{Elem, Node, Text}
 
@@ -40,7 +41,13 @@ object DataTable {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
 
-  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map("%.4f".format(_)), null, dataEntry = Some("number")) {
+  class DoubleColumn(val source: Rx[Double]) extends TableColumn(
+    datasource = null,
+    dataEntry = Some("number"),
+    content = source.map(number => {
+      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+      number.asInstanceOf[JSNumberOps].toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2))
+    })) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 

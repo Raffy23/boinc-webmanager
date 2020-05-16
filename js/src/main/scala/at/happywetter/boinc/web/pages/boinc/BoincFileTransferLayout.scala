@@ -61,12 +61,11 @@ class BoincFileTransferLayout extends BoincClientLayout {
   }
 
   override def after(): Unit = {
-    syncTimerID = dom.window.setTimeout(() => loadData(), GlobalOptions.refreshDetailPageTimeout)
+    loadData(false)
+    syncTimerID = dom.window.setInterval(() => loadData(), GlobalOptions.refreshDetailPageTimeout)
   }
 
   override def render: Elem = {
-    loadData(false)
-
     <div id="file_transfer">
       <h3 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-exchange-alt" aria-hidden="true"></i>
