@@ -10,7 +10,7 @@ import at.happywetter.boinc.web.util.I18N.Locale
   */
 object StatisticPlatforms {
 
-  def freedc(cpid: String) = s"http://stats.free-dc.org/stats.php?page=hostbycpid&cpid=$cpid"
-  def boincStats(cpid: String) = s"http://boincstats.com/${Locale.current}/stats/-1/host/detail/$cpid"
+  def freedc(cpid: String) = s"https://stats.free-dc.org/stats.php?page=hostbycpid&cpid=$cpid"
+  def boincStats(cpid: String) = s"https://boincstats.com/${Locale.current}/stats/-1/host/detail/$cpid"
 
 }

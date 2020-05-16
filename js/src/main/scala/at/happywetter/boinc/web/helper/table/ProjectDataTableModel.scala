@@ -158,6 +158,7 @@ object ProjectDataTableModel {
     private lazy val jsShowDetailsAction: (Event) => Unit = { event =>
       event.preventDefault()
 
+      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
       new OkDialog("workunit_dialog_properties".localize + " " + project.data.name,
         List(
           <h4 class={BoincClientStyle.h4.htmlClass}>{"project_dialog_general_header".localize}</h4>,
@@ -181,10 +182,10 @@ object ProjectDataTableModel {
                 <td>
                   {project.data.hostID}
                   <span style="float:right">
-                    <a href={StatisticPlatforms.freedc(project.data.cpid)} onclick={AppRouter.openExternal}>
+                    <a href={StatisticPlatforms.freedc(project.data.cpid)} target="_blank">
                       <img src="/files/images/freedc_icon.png" alt="freedc-icon"></img>
                     </a>
-                    <a href={StatisticPlatforms.boincStats(project.data.cpid)} onclick={AppRouter.openExternal}>
+                    <a href={StatisticPlatforms.boincStats(project.data.cpid)} target="_blank">
                       <img src="/files/images/boincstats_icon.png" alt="boincstats-icon"></img>
                     </a>
                   </span>
@@ -199,10 +200,10 @@ object ProjectDataTableModel {
           <h4 class={BoincClientStyle.h4.htmlClass}>{"project_dialog_credits_header".localize}</h4>,
           <table class={TableTheme.table.htmlClass}>
             <tbody>
-              <tr><td><b>{"project_dialog_credits_user".localize}</b></td><td>{project.data.userTotalCredit}</td></tr>
-              <tr><td><b>{"project_dialog_credits_uavg".localize}</b></td><td>{project.data.userAvgCredit}</td></tr>
-              <tr><td><b>{"project_dialog_credits_host".localize}</b></td><td>{project.data.hostTotalCredit}</td></tr>
-              <tr><td><b>{"project_dialog_credits_havg".localize}</b></td><td>{project.data.hostAvgCredit}</td></tr>
+              <tr><td><b>{"project_dialog_credits_user".localize}</b></td><td style="text-align:right">{project.data.userTotalCredit.asInstanceOf[JSNumberOps].toLocaleString()}</td></tr>
+              <tr><td><b>{"project_dialog_credits_uavg".localize}</b></td><td style="text-align:right">{project.data.userAvgCredit.asInstanceOf[JSNumberOps].toLocaleString()}</td></tr>
+              <tr><td><b>{"project_dialog_credits_host".localize}</b></td><td style="text-align:right">{project.data.hostTotalCredit.asInstanceOf[JSNumberOps].toLocaleString()}</td></tr>
+              <tr><td><b>{"project_dialog_credits_havg".localize}</b></td><td style="text-align:right">{project.data.hostAvgCredit.asInstanceOf[JSNumberOps].toLocaleString()}</td></tr>
             </tbody>
           </table>,
           <h4 class={BoincClientStyle.h4.htmlClass}>{"project_actions".localize}</h4>,
