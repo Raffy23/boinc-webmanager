@@ -46,7 +46,7 @@ object DataTable {
     dataEntry = Some("number"),
     content = source.map(number => {
       import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
-      number.asInstanceOf[JSNumberOps].toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2))
+      number.asInstanceOf[JSNumberOps].toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2, "maximumFractionDigits" -> 2))
     })) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
