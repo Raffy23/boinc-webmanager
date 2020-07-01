@@ -3,10 +3,12 @@ package at.happywetter.boinc.server
 import java.util.concurrent.{Executors, ThreadFactory}
 
 import at.happywetter.boinc.AppConfig.Config
+import at.happywetter.boinc.util.IOAppTimer
 import at.happywetter.boinc.web.css.CSSRenderer
 import cats.effect._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
@@ -17,24 +19,11 @@ import scala.concurrent.ExecutionContext
   * @version 17.08.2017
   */
 object WebResourcesRoute {
-
   import org.http4s._
 
-  private val blockingPool = ExecutionContext.fromExecutor(
-    Executors.newFixedThreadPool(
-      Runtime.getRuntime.availableProcessors,
-      (r: Runnable) => {
-        val t = new Thread(r)
-        t.setDaemon(true)
-        t.setName("web-resources-blocking-pool-thread")
-
-        t
-      }
-    )
-  )
-  private val blocker      = Blocker.liftExecutionContext(blockingPool)
-
+  private val blocker = IOAppTimer.blocker
   private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
+  private val LOG = LoggerFactory.getILoggerFactory.getLogger(this.getClass.getCanonicalName)
 
   // Workaround of content encoding Bugs
   private val contentTypes = Map[String, String](
@@ -130,10 +119,8 @@ object WebResourcesRoute {
   private def fromResource(file: String, request: Request[IO]) =
     StaticFile.fromResource("/web-root/" + file, blocker, Some(request))
 
-  private def fromFile(file: String, request: Request[IO])(implicit config: Config) = {
-    println(s"fromString(${config.server.webroot + file}")
+  private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
     StaticFile.fromString(config.server.webroot + file, blocker, Some(request))
-  }
 
 
   private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) = {
@@ -154,9 +141,8 @@ object WebResourcesRoute {
           cType.map(x => Header("Content-Type", x)).getOrElse(Header("", ""))
         )
       ).getOrElseF(
-        normalFile.getOrElseF{
-           println(s"Could not load $file")
-
+        normalFile.getOrElseF {
+          LOG.error(s"Can not load $file")
           NotFound()
         }
       )

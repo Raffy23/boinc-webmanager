@@ -2,12 +2,12 @@ package at.happywetter.boinc.util
 
 import java.net.{InetSocketAddress, Socket}
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture, TimeUnit}
+import java.util.concurrent.{ScheduledFuture, TimeUnit}
 
 import at.happywetter.boinc.AppConfig.AutoDiscovery
+import cats.effect.{Blocker, ContextShift, IO}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * Created by: 
@@ -15,22 +15,29 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 19.09.2017
   */
-class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: Future[List[IP]] => Unit)(implicit val scheduler: ScheduledExecutorService) {
+class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] => Unit, blocker: Blocker)(implicit contextShift: ContextShift[IO]) {
 
   private val start = IP(config.startIp)
   private val end   = IP(config.endIp)
 
   val excluded = new AtomicReference[List[IP]](List.empty)
+  private val scheduler = IOAppTimer.scheduler
+
+
   val task: Option[ScheduledFuture[_]] =
-    if (config.enabled) Some(scheduler.scheduleWithFixedDelay(() => autoScanCallback( search() ), config.scanTimeout, config.scanTimeout, TimeUnit.MINUTES))
+    if (config.enabled) Some(scheduler.scheduleWithFixedDelay(() => autoScanCallback( search().unsafeRunSync() ), config.scanTimeout, config.scanTimeout, TimeUnit.MINUTES))
     else None
 
   def destroy(): Unit = task.map(_.cancel(true))
 
-  def search(): Future[List[IP]] =
-    Future
-      .sequence( probeRange(config.port) )
+  def search(): IO[List[IP]] = {
+    import cats.instances.list._
+    import cats.syntax.parallel._
+
+    probeRange(config.port)
+      .parSequence
       .map(_.filter { case (ip, found) => excludeIP(ip, found) }.map(_._1) )
+  }
 
   private def excludeIP(ip: IP, found: Boolean): Boolean = {
     if (found)
@@ -39,19 +46,23 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: Future[List
     found
   }
 
-  private def probeRange(port: Int) = (start to end)
+  private def probeRange(port: Int): List[IO[(IP, Boolean)]] = (start to end)
     .filterNot(excluded.get().contains)
     .map(ip => { probeSocket(ip, port) })
     .toList
 
-  private def probeSocket(ip: IP, port: Int) = Future {
-    val socket = new Socket()
-    socket.connect(new InetSocketAddress(ip.toInetAddress, port), config.timeout)
-    socket.close()
+  private def probeSocket(ip: IP, port: Int): IO[(IP, Boolean)] = contextShift.blockOn(blocker) {
+    IO.async { resolve =>
+      resolve.apply(
+        Try {
+          val socket = new Socket()
+          socket.connect(new InetSocketAddress(ip.toInetAddress, port), config.timeout)
+          socket.close()
 
-    (ip, true)
-  }.recover {
-    case _: Exception => (ip, false)
+          (ip, true)
+        }.recover(_ => (ip, false)).toEither
+      )
+    }
   }
 
 }

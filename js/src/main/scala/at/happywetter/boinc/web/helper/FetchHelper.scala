@@ -27,11 +27,11 @@ object FetchHelper {
   header.set("Accept", if(USE_MESSAGE_PACK_FORMAT) "application/messagepack" else "application/json")
 
   def setToken(token: String): Unit = {
-    header.set("X-Authorization", token)
+    header.set("Authorization", "Bearer " + token)
   }
 
   def hasToken: Boolean = {
-    header.get("X-Authorization") != null && header.get("X-Authorization").map(_.nonEmpty).getOrElse(false)
+    header.get("Authorization") != null && header.get("Authorization").map(_.nonEmpty).getOrElse(false)
   }
 
   def get[A](uri: String)(implicit decoder: Reader[A]): Future[A] = {

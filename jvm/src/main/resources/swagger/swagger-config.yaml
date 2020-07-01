@@ -1,0 +1,1169 @@
+openapi: 3.0.0
+info:
+  title: Boinc Webmanager API
+  description: API description of the REST Interface of the BOINC Webmanager. For all API Endpoints
+    a JWT Token from the `/auth` endpoint is needed. Depending on the `Content-Type` header
+    the response will be encoded accordingly by the server. The default encoding without any `Content-Type`
+    header is `application/messagepack`. All POST request bodys must be in `application/json` encoding.
+  version: "1.0"
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: /
+    description: Boinc Webmanager
+
+tags:
+  - name: Authentication
+    description: All Endpoints for the authentication flow
+  - name: Boinc
+    description: Endpoints for the communication with the BOINC core clients
+  - name: Others
+    description: All other endpoints
+
+paths:
+  /auth:
+    get:
+      summary: Returns a securly generated nonce which should be used when hashing the password
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: A nonce formatted as string
+          content:
+            text:
+              example: "8220b3f64911d93e285000fbf6296cc35725a0fbb76ebd7472f8d3c98dea7c5e"
+
+    post:
+      summary: Request a JWT Token from the given credentials, if the Page is served over HTTPS then
+               the server expects the password hashed with a nonce. Otherwise the nonce is ignored
+               and the clear text password is compared.
+      tags:
+        - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                passwordHash:
+                  type: string
+                nonce:
+                  type: String
+            examples:
+              'Secure endpoint':
+                value:
+                  username: admin
+                  passwordHash: 5d3f1e16bb4116629be9564195450984540ef4a1cae14c5c6c0a85e363a9b184
+                  nonce: 88edf81c36daec50fb94c67ec084376c2f1c1e4b53d5a56a880f82be09b330e2
+              'Non secure endpoint':
+                value:
+                  username: admin
+                  passwordHash: password
+                  nonce:
+          application/messagepack:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                passwordHash:
+                  type: string
+                nonce:
+                  type: String
+
+      responses:
+        '200':
+          description: The user credentials where valid resulting in a JWT Token that should be used
+                       in the Authorization header
+          content:
+            text:
+              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw"
+        '400':
+          description: Either the user credentials where invalid or the request body could not be
+                       parsed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationError"
+              example:
+                - reason: error_invalid_credentials
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ApplicationError"
+
+  /auth/refresh:
+    get:
+      summary: This Endpoint can be used to refresh the given token. The JWT Token must be valid otherwise
+               the request will fail
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: The token was refreshed successfully and should be used for further communication
+          content:
+            text:
+              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw"
+        '401':
+          description: Either the token is invalid or no token was attached to the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationError"
+              examples:
+                'Invalid Token':
+                  value:
+                    reason: error_invalid_token
+                'No Token':
+                  value:
+                    reason: error_no_token
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ApplicationError"
+
+  /api:
+    get:
+      summary: Redirects to the Swagger endpoint to view the documentation
+      security:
+        - bearerAuth: []
+      responses:
+        '304':
+          description: Redirects to the Swagger endpoint
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc:
+    get:
+      summary: Returns a list of all hostnames of connected boinc core clients
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of hostnames
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                [Host1, Host2, Host3]
+            application/messagepack:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Either invalid or no token was provided
+
+
+  /api/config:
+    get:
+      summary: Returns the config that is shared between the server and the fronted
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The ServerStatus object formatted as JSON
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/groups:
+    get:
+      summary: A directory that contains a list of hostnames for all groups
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All groups with their resprective hostnames
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostGroups"
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/HostGroups"
+
+        '401':
+          description: Either invalid or no token was provided
+
+
+  /api/groups/version:
+    get:
+      summary: The version of the current groups entry
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The version of the groups entry, usually a unix timestamp when the last change
+                       was
+          content:
+            application/messagepack:
+              schema:
+                type: string
+                example: "1593602046"
+            application/json:
+              schema:
+                type: string
+                example: "1593602046"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/project_list:
+    get:
+      summary: A list of all projects known to the BOINC Webmanager
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Returns a list of all projects with their details. These projects can be added
+                       to the core clients with other requests.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoincProjectMetaData"
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/BoincProjectMetaData"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/tasks:
+    get:
+      summary: Lists all tasks for the {hostname} host
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description: Lists all current active tasks of the {hostname} host that are processed
+                       by the core client. To query all tasks that are stored in the core client
+                       use `/api/boinc/{hostname}/all_tasks`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Result"
+            application/messagepack:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Result"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/tasks/{task}:
+    post:
+      summary: Modify the task state of the {task} for {hostname}
+      tags:
+        - Boinc
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+        - $ref: '#/components/parameters/task'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkunitRequestBody'
+      responses:
+        '200':
+          description: Modify the workunit state of the {task}. Valid actions are Suspend, Resume or Abort.
+                       Returns true / false upon success / failure
+          content:
+            application/json:
+              schema:
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/all_tasks:
+    get:
+      tags:
+        - Boinc
+      summary: Lists all tasks of the core client of {hostname}
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description: Lists all tasks known to the core client of {hostname} host.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Result"
+            application/messagepack:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Result"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/hostinfo:
+    get:
+      tags:
+        - Boinc
+      summary: Shows some information about the host.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description: Shows information about the host. Containing the Domain name, local IP Address and
+                       other infos provided by the core client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostInfo"
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/HostInfo"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/network:
+    get:
+      tags:
+        - Boinc
+      summary: Returns the current network state of the selected host
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description: Returns true if the internet / network access is available for the core client,
+                       otherwise false is returned
+          content:
+            application/json:
+              schema:
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
+        '401':
+          description: Either invalid or no token was provided
+    post:
+      tags:
+        - Boinc
+      summary: Changes the network mode of the core client
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoincModeChange'
+      responses:
+        '200':
+          description: Changes the network mode for the core client to always, never, auto usage.
+                       Additionally with restore the previos mode can be restored.
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/projects:
+    get:
+      tags:
+        - Boinc
+      summary: Lists all projects of the selected host
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description: Lists all projects of the selected host.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+            application/messagepack:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '401':
+          description: Either invalid or no token was provided
+    post:
+      tags:
+        - Boinc
+      summary: Peform a certain action on the project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequestBody'
+      responses:
+        '200':
+          description: Returns true of the action was succesful otherwise false
+          content:
+            application/json:
+              schema:
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/project:
+    post:
+      tags:
+        - Boinc
+      summary: Add a new project to the core client
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProjectBody'
+      responses:
+        '200':
+          description: Attaches a new project to the core client. In the background all WebRPC calls
+                       will be handled by the server. Depending on the Project server this call may
+                       take a while until it is processed.
+          content:
+            application/json:
+              schema:
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/run_mode:
+    post:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+
+  /api/boinc/{hostname}/cpu:
+    post:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/gpu:
+    post:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/state:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/filetransfers:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/disk:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/ccstate:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/global_prefs_override:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+    post:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+    patch:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/statistics:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/messages:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/notices:
+    get:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /api/boinc/{hostname}/retry_file_transfer:
+    post:
+      tags:
+        - Boinc
+      summary:
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/hostname'
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /language:
+    get:
+      tags:
+        - Others
+      summary:
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+  /language/{lang}:
+    get:
+      tags:
+        - Others
+      summary:
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description:
+          content:
+            application/messagepack:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerStatus"
+        '401':
+          description: Either invalid or no token was provided
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    hostname:
+      name: hostname
+      in: path
+      description: Name of the Host
+      required: true
+      schema:
+        type: string
+    task:
+      name: task
+      in: path
+      description: Name of the task
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    ServerStatus:
+      type: object
+      properties:
+        hostNameCacheTimeout:
+          description: The time in millisecounds after which the client should revalidate
+            the host names of all boinc core clients
+          type: integer
+          format: int64
+        hardware:
+          description: True if the hardware endpoint is aviable on this server
+          type: boolean
+      required:
+        - hostNameCacheTimeout
+        - hardware
+
+    HostGroups:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+
+    BoincProjectMetaData:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          name:
+            type: string
+          url:
+            type: string
+          general_area:
+            type: string
+          specific_area:
+            type: string
+          description:
+            type: string
+          home:
+            type: string
+          platforms:
+            type: array
+            items:
+              type: string
+
+    Result:
+      type: object
+      properties:
+        name:
+          type: string
+        wuName:
+          type: string
+        platfrom:
+          type: string
+        version:
+          type: string
+        plan:
+          type: string
+        project:
+          type: string
+        state:
+          type: number
+          format: integer
+        suspended:
+          type: boolean
+        activeTask:
+          $ref: "#/components/schemas/Task"
+        remainingCPU:
+          type: number
+          format: double
+        reportDeadline:
+          type: number
+          format: double
+        finalCPUTime:
+          type: number
+          format: double
+        finalElapsedTime:
+          type: number
+          format: double
+        exitStatus:
+          type: number
+          format: integer
+
+    Task:
+      type: object
+      properties:
+        activeTaskState:
+          type: number
+          format: integer
+        appVersionNum:
+          type: number
+          format: integer
+        slot:
+          type: number
+          format: integer
+        pid:
+          type: number
+          format: integer
+        schedulerState:
+          type: number
+          format: integer
+        checkpoint:
+          type: number
+          format: double
+        done:
+          type: number
+          format: double
+        cpuTime:
+          type: number
+          format: double
+        time:
+          type: number
+          format: double
+        swapSize:
+          type: number
+          format: double
+        workingSet:
+          type: number
+          format: double
+        progress:
+          type: number
+          format: double
+
+    WorkunitRequestBody:
+      type: object
+      properties:
+        project:
+          description: The URL of the project
+          type: string
+        action:
+          type: string
+          enum: [suspend_result, resume_result, abort_result]
+
+    ProjectRequestBody:
+      type: object
+      properties:
+        project:
+          description: The URL of the project
+          type: string
+        action:
+          type: string
+          enum: [project_update, project_reset, project_suspend, project_resume, project_detach, project_nomorework, project_allowmorework, project_detach_when_done, project_dont_detach_when_done]
+
+    AddProjectBody:
+      type: object
+      properties:
+        projectUrl:
+          type: string
+        projectName:
+          type: string
+        user:
+          type: string
+        password:
+          type: string
+
+    HostInfo:
+      type: object
+      properties:
+        domainName:
+          type: string
+        ipAddr:
+          type: string
+        cpid:
+          type: string
+        cpus:
+          type: number
+          format: integer
+        cpuVender:
+          type: string
+        cpuModel:
+          type: string
+        cpuFeatures:
+          type: array
+          items:
+            type: string
+        fops:
+          type: number
+          format: double
+        iops:
+          type: number
+          format: double
+        memBW:
+          type: number
+          format: double
+        memory:
+          type: number
+          format: double
+        cache:
+          type: number
+          format: double
+        swap:
+          type: number
+          format: double
+        diskTotal:
+          type: number
+          format: double
+        diskFree:
+          type: number
+          format: double
+        osName:
+          type: string
+        osVersion:
+          type: string
+        coproc:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoProcessor'
+        virtualBox:
+          type: string
+          nullable: true
+
+    CoProcessor:
+      type: object
+      properties:
+        name:
+          type: string
+        memory:
+          type: number
+          format: double
+        flops:
+          type: number
+          format: double
+        openCL:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+            vendor:
+              type: string
+            platformVersion:
+              type: string
+            deviceVersion:
+              type: string
+            driverVersion:
+              type: string
+
+    Project:
+      type: object
+      properties:
+        name:
+          type: string
+        userName:
+          type: string
+        teamName:
+          type: string
+        cpid:
+          type: string
+        userTotalCredit:
+          type: number
+          format: double
+        userAvgCredit:
+          type: number
+          format: double
+        userID:
+          type: number
+          format: int64
+        teamID:
+          type: number
+          format: int64
+        hostID:
+          type: number
+          format: int64
+        hostTotalCredit:
+          type: number
+          format: double
+        hostAvgCredit:
+          type: number
+          format: double
+        dontRequestWork:
+          type: boolean
+        trickles:
+          type: boolean
+        resourcerShre:
+          type: number
+          format: double
+        desiredDiskUsage:
+          type: number
+          format: double
+        durationCorrection:
+          type: number
+          format: double
+        jobSucc:
+          type: number
+          format: integer
+        jobErrors:
+          type: number
+          format: integer
+        guiURLs:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              dec:
+                type: string
+              url:
+                type: string
+
+
+    BoincModeChange:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [always, never, auto, restore]
+        duration:
+          type: number
+          format: double
+
+    ApplicationError:
+      type: object
+      properties:
+        reason:
+          type: string

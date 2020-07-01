@@ -29,8 +29,11 @@ object BoincApiRoutes extends ResponseEncodingHelper {
 
   def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
+    // Redirect to swagger
+    case GET -> Root => SwaggerRoutes.redirectToEndpoint()
+
     // Basic Meta States
-    case request @ GET -> Root / "boinc" => Ok(hostManager.getAllHostNames, request)
+    case request @ GET -> Root / "boinc"  => Ok(hostManager.getAllHostNames, request)
     case request @ GET -> Root / "health" => Ok(hostManager.checkHealth, request)
     case request @ GET -> Root / "config" => Ok(AppConfig.sharedConf, request)
     case request @ GET -> Root / "groups" => Ok(hostManager.getSerializableGroups, request)

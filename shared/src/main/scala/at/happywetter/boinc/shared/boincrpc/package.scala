@@ -95,7 +95,7 @@ package object boincrpc {
 
   final case class CoProcessorOpenCL(name: String
                                      ,vendor: String
-                                     ,platfromVersion: String
+                                     ,platformVersion: String
                                      ,deviceVersion: String
                                      ,driverVersion: String)
 

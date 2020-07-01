@@ -27,7 +27,7 @@ object WebSocketClient {
       case "https:" => "wss"
     }
 
-    s"$protocol://${dom.window.location.hostname}:${dom.window.location.port}/api/ws?token=${dom.window.localStorage.getItem("auth/token")}"
+    s"$protocol://${dom.window.location.hostname}:${dom.window.location.port}/ws?token=${dom.window.localStorage.getItem("auth/token")}"
   }
 
   private var ws: Option[WebSocket] = None

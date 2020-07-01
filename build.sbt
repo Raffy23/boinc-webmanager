@@ -16,7 +16,7 @@ git.gitTagToVersionNumber := { tag: String =>
   else None
 }
 
-val http4sVersion  = "0.21.1"
+val http4sVersion  = "1.0.0-M3"
 val uPickleVersion = "0.9.9"
 
 lazy val root = project.in(file(".")).
@@ -58,12 +58,18 @@ lazy val serverJVM = (project in file ("jvm"))
       "org.http4s"             %% "http4s-blaze-server" % http4sVersion,
 
       "com.github.pureconfig"  %% "pureconfig"          % "0.12.2",
+
       "org.scala-lang.modules" %% "scala-xml"           % "1.2.0",
       "com.lihaoyi"            %% "scalatags"           % "0.8.4",
       "org.scalaj"             %% "scalaj-http"         % "2.4.2",
 
+      "org.webjars"            %  "swagger-ui"          % "3.25.0",
+
       "org.jsoup"              %  "jsoup"               % "1.12.1",
       "com.auth0"              %  "java-jwt"            % "3.9.0",
+
+      "com.h2database"         %  "h2"                  % "1.4.200",
+      "io.getquill"            %% "quill-jdbc-monix"    % "3.5.2",
 
       "com.lihaoyi"            %% "upack"               % uPickleVersion,
       "com.lihaoyi"            %% "upickle"             % uPickleVersion,

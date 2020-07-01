@@ -3,6 +3,7 @@ package at.happywetter.boinc.boincclient
 import java.io.InputStream
 import java.net.{InetAddress, Socket}
 
+import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
@@ -23,6 +24,9 @@ import scala.xml.{NodeSeq, XML}
   * @version 08.07.2016
   */
 object BoincClient {
+
+  private val CLIENT_IDENTIFER = s"BOINC WebManager ${BuildInfo.version}"
+  private val CLIENT_VERSION   = Version(major = 7, minor = 16, release = 6)
 
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
@@ -50,6 +54,8 @@ object BoincClient {
     val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
     val getStatistics = Value("<get_statistics/>")
   }
+
+  private final case class Version(major: Int, minor: Int, release: Int)
 
 }
 class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8") extends BoincCoreClient {

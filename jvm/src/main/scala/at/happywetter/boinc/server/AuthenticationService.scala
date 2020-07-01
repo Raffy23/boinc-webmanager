@@ -12,11 +12,13 @@ import org.http4s.util.CaseInsensitiveString
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.util.Logger
 import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import cats.data.Kleisli
 import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+import org.typelevel.ci.CIString
 
 /**
   * Created by: 
@@ -24,7 +26,7 @@ import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
   * @author Raphael
   * @version 18.08.2017
   */
-class AuthenticationService(config: Config) extends ResponseEncodingHelper {
+class AuthenticationService(config: Config) extends ResponseEncodingHelper with Logger {
 
   import AuthenticationService.toDate
   import cats.effect._
@@ -38,7 +40,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
     case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
 
     case request @ GET -> Root / "refresh" =>
-      request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
+      request.headers.get(CIString("Authorization")).map(header => {
         validate(header.value) match {
           case Success(true) => Ok(refreshToken(header.value), request)
           case _ => encode(status = Unauthorized, body = ApplicationError("error_invalid_token"), request)
@@ -63,13 +65,17 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
   }
 
   def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
-    req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-      validate(header.value) match {
-        case Success(true) => service(req)
+    req.headers.get(CIString("Authorization")).map(header => {
+      validate(header.value.substring("Bearer ".length)) match {
+        case Success(true)  => service(req)
         case Success(false) => denyService("error_invalid_token", req)(req)
-        case Failure(_) => denyService("error_invalid_token", req)(req)
+        case Failure(ex)     =>
+          LOG.error(s"Exception occurred while validating JWT token: ${ex.getMessage}")
+          denyService("error_invalid_token", req)(req)
       }
-    }).getOrElse(denyService("error_no_token", req)(req))
+    }).getOrElse(
+      denyService("error_no_token", req)(req)
+    )
   }
 
   def validate(token: String): Try[Boolean] = Try(

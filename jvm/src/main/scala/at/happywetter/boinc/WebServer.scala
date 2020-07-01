@@ -10,7 +10,6 @@ import org.http4s.HttpRoutes
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.SSLKeyStoreSupport.StoreInfo
 import org.http4s.server.blaze._
 import org.http4s.server.middleware.GZip
 
@@ -54,10 +53,11 @@ object WebServer extends IOApp with Logger {
   // Create top level routes
   private val routes = Router(
     "/"              -> WebResourcesRoute(config),
+    "/swagger"       -> SwaggerRoutes(),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, projects)),
-    "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),
-    "/api/hardware"  -> authService.protectedService(hw),
-    "/api/ws"        -> WebsocketRoutes(authService, hostManager),
+    "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
+    "/api/hardware"  -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
+    "/ws"            -> WebsocketRoutes(authService, hostManager),
     "/auth"          -> authService.authService,
     "/language"      -> GZip(LanguageService())
   )
@@ -67,8 +67,7 @@ object WebServer extends IOApp with Logger {
     LOG.info(s"Using scheduler with ${IOAppTimer.cores} cores as pool size")
 
     // TODO: Use resource management ...
-    import cats.implicits._
-    BlazeServerBuilder[IO]
+    BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
       .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
       .withOptionalSSL(config)
       .bindHttp(config.server.port, config.server.address)

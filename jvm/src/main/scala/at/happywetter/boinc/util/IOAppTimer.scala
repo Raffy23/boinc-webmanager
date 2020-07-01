@@ -2,16 +2,18 @@ package at.happywetter.boinc.util
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ThreadFactory}
 
-import cats.effect.{Clock, IO, Timer}
+import cats.effect.{Blocker, Clock, IO, Resource, Sync, Timer}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.language.higherKinds
 
 
 /**
   * https://typelevel.org/cats-effect/datatypes/timer.html
   */
 final class IOAppTimer(ec: ExecutionContext, sc: ScheduledExecutorService) extends Timer[IO] {
+
   override val clock: Clock[IO] =
     new Clock[IO] {
       override def realTime(unit: TimeUnit): IO[Long] =
@@ -26,25 +28,25 @@ final class IOAppTimer(ec: ExecutionContext, sc: ScheduledExecutorService) exten
       val tick = new Runnable {
         def run(): Unit = ec.execute(() => cb(Right(())))
       }
+
       val f = sc.schedule(tick, timespan.length, timespan.unit)
       IO(f.cancel(false))
     }
+
 }
 
 object IOAppTimer {
 
   implicit val cores: Int = Runtime.getRuntime.availableProcessors()
 
-  implicit val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(
-    cores,
-    (r: Runnable) => {
-      val t = new Thread(r)
-      t.setName(s"io-timer-${r.hashCode()}")
-      t.setDaemon(true)
+  implicit val defaultExecutionContext: ExecutionContextExecutor = ExecutionContext.global
 
-      t
-    })
+  implicit val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(cores, new DaemonThreadFactory("io-timer"))
 
   implicit val timer: Timer[IO] = new IOAppTimer(ExecutionContext.global, scheduler)
+
+  implicit val blocker: Blocker = Blocker.liftExecutionContext(
+    ExecutionContext.fromExecutorService(Executors.newWorkStealingPool())
+  )
 
 }
