@@ -1,5 +1,6 @@
 package at.happywetter.boinc
 
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 import at.happywetter.boinc.boincclient.webrpc.ProjectRules
@@ -64,24 +65,15 @@ object AppConfig {
   //case class Parser(default: Int = ProjectRules.UseXMLParser)
   //case class WebRPCRule(serverStatus: Int)
 
+  val typesafeConfig: TypesafeConfig = ConfigFactory.parseFile(new File("./application.conf"))
 
   val conf: Config = {
-    val confString: String = {
-      val source = Source.fromFile("./application.conf")
-      val result = source.getLines().mkString("\n")
-      source.close()
-
-      result
-    }
-
-    val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
-
     import pureconfig._
     import pureconfig.generic.auto._
-    ConfigSource.fromConfig(hocon).loadOrThrow[Config]
+    ConfigSource.fromConfig(typesafeConfig).loadOrThrow[Config]
   }
 
-  lazy val sharedConf = ServerSharedConfig(
+  lazy val sharedConf: ServerSharedConfig = ServerSharedConfig(
     if (conf.autoDiscovery.enabled) FiniteDuration(conf.autoDiscovery.scanTimeout, TimeUnit.MINUTES).toMillis
     else FiniteDuration(12, TimeUnit.HOURS).toMillis,
     conf.hardware.exists(_.enabled)

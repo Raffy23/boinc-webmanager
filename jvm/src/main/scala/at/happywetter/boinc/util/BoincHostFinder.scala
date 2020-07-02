@@ -6,7 +6,7 @@ import java.util.concurrent.{Executors, ScheduledExecutorService}
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.{AppConfig, BoincManager}
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.{Blocker, ContextShift, IO, Resource}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,10 +23,12 @@ class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit conte
   private val blocker = BoincHostFinder.createBlocker()
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted, blocker)
 
-  def beginSearch(): Unit =
+  def beginSearch(): Resource[IO, IO[Unit]] =
     if (config.autoDiscovery.enabled) {
       LOG.info("Starting to search for boinc core clients ...")
-      discoveryCompleted( autoDiscovery.search().unsafeRunSync() )
+      autoDiscovery.search().map(discoveryCompleted).background
+    } else {
+      Resource.pure[IO, IO[Unit]](IO.unit)
     }
 
   def stopSearch(): Unit =
