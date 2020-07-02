@@ -6,6 +6,7 @@ import org.http4s.util.CaseInsensitiveString
 import org.http4s.{Header, Headers, Request, Response, Status}
 import upickle.default.{Writer, write, writeBinary}
 import at.happywetter.boinc.util.http4s.Implicits._
+import org.typelevel.ci.CIString
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +37,7 @@ trait ResponseEncodingHelper {
 
   @inline
   private def encode[T](response: T, request: Request[IO])(implicit encoder: Writer[T]): IO[Response[IO]] =
-    request.headers.get(CaseInsensitiveString("Accept")).map(_.value) match {
+    request.headers.get(CIString("Accept")).map(_.value) match {
       case Some("application/json")        => org.http4s.dsl.io.Ok(write(response), HEADER_JSON)
       case Some("application/messagepack") => org.http4s.dsl.io.Ok(writeBinary(response), HEADER_MSGPACK)
       case Some("*/*")                     => org.http4s.dsl.io.Ok(writeBinary(response), HEADER_MSGPACK)
@@ -46,7 +47,7 @@ trait ResponseEncodingHelper {
 
   def encode[T](status: Status, body: T, request: Request[IO])(implicit encoder: Writer[T]): IO[Response[IO]] =
     IO.pure(
-      request.headers.get(CaseInsensitiveString("Accept")).map(_.value) match {
+      request.headers.get(CIString("Accept")).map(_.value) match {
         case Some("application/json")        => new Response[IO](status = status, body = write(body), headers = Headers.of(HEADER_JSON))
         case Some("application/messagepack") => new Response[IO](status = status, body = writeBinary(body), headers = Headers.of(HEADER_MSGPACK))
         case Some("*/*")                     => new Response[IO](status = status, body = writeBinary(body), headers = Headers.of(HEADER_MSGPACK))

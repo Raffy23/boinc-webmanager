@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit contextShift: ContextShift[IO]) extends Logger {
 
-  private val blocker = Blocker.liftExecutionContext(ExecutionContext.fromExecutor(Executors.newCachedThreadPool(new DaemonThreadFactory("host-finder"))))
+  private val blocker = BoincHostFinder.createBlocker()
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted, blocker)
 
   def beginSearch(): Unit =
@@ -76,5 +76,16 @@ class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit conte
       if (ip == IP.empty) IP(InetAddress.getByName(addr).getHostAddress)
       else ip
     }
+
+}
+object BoincHostFinder {
+
+  def createBlocker(): Blocker = {
+    Blocker.liftExecutionContext(
+      ExecutionContext.fromExecutor(
+        Executors.newWorkStealingPool()
+      )
+    )
+  }
 
 }

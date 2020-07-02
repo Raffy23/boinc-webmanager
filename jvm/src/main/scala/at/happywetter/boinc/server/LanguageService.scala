@@ -36,14 +36,20 @@ object LanguageService extends ResponseEncodingHelper {
   }
 
   private def load(lang: String): Map[String, String] = {
-    val path = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
-    val ins  = ResourceWalker.getStream(path)
+    val path      = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
+    val bufSource = ResourceWalker.getStream(path)
 
-    val confString: String = Source.fromInputStream(ins)(IOCodec.UTF8).getLines().mkString("\n")
+    val confString: String = {
+      val ins = Source.fromInputStream(bufSource)(IOCodec.UTF8)
+      val config = ins.getLines().mkString("\n")
+      ins.close()
+
+      config
+    }
     val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
 
     import pureconfig._
-    loadConfigOrThrow[Map[String, String]](hocon)
+    ConfigSource.fromConfig(hocon).loadOrThrow[Map[String,  String]]
   }
 
 }

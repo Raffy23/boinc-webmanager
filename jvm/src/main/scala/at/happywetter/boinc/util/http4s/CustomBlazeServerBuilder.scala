@@ -33,7 +33,7 @@ object CustomBlazeServerBuilder {
         val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(keyManager.getKeyManagers, trustManager.getTrustManagers, null)
 
-        sb.withSSLContext(sslContext)
+        sb.withSslContext(sslContext)
       } else {
         sb
       }

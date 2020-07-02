@@ -5,7 +5,7 @@ info:
     a JWT Token from the `/auth` endpoint is needed. Depending on the `Content-Type` header
     the response will be encoded accordingly by the server. The default encoding without any `Content-Type`
     header is `application/messagepack`. All POST request bodys must be in `application/json` encoding.
-  version: "1.0"
+  version: '1.0'
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -33,7 +33,7 @@ paths:
           description: A nonce formatted as string
           content:
             text:
-              example: "8220b3f64911d93e285000fbf6296cc35725a0fbb76ebd7472f8d3c98dea7c5e"
+              example: '8220b3f64911d93e285000fbf6296cc35725a0fbb76ebd7472f8d3c98dea7c5e'
 
     post:
       summary: Request a JWT Token from the given credentials, if the Page is served over HTTPS then
@@ -81,19 +81,19 @@ paths:
                        in the Authorization header
           content:
             text:
-              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw"
+              example: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw'
         '400':
           description: Either the user credentials where invalid or the request body could not be
                        parsed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApplicationError"
+                $ref: '#/components/schemas/ApplicationError'
               example:
                 - reason: error_invalid_credentials
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ApplicationError"
+                $ref: '#/components/schemas/ApplicationError'
 
   /auth/refresh:
     get:
@@ -106,13 +106,13 @@ paths:
           description: The token was refreshed successfully and should be used for further communication
           content:
             text:
-              example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw"
+              example: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1OTM2MDU4MDAsInVzZXIiOiJhZG1pbiJ9.8a1AnW-6Fi97x6B3WikqsWNy46pbF6FnT_QO5CLrmI0F5s0hfGhtoNnsehDVE9PUiEXifjSgaXKF88-qA-iruw'
         '401':
           description: Either the token is invalid or no token was attached to the request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApplicationError"
+                $ref: '#/components/schemas/ApplicationError'
               examples:
                 'Invalid Token':
                   value:
@@ -122,7 +122,7 @@ paths:
                     reason: error_no_token
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ApplicationError"
+                $ref: '#/components/schemas/ApplicationError'
 
   /api:
     get:
@@ -175,10 +175,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -195,10 +195,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HostGroups"
+                $ref: '#/components/schemas/HostGroups'
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/HostGroups"
+                $ref: '#/components/schemas/HostGroups'
 
         '401':
           description: Either invalid or no token was provided
@@ -219,11 +219,11 @@ paths:
             application/messagepack:
               schema:
                 type: string
-                example: "1593602046"
+                example: '1593602046'
             application/json:
               schema:
                 type: string
-                example: "1593602046"
+                example: '1593602046'
         '401':
           description: Either invalid or no token was provided
 
@@ -241,10 +241,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BoincProjectMetaData"
+                $ref: '#/components/schemas/BoincProjectMetaData'
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/BoincProjectMetaData"
+                $ref: '#/components/schemas/BoincProjectMetaData'
         '401':
           description: Either invalid or no token was provided
 
@@ -267,12 +267,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Result"
+                  $ref: '#/components/schemas/Result'
             application/messagepack:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Result"
+                  $ref: '#/components/schemas/Result'
         '401':
           description: Either invalid or no token was provided
 
@@ -322,12 +322,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Result"
+                  $ref: '#/components/schemas/Result'
             application/messagepack:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Result"
+                  $ref: '#/components/schemas/Result'
         '401':
           description: Either invalid or no token was provided
 
@@ -347,10 +347,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HostInfo"
+                $ref: '#/components/schemas/HostInfo'
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/HostInfo"
+                $ref: '#/components/schemas/HostInfo'
         '401':
           description: Either invalid or no token was provided
 
@@ -396,10 +396,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -487,21 +487,26 @@ paths:
     post:
       tags:
         - Boinc
-      summary:
+      summary: Change the run mode of the core client
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoincModeChange'
       responses:
         '200':
           description:
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
         '401':
           description: Either invalid or no token was provided
 
@@ -510,21 +515,26 @@ paths:
     post:
       tags:
         - Boinc
-      summary:
+      summary: Change the CPU mode of the core client
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/hostname'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoincModeChange'
       responses:
         '200':
           description:
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
         '401':
           description: Either invalid or no token was provided
 
@@ -532,21 +542,26 @@ paths:
     post:
       tags:
         - Boinc
-      summary:
+      summary: Change the GPU mode of the core client
       security:
         - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoincModeChange'
       parameters:
         - $ref: '#/components/parameters/hostname'
       responses:
         '200':
           description:
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
         '401':
           description: Either invalid or no token was provided
 
@@ -554,21 +569,23 @@ paths:
     get:
       tags:
         - Boinc
-      summary:
+      summary: Queries the current state of the core client
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/hostname'
       responses:
         '200':
-          description:
+          description: Returns the current state of the core boinc client. This endpoint should not
+                       be called to often since it foreces the core client to serialize the whole
+                       state and transmit it.
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/BoincState'
+            application/messagepack:
+              schema:
+                $ref: '#/components/schemas/BoincState'
         '401':
           description: Either invalid or no token was provided
 
@@ -576,21 +593,27 @@ paths:
     get:
       tags:
         - Boinc
-      summary:
+      summary: Retry a pending file transfer
       security:
         - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetryFileTransferBody'
       parameters:
         - $ref: '#/components/parameters/hostname'
       responses:
         '200':
-          description:
+          description: Retry a pending file transfer of a certain project. Returns true if the core
+                       client retries the file transfer false otherwise
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                type: boolean
+            application/messagepack:
+              schema:
+                type: boolean
         '401':
           description: Either invalid or no token was provided
 
@@ -598,21 +621,21 @@ paths:
     get:
       tags:
         - Boinc
-      summary:
+      summary: Query the disk usage from the core client
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/hostname'
       responses:
         '200':
-          description:
+          description: Returns the current disk usage of the core client
           content:
-            application/messagepack:
-              schema:
-                $ref: "#/components/schemas/ServerStatus"
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/DiskUsage'
+            application/messagepack:
+              schema:
+                $ref: '#/components/schemas/DiskUsage'
         '401':
           description: Either invalid or no token was provided
 
@@ -631,10 +654,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -653,10 +676,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
     post:
@@ -673,10 +696,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
     patch:
@@ -693,10 +716,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -715,10 +738,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -737,10 +760,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -759,10 +782,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -781,10 +804,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -801,10 +824,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -821,10 +844,10 @@ paths:
           content:
             application/messagepack:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerStatus"
+                $ref: '#/components/schemas/ServerStatus'
         '401':
           description: Either invalid or no token was provided
 
@@ -917,7 +940,7 @@ components:
         suspended:
           type: boolean
         activeTask:
-          $ref: "#/components/schemas/Task"
+          $ref: '#/components/schemas/Task'
         remainingCPU:
           type: number
           format: double
@@ -1004,6 +1027,14 @@ components:
         user:
           type: string
         password:
+          type: string
+
+    RetryFileTransferBody:
+      type: object
+      properties:
+        project:
+          type: string
+        file:
           type: string
 
     HostInfo:
@@ -1151,7 +1182,6 @@ components:
               url:
                 type: string
 
-
     BoincModeChange:
       type: object
       properties:
@@ -1167,3 +1197,187 @@ components:
       properties:
         reason:
           type: string
+
+    BoincState:
+      type: object
+      properties:
+        hostInfo:
+          $ref: '#/components/schemas/HostInfo'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        apps:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              name:
+                type: string
+              userFriendlyName:
+                type: string
+              nonCpuIntensive:
+                type: boolean
+              version:
+                type: object
+                properties:
+                  version:
+                    type: number
+                    format: integer
+                  platform:
+                    type: string
+                  flops:
+                    type: number
+                    format: double
+                  avgCpus:
+                    type: number
+                    format: double
+                  maxCpus:
+                    type: number
+                    format: double
+                    nullable: true
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                        openName:
+                          type: string
+                        mainProgram:
+                          type: boolean
+                        copyFile:
+                          type: boolean
+                  coproc:
+                    nullable: true
+                    type: object
+                    properties:
+                      'type':
+                        type: string
+                      count:
+                        type: number
+                        format: double
+                  gpuRam:
+                    nullable: true
+                    type: number
+                    format: double
+                  dontThrottle:
+                    type: boolean
+                  needNetwork:
+                    type: boolean
+              project:
+                type: string
+        workunits:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              appName:
+                type: string
+              fopsEst:
+                type: number
+                format: double
+              fopsBound:
+                type: number
+                format: double
+              memBound:
+                type: number
+                format: double
+        boincVersion:
+          type: string
+        platform:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+        netStats:
+          type: object
+          properties:
+            bwup:
+              type: number
+              format: double
+            avgUpload:
+              type: number
+              format: double
+            avgUploadTime:
+              type: number
+              format: double
+            bwdown:
+              type: number
+              format: double
+            avgDownload:
+              type: number
+              format: double
+            avgDownloadTime:
+              type: number
+              format: double
+        timeStats:
+          type: object
+          properties:
+            on:
+              type: number
+              format: double
+            connected:
+              type: number
+              format: double
+            cpuAndNetworkAvailable:
+              type: number
+              format: double
+            active:
+              type: number
+              format: double
+            gpuActive:
+              type: number
+              format: double
+            clientStartTime:
+              type: number
+              format: double
+            totalStartTime:
+              type: number
+              format: double
+            totalDuration:
+              type: number
+              format: double
+            totalActiveDuration:
+              type: number
+              format: double
+            totalGPUActiveDuration:
+              type: number
+              format: double
+            now:
+              type: number
+              format: double
+            prevUpdate:
+              type: number
+              format: double
+            sessionActiveDuration:
+              type: number
+              format: double
+            sessionGPUActiveDuration:
+              type: number
+              format: double
+
+    DiskUsage:
+      type: object
+      properties:
+        diskUsage:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        total:
+          type: number
+          format: double
+        free:
+          type: number
+          format: double
+        boinc:
+          type: number
+          format: double
+        allowed:
+          type: number
+          format: double
