@@ -33,6 +33,18 @@ class Database private (ctx: H2MonixJdbcContext[SnakeCase]) extends AutoCloseabl
     }.map(_.headOption)
   )
 
+  def insert(project: Project): Task[Long] = run {
+    quote {
+      query[Project].insert(lift(project))
+    }
+  }
+
+  def projects(): Task[List[Project]] = run {
+    quote {
+      query[Project]
+    }
+  }
+
   override def close(): Unit = ctx.close()
 
 }

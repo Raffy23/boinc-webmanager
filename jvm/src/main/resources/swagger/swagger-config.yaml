@@ -403,7 +403,7 @@ paths:
         '401':
           description: Either invalid or no token was provided
 
-  /api/boinc/{hostname}/projects:
+  /api/boinc/{hostname}/project:
     get:
       tags:
         - Boinc
@@ -428,7 +428,7 @@ paths:
                   $ref: '#/components/schemas/Project'
         '401':
           description: Either invalid or no token was provided
-    post:
+    patch:
       tags:
         - Boinc
       summary: Peform a certain action on the project
@@ -453,8 +453,6 @@ paths:
                 type: boolean
         '401':
           description: Either invalid or no token was provided
-
-  /api/boinc/{hostname}/project:
     post:
       tags:
         - Boinc

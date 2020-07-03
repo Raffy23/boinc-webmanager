@@ -70,6 +70,14 @@ object FetchHelper {
       .mapData(data => readData[A](data))
   }
 
+  def patch[A,R](uri: String, data: A)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] = {
+    dom.console.log("PATCH", uri)
+
+    Fetch
+      .fetch(uri, requestPatchParameters(write(data)))
+      .mapData(data => readData[R](data))
+  }
+
   @inline
   private def readData[T](s: Array[Byte])(implicit decoder: Reader[T]): T =
     if (USE_MESSAGE_PACK_FORMAT) readBinary[T](s) else read[T](s)

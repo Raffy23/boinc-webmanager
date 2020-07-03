@@ -22,7 +22,6 @@ import scala.io.StdIn
 object WebServer extends IOApp with Logger {
 
   private lazy val config      = AppConfig.conf
-  private lazy val projects    = new XMLProjectStore(config.boinc.projects.xmlSource)
   private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
 
   ConfigurationChecker.checkConfiguration(config)
@@ -50,10 +49,10 @@ object WebServer extends IOApp with Logger {
   }
 
   // Create top level routes
-  private val routes = Router(
+  private def routes(xmlProjectStore: XMLProjectStore) = Router(
     "/"              -> WebResourcesRoute(config),
     "/swagger"       -> SwaggerRoutes(),
-    "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, projects)),
+    "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore)),
     "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
     "/api/hardware"  -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
     "/ws"            -> WebsocketRoutes(authService, hostManager),
@@ -68,35 +67,31 @@ object WebServer extends IOApp with Logger {
     // TODO: Use resource management ...
     (for {
       database  <- Database()
+      xmlPStore <- XMLProjectStore(database, config)
       webserver <-  BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
                       .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
                       .withOptionalSSL(config)
                       .bindHttp(config.server.port, config.server.address)
-                      .withHttpApp(routes.orNotFound)
+                      .withHttpApp(routes(xmlPStore).orNotFound)
                       .resource
 
+      // This is kinda ugly ...
       autoDiscovery <- new BoincHostFinder(config, hostManager).beginSearch()
     } yield (database, webserver, autoDiscovery))
       .use(_ =>
-        IO {
-          LOG.info("Loading project definitions")
-          projects.importFrom(config)
-        }.flatMap(_ =>
-          if (config.serviceMode)
-            IO {
-              println("Running in service mode, waiting for signal ...")
-            }.flatMap(_ => IO.never)
-          else
-            IO.async[Unit] { resolve =>
-              println("Press ENTER to exit the server ...")
-              StdIn.readLine()
+        if (config.serviceMode)
+          IO {
+            println("Running in service mode, waiting for signal ...")
+          }.flatMap(_ => IO.never)
+        else
+          IO.async[Unit] { resolve =>
+            println("Press ENTER to exit the server ...")
+            StdIn.readLine()
 
-              scheduler.shutdownNow()
-              hostManager.destroy()
-              resolve(Right(()))
-            }
-        )
-      )
-      .as(ExitCode.Success)
+            scheduler.shutdownNow()
+            hostManager.destroy()
+            resolve(Right(()))
+          }
+      ).as(ExitCode.Success)
   }
 }

@@ -38,7 +38,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     case request @ GET -> Root / "config" => Ok(AppConfig.sharedConf, request)
     case request @ GET -> Root / "groups" => Ok(hostManager.getSerializableGroups, request)
     case request @ GET -> Root / "groups" / "version" => Ok(hostManager.getVersion, request)
-    case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects, request)
+    case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects.flatMap(_.get), request)
 
     // Main route for Boinc Data
     case request @ GET -> Root / "boinc" / name / action :? requestParams =>
@@ -79,7 +79,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
           .flatMap(result => result.getOrElse(Future {false}))
       })
 
-    case request @ POST -> Root / "boinc" / name / "projects" =>
+    case request @ PATCH -> Root / "boinc" / name / "project" =>
       executeForClient[ProjectRequestBody, Boolean](hostManager, name, request, (client, requestBody) =>  {
         client.project(requestBody.project, ProjectAction.fromValue(requestBody.action).get)
       })
@@ -119,6 +119,15 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       executeForClient[RetryFileTransferBody, Boolean](hostManager, name, request, (client, requestBody) => {
         client.retryFileTransfer(requestBody.project, requestBody.file)
       })
+
+
+    case request @ POST -> Root / "boinc" / "project_list" =>
+      request.decodeJson[BoincProjectMetaData] { project =>
+        projects.addProject(project.name, project).flatMap(_ =>
+          Ok(true, request)
+        )
+      }
+
 
     case _ => NotAcceptable()
   }
