@@ -1,5 +1,6 @@
 package at.happywetter.boinc.util.http4s
 
+import cats.effect.IO
 import cats.{Applicative, Monad}
 import org.http4s.dsl.io._
 import org.http4s.{EntityDecoder, Header, Headers, Request, Response}
@@ -38,6 +39,7 @@ object RichMsgPackRequest {
           .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}
           .get
       }
+
   }
 
 }

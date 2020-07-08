@@ -1,13 +1,14 @@
 package at.happywetter.boinc.util
 
 import java.net.InetAddress
-import java.util.concurrent.{Executors, ScheduledExecutorService}
+import java.util.concurrent.Executors
 
 import at.happywetter.boinc.AppConfig.Config
+import at.happywetter.boinc.BoincManager.AddedByDiscovery
 import at.happywetter.boinc.boincclient.BoincClient
-import at.happywetter.boinc.{AppConfig, BoincManager}
+import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
+import at.happywetter.boinc.{AppConfig, BoincManager, Database}
 import cats.effect.{Blocker, ContextShift, IO, Resource}
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,24 +19,27 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Raphael
   * @version 20.09.2017
   */
-class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit contextShift: ContextShift[IO]) extends Logger {
+class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
 
   private val blocker = BoincHostFinder.createBlocker()
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted, blocker)
 
-  def beginSearch(): Resource[IO, IO[Unit]] =
+  def beginSearch(): IO[Unit] =
     if (config.autoDiscovery.enabled) {
       LOG.info("Starting to search for boinc core clients ...")
-      autoDiscovery.search().map(discoveryCompleted).background
+      autoDiscovery.search().map(discoveryCompleted)
     } else {
-      Resource.pure[IO, IO[Unit]](IO.unit)
+      IO.unit
     }
 
-  def stopSearch(): Unit =
-    autoDiscovery.destroy()
+  def close(): Unit =
+    autoDiscovery.close()
 
   private def discoveryCompleted(hosts: List[IP]): Unit = {
-    LOG.info("Following Hosts can be added: " + hosts.diff(getUsedIPs))
+    if (hosts.nonEmpty)
+      LOG.info("Following hosts can be added: " + hosts.diff(getUsedIPs))
+    else
+      LOG.debug("No new hosts can be added")
 
     hosts.diff(getUsedIPs).foreach( ip => {
       Future {
@@ -61,14 +65,19 @@ class BoincHostFinder(config: Config, boincManager: BoincManager)(implicit conte
 
               boincManager.add(
                 domainName,
-                AppConfig.Host(ip.toString, config.autoDiscovery.port.toShort, pw)
+                ip, config.autoDiscovery.port.toShort, pw,
+                AddedByDiscovery
               )
+
+              import monix.execution.Scheduler.Implicits.global
+              db.clients
+                .update(CoreClient(domainName, ip.toString, config.autoDiscovery.port, pw, CoreClient.ADDED_BY_DISCOVERY))
+                .runSyncUnsafe()
             })
           }
       }
     })
   }
-
 
   private def getUsedIPs: List[IP] = boincManager
     .getAddresses.filter(_._2 == config.autoDiscovery.port)
@@ -89,5 +98,12 @@ object BoincHostFinder {
       )
     )
   }
+
+  def apply(config: Config, boincManager: BoincManager, db: Database)(implicit contextShift: ContextShift[IO]): Resource[IO, BoincHostFinder] =
+    Resource.fromAutoCloseable(
+      IO.pure(new BoincHostFinder(config, boincManager, db)).flatMap { hostinder =>
+        hostinder.beginSearch().map(_ => hostinder)
+      }
+    )
 
 }

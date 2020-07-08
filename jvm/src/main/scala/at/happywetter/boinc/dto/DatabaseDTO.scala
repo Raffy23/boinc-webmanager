@@ -10,7 +10,11 @@ import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
  */
 object DatabaseDTO {
 
-  final case class CoreClient(name: String, ipAddress: String, password: String)
+  final case class CoreClient(name: String, ipAddress: String, port: Int, password: String, addedBy: Int)
+  object CoreClient {
+    val ADDED_BY_USER      = 0
+    val ADDED_BY_DISCOVERY = 1
+  }
 
   final case class Project(name: String, url: String, generalArea: String, specificArea: String, description: String, home: String, platforms: String) {
     def toBoincProjectMetaData: BoincProjectMetaData =

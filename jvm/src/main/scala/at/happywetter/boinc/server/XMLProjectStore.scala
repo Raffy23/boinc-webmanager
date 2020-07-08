@@ -36,7 +36,7 @@ class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
   def getProjects: IO[Ref[IO, Map[String, BoincProjectMetaData]]] = projects
 
   def addProject(name: String, project: BoincProjectMetaData): IO[Unit] = projects.flatMap { ref =>
-    db.insert(Project(project)).to[IO] *>
+    db.projects.insert(Project(project)).to[IO] *>
     ref.update(_ + (name -> project))
   }
 

@@ -5,8 +5,10 @@
 -- Store all auto-discovered core clients persistently in this table
 CREATE TABLE IF NOT EXISTS core_client (
     name        VARCHAR(64) PRIMARY KEY,
-    ip_address  VARCHAR(16) UNIQUE,
-    password    VARCHAR(256)
+    ip_address  VARCHAR(16),
+    port        INTEGER,
+    password    VARCHAR(256),
+    added_by    INTEGER
 );
 
 -- Additional projects that can be added to the Webmanager

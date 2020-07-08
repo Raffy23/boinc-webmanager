@@ -1,5 +1,7 @@
 package at.happywetter.boinc.shared
 
+import at.happywetter.boinc.shared.webrpc.AddNewHostRequestBody
+
 /**
   * Created by: 
   *
@@ -52,5 +54,6 @@ package object parser {
   implicit val serverStatusParser = macroRW[webrpc.ServerStatus]
 
   implicit val hwSensorsParser = macroRW[extension.HardwareData.SensorsRow]
+  implicit val addNewHostRequestBodyParser = macroRW[AddNewHostRequestBody]
 
 }

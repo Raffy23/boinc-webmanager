@@ -3,8 +3,11 @@ package at.happywetter.boinc
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentLinkedQueue, ScheduledExecutorService, TimeUnit}
 
+import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.BoincManager.{AddedBy, AddedByConfig, AddedByDiscovery, BoincClientEntry}
-import at.happywetter.boinc.util.{Logger, PooledBoincClient}
+import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
+import at.happywetter.boinc.util.{IP, Logger, PooledBoincClient}
+import cats.effect.{IO, Resource}
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
@@ -24,11 +27,34 @@ object BoincManager {
   trait AddedBy
   object AddedByConfig extends AddedBy
   object AddedByDiscovery extends AddedBy
+  object AddedByUser extends AddedBy
 
   private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, var lastUsed: Long)
 
+  def apply(config: Config, db: Database)(implicit scheduler: ScheduledExecutorService): Resource[IO, BoincManager] =
+    Resource.fromAutoCloseable(
+      IO.pure(new BoincManager(config.boinc.connectionPool, config.boinc.encoding)).map { hostManager =>
+        config.boinc.hosts.foreach(hostManager.add)
+        config.hostGroups.foreach{ case (group, hosts) => hostManager.addGroup(group, hosts)}
+
+        import monix.execution.Scheduler.Implicits.global
+        db.clients.queryAll().runSyncUnsafe().foreach(coreClient => {
+          hostManager.add(
+            coreClient.name,
+            IP(coreClient.ipAddress), coreClient.port, coreClient.password,
+            coreClient.addedBy match {
+              case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
+              case CoreClient.ADDED_BY_USER      => AddedByUser
+            }
+          )
+        })
+
+        hostManager
+      }
+    )
+
 }
-class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) extends Logger {
+class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) extends Logger with AutoCloseable {
 
   private val timeout        = 5 minutes
   private val deathCollector = 30 minutes
@@ -39,7 +65,7 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   val versionChangeListeners = new ConcurrentLinkedQueue[BoincManager => Unit]()
 
   // Close connections periodically
-  scheduler.scheduleWithFixedDelay(() => {
+  private val autoCloser = scheduler.scheduleWithFixedDelay(() => {
     val curTime = System.currentTimeMillis() - timeout.toMillis
 
     boincClients.foreach { case (name, BoincClientEntry(client, _, time)) =>
@@ -51,7 +77,7 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   }, timeout.toMinutes, timeout.toMinutes, TimeUnit.MINUTES )
 
   // Throw out all dead boinc core clients
-  scheduler.scheduleWithFixedDelay(() => {
+  private val connectionCloser = scheduler.scheduleWithFixedDelay(() => {
     var somethingChanged = false
     boincClients.foreach {
       case (name, BoincClientEntry(client, AddedByConfig, _)) =>
@@ -77,14 +103,14 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
 
   def get(name: String): Option[PooledBoincClient] = {
     // Update time only if Client exists
-    if (boincClients.get(name).nonEmpty )
+    if (boincClients.contains(name) )
       boincClients(name).lastUsed = System.currentTimeMillis()
 
     boincClients.get(name).map(_.client)
   }
 
   def add(name: String, client: PooledBoincClient, addedBy: AddedBy): Unit = {
-    if (!boincClients.keys.exists(_ == name)) {
+    if (!boincClients.contains(name)) {
 
       LOG.debug(s"Adding new client $name")
       boincClients += (name -> BoincClientEntry(client, addedBy, System.currentTimeMillis()))
@@ -93,14 +119,17 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
     }
   }
 
-  def add(name: String, host: AppConfig.Host): Unit =
+  def add(name: String, address: IP, port: Int, password: String, addedBy: AddedBy): Unit =
+    add(name, new PooledBoincClient(poolSize, address.toString, port, password, encoding), addedBy)
+
+  protected def add(name: String, host: AppConfig.Host): Unit =
     add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding), AddedByConfig)
 
-  def add(config: (String,AppConfig.Host)): Unit = add(config._1, config._2)
+  protected def add(config: (String, AppConfig.Host)): Unit = add(config._1, config._2)
 
   def getAllHostNames: Seq[String] = boincClients.keys.toSeq
 
-  def destroy(): Unit = boincClients.foreach { case (_, BoincClientEntry(client, _, _)) => client.closeAll() }
+  protected def destroy(): Unit = boincClients.foreach { case (_, BoincClientEntry(client, _, _)) => client.closeAll() }
 
   def queryDeathCounter: Map[String, Int] =
     boincClients.map { case (name, BoincClientEntry(client, _, _)) => (name, client.deathCounter.get()) }.toMap
@@ -118,8 +147,13 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
 
   def getSerializableGroups: Map[String, List[String]] = getGroups.map{ case (key, value) => (key, value.toList)}.toMap
 
-  def addGroup(group: String, hostname: String): Unit = {
-    clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) += hostname
+  def addToGroup(group: String, hostname: String): Unit = {
+    clientGroups.getOrElseUpdate(group, ListBuffer.empty) += hostname
+    updateVersion()
+  }
+
+  def removeFromGroup(group: String, hostname: String): Unit = {
+    clientGroups.getOrElseUpdate(group, ListBuffer.empty) -= hostname
     updateVersion()
   }
 
@@ -128,11 +162,23 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
     updateVersion()
   }
 
+  def remove(name: String): Unit = {
+    boincClients.remove(name).foreach(_.client.closeAll())
+    clientGroups.keys.foreach(removeFromGroup(_, name))
+    updateVersion()
+  }
+
   def getVersion: Long = version.get()
 
   private def updateVersion(): Unit = {
     version.set(System.currentTimeMillis())
     versionChangeListeners.forEach(_(this))
+  }
+
+  override def close(): Unit = {
+    autoCloser.cancel(false)
+    connectionCloser.cancel(false)
+    destroy()
   }
 
 }

@@ -8,6 +8,7 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
+import at.happywetter.boinc.util.PooledBoincClient.ConnectionException
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
@@ -21,6 +22,11 @@ import scala.util.Try
   * @author Raphael
   * @version 12.09.2017
   */
+object PooledBoincClient {
+
+  case class ConnectionException(e: Throwable) extends RuntimeException
+
+}
 class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
 
   val deathCounter = new AtomicInteger(0)
@@ -49,9 +55,8 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
           client,
           Try(extractor(client))
             .recover{ case e: Throwable =>
-              pool.offer(client)
               deathCounter.incrementAndGet()
-              throw e
+              throw ConnectionException(e)
             }
         )
       }

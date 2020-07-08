@@ -36,7 +36,7 @@ object AppConfig {
                     secret: String,
                     ssl: SSLConfig)
 
-  case class Host(address: String, port: Short, password: String)
+  case class Host(address: String, port: Int, password: String)
 
   case class Boinc(hosts: Map[String, Host], projects: Projects, connectionPool: Int, encoding: String)
 

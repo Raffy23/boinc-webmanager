@@ -1,12 +1,11 @@
 package at.happywetter.boinc
 
-import at.happywetter.boinc.util.{IOAppTimer, IP}
-import cats.data.OptionT
+import at.happywetter.boinc.repository.{CoreClientRepository, ProjectRepository}
+import at.happywetter.boinc.util.IOAppTimer
 import cats.effect.{ContextShift, IO, Resource}
 import com.typesafe.config.ConfigFactory
 import io.getquill.context.monix.Runner
 import io.getquill.{H2MonixJdbcContext, SnakeCase}
-import monix.eval.Task
 import monix.execution.Scheduler
 
 /**
@@ -16,34 +15,9 @@ import monix.execution.Scheduler
  * @version 02.07.2020
  */
 class Database private (ctx: H2MonixJdbcContext[SnakeCase]) extends AutoCloseable {
-  import at.happywetter.boinc.dto.DatabaseDTO._
-  import ctx._
 
-  def insert(coreClient: CoreClient): Task[Long] = run {
-    quote {
-      query[CoreClient].insert(lift(coreClient))
-    }
-  }
-
-  def searchCoreClientBy(ip: IP): OptionT[Task, CoreClient] = OptionT(
-    run {
-      quote {
-        query[CoreClient].filter(_.ipAddress == lift(ip.toString))
-      }
-    }.map(_.headOption)
-  )
-
-  def insert(project: Project): Task[Long] = run {
-    quote {
-      query[Project].insert(lift(project))
-    }
-  }
-
-  def projects(): Task[List[Project]] = run {
-    quote {
-      query[Project]
-    }
-  }
+  val clients  = new CoreClientRepository(ctx)
+  val projects = new ProjectRepository(ctx)
 
   override def close(): Unit = ctx.close()
 

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
+import at.happywetter.boinc.shared.webrpc.{AddNewHostRequestBody, BoincProjectMetaData}
 import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig, WebSocketClient}
 import org.scalajs.dom
 import upickle.default._
@@ -51,7 +51,7 @@ object ClientManager {
       case _ => /* Do nothing, other messages ... */
     }
 
-    val serverVersion = FetchHelper.get[Long]("/api/groups/version")
+    val serverVersion = FetchHelper.get[Long]("/api/version")
     serverVersion.foreach { serverVersion =>
       if (loadFromLocalStorage[Long](CACHE_VERSION).getOrElse(0L) != serverVersion) {
         dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
@@ -111,7 +111,7 @@ object ClientManager {
 
   def readClients(): Future[List[String]] = {
     readClientsFromServer().map(data => {
-      data.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
+      data.foreach(c => if(!clients.contains(c)) clients += (c -> new BoincClient(c)))
       persistClientsIntoStorage(data)
 
       data.sorted(ord = StringLengthAlphaOrdering)
@@ -133,6 +133,12 @@ object ClientManager {
     })
   }
   */
+
+  def addClient(name: String, address: String, port: Int, password: String): Future[Boolean] =
+    FetchHelper.post[AddNewHostRequestBody, Boolean](s"$baseURI/$name", AddNewHostRequestBody(address, port, password))
+
+  def removeClient(name: String): Future[Boolean] =
+    FetchHelper.delete[Boolean](s"$baseURI/$name")
 
   def queryClientHealth(): Future[Map[String, Boolean]] =
     FetchHelper.get[Map[String, Boolean]](baseURI + "/health")

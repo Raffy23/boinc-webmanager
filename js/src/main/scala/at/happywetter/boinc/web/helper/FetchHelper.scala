@@ -78,6 +78,14 @@ object FetchHelper {
       .mapData(data => readData[R](data))
   }
 
+  def delete[R](uri: String)(implicit decoder: Reader[R]): Future[R] = {
+    dom.console.log("DELETE", uri)
+
+    Fetch
+      .fetch(uri, requestDeleteParameters())
+      .mapData(data => readData[R](data))
+  }
+
   @inline
   private def readData[T](s: Array[Byte])(implicit decoder: Reader[T]): T =
     if (USE_MESSAGE_PACK_FORMAT) readBinary[T](s) else read[T](s)
@@ -139,6 +147,22 @@ object FetchHelper {
 
   private def requestPatchParameters(content: UndefOr[BodyInit] = js.undefined): RequestInit = new RequestInit {
     override var method: UndefOr[HttpMethod] = HttpMethod.PATCH
+    override var headers: UndefOr[HeadersInit] = header
+    override var body: UndefOr[BodyInit] = content
+    override var referrer: UndefOr[String] = js.undefined
+    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
+    override var mode: UndefOr[RequestMode] = js.undefined
+    override var credentials: UndefOr[RequestCredentials] = js.undefined
+    override var cache: UndefOr[RequestCache] = js.undefined
+    override var redirect: UndefOr[RequestRedirect] = js.undefined
+    override var integrity: UndefOr[String] = js.undefined
+    override var keepalive: UndefOr[Boolean] = js.undefined
+    override var signal: UndefOr[AbortSignal] = js.undefined
+    override var window: UndefOr[Null] = js.undefined
+  }
+
+  private def requestDeleteParameters(content: UndefOr[BodyInit] = js.undefined): RequestInit = new RequestInit {
+    override var method: UndefOr[HttpMethod] = HttpMethod.DELETE
     override var headers: UndefOr[HeadersInit] = header
     override var body: UndefOr[BodyInit] = content
     override var referrer: UndefOr[String] = js.undefined

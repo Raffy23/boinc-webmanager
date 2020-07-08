@@ -1,14 +1,16 @@
 package at.happywetter.boinc.server
 
+import at.happywetter.boinc.BoincManager.AddedByUser
 import at.happywetter.boinc.boincclient.WebRPC
+import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAction}
 import at.happywetter.boinc.shared.boincrpc.{BoincRPC, GlobalPrefsOverride}
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc._
-import at.happywetter.boinc.util.PooledBoincClient
+import at.happywetter.boinc.util.{IP, PooledBoincClient}
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
-import at.happywetter.boinc.{AppConfig, BoincManager}
+import at.happywetter.boinc.{AppConfig, BoincManager, Database}
 import cats.effect._
 import org.http4s._
 import org.http4s.dsl.io._
@@ -27,17 +29,17 @@ object BoincApiRoutes extends ResponseEncodingHelper {
   private def getIntParameter(name: String)(implicit params: Map[String, collection.Seq[String]]): Int =
     Try { params(name).head.toInt }.toOption.getOrElse(0)
 
-  def apply(hostManager: BoincManager, projects: XMLProjectStore): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(hostManager: BoincManager, projects: XMLProjectStore, db: Database): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Redirect to swagger
     case GET -> Root => SwaggerRoutes.redirectToEndpoint()
 
     // Basic Meta States
-    case request @ GET -> Root / "boinc"  => Ok(hostManager.getAllHostNames, request)
-    case request @ GET -> Root / "health" => Ok(hostManager.checkHealth, request)
-    case request @ GET -> Root / "config" => Ok(AppConfig.sharedConf, request)
-    case request @ GET -> Root / "groups" => Ok(hostManager.getSerializableGroups, request)
-    case request @ GET -> Root / "groups" / "version" => Ok(hostManager.getVersion, request)
+    case request @ GET -> Root / "boinc"   => Ok(hostManager.getAllHostNames, request)
+    case request @ GET -> Root / "health"  => Ok(hostManager.checkHealth, request)
+    case request @ GET -> Root / "config"  => Ok(AppConfig.sharedConf, request)
+    case request @ GET -> Root / "groups"  => Ok(hostManager.getSerializableGroups, request)
+    case request @ GET -> Root / "version" => Ok(hostManager.getVersion, request)
     case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects.flatMap(_.get), request)
 
     // Main route for Boinc Data
@@ -121,6 +123,28 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       })
 
 
+    // Add / Remove boinc hosts
+    case request @ POST -> Root / "boinc" / name =>
+      request.decodeJson[AddNewHostRequestBody] { host =>
+        db.clients
+          .insert(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
+          .runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
+
+        hostManager.add(name, IP(host.address), host.port, host.password, AddedByUser)
+
+        // TODO: Implement correct state stuff ...
+        Ok(true, request)
+      }
+
+    case request @ DELETE -> Root / "boinc" / name =>
+      db.clients.delete(name).runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
+      hostManager.remove(name)
+
+      // TODO: Implement correct state stuff ...
+      Ok(true, request)
+
+
+    // Add / Remove boinc stuff
     case request @ POST -> Root / "boinc" / "project_list" =>
       request.decodeJson[BoincProjectMetaData] { project =>
         projects.addProject(project.name, project).flatMap(_ =>

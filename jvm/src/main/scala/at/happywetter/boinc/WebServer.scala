@@ -22,13 +22,7 @@ import scala.io.StdIn
 object WebServer extends IOApp with Logger {
 
   private lazy val config      = AppConfig.conf
-  private lazy val hostManager = new BoincManager(config.boinc.connectionPool, config.boinc.encoding)
-
   ConfigurationChecker.checkConfiguration(config)
-
-  // Populate Host Manager with clients
-  config.boinc.hosts.foreach(hostManager.add)
-  config.hostGroups.foreach{ case (group, hosts) => hostManager.addGroup(group, hosts)}
 
   // Create services
   private val authService = new AuthenticationService(config)
@@ -49,10 +43,10 @@ object WebServer extends IOApp with Logger {
   }
 
   // Create top level routes
-  private def routes(xmlProjectStore: XMLProjectStore) = Router(
+  private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
     "/"              -> WebResourcesRoute(config),
     "/swagger"       -> SwaggerRoutes(),
-    "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore)),
+    "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
     "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
     "/api/hardware"  -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
     "/ws"            -> WebsocketRoutes(authService, hostManager),
@@ -64,19 +58,18 @@ object WebServer extends IOApp with Logger {
     LOG.info("Boinc-Webmanager: current Version: " + BuildInfo.version)
     LOG.info(s"Using scheduler with ${IOAppTimer.cores} cores as pool size")
 
-    // TODO: Use resource management ...
     (for {
-      database  <- Database()
-      xmlPStore <- XMLProjectStore(database, config)
-      webserver <-  BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
-                      .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
-                      .withOptionalSSL(config)
-                      .bindHttp(config.server.port, config.server.address)
-                      .withHttpApp(routes(xmlPStore).orNotFound)
-                      .resource
+      database    <- Database()
+      xmlPStore   <- XMLProjectStore(database, config)
+      hostManager <- BoincManager(config, database)
+      webserver   <- BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
+                        .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
+                        .withOptionalSSL(config)
+                        .bindHttp(config.server.port, config.server.address)
+                        .withHttpApp(routes(hostManager, xmlPStore, database).orNotFound)
+                        .resource
 
-      // This is kinda ugly ...
-      autoDiscovery <- new BoincHostFinder(config, hostManager).beginSearch()
+      autoDiscovery <- BoincHostFinder(config, hostManager, database)
     } yield (database, webserver, autoDiscovery))
       .use(_ =>
         if (config.serviceMode)
@@ -89,7 +82,6 @@ object WebServer extends IOApp with Logger {
             StdIn.readLine()
 
             scheduler.shutdownNow()
-            hostManager.destroy()
             resolve(Right(()))
           }
       ).as(ExitCode.Success)

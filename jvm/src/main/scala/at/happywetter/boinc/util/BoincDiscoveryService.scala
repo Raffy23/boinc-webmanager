@@ -15,7 +15,7 @@ import scala.util.Try
   * @author Raphael
   * @version 19.09.2017
   */
-class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] => Unit, blocker: Blocker)(implicit contextShift: ContextShift[IO]) extends Logger {
+class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] => Unit, blocker: Blocker)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
 
   private val start = IP(config.startIp)
   private val end   = IP(config.endIp)
@@ -30,8 +30,6 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] =>
         config.scanTimeout, TimeUnit.MINUTES)
     )
     else None
-
-  def destroy(): Unit = task.map(_.cancel(true))
 
   def search(): IO[List[IP]] = {
     LOG.info(s"Start probing range ${start} - ${end}")
@@ -75,5 +73,7 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] =>
       )
     }
   }
+
+  override def close(): Unit = task.map(_.cancel(true))
 
 }

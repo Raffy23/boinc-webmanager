@@ -49,4 +49,6 @@ package object webrpc {
 
   final case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
 
+  final case class AddNewHostRequestBody(address: String, port: Int, password: String)
+
 }
