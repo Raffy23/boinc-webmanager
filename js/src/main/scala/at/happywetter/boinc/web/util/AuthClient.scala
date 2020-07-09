@@ -1,28 +1,27 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
 import at.happywetter.boinc.shared.webrpc.User
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.facade.TextEncoder
 import at.happywetter.boinc.web.pages.LoginPage
-import at.happywetter.boinc.web.routes.AppRouter
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.shared.parser._
 import org.scalajs.dom
 
 import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 19.08.2017
   */
 object AuthClient {
-
-  import at.happywetter.boinc.shared.parser._
   type AuthToken = String
 
   val isSecureEndpoint: Boolean = dom.window.location.protocol == "https:"
@@ -56,6 +55,7 @@ object AuthClient {
 
   def validateAction(done: js.Function0[Unit]): Boolean = {
     if (!FetchHelper.hasToken) {
+      NProgress.done(true)
       AppRouter.navigate(LoginPage.link)
       false
     } else {
@@ -68,8 +68,6 @@ object AuthClient {
   private def requestToken(user: User): Future[AuthToken] = {
     if (user == null || user.username == null || user.passwordHash == null || user.nonce == null)
       return Future.failed(new RuntimeException("User case class is not valid! ("+user+")"))
-
-    import upickle.default._
     FetchHelper.post[User, AuthToken]("/auth", user)
   }
 

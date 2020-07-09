@@ -1,7 +1,5 @@
 package at.happywetter.boinc.shared
 
-import at.happywetter.boinc.shared.webrpc.AddNewHostRequestBody
-
 /**
   * Created by: 
   *
@@ -39,21 +37,23 @@ package object parser {
   implicit val noticeParser = macroRW[boincrpc.Notice]
 
 
-  implicit val retryFileTransferParser = macroRW[webrpc.RetryFileTransferBody]
-  implicit val wuRBodyParser = macroRW[webrpc.WorkunitRequestBody]
-  implicit val projRBodyParser = macroRW[webrpc.ProjectRequestBody]
-  implicit val addProjectParser = macroRW[webrpc.AddProjectBody]
-  implicit val boincModeChangeParser = macroRW[webrpc.BoincModeChange]
-  implicit val projectMetaDataParser = macroRW[webrpc.BoincProjectMetaData]
+  implicit val retryFileTransferParser = macroRW[boincrpc.RetryFileTransferBody]
+  implicit val wuRBodyParser = macroRW[boincrpc.WorkunitRequestBody]
+  implicit val projRBodyParser = macroRW[boincrpc.ProjectRequestBody]
+  implicit val addProjectParser = macroRW[boincrpc.AddProjectBody]
+  implicit val boincModeChangeParser = macroRW[boincrpc.BoincModeChange]
+  implicit val projectMetaDataParser = macroRW[boincrpc.BoincProjectMetaData]
   implicit val userParser = macroRW[webrpc.User]
-  implicit val appErrorParser = macroRW[webrpc.ApplicationError]
-  implicit val serverCfgParser = macroRW[webrpc.ServerSharedConfig]
+  implicit val appErrorParser = macroRW[boincrpc.ApplicationError]
+  implicit val serverCfgParser = macroRW[boincrpc.ServerSharedConfig]
   implicit val swAppStatusParser = macroRW[webrpc.ServerStatusApp]
   implicit val dbfileParser = macroRW[webrpc.DatabaseFileStates]
   implicit val daemoParser = macroRW[webrpc.Daemon]
   implicit val serverStatusParser = macroRW[webrpc.ServerStatus]
 
   implicit val hwSensorsParser = macroRW[extension.HardwareData.SensorsRow]
-  implicit val addNewHostRequestBodyParser = macroRW[AddNewHostRequestBody]
+  implicit val addNewHostRequestBodyParser = macroRW[boincrpc.AddNewHostRequestBody]
+
+  implicit val hostDetailsParser = macroRW[rpc.HostDetails]
 
 }

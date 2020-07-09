@@ -1,9 +1,9 @@
-package at.happywetter.boinc.web.helper.table
+package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.Message
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn, TableRow}
 import mhtml.{Rx, Var}

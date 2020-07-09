@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}

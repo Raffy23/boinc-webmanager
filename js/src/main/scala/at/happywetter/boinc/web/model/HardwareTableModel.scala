@@ -1,10 +1,10 @@
-package at.happywetter.boinc.web.helper.table
+package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.extension.HardwareData.SensorsRow
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}

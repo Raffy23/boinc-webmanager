@@ -1,20 +1,19 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.webrpc.ApplicationError
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
+import at.happywetter.boinc.shared.parser._
 import org.scalajs.dom
 import org.scalajs.dom.experimental.Response
 
 import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.Int8Array
-import at.happywetter.boinc.shared.parser._
-
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Try
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 12.09.2017

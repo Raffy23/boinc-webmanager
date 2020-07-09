@@ -7,8 +7,8 @@ import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseExcepti
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincSwarmPageStyle => Style}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._

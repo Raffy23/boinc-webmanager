@@ -1,6 +1,5 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.web.helper.FetchHelper
 import at.happywetter.boinc.web.util.I18N.Locale
 import org.scalajs.dom
 

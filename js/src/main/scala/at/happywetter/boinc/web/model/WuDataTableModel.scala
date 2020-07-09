@@ -1,10 +1,10 @@
-package at.happywetter.boinc.web.helper.table
+package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{App, Result, Task}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.DataTable.{LinkColumn, StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, SimpleModalDialog}

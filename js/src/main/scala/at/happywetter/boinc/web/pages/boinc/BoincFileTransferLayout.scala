@@ -10,8 +10,8 @@ import scala.util.Try
 import scala.xml.Elem
 import BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.table.FileTransferTableModel.FileTransferTableRow
-import at.happywetter.boinc.web.helper.table.WuDataTableModel.WuTableRow
+import at.happywetter.boinc.web.model.FileTransferTableModel.FileTransferTableRow
+import at.happywetter.boinc.web.model.WuDataTableModel.WuTableRow
 import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.util.GlobalOptions
 import org.scalajs.dom

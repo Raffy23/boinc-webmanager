@@ -1,4 +1,4 @@
-package at.happywetter.boinc.web.helper.table
+package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.web.pages.component
 import at.happywetter.boinc.web.pages.component.DataTable

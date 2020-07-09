@@ -1,9 +1,9 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
 import at.happywetter.boinc.web.facade.Navigator
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 01.11.2017

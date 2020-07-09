@@ -7,12 +7,11 @@ import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableT
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle
 import at.happywetter.boinc.web.facade.Implicits.RichWindow
-import at.happywetter.boinc.web.helper.FetchHelper.FetchRequest
-import at.happywetter.boinc.web.helper.{AuthClient, FetchHelper}
+import at.happywetter.boinc.web.util.FetchHelper.FetchRequest
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, FetchHelper}
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -33,11 +32,6 @@ object WebRPCProjectPage extends Layout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "project_overview"
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    PageLayout.clearNav()
-    AuthClient.validateAction(done)
-  }
-
   private val projects: Var[Map[String, String]] = Var(Map.empty)
   private val currentSelection: Var[Option[Either[ServerStatus, Exception]]] = Var(None)
   private val selectorPlaceholder: Var[String] = Var("fetching_projects".localize)
@@ -52,14 +46,7 @@ object WebRPCProjectPage extends Layout {
   }
 
   override def onRender(): Unit = {
-    ClientManager.readClients().map(clients => {
-      DashboardMenuBuilder.renderClients(clients)
-
-      DashboardMenu.selectByMenuId("dashboard_webrpc")
-      AppRouter.router.updatePageLinks()
-    }).recover(ErrorDialogUtil.showDialog)
-
-    NProgress.start()
+    DashboardMenu.selectByMenuId("dashboard_webrpc")
     ClientManager.getClients.foreach(clients => {
       Future.sequence(
         clients.map(client =>

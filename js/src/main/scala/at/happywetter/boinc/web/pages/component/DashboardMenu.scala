@@ -1,14 +1,14 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.helper.ServerConfig
 import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
 import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.ServerConfig
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{HTMLAnchorElement, HTMLElement}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
@@ -223,24 +223,15 @@ object DashboardMenu {
 
   private def subMenuListener(entry: SublistEntry): (Event) => Unit = (event) => entry.visible.update(!_)
 
-  private var selected: String = _
   def selectMenuItemByContent(content: String): Unit = {
-    val rootElement = dom.document.getElementById("dashboard-menu")
-    var marked = false
-
     import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
-    rootElement.childNodes.forEach((li, _, _) => {
-      if (li.firstChild != null && li.firstChild.textContent == content) {
-        li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
-        marked = true
-      } else if(li.firstChild == null && li.textContent == content) {
-        li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
-        marked = true
-      }
+    dom.document.querySelectorAll("#dashboard-menu li a").forEach((a, _, _) => {
+      val element = a.asInstanceOf[HTMLAnchorElement]
+
+      if (element.text.trim() == content)
+        element.classList.add(Style.active.htmlClass)
     })
 
-    if (!marked) selected = content
-    else selected = null
   }
 
 }

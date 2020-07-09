@@ -1,7 +1,7 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.BoincManager
-import at.happywetter.boinc.shared.webrpc.ApplicationError
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import cats.effect.{Concurrent, IO}
 import fs2.Pipe
 import fs2.concurrent.Queue

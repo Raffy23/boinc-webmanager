@@ -4,8 +4,9 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentLinkedQueue, ScheduledExecutorService, TimeUnit}
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.BoincManager.{AddedBy, AddedByConfig, AddedByDiscovery, BoincClientEntry}
+import at.happywetter.boinc.BoincManager.{AddedBy, AddedByConfig, AddedByDiscovery, AddedByUser, BoincClientEntry}
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
+import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.util.{IP, Logger, PooledBoincClient}
 import cats.effect.{IO, Resource}
 
@@ -146,6 +147,20 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   def getGroups: TrieMap[String, ListBuffer[String]] = clientGroups
 
   def getSerializableGroups: Map[String, List[String]] = getGroups.map{ case (key, value) => (key, value.toList)}.toMap
+
+  def getDetailedHosts: List[HostDetails] = boincClients.map { case (name, entry) =>
+    HostDetails(
+      name,
+      entry.client.address,
+      entry.client.port,
+      entry.client.password,
+      entry.addedBy match {
+        case AddedByDiscovery => "added_by_discovery"
+        case AddedByConfig    => "added_by_config"
+        case AddedByUser      => "added_by_user"
+      }
+    )
+  }.toList
 
   def addToGroup(group: String, hostname: String): Unit = {
     clientGroups.getOrElseUpdate(group, ListBuffer.empty) += hostname

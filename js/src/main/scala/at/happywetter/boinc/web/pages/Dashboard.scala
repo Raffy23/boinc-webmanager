@@ -3,15 +3,15 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
-import at.happywetter.boinc.web.helper.{AuthClient, ServerConfig, WebSocketClient}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.WebSocketClient
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, ServerConfig, WebSocketClient}
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
@@ -28,7 +28,7 @@ import scala.util.Try
 import BoincFormater.Implicits._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.helper.table.StringTableRow
+import at.happywetter.boinc.web.model.StringTableRow
 
 import Ordering.Double.TotalOrdering
 import scala.collection.mutable
@@ -66,16 +66,6 @@ object Dashboard extends Layout {
   private val clients = Var(Map.empty[String, ClientData])
   private val projects = Var(Map.empty[String, String])
   private val clientsDataSum = HostSumData(Var(0),Var(0),Var(0D),Var(0D),Var(0D))
-
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    PageLayout.clearNav()
-    PageLayout.showMenu()
-    PageLayout.clearNav()
-
-    if (AuthClient.validateAction(done)) {
-      ServerConfig.query
-    }
-  }
 
   override def already(): Unit = onRender()
 

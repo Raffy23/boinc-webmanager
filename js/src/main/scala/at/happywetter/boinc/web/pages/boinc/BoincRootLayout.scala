@@ -25,12 +25,9 @@ object BoincRootLayout extends BoincClientLayout {
   }
 
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    currentController.before(() => {
-      AppRouter.navigate(currentController.linkForHost(params("client")))
-      //done()
-    }, params)
+    AppRouter.navigate(currentController.linkForHost(params("client")))
   }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {}
+  override def beforeRender(params: Dictionary[String]): Unit = { }
 
 }

@@ -17,7 +17,7 @@ git.gitTagToVersionNumber := { tag: String =>
 }
 
 val http4sVersion  = "1.0.0-M3"
-val uPickleVersion = "0.9.9"
+val uPickleVersion = "1.1.0"
 
 lazy val root = project.in(file(".")).
   aggregate(clientJS, serverJVM).

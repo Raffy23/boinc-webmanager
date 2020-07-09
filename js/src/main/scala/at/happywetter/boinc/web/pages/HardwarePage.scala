@@ -3,14 +3,13 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
-import at.happywetter.boinc.web.helper.AuthClient
-import at.happywetter.boinc.web.helper.table.DataModelConverter._
-import at.happywetter.boinc.web.helper.table.HardwareTableModel.HardwareTableRow
+import at.happywetter.boinc.web.model.DataModelConverter._
+import at.happywetter.boinc.web.model.HardwareTableModel.HardwareTableRow
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -26,11 +25,6 @@ import scala.xml.Elem
 object HardwarePage extends Layout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
-
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    PageLayout.clearNav()
-    AuthClient.validateAction(done)
-  }
 
   private var clients: Future[List[HardwareStatusClient]] = _
   private val tableHeaders: List[(String, Boolean)] = List(
@@ -54,13 +48,7 @@ object HardwarePage extends Layout {
   }
 
   override def onRender(): Unit = {
-    ClientManager.readClients().map(clients => {
-      DashboardMenuBuilder.renderClients(clients)
-
-      DashboardMenu.selectByMenuId("dashboard_hardware")
-      AppRouter.router.updatePageLinks()
-    }).recover(ErrorDialogUtil.showDialog)
-
+    DashboardMenu.selectByMenuId("dashboard_hardware")
     clients.foreach(clients => dataTable.reactiveData := clients)
   }
 

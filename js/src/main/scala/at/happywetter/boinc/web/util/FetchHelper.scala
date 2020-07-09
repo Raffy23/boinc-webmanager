@@ -1,19 +1,17 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.web.helper.ResponseHelper._
 import org.scalajs.dom
 import org.scalajs.dom.experimental._
-import org.scalajs.dom.raw.{Blob, BlobPropertyBag}
-import upickle.default._
+import upickle.default.{read, readBinary, write, Reader, Writer}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
-import scala.scalajs.js.annotation.JSGlobal
-import scala.scalajs.js.typedarray.{TypedArray, Uint8Array}
+
+import ResponseHelper._
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 23.07.2017
@@ -110,8 +108,6 @@ object FetchHelper {
     override var signal: UndefOr[AbortSignal] = _signal
     override var window: UndefOr[Null] = js.undefined
   }
-
-  import js.JSConverters._
   private def requestPostParameters(content: String): RequestInit = new RequestInit {
     override var method: UndefOr[HttpMethod] = HttpMethod.POST
     override var headers: UndefOr[HeadersInit] = header

@@ -4,9 +4,8 @@ import at.happywetter.boinc.BoincManager.AddedByUser
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAction}
-import at.happywetter.boinc.shared.boincrpc.{BoincRPC, GlobalPrefsOverride}
+import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, AddProjectBody, BoincModeChange, BoincProjectMetaData, BoincRPC, GlobalPrefsOverride, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
 import at.happywetter.boinc.shared.parser._
-import at.happywetter.boinc.shared.webrpc._
 import at.happywetter.boinc.util.{IP, PooledBoincClient}
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
@@ -143,6 +142,10 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       // TODO: Implement correct state stuff ...
       Ok(true, request)
 
+
+    // More details
+    case request @ GET -> Root / "boinc" / "host_details" =>
+      Ok(hostManager.getDetailedHosts, request)
 
     // Add / Remove boinc stuff
     case request @ POST -> Root / "boinc" / "project_list" =>

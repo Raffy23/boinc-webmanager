@@ -3,13 +3,13 @@ package at.happywetter.boinc.web
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientCacheHelper
 import at.happywetter.boinc.web.css.AppCSSRegistry
-import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
+import at.happywetter.boinc.web.pages.settings.HostSettings
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
-import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.{AuthClient, LanguageDataProvider}
 import org.scalajs.dom
 
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
@@ -74,6 +74,9 @@ object Main {
     AppRouter += SettingsPage
     AppRouter += WebRPCProjectPage
     AppRouter += HardwarePage
+
+    // Settings pages:
+    AppRouter += HostSettings
 
     // Swarm pages:
     AppRouter += new BoincSwarmPage

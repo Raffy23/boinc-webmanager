@@ -13,7 +13,7 @@ import I18N._
   * @version 21.09.2017
   */
 object ErrorDialogUtil {
-  import at.happywetter.boinc.web.helper.XMLHelper._
+  import XMLHelper._
 
   val showDialog: PartialFunction[Throwable, Unit] = {
     case ex: FetchResponseException if ex.statusCode == 500 =>

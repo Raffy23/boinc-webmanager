@@ -1,4 +1,4 @@
-package at.happywetter.boinc.web.helper.table
+package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
 import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}

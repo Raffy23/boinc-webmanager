@@ -3,12 +3,12 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.pages.component.topnav.SettingsTopNavigation
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
 
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
@@ -23,7 +23,6 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   */
 object SettingsPage extends Layout {
   override val path: String = "settings"
-
 
   override def render: Elem = {
     <div id="settings">
@@ -72,22 +71,9 @@ object SettingsPage extends Layout {
     </div>
   }
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    PageLayout.clearNav()
-    AuthClient.validateAction(done)
-  }
-
   override def beforeRender(params: Dictionary[String]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-    ClientManager.readClients().map(clients => {
-      DashboardMenuBuilder.renderClients(clients)
-
-      AppRouter.router.updatePageLinks()
-    }).recover(ErrorDialogUtil.showDialog)
-  }
-
-  override def onRender(): Unit = {
+    SettingsTopNavigation.render(Some(""))
     DashboardMenu.selectByMenuId("settings")
   }
+
 }

@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
-import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
+import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
 import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Dialog => DialogStyle}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, LoginPageStyle}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
@@ -15,7 +15,7 @@ import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Random
 import scala.xml.{Elem, Node}
-import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.RichRx._
 
 /**
   * Created by: 

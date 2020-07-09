@@ -1,6 +1,6 @@
 package at.happywetter.boinc.dto
 
-import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
+import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
 
 /**
  * Created by: 

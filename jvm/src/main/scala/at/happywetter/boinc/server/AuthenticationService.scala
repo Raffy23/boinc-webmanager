@@ -4,7 +4,7 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
 
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.webrpc.{ApplicationError, User}
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import org.http4s.util.CaseInsensitiveString
@@ -12,6 +12,7 @@ import org.http4s.util.CaseInsensitiveString
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.webrpc.User
 import at.happywetter.boinc.util.Logger
 import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse

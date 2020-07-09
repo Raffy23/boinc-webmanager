@@ -27,7 +27,7 @@ object PooledBoincClient {
   case class ConnectionException(e: Throwable) extends RuntimeException
 
 }
-class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
+class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, val password: String, encoding: String) extends BoincCoreClient {
 
   val deathCounter = new AtomicInteger(0)
 

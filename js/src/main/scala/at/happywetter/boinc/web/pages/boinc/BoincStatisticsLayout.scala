@@ -4,7 +4,7 @@ import at.happywetter.boinc.shared.boincrpc.{DailyStatistic, Statistics}
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincStatisticsStyle => Style}
-import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil

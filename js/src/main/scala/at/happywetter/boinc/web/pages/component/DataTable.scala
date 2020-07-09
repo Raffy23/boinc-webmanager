@@ -4,8 +4,8 @@ import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.Misc
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, Dialog, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N

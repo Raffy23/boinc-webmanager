@@ -3,8 +3,7 @@ package at.happywetter.boinc
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-import at.happywetter.boinc.boincclient.webrpc.ProjectRules
-import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.concurrent.duration.FiniteDuration

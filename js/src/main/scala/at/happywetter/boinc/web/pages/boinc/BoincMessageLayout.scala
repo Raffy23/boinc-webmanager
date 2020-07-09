@@ -6,7 +6,7 @@ import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincMessageStyle => Style}
-import at.happywetter.boinc.web.helper.table.MessageTableModel.MessageTableRow
+import at.happywetter.boinc.web.model.MessageTableModel.MessageTableRow
 import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress, Navigo}
 import at.happywetter.boinc.web.storage.MessageCache
@@ -20,8 +20,8 @@ import org.scalajs.dom.raw.{DOMParser, HTMLElement, HTMLInputElement, HTMLSelect
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.xml.Elem
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.table.DataModelConverter._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.model.DataModelConverter._
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dictionary

@@ -73,17 +73,19 @@ object WebServer extends IOApp with Logger {
     } yield (database, webserver, autoDiscovery))
       .use(_ =>
         if (config.serviceMode)
-          IO {
-            println("Running in service mode, waiting for signal ...")
-          }.flatMap(_ => IO.never)
+          serviceMode
         else
-          IO.async[Unit] { resolve =>
-            println("Press ENTER to exit the server ...")
-            StdIn.readLine()
-
-            scheduler.shutdownNow()
-            resolve(Right(()))
-          }
+          interactive
       ).as(ExitCode.Success)
   }
+
+  private val serviceMode = IO { println("Running in service mode, waiting for signal ...") } *> IO.never
+  private val interactive = IO.async[Unit] { resolve =>
+    println("Press ENTER to exit the server ...")
+    StdIn.readLine()
+
+    scheduler.shutdownNow()
+    resolve(Right(()))
+  }
+
 }

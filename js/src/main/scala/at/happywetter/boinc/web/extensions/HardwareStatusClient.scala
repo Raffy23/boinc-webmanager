@@ -1,10 +1,10 @@
 package at.happywetter.boinc.web.extensions
 
 import at.happywetter.boinc.shared.extension.HardwareData.SensorsData
-import at.happywetter.boinc.web.helper.FetchHelper
 import upickle.default._
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
+import at.happywetter.boinc.web.util.FetchHelper
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

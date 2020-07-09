@@ -1,6 +1,6 @@
 // Add Scala.JS and JSDependency Plugin
-addSbtPlugin("org.scala-js"     % "sbt-scalajs"                     % "1.0.0")
-addSbtPlugin("org.scala-js"     % "sbt-jsdependencies"              % "1.0.0")
+addSbtPlugin("org.scala-js"     % "sbt-scalajs"                     % "1.1.1")
+addSbtPlugin("org.scala-js"     % "sbt-jsdependencies"              % "1.0.1")
 
 // Use Scala Crossproject for Scala.js (https://github.com/scala-native/sbt-crossproject)
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % "1.0.0")

@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.webrpc.{AddNewHostRequestBody, BoincProjectMetaData}
-import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, BoincProjectMetaData}
 import org.scalajs.dom
 import upickle.default._
 
@@ -11,9 +10,12 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
-import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.{FetchHelper, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.WebSocketClient
 
 /**
   * Created by: 
@@ -139,6 +141,9 @@ object ClientManager {
 
   def removeClient(name: String): Future[Boolean] =
     FetchHelper.delete[Boolean](s"$baseURI/$name")
+
+  def queryClientDetails(): Future[List[HostDetails]] =
+    FetchHelper.get[List[HostDetails]](s"$baseURI/host_details")
 
   def queryClientHealth(): Future[Map[String, Boolean]] =
     FetchHelper.get[Map[String, Boolean]](baseURI + "/health")

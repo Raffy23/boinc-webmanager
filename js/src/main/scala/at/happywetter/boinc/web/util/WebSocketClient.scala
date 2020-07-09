@@ -1,15 +1,15 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.websocket._
+import at.happywetter.boinc.shared.websocket.WebSocketMessage
 import org.scalajs.dom
 import org.scalajs.dom.raw.{Blob, FileReader, WebSocket}
-import upickle.default.{Reader, Writer, readBinary, writeBinary}
+import upickle.default.{readBinary, writeBinary, Reader, Writer}
 
 import scala.collection.mutable
 import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 17.07.2019

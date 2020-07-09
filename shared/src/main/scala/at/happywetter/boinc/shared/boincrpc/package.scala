@@ -381,4 +381,22 @@ package object boincrpc {
 
   }
 
+  final case class WorkunitRequestBody(project: String, action: String)
+
+  final case class ProjectRequestBody(project: String, action: String)
+
+  final case class BoincModeChange(mode: String, duration: Double)
+
+  final case class RetryFileTransferBody(project: String, file: String)
+
+  final case class AddProjectBody(projectUrl: String, projectName: String, user: String, password: String)
+
+  final case class ApplicationError(reason: String)
+
+  final case class ServerSharedConfig(hostNameCacheTimeout: Long, hardware: Boolean)
+
+  final case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
+
+  final case class AddNewHostRequestBody(address: String, port: Int, password: String)
+
 }

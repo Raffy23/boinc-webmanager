@@ -6,8 +6,8 @@ import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Tooltip => TooltipStyle}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, ProjectSwarmPageStyle => Style}
 import at.happywetter.boinc.web.css.definitions.components.{Dialog => DialogStyle}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.pages.component.dialog._
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}

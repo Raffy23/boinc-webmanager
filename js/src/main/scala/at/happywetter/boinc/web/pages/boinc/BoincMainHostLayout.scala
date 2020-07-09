@@ -6,7 +6,7 @@ import at.happywetter.boinc.shared.boincrpc.{CCState, HostInfo}
 import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper}
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.css.definitions.pages.{BoincMainHostStyle => Style}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog

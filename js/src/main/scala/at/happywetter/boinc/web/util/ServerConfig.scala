@@ -1,14 +1,14 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
 import at.happywetter.boinc.shared.parser._
 import mhtml.Var
 
 import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 20.09.2017

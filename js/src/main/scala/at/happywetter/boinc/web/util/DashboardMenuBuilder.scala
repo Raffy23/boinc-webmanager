@@ -5,6 +5,7 @@ import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter
 
+import scala.collection.mutable.ListBuffer
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
@@ -14,7 +15,10 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @version 21.09.2017
   */
 object DashboardMenuBuilder {
+
+
   private var rendered: Boolean = false
+  var afterRenderHooks: ListBuffer[() => Unit] = ListBuffer.empty
 
   def renderClients(clients: List[String]): Unit = {
     if (rendered) return
@@ -39,6 +43,9 @@ object DashboardMenuBuilder {
       })
 
       AppRouter.router.updatePageLinks()
+
+      afterRenderHooks.foreach(_())
+      afterRenderHooks = ListBuffer.empty
     })
   }
 

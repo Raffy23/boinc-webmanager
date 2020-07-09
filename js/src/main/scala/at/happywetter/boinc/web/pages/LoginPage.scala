@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.css.definitions.pages.{LoginPageStyle => Style}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.{LanguageDataProvider, ServerConfig}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
@@ -18,7 +18,6 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.web.helper.ServerConfig
 
 /**
   * Created by: 

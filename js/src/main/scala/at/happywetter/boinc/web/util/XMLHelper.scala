@@ -1,9 +1,9 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
 import scala.xml.{Node, Text}
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 06.02.2018

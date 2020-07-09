@@ -5,7 +5,7 @@ import java.io.File
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.Database
 import at.happywetter.boinc.dto.DatabaseDTO.Project
-import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
+import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
 import at.happywetter.boinc.util.IOAppTimer
 import cats.effect._
 import cats.effect.concurrent._

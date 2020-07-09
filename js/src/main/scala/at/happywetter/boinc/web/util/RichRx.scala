@@ -1,11 +1,11 @@
-package at.happywetter.boinc.web.helper
+package at.happywetter.boinc.web.util
 
 import mhtml.{Rx, Var}
 
 import scala.concurrent.Future
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 06.02.2018
@@ -13,15 +13,15 @@ import scala.concurrent.Future
 object RichRx {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  implicit class NowRx[T](rx: Rx[T]) {
+  implicit class NowRx[T](private val rx: Rx[T]) extends AnyVal {
     def now: T = extract(rx)
   }
 
-  implicit class NowVar[T](rx: Var[T]) {
+  implicit class NowVar[T](private val rx: Var[T]) extends AnyVal {
     def now: T = extract(rx)
   }
 
-  implicit class FutureRx[R](future: Future[R]) {
+  implicit class FutureRx[R](private val future: Future[R]) extends AnyVal {
     def toRx(default: R): Var[R] = {
       val rx = Var[R](default)
       future.foreach(async => rx := async)
@@ -39,7 +39,7 @@ object RichRx {
     }
   }
 
-  protected def extract[T](rx: Rx[T]): T = {
+  @inline protected def extract[T](rx: Rx[T]): T = {
     var value: Option[T] = None
     rx.impure.run(v => value = Some(v)).cancel
 
