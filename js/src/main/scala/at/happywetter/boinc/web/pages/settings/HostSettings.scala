@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.pages.settings
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.model.HostDetailsTableModel
-import at.happywetter.boinc.web.model.HostDetailsTableModel.HostDetailsTableRow
+import at.happywetter.boinc.web.model.HostDetailsTableRow
 import at.happywetter.boinc.web.pages.Layout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.pages.component.topnav.SettingsTopNavigation
@@ -24,16 +24,7 @@ object HostSettings extends Layout {
 
   override val path: String = "settings/hosts"
 
-  private val dataTable = new DataTable[HostDetailsTableRow](
-    List(
-      ("name".localize, true),
-      ("address".localize, true),
-      ("port".localize, true),
-      ("added_by".localize, true),
-      ("", false)
-    ),
-    paged = true
-  )
+  private val dataTable = DataTable.of(HostDetailsTableModel)
 
   override def render: Elem =
     <div>

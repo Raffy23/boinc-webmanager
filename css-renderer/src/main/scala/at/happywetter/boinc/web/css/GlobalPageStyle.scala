@@ -46,4 +46,12 @@ object GlobalPageStyle extends StyleSheet.Standalone {
     Button.normal
   )
 
+  "input" - (
+    backgroundColor(c"#f2f2f2"),
+    border :=! "1px solid #DDD",
+    padding(15 px),
+    boxSizing.borderBox,
+    fontSize(14 px)
+  )
+
 }

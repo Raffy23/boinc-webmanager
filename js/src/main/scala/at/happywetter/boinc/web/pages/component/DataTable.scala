@@ -4,6 +4,7 @@ import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.Misc
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, Dialog, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
+import at.happywetter.boinc.web.model.TableModel
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
@@ -41,6 +42,10 @@ object DataTable {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
 
+  class IntegerColumn(val source: Rx[Int]) extends TableColumn(content = source.map(int => Text(int.toString)), null) {
+    override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[IntegerColumn].source.now)
+  }
+
   class DoubleColumn(val source: Rx[Double]) extends TableColumn(
     datasource = null,
     dataEntry = Some("number"),
@@ -65,6 +70,12 @@ object DataTable {
       </tr>
     }
   }
+
+  def of[A, T <: TableRow](model: TableModel[A,T], paged: Boolean = false) = new DataTable[T](
+    model.header,
+    paged = paged
+  )
+
 }
 
 class DataTable[T <: TableRow](headers: List[(String, Boolean)],
@@ -140,7 +151,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
               </a>
               {
               currentPage.zip(pages).map { case (page, pages) =>
-                <input type="number" value={page.toString} onchange={onPageChange}
+                <input type="number" value={page.toString} onchange={onPageChange} style={s"padding:7px;width:${3.5 + (pages/100)}em"}
                        min="1" max={(pages+1).toString} aria-label={"current_page".localize}>
                 </input>
               }

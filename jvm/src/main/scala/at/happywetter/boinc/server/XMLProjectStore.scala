@@ -1,6 +1,7 @@
 package at.happywetter.boinc.server
 
 import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.Database
@@ -22,22 +23,21 @@ import monix.execution.Scheduler.Implicits.global
   */
 class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
 
-  private val projects = Ref.of[IO, Map[String, BoincProjectMetaData]](Map.empty)
+  private val projects = new AtomicReference[Map[String, BoincProjectMetaData]](Map.empty)
 
-  def importFrom(config: Config): IO[Unit] = projects.flatMap { ref =>
-    ref.update(_ ++ config.boinc.projects.customProjects.map { case (name, project) =>
-        println(name)
-        name -> BoincProjectMetaData(
-          name, project.url, project.generalArea, "", project.description, project.organization, List()
-        )
+  def importFrom(config: Config): IO[Map[String, BoincProjectMetaData]] = IO {
+    projects.updateAndGet(_ ++ config.boinc.projects.customProjects.map { case (name, project) =>
+      name -> BoincProjectMetaData(
+        name, project.url, project.generalArea, "", project.description, project.organization, List()
+      )
     })
   }
 
-  def getProjects: IO[Ref[IO, Map[String, BoincProjectMetaData]]] = projects
+  def getProjects: Map[String, BoincProjectMetaData] = projects.get()
 
-  def addProject(name: String, project: BoincProjectMetaData): IO[Unit] = projects.flatMap { ref =>
-    db.projects.insert(Project(project)).to[IO] *>
-    ref.update(_ + (name -> project))
+  def addProject(name: String, project: BoincProjectMetaData): IO[Unit] = IO {
+    db.projects.insert(Project(project)).to[IO].unsafeRunSync()
+    projects.updateAndGet(_ + (name -> project))
   }
 
 }
@@ -50,8 +50,8 @@ object XMLProjectStore {
       .flatMap { projectStore =>
 
         // Read projects from projects.xml in the background
-        contextShift.blockOn(IOAppTimer.blocker)(
-          projectStore.projects.map(_.update(_ ++
+        contextShift.blockOn(IOAppTimer.blocker)(IO {
+          projectStore.projects.updateAndGet(_ ++
             (XML.loadFile(new File(config.boinc.projects.xmlSource)) \ "project").map(node =>
               (node \ "name").text ->
                 BoincProjectMetaData(
@@ -64,7 +64,8 @@ object XMLProjectStore {
                   (node \ "platforms" \ "name").theSeq.map(name => name.text).toList
                 )
             ).toMap
-          ))
+          )
+        }
         ) *>
         projectStore.importFrom(config).map(_ => projectStore)
       }

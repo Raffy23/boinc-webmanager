@@ -30,6 +30,10 @@ object Tooltip {
       style = Some(Style.loadingIcon)
     )
 
+  def apply(text: Rx[String], parent: Elem, textOrientation: CSSIdentifier = Style.topText,
+            tooltipId: Option[String] = None, style: Option[CSSIdentifier] = None): Elem =
+    new Tooltip(text, parent, textOrientation, tooltipId, style).component
+
 }
 class Tooltip(text: Rx[String], parent: Elem, textOrientation: CSSIdentifier = Style.topText,
               tooltipId: Option[String] = None, val style: Option[CSSIdentifier] = None) {
