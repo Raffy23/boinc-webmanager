@@ -27,6 +27,7 @@ object LoginPageCSS extends StyleSheet.Standalone {
 
   input.cssName -(
     width(100%%),
+    padding(15 px),
     margin(0 px, 0 px, 15 px, 0 px),
   )
 

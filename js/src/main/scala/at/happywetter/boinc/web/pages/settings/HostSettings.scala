@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.settings
 
+import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.model.HostDetailsTableModel

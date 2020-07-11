@@ -8,6 +8,7 @@ package at.happywetter.boinc.shared
  */
 package object rpc {
 
-  final case class HostDetails(name: String, address: String, port: Int, password: String, addedBy: String)
+  final case class HostDetails(name: String, address: String, port: Int, password: String,
+                               addedBy: String, errors: Int)
 
 }

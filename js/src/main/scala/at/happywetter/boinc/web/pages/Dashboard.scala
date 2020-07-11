@@ -79,7 +79,7 @@ object Dashboard extends Layout {
     }
 
     ClientManager.readClients().map(clients => {
-      DashboardMenuBuilder.renderClients(clients)
+      //DashboardMenuBuilder.renderClients(clients)
       this.clients := clients.map(name => (name, ClientData(name))).toMap
 
       // Sequence futures for the project names, data is partially updated with Rx[...] and Var[...]

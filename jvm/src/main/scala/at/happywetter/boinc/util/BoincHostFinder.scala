@@ -39,7 +39,7 @@ class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(
     if (hosts.nonEmpty)
       LOG.info("Following hosts can be added: " + hosts.diff(getUsedIPs))
     else
-      LOG.debug("No new hosts can be added")
+      LOG.info("No new hosts can be added")
 
     hosts.diff(getUsedIPs).foreach( ip => {
       Future {
@@ -65,7 +65,7 @@ class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(
 
               boincManager.add(
                 domainName,
-                ip, config.autoDiscovery.port.toShort, pw,
+                ip.toString, config.autoDiscovery.port.toShort, pw,
                 AddedByDiscovery
               )
 

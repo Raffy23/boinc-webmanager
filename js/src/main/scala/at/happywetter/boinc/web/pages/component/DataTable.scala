@@ -42,7 +42,13 @@ object DataTable {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
 
-  class IntegerColumn(val source: Rx[Int]) extends TableColumn(content = source.map(int => Text(int.toString)), null) {
+  class IntegerColumn(val source: Rx[Int]) extends TableColumn(
+    datasource = null,
+    dataEntry = Some("number"),
+    content = source.map(int => {
+      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+      int.asInstanceOf[JSNumberOps].toLocaleString()
+    })) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[IntegerColumn].source.now)
   }
 
@@ -61,6 +67,8 @@ object DataTable {
 
   abstract class TableRow {
 
+    protected[component] var weakTableRef: DataTable[TableRow] = _
+
     val columns: List[TableColumn]
     val contextMenuHandler: (Event) => Unit = (_) => {}
 
@@ -69,6 +77,7 @@ object DataTable {
         {columns.map(column => <td data-type={column.dataEntry}>{column.content}</td>)}
       </tr>
     }
+
   }
 
   def of[A, T <: TableRow](model: TableModel[A,T], paged: Boolean = false) = new DataTable[T](
@@ -131,10 +140,10 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
           if(paged) {
             currentPage.zip(curPageSize).zip(reactiveData).map { case ((page, size), data) =>
               val start = (page-1) * size
-              data.slice(start, start + size).map(_.htmlRow)
+              data.slice(start, start + size).map(renderAndBindRow)
             }
           } else {
-            reactiveData.map(_.map(_.htmlRow))
+            reactiveData.map(_.map(renderAndBindRow))
           }
           }
         </tbody>
@@ -166,6 +175,11 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
         } else None
       }
     </div>
+  }
+
+  private def renderAndBindRow(row: T): Elem = {
+    row.weakTableRef = this.asInstanceOf[DataTable[TableRow]]
+    row.htmlRow
   }
 
   private val onPageSizeChange: Event => Unit = { event =>

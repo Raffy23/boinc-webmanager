@@ -71,6 +71,10 @@ object SettingsPage extends Layout {
     </div>
   }
 
+  override def after(): Unit = {
+    NProgress.done(true)
+  }
+
   override def beforeRender(params: Dictionary[String]): Unit = {
     SettingsTopNavigation.render(Some(""))
     DashboardMenu.selectByMenuId("settings")

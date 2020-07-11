@@ -234,4 +234,9 @@ object DashboardMenu {
 
   }
 
+  def clearSubmenus(): Unit = {
+    menuComputers := List.empty
+    menuGroups := List.empty
+  }
+
 }

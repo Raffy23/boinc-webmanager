@@ -24,7 +24,7 @@ import scala.util.Try
   */
 object PooledBoincClient {
 
-  case class ConnectionException(e: Throwable) extends RuntimeException
+  case class ConnectionException(e: Throwable) extends RuntimeException(e)
 
 }
 class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, val password: String, encoding: String) extends BoincCoreClient {
@@ -50,17 +50,16 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
 
   private def connection[R](extractor: BoincClient => Future[R]): Future[R] =
     takeConnection()
-      .map { client =>
-        (
-          client,
-          Try(extractor(client))
-            .recover{ case e: Throwable =>
+      .flatMap { client =>
+        extractor(client)
+          .map{ result => pool.offer(client); result }
+          .recover {
+            case e: Exception =>
               deathCounter.incrementAndGet()
+              pool.offer(client);
               throw ConnectionException(e)
-            }
-        )
+          }
       }
-      .flatMap{ case (client, result) => pool.offer(client); result.get }
 
   def checkConnection(): Future[Boolean] =
     connection(_.getCCState)

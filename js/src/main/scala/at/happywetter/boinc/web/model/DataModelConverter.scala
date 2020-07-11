@@ -30,7 +30,4 @@ object DataModelConverter {
   implicit def messagesConvert(data: List[Message]): List[MessageTableModel.MessageTableRow] =
     data.map(MessageTableModel.convert)
 
-  implicit def hostDetailsConverter(data: List[HostDetails]): List[HostDetailsTableRow] =
-    HostDetailsTableModel.convert(data)
-
 }

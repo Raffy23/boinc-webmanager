@@ -42,7 +42,7 @@ object BoincManager {
         db.clients.queryAll().runSyncUnsafe().foreach(coreClient => {
           hostManager.add(
             coreClient.name,
-            IP(coreClient.ipAddress), coreClient.port, coreClient.password,
+            coreClient.ipAddress, coreClient.port, coreClient.password,
             coreClient.addedBy match {
               case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
               case CoreClient.ADDED_BY_USER      => AddedByUser
@@ -120,8 +120,8 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
     }
   }
 
-  def add(name: String, address: IP, port: Int, password: String, addedBy: AddedBy): Unit =
-    add(name, new PooledBoincClient(poolSize, address.toString, port, password, encoding), addedBy)
+  def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): Unit =
+    add(name, new PooledBoincClient(poolSize, address, port, password, encoding), addedBy)
 
   protected def add(name: String, host: AppConfig.Host): Unit =
     add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding), AddedByConfig)
@@ -158,7 +158,8 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
         case AddedByDiscovery => "added_by_discovery"
         case AddedByConfig    => "added_by_config"
         case AddedByUser      => "added_by_user"
-      }
+      },
+      entry.client.deathCounter.get()
     )
   }.toList
 

@@ -47,11 +47,27 @@ object GlobalPageStyle extends StyleSheet.Standalone {
   )
 
   "input" - (
-    backgroundColor(c"#f2f2f2"),
-    border :=! "1px solid #DDD",
-    padding(15 px),
+    border :=! "1px solid #AAA",
+    padding(7 px),
     boxSizing.borderBox,
-    fontSize(14 px)
+    fontSize(14 px),
+
+    &.focus - (
+      outlineColor(c"#999"),
+      outlineWidth(2 px)
+    )
+  )
+
+  "select" - (
+    border :=! "1px solid #AAA",
+    padding(7 px),
+    boxSizing.borderBox,
+    fontSize(14 px),
+
+    &.focus - (
+      outlineColor(c"#999"),
+      outlineWidth(2 px)
+    )
   )
 
 }

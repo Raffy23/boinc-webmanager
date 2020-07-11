@@ -5,6 +5,8 @@ import upickle.default._
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.util.FetchHelper
+import at.happywetter.boinc.web.facade.Implicits._
+import org.scalajs.dom
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,7 +19,7 @@ import scala.concurrent.Future
   */
 class HardwareStatusClient(val hostname: String) {
   
-  private val baseURI = "/api/hardware/" + hostname + "/"
+  private val baseURI = s"/hardware/${dom.window.encodeURIComponent(hostname)}/"
 
   def getCpuFrequency: Future[Double] =
     FetchHelper.get[Double](baseURI + "cpufrequency")
@@ -30,7 +32,7 @@ class HardwareStatusClient(val hostname: String) {
 object HardwareStatusClient {
 
   def queryClients: Future[List[HardwareStatusClient]] =
-    FetchHelper.get[List[String]]("/api/hardware")
+    FetchHelper.get[List[String]]("/hardware")
       .map(_
         .sorted(ord = StringLengthAlphaOrdering)
         .map(new HardwareStatusClient(_))

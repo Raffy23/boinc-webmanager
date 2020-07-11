@@ -16,7 +16,6 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   */
 object DashboardMenuBuilder {
 
-
   private var rendered: Boolean = false
   var afterRenderHooks: ListBuffer[() => Unit] = ListBuffer.empty
 
@@ -51,5 +50,10 @@ object DashboardMenuBuilder {
 
   def renderClients(): Unit =
     ClientManager.readClients().map(renderClients)
+
+  def invalidateCache(): Unit = {
+    rendered = false
+    renderClients()
+  }
 
 }

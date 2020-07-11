@@ -43,12 +43,13 @@ object WebServer extends IOApp with Logger {
   }
 
   // Create top level routes
+  // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware ...
   private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
     "/"              -> WebResourcesRoute(config),
     "/swagger"       -> SwaggerRoutes(),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
-    "/api/webrpc"    -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
-    "/api/hardware"  -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
+    "/webrpc"        -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
+    "/hardware"      -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
     "/ws"            -> WebsocketRoutes(authService, hostManager),
     "/auth"          -> authService.authService,
     "/language"      -> GZip(LanguageService())
@@ -63,7 +64,7 @@ object WebServer extends IOApp with Logger {
       xmlPStore   <- XMLProjectStore(database, config)
       hostManager <- BoincManager(config, database)
       webserver   <- BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
-                        .enableHttp2(false) // Can't use web sockets if http2 is enabled (0.21.0-M2)
+                        .enableHttp2(false) // Can't use web sockets if http2 is enabled (since 0.21.0-M2)
                         .withOptionalSSL(config)
                         .bindHttp(config.server.port, config.server.address)
                         .withHttpApp(routes(hostManager, xmlPStore, database).orNotFound)

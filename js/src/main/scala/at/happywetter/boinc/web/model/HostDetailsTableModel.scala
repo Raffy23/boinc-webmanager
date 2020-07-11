@@ -1,13 +1,18 @@
 package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.rpc.HostDetails
+import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.pages.component.DataTable.{IntegerColumn, StringColumn, TableColumn}
-import at.happywetter.boinc.web.pages.component.dialog.EditHostDetailsDialog
+import at.happywetter.boinc.web.pages.component.dialog.{ConfirmDialog, EditHostDetailsDialog}
+import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
+
+import scala.xml.Text
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
  * Created by: 
@@ -22,6 +27,7 @@ object HostDetailsTableModel extends TableModel[HostDetails, HostDetailsTableRow
     ("address".localize, true),
     ("port".localize, true),
     ("added_by".localize, true),
+    ("connection_errors".localize, true),
     ("", false)
   )
 
@@ -37,7 +43,20 @@ class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
   }
 
   protected val jsDeleteAction: Event => Unit = event => {
-    dom.window.alert("Action not Implemented!")
+    new ConfirmDialog(
+      "delete_host".localize,
+      List(Text("delete_host_dialog_body".localize)),
+      (_) => {
+        NProgress.start()
+        ClientManager.removeClient(details.name).foreach(succ => {
+          NProgress.done(true)
+
+          if (succ) this.weakTableRef.reactiveData.update(_.filterNot(_ == this))
+          else dom.window.alert("Error: Could not delete Host!")
+        })
+      },
+      (_) => {/* Do nothing */}
+    ).renderToBody().show()
   }
 
   protected val jsDirectConnect: Event => Unit = event => {
@@ -55,6 +74,7 @@ class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
     new StringColumn(address),
     new IntegerColumn(port),
     new StringColumn(addedBy),
+    new IntegerColumn(Var(details.errors)),
     new TableColumn(Var(
       <div>
         {
@@ -67,7 +87,7 @@ class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
         {
           Tooltip(Var("direct_connection".localize),
             <a onclick={jsDirectConnect}>
-              <i class="fas fa-compress-alt"></i>
+              <i class="fas fa-link"></i>
             </a>
           )
         }

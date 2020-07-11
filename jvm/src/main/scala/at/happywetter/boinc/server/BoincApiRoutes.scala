@@ -129,7 +129,20 @@ object BoincApiRoutes extends ResponseEncodingHelper {
           .insert(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
           .runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
 
-        hostManager.add(name, IP(host.address), host.port, host.password, AddedByUser)
+        hostManager.add(name, host.address, host.port, host.password, AddedByUser)
+
+        // TODO: Implement correct state stuff ...
+        Ok(true, request)
+      }
+
+    case request @ PATCH -> Root / "boinc" / name =>
+      request.decodeJson[AddNewHostRequestBody] { host =>
+        db.clients
+          .update(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
+          .runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
+
+        hostManager.remove(name)
+        hostManager.add(name, host.address, host.port, host.password, AddedByUser)
 
         // TODO: Implement correct state stuff ...
         Ok(true, request)
@@ -156,7 +169,8 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       }
 
 
-    case _ => NotAcceptable()
+    // Let it fall though to another route handler
+    // case _ => NotAcceptable()
   }
 
   private def executeForClient[IN, OUT](hostManager: BoincManager, name: String, request: Request[IO], f: (PooledBoincClient, IN) => Future[OUT])(implicit decoder: upickle.default.Reader[IN], encoder: upickle.default.Writer[OUT]): IO[Response[IO]] = {

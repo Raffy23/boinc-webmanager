@@ -13,9 +13,12 @@ import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
-import at.happywetter.boinc.web.util.{FetchHelper, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.web.util.{FetchHelper, ServerConfig}
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.WebSocketClient
+import at.happywetter.boinc.web.facade.Implicits._
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by: 
@@ -36,6 +39,8 @@ object ClientManager {
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
 
+  val cacheInvalidationCallback: mutable.ListBuffer[Unit => Unit] = ListBuffer.empty
+
   private var groups: Map[String, List[String]] = _
 
   init()
@@ -49,6 +54,7 @@ object ClientManager {
         groups = newGroups
         clients.clear()
         newHosts.foreach(c => clients += (c -> new BoincClient(c)))
+        cacheInvalidationCallback.foreach(_(()))
 
       case _ => /* Do nothing, other messages ... */
     }
@@ -137,10 +143,28 @@ object ClientManager {
   */
 
   def addClient(name: String, address: String, port: Int, password: String): Future[Boolean] =
-    FetchHelper.post[AddNewHostRequestBody, Boolean](s"$baseURI/$name", AddNewHostRequestBody(address, port, password))
+    FetchHelper
+      .post[AddNewHostRequestBody, Boolean](
+        s"$baseURI/${dom.window.encodeURIComponent(name)}",
+        AddNewHostRequestBody(address, port, password)
+      ).map(result => {
+        invalidateCache()
+        result
+      })
+
+  def updateClient(name: String, address: String, port: Int, password: String): Future[Boolean] =
+    FetchHelper.patch[AddNewHostRequestBody, Boolean](
+      s"$baseURI/${dom.window.encodeURIComponent(name)}",
+      AddNewHostRequestBody(address, port, password)
+    )
 
   def removeClient(name: String): Future[Boolean] =
-    FetchHelper.delete[Boolean](s"$baseURI/$name")
+    FetchHelper
+      .delete[Boolean](s"$baseURI/${dom.window.encodeURIComponent(name)}")
+      .map(result => {
+        invalidateCache()
+        result
+      })
 
   def queryClientDetails(): Future[List[HostDetails]] =
     FetchHelper.get[List[HostDetails]](s"$baseURI/host_details")
@@ -159,6 +183,13 @@ object ClientManager {
 
   private def queryClientsFromCache(): Future[List[String]] = Future {
     read[List[String]](dom.window.localStorage.getItem(CACHE_CLIENTS))
+  }
+
+  private def invalidateCache(): Unit = {
+    dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
+    readClientsFromServer().foreach(_ => {
+      cacheInvalidationCallback.foreach(_(()))
+    })
   }
 
   private def loadFromLocalStorage[T](name: String)(implicit r: Reader[T]): Option[T] = {

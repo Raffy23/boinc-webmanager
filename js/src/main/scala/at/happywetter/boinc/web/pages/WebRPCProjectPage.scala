@@ -38,7 +38,7 @@ object WebRPCProjectPage extends Layout {
 
   private var currentRequest: Option[FetchRequest[ServerStatus]] = None
 
-  def uri(projectUrl: String) = s"/api/webrpc/status?server=${dom.window.encodeURIComponent(projectUrl)}"
+  def uri(projectUrl: String) = s"/webrpc/status?server=${dom.window.encodeURIComponent(projectUrl)}"
 
   override def beforeRender(params: Dictionary[String]): Unit = {
     currentSelection := None
