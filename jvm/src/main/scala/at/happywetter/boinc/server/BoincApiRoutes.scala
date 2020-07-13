@@ -60,6 +60,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
           case "statistics" => Ok(client.getStatistics, request)
           case "messages" => Ok(client.getMessages(getIntParameter("seqno")), request)
           case "notices" => Ok(client.getNotices(getIntParameter("seqno")), request)
+          case "version" => Ok(client.getVersion, request)
 
           case _ => NotAcceptable()
         }

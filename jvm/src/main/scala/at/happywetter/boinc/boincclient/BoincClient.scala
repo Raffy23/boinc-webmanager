@@ -26,7 +26,7 @@ import scala.xml.{NodeSeq, XML}
 object BoincClient {
 
   private val CLIENT_IDENTIFER = s"BOINC WebManager ${BuildInfo.version}"
-  private val CLIENT_VERSION   = Version(major = 7, minor = 16, release = 6)
+  private val CLIENT_VERSION   = BoincVersion(major = 7, minor = 16, release = 6)
 
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
@@ -55,31 +55,13 @@ object BoincClient {
     val getStatistics = Value("<get_statistics/>")
   }
 
-  private final case class Version(major: Int, minor: Int, release: Int)
-
 }
 class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8") extends BoincCoreClient {
   var socket: Socket = _
   var reader: InputStream = _
-  var authenticated = false
 
-  /**
-   * TODO: Implement exchange Version:
-   * SEND:
-   * <exchange_versions>
-   * <major>7</major>
-   * <minor>16</minor>
-   * <release>6</release>
-   * <name>BOINC Manager 7.16.6</name>
-   * </exchange_versions>
-   *
-   * GET:
-   * <server_version>
-   * <major>7</major>
-   * <minor>16</minor>
-   * <release>6</release>
-   * </server_version>
-   */
+  var authenticated = false
+  var version: Option[BoincVersion] = Option.empty
 
   protected val logger: Logger = LoggerFactory.getLogger(BoincClient.getClass.getCanonicalName)
 
@@ -123,7 +105,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     readHMTL()
   }
 
-  private def handleSocketConnection(): Unit = {
+  @inline private def handleSocketConnection(): Unit = {
     if (socket == null || socket.isClosed || !socket.isConnected) {
       this.connect()
     }
@@ -140,24 +122,44 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     authenticated
   }
 
-  def execCommand(cmd: BoincClient.Command.Value): NodeSeq = execAction(cmd.toString)
-  def execHtmlCommand(cmd: BoincClient.Command.Value): Document = execHTMLAction(cmd.toString)
+  @inline def execCommand(cmd: BoincClient.Command.Value): NodeSeq = execAction(cmd.toString)
+  @inline def execHtmlCommand(cmd: BoincClient.Command.Value): Document = execHTMLAction(cmd.toString)
 
-  private def execAction(action: NodeSeq): NodeSeq = execAction(action.toString())
-  private def execHTMLAction(action: NodeSeq): Document = execHTMLAction(action.toString())
+  @inline private def execAction(action: NodeSeq): NodeSeq = execAction(action.toString())
+  @inline private def execHTMLAction(action: NodeSeq): Document = execHTMLAction(action.toString())
 
-  private def execAction(action: String): NodeSeq = {
+  private def executeAction[T](action: String, f: String => T): T = {
     this.synchronized {
-      if (!this.authenticated) this.authenticate()
-      xmlRpc(action)
+      if (!this.authenticated) {
+        this.authenticate()
+
+        if (version.isEmpty)
+          version = Some(exchangeVersion())
+      }
+
+      f(action)
     }
   }
 
-  private def execHTMLAction(action: String): Document = {
-    this.synchronized {
-      if (!this.authenticated) this.authenticate()
-      htmlRpc(action)
-    }
+  @inline private def execAction(action: String): NodeSeq = {
+    executeAction(action, xmlRpc)
+  }
+
+  @inline private def execHTMLAction(action: String): Document = {
+    executeAction(action, htmlRpc)
+  }
+
+  private def exchangeVersion(): BoincVersion = {
+    import BoincClient._
+
+    (execAction(
+      <exchange_versions>
+        <major>{CLIENT_VERSION.major}</major>
+        <minor>{CLIENT_VERSION.minor}</minor>
+        <release>{CLIENT_VERSION.release}</release>
+        <name>{CLIENT_IDENTIFER} {CLIENT_VERSION.toString}</name>
+      </exchange_versions>
+    ) \ "server_version").toVersion
   }
 
   override def getTasks(active: Boolean = true): Future[List[Result]] = Future {
@@ -307,5 +309,10 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     }
 
     authenticated = false
+  }
+
+  override def getVersion: Future[BoincVersion] = {
+    if (version.isDefined) Future.successful(version.get)
+    else getCCState.map(_ => version.get)
   }
 }

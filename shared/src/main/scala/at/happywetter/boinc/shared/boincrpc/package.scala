@@ -8,6 +8,13 @@ package at.happywetter.boinc.shared
   */
 package object boincrpc {
 
+  final case class BoincVersion(major: Int, minor: Int, release: Int) extends Ordered[BoincVersion] {
+    override def toString: String = s"$major.$minor.$release"
+    override def compare(that: BoincVersion): Int =
+      (this.major - that.major) * 100 +
+      (this.minor - that.minor) * 10  +
+      (this.release - that.release)
+  }
 
   final case class Task(activeTaskState: Int // 0=>inactive,1=>active,9=>pause(time)
                         ,appVersionNum: Int

@@ -136,4 +136,6 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
   override def retryFileTransfer(project: String, file: String): Future[Boolean] =
     connection(_.retryFileTransfer(project, file))
 
+  override def getVersion: Future[BoincVersion] =
+    connection(_.getVersion)
 }

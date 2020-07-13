@@ -13,6 +13,8 @@ import scala.concurrent.Future
   */
 trait BoincCoreClient {
 
+  def getVersion: Future[BoincVersion]
+
   // Read Boinc Stuff
   def getTasks(active: Boolean = true): Future[List[Result]]
   def getHostInfo: Future[HostInfo]

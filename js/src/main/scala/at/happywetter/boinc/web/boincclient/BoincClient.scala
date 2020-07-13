@@ -120,4 +120,6 @@ class BoincClient(val hostname: String) extends BoincCoreClient {
       RetryFileTransferBody(project, file)
     )
 
+  override def getVersion: Future[BoincVersion] =
+    FetchHelper.get[BoincVersion](baseURI + "version")
 }

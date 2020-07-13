@@ -10,7 +10,7 @@ import scala.xml.NodeSeq
   */
 package object parser {
 
-  implicit class NodeSeqParserHelper(node: NodeSeq) {
+  implicit class NodeSeqParserHelper(val node: NodeSeq) extends AnyVal {
 
     def toScalaBoolean: Boolean = if (node.text.nonEmpty) node.text.toInt==1 else false
     def toScalaDouble: Double = if(node.text.nonEmpty) node.text.toDouble else 0D
