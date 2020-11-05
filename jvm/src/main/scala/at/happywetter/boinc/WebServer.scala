@@ -62,7 +62,7 @@ object WebServer extends IOApp with Logger {
     (for {
       database    <- Database()
       xmlPStore   <- XMLProjectStore(database, config)
-      hostManager <- BoincManager(config, database)
+      hostManager <- BoincManager(config, database, IOAppTimer.blocker)
       webserver   <- BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
                         .enableHttp2(false) // Can't use web sockets if http2 is enabled (since 0.21.0-M2)
                         .withOptionalSSL(config)
@@ -70,7 +70,7 @@ object WebServer extends IOApp with Logger {
                         .withHttpApp(routes(hostManager, xmlPStore, database).orNotFound)
                         .resource
 
-      autoDiscovery <- BoincHostFinder(config, hostManager, database)
+      autoDiscovery <- BoincHostFinder(config, hostManager, database, IOAppTimer.blocker)
     } yield (database, webserver, autoDiscovery))
       .use(_ =>
         if (config.serviceMode)

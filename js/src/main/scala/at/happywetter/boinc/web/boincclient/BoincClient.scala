@@ -16,7 +16,7 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.07.2017
   */
-class BoincClient(val hostname: String) extends BoincCoreClient {
+class BoincClient(val hostname: String) extends BoincCoreClient[Future] {
   import at.happywetter.boinc.shared.parser._
 
   private val baseURI = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"

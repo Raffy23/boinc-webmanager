@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Raphael
   * @version 20.09.2017
   */
-class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
+class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database, clientBlocker: Blocker)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
 
   private val blocker = BoincHostFinder.createBlocker()
   private val autoDiscovery = new BoincDiscoveryService(config.autoDiscovery, discoveryCompleted, blocker)
@@ -49,18 +49,18 @@ class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(
           if (found)
             (false, Future{""})
 
-          val boincCoreClient = new BoincClient(ip.toString, config.autoDiscovery.port, password, config.boinc.encoding)
-          found = boincCoreClient.authenticate()
+          val boincCoreClient = new BoincClient(ip.toString, config.autoDiscovery.port, password, config.boinc.encoding)(implicitly, clientBlocker)
+          found = boincCoreClient.authenticate().unsafeRunSync() // Kinda bad, but at least we are in a future ...
 
           val result =
             if (found) (found, boincCoreClient.getHostInfo.map(_.domainName), password)
-            else (found, Future { "" }, "")
+            else (found, IO { "" }, "")
 
           boincCoreClient.close()
           result
         }).find{ case (succ, _, _) => succ }
           .foreach{ case (_, domainName, pw) =>
-            domainName.foreach( domainName => {
+            domainName.flatMap( domainName => {
               LOG.info(s"Found usable core client ($domainName) at $ip")
 
               boincManager.add(
@@ -69,10 +69,12 @@ class BoincHostFinder(config: Config, boincManager: BoincManager, db: Database)(
                 AddedByDiscovery
               )
 
-              import monix.execution.Scheduler.Implicits.global
-              db.clients
-                .update(CoreClient(domainName, ip.toString, config.autoDiscovery.port, pw, CoreClient.ADDED_BY_DISCOVERY))
-                .runSyncUnsafe()
+              contextShift.blockOn(clientBlocker)(IO {
+                import monix.execution.Scheduler.Implicits.global
+                db.clients
+                  .update(CoreClient(domainName, ip.toString, config.autoDiscovery.port, pw, CoreClient.ADDED_BY_DISCOVERY))
+                  .runSyncUnsafe()
+              })
             })
           }
       }
@@ -99,9 +101,9 @@ object BoincHostFinder {
     )
   }
 
-  def apply(config: Config, boincManager: BoincManager, db: Database)(implicit contextShift: ContextShift[IO]): Resource[IO, BoincHostFinder] =
+  def apply(config: Config, boincManager: BoincManager, db: Database, blocker: Blocker)(implicit contextShift: ContextShift[IO]): Resource[IO, BoincHostFinder] =
     Resource.fromAutoCloseable(
-      IO.pure(new BoincHostFinder(config, boincManager, db)).flatMap { hostinder =>
+      IO.pure(new BoincHostFinder(config, boincManager, db, blocker)).flatMap { hostinder =>
         hostinder.beginSearch().map(_ => hostinder)
       }
     )

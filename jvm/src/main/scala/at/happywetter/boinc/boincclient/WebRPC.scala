@@ -2,6 +2,7 @@ package at.happywetter.boinc.boincclient
 
 import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
 import at.happywetter.boinc.shared.webrpc._
+import cats.effect.IO
 import scalaj.http.{Http, HttpOptions, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -57,7 +58,7 @@ object WebRPC {
     ServerStatusParser.fromXML(request.asXML)
   }
 
-  def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {
+  def lookupAccount(url: String, email: String, password: Option[String] = None): IO[(Boolean, Option[String])] = IO {
     var request = Http(s"$url/lookup_account.php")
       .param("email_addr", email)
       .option(HttpOptions.followRedirects(true))
@@ -73,10 +74,7 @@ object WebRPC {
       case _: Exception =>
         (false, Some("err_unable_to_read_webrpc_response"))
     }.get
-
   }
-
-
 
   private implicit class XMLHttpResponse(httpRequest: HttpRequest) {
     def asXML: NodeSeq = XML.loadString(httpRequest.asString.body)

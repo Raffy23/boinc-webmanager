@@ -46,7 +46,7 @@ object IOAppTimer {
   implicit val timer: Timer[IO] = new IOAppTimer(ExecutionContext.global, scheduler)
 
   implicit val blocker: Blocker = Blocker.liftExecutionContext(
-    ExecutionContext.fromExecutorService(Executors.newWorkStealingPool())
+    ExecutionContext.fromExecutorService(Executors.newCachedThreadPool(new DaemonThreadFactory("blocker")))
   )
 
 }

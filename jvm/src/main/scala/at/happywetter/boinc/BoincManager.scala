@@ -8,7 +8,7 @@ import at.happywetter.boinc.BoincManager.{AddedBy, AddedByConfig, AddedByDiscove
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.util.{IP, Logger, PooledBoincClient}
-import cats.effect.{IO, Resource}
+import cats.effect.{Blocker, ContextShift, IO, Resource}
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
@@ -32,9 +32,9 @@ object BoincManager {
 
   private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, var lastUsed: Long)
 
-  def apply(config: Config, db: Database)(implicit scheduler: ScheduledExecutorService): Resource[IO, BoincManager] =
+  def apply(config: Config, db: Database, blocker: Blocker)(implicit scheduler: ScheduledExecutorService, cS: ContextShift[IO]): Resource[IO, BoincManager] =
     Resource.fromAutoCloseable(
-      IO.pure(new BoincManager(config.boinc.connectionPool, config.boinc.encoding)).map { hostManager =>
+      IO.pure(new BoincManager(config.boinc.connectionPool, config.boinc.encoding, blocker)).map { hostManager =>
         config.boinc.hosts.foreach(hostManager.add)
         config.hostGroups.foreach{ case (group, hosts) => hostManager.addGroup(group, hosts)}
 
@@ -55,7 +55,7 @@ object BoincManager {
     )
 
 }
-class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: ScheduledExecutorService) extends Logger with AutoCloseable {
+class BoincManager(poolSize: Int, encoding: String, blocker: Blocker)(implicit val scheduler: ScheduledExecutorService, cS: ContextShift[IO]) extends Logger with AutoCloseable {
 
   private val timeout        = 5 minutes
   private val deathCollector = 30 minutes
@@ -121,10 +121,10 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   }
 
   def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): Unit =
-    add(name, new PooledBoincClient(poolSize, address, port, password, encoding), addedBy)
+    add(name, new PooledBoincClient(poolSize, address, port, password, encoding, blocker), addedBy)
 
   protected def add(name: String, host: AppConfig.Host): Unit =
-    add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding), AddedByConfig)
+    add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding, blocker), AddedByConfig)
 
   protected def add(config: (String, AppConfig.Host)): Unit = add(config._1, config._2)
 
@@ -135,12 +135,15 @@ class BoincManager(poolSize: Int, encoding: String)(implicit val scheduler: Sche
   def queryDeathCounter: Map[String, Int] =
     boincClients.map { case (name, BoincClientEntry(client, _, _)) => (name, client.deathCounter.get()) }.toMap
 
-  def checkHealth: Future[Map[String, Boolean]] =
-    Future.sequence(
-      boincClients
-        .map{ case(name, BoincClientEntry(client, _, _)) => client.checkConnection().map(state => (name, state))}
-        .toList
-    ).map(_.toMap)
+  def checkHealth: IO[Map[String, Boolean]] = {
+    import cats.implicits._
+
+    boincClients
+      .map{ case(name, BoincClientEntry(client, _, _)) => client.checkConnection().map(state => (name, state))}
+      .toList
+      .sequence
+      .map(_.toMap)
+  }
 
   def getAddresses: List[(String, Int)] = boincClients.values.map{ case BoincClientEntry(client, _, _) => (client.address, client.port)}.toList
 

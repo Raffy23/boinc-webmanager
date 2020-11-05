@@ -78,7 +78,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
         WebRPC
           .lookupAccount(requestBody.projectUrl, requestBody.user, Some(requestBody.password))
           .map { case (_, auth) => auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName)) }
-          .flatMap(result => result.getOrElse(Future {false}))
+          .flatMap(result => result.getOrElse(IO {false}))
       })
 
     case request @ PATCH -> Root / "boinc" / name / "project" =>
@@ -174,7 +174,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     // case _ => NotAcceptable()
   }
 
-  private def executeForClient[IN, OUT](hostManager: BoincManager, name: String, request: Request[IO], f: (PooledBoincClient, IN) => Future[OUT])(implicit decoder: upickle.default.Reader[IN], encoder: upickle.default.Writer[OUT]): IO[Response[IO]] = {
+  private def executeForClient[IN, OUT](hostManager: BoincManager, name: String, request: Request[IO], f: (PooledBoincClient, IN) => IO[OUT])(implicit decoder: upickle.default.Reader[IN], encoder: upickle.default.Writer[OUT]): IO[Response[IO]] = {
     hostManager.get(name).map(client => {
       request.decodeJson[IN]{ requestBody =>
         Ok(f(client, requestBody), request)
