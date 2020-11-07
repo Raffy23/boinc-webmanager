@@ -42,7 +42,7 @@ object BoincManager {
         db.clients.queryAll().runSyncUnsafe().foreach(coreClient => {
           hostManager.add(
             coreClient.name,
-            coreClient.ipAddress, coreClient.port, coreClient.password,
+            coreClient.address, coreClient.port, coreClient.password,
             coreClient.addedBy match {
               case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
               case CoreClient.ADDED_BY_USER      => AddedByUser

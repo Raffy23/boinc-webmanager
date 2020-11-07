@@ -60,7 +60,7 @@ class CoreClientRepository(ctx: H2MonixJdbcContext[SnakeCase]) {
   def searchBy(ip: IP, port: Int): OptionT[Task, CoreClient] = OptionT(
     run {
       quote {
-        query[CoreClient].filter(c => c.ipAddress == lift(ip.toString) && c.port == lift(port))
+        query[CoreClient].filter(c => c.address == lift(ip.toString) && c.port == lift(port))
       }
     }.map(_.headOption)
   )

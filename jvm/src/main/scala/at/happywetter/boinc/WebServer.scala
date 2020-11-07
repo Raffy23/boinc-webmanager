@@ -45,7 +45,7 @@ object WebServer extends IOApp with Logger {
   // Create top level routes
   // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware ...
   private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
-    "/"              -> WebResourcesRoute(config),
+    "/"              -> GZip(WebResourcesRoute(config, this.contextShift)),
     "/swagger"       -> SwaggerRoutes(),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
     "/webrpc"        -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger

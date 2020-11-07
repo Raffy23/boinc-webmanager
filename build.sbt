@@ -16,7 +16,7 @@ git.gitTagToVersionNumber := { tag: String =>
   else None
 }
 
-val http4sVersion  = "1.0.0-M3"
+val http4sVersion  = "1.0.0-M5"
 val uPickleVersion = "1.1.0"
 
 lazy val root = project.in(file(".")).
@@ -73,6 +73,12 @@ lazy val serverJVM = (project in file ("jvm"))
 
       "com.lihaoyi"            %% "upack"               % uPickleVersion,
       "com.lihaoyi"            %% "upickle"             % uPickleVersion,
+
+      // Resources for the client:
+      "org.webjars"            %  "font-awesome"        % "5.15.1",
+      "org.webjars.bower"      %  "nprogress"           % "0.2.0",
+      "org.webjars.npm"        %  "flag-icon-css"       % "3.5.0",
+      "org.webjars.npm"        %  "purecss"             % "2.0.3"
     )
   )
 
@@ -88,6 +94,10 @@ lazy val clientJS = (project in file ("js"))
     buildInfoKeys    := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
+
+    // Publish fullOpt + dependencies diretly to managed resource directory of the server
+    crossTarget in fullOptJS in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
+    crossTarget in packageMinifiedJSDependencies in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
 
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom"       % "1.0.0",

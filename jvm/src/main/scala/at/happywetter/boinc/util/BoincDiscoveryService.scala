@@ -23,7 +23,7 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] =>
   val excluded = new AtomicReference[Set[IP]](Set.empty)
   private val scheduler = IOAppTimer.scheduler
 
-  val task: Option[ScheduledFuture[_]] =
+  private val task: Option[ScheduledFuture[_]] =
     if (config.enabled) Some(
       scheduler.scheduleWithFixedDelay(() => autoScanCallback( search().unsafeRunSync() ),
         config.scanTimeout,
