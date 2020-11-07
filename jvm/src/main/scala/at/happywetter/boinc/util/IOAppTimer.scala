@@ -1,6 +1,6 @@
 package at.happywetter.boinc.util
 
-import java.util.concurrent.{Executors, ScheduledExecutorService}
+import java.util.concurrent.{Executors, LinkedBlockingQueue, ScheduledExecutorService, ThreadPoolExecutor, TimeUnit}
 
 import cats.effect.{Blocker, IO, Timer}
 
@@ -19,8 +19,21 @@ object IOAppTimer {
     scheduler
   )
 
-  implicit val blocker: Blocker = Blocker.liftExecutionContext(
-    ExecutionContext.fromExecutorService(Executors.newCachedThreadPool(new DaemonThreadFactory("io-blocker")))
+  implicit val blocker: Blocker = createBlocker("io-blocker")
+
+  def createMaxParallelismBlocker(prefix: String, nThreads: Int = cores): Blocker = Blocker.liftExecutionContext(
+    ExecutionContext.fromExecutorService(
+      new ThreadPoolExecutor(
+        nThreads, nThreads,
+        5L, TimeUnit.SECONDS,
+        new LinkedBlockingQueue[Runnable](),
+        new DaemonThreadFactory(prefix)
+      )
+    )
+  )
+
+  def createBlocker(prefix: String): Blocker = Blocker.liftExecutionContext(
+    ExecutionContext.fromExecutorService(Executors.newCachedThreadPool(new DaemonThreadFactory(prefix)))
   )
 
 }

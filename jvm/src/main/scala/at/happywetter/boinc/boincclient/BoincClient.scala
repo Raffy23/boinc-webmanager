@@ -59,7 +59,7 @@ object BoincClient {
   }
 
 }
-class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8")(implicit cS: ContextShift[IO], blocker: Blocker) extends BoincCoreClient[IO] {
+class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8")(implicit cS: ContextShift[IO], blocker: Blocker) extends BoincCoreClient[IO] with AutoCloseable {
   var socket: Socket = _
   var reader: InputStream = _
 

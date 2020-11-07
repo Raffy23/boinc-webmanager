@@ -157,6 +157,7 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
     boinc.getGlobalPrefsOverride
       .map(f => this.globalPrefsOverride := f)
       .recover(ErrorDialogUtil.showDialog)
+      .foreach(_ => NProgress.done(true))
   }
 
   private val jsOnSubmitListener: (Event) => Unit = (event) => {

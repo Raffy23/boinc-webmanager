@@ -15,7 +15,7 @@ import scala.util.Try
   * @author Raphael
   * @version 19.09.2017
   */
-class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] => Unit, blocker: Blocker)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
+class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] => IO[Unit], blocker: Blocker)(implicit contextShift: ContextShift[IO]) extends Logger with AutoCloseable {
 
   private val start = IP(config.startIp)
   private val end   = IP(config.endIp)
@@ -25,7 +25,7 @@ class BoincDiscoveryService(config: AutoDiscovery, autoScanCallback: List[IP] =>
 
   private val task: Option[ScheduledFuture[_]] =
     if (config.enabled) Some(
-      scheduler.scheduleWithFixedDelay(() => autoScanCallback( search().unsafeRunSync() ),
+      scheduler.scheduleWithFixedDelay(() => search().flatMap(autoScanCallback).unsafeRunSync(),
         config.scanTimeout,
         config.scanTimeout, TimeUnit.MINUTES)
     )

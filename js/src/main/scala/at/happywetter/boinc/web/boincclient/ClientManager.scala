@@ -13,10 +13,10 @@ import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
-import at.happywetter.boinc.web.util.{FetchHelper, ServerConfig}
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, FetchHelper, ServerConfig, WebSocketClient}
 import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.WebSocketClient
 import at.happywetter.boinc.web.facade.Implicits._
+import at.happywetter.boinc.web.pages.Dashboard
 
 import scala.collection.mutable.ListBuffer
 
@@ -76,13 +76,14 @@ object ClientManager {
     timestamp.fold(
       _ => {
         saveToCache(clients)
-        dom.console.log("Clientmanager: Could not read timestamp, persisting current dataset")
+        dom.console.log("[Client Manager] Could not read timestamp, persisting current dataset")
       },
       date => {
         val current = new Date()
         if (current.getTime() - date.getTime() > cacheTimeout.now) {
           saveToCache(clients)
-          dom.console.log("Clientmanager: Updated Clientlist")
+          notifyCacheInvalidation(Future.successful(()))
+          dom.console.log("[Client Manager] Updated Clientlist")
         }
       }
     )
@@ -102,10 +103,10 @@ object ClientManager {
       val current = new Date()
 
       if (current.getTime() - date.getTime() > cacheTimeout.now) {
-        println("Old Cache, reloading groups and clients ...")
+        println("[Client Manager] Old Cache, reloading groups and clients ...")
         queryGroups.flatMap(data => {
           groups = data
-          queryClientsFromServer()
+          notifyCacheInvalidation(queryClientsFromServer())
         })
       } else {
         Future { clients.keys.toList }
@@ -185,11 +186,14 @@ object ClientManager {
     read[List[String]](dom.window.localStorage.getItem(CACHE_CLIENTS))
   }
 
+  private def notifyCacheInvalidation[T](of: Future[T]): Future[T] = of.map { t =>
+    cacheInvalidationCallback.foreach(_(()))
+    t
+  }
+
   private def invalidateCache(): Unit = {
     dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
-    readClientsFromServer().foreach(_ => {
-      cacheInvalidationCallback.foreach(_(()))
-    })
+    notifyCacheInvalidation(readClientsFromServer())
   }
 
   private def loadFromLocalStorage[T](name: String)(implicit r: Reader[T]): Option[T] = {

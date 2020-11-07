@@ -70,7 +70,7 @@ object WebServer extends IOApp with Logger {
                         .withHttpApp(routes(hostManager, xmlPStore, database).orNotFound)
                         .resource
 
-      autoDiscovery <- BoincHostFinder(config, hostManager, database, IOAppTimer.blocker)
+      autoDiscovery <- BoincHostFinder(config, hostManager, database)
     } yield (database, webserver, autoDiscovery))
       .use(_ =>
         if (config.serviceMode)

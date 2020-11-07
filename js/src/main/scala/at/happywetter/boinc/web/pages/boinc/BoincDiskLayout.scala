@@ -6,6 +6,7 @@ import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
@@ -18,6 +19,7 @@ import scala.concurrent.Future
 import scala.scalajs.js
 import scala.xml.Elem
 import Ordering.Double.TotalOrdering
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 
@@ -45,7 +47,10 @@ class BoincDiskLayout extends BoincClientLayout {
       ).map(names => names.map{ case (url, nameOpt) => (url, nameOpt.getOrElse(url)) })
        .map(_.toMap)
        .map(x => names := x)
-       .foreach(_ => buildChart(diskUsage))
+       .foreach(_ => {
+         buildChart(diskUsage)
+         NProgress.done(true)
+       })
     })
 
     <div>

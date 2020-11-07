@@ -1,10 +1,11 @@
 openapi: 3.0.0
 info:
   title: Boinc Webmanager API
-  description: API description of the REST Interface of the BOINC Webmanager. For all API Endpoints
-    a JWT Token from the `/auth` endpoint is needed. Depending on the `Content-Type` header
-    the response will be encoded accordingly by the server. The default encoding without any `Content-Type`
-    header is `application/messagepack`. All POST request bodys must be in `application/json` encoding.
+  description: "**[Work in progress]** API description of the REST Interface of the BOINC Webmanager.\n\n
+    For all API Endpoints a JWT Token from the `/auth` endpoint is needed.\n\n
+    Depending on the `Content-Type` header the response will be encoded accordingly by the server.
+    The default encoding without any `Content-Type` header is `application/messagepack`.\n\n
+    All POST request bodys must be in `application/json` encoding."
   version: '1.0'
   license:
     name: Apache 2.0
