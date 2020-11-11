@@ -36,9 +36,8 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
   override def already(): Unit = onRender()
 
   override def render: Elem = {
-    def v[T](x: (GlobalPrefsOverride) => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
-    def b[T](x: (GlobalPrefsOverride) => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
-
+    @inline def v[T](x: (GlobalPrefsOverride) => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
+    @inline def b[T](x: (GlobalPrefsOverride) => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
 
     <div id="global_prefs" class={Style.rootPane.htmlClass}>
       <div class={Seq(FloatingMenu.root.htmlClass, BoincClientStyle.inTextIcon).mkString(" ")}>

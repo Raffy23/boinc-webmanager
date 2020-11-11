@@ -1,21 +1,18 @@
 package at.happywetter.boinc.server
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.{Executors, ThreadFactory}
+import java.time.{ZoneOffset, ZonedDateTime}
 
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.util.IOAppTimer
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper.withNotMatchingEtag
 import at.happywetter.boinc.util.webjar.ResourceResolver
 import at.happywetter.boinc.web.css.CSSRenderer
-import cats.data.OptionT
 import cats.effect._
 import org.http4s.dsl.io._
-import org.http4s.implicits._
 import org.slf4j.LoggerFactory
 import org.typelevel.ci.CIString
 
-import scala.concurrent.ExecutionContext
 import scala.util.Random
 
 /**
@@ -35,7 +32,6 @@ object WebResourcesRoute {
     ".css" -> "text/css",
     ".html" -> "text/html",
     ".js" -> "application/javascript",
-    ".manifest" -> "text/cache-manifest",
   )
 
   // Load resource roots that are dependencies
@@ -44,6 +40,7 @@ object WebResourcesRoute {
   private val flagIconCssPath = ResourceResolver.getResourceRoot(repo="npm"  , name="flag-icon-css")
   private val pureCssPath     = ResourceResolver.getResourceRoot(repo="npm"  , name="purecss")
 
+  private val indexContentEtag = Random.alphanumeric.take(12).mkString
   private lazy val indexContent: String = {
     import scalatags.Text.all._
 
@@ -82,15 +79,7 @@ object WebResourcesRoute {
 
   // TODO: Render into file and serve from there ...
   private val cssEtag = Random.alphanumeric.take(12).mkString
-  private lazy val cssContent: IO[Response[IO]] = Ok(CSSRenderer.render()).map(
-    _.putHeaders(
-      Header("Content-Type", "text/css; charset=UTF-8"),
-
-      // This should probably be the build time and not the startup time of the generated CSS ...
-      Header("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneOffset.UTC))),
-      Header("ETag", cssEtag)
-    )
-  )
+  private lazy val cssContent: String = CSSRenderer.render()
 
   private lazy val launchScript =
     """
@@ -101,17 +90,18 @@ object WebResourcesRoute {
       | }
     """.stripMargin
 
-  private lazy val indexPage =
+  private def indexPage =
     Ok(indexContent,
+      Header("Content-Type", "text/html; charset=UTF-8"),
       Header("X-Frame-Options", "DENY"),
-      Header("X-XSS-Protection", "1"),
-      Header("Content-Type", "text/html; charset=UTF-8")
+      Header("Last-Modified", bootUpTime),
+      Header("ETag", indexContentEtag)
     )
 
   def apply(implicit config: Config, cS: ContextShift[IO]): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Normal index Page which is served
-    case GET -> Root => indexPage
+    case request@GET -> Root => withNotMatchingEtag(request, indexContentEtag) { indexPage }
 
     case request@GET -> Root / "files" / "app.js" => completeWithGipFile(appJS, request)
 
@@ -120,10 +110,13 @@ object WebResourcesRoute {
     case request@GET -> Root / "favicon.ico" => completeWithGipFile("favicon.ico", request)
 
     case request@GET -> Root / "files" / "css" / "app.css" =>
-      request.headers.get(CIString("If-None-Match")).map { etag =>
-        if (etag.value == cssEtag) IO { new Response[IO](status = NotModified) }
-        else cssContent
-      }.getOrElse(cssContent)
+      withNotMatchingEtag(request, cssEtag) {
+        Ok(cssContent,
+          Header("Content-Type", "text/css; charset=UTF-8"),
+          Header("Last-Modified", bootUpTime),
+          Header("ETag", cssEtag)
+        )
+      }
 
     case request@GET -> Root / "files" / "css" /  "font-awesome.min.css" =>
       fromWebJarResource(fontAwesomePath, "css/all.min.css", request).getOrElseF(NotFound())
@@ -144,13 +137,12 @@ object WebResourcesRoute {
     case request@GET -> "files" /: file => completeWithGipFile(file.toList.mkString("/"), request)
 
     // To alow the SPA to work any view will render the index page
-    case GET -> "view" /: _ => indexPage
+    case request@GET -> "view" /: _ => withNotMatchingEtag(request, indexContentEtag) { indexPage }
 
     // Default Handler
     case _ => NotFound(/* TODO: Implement Default 404-Page */)
   }
-
-  // TODO: Rename static resources, a change in build.sbt has renamed them
+  
   private def appJS(implicit config: Config): String =
     if (config.development.getOrElse(false)) "boinc-webmanager_client-fastopt.js"
     else "boinc-webmanager_client-opt.js"

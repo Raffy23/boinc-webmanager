@@ -41,8 +41,9 @@ object WebRPC {
   //  Http(url+"/get_project_config.php").option(HttpOptions.followRedirects(true)).asString.body.toProjectConfig
   //}
 
+  //TODO: Use blocker for http fetching stuff ...
   //TODO:
-  def getServerStatus(url: String)(/*implicit config: AppConfig.WebRPC*/): Future[ServerStatus] = Future {
+  def getServerStatus(url: String)(/*implicit config: AppConfig.WebRPC*/): IO[ServerStatus] = IO {
     val request =
       Http(s"$url/server_status.php?xml=1")
         .header("Accept", "application/xml")

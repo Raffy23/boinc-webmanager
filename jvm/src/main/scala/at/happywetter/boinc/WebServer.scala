@@ -6,8 +6,9 @@ import at.happywetter.boinc.util.IOAppTimer.scheduler
 import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, IOAppTimer, Logger}
 import cats.effect._
-import org.http4s.HttpRoutes
+import org.http4s.{HttpRoutes, Response}
 import org.http4s.dsl.io._
+import org.http4s.headers.`Content-Length`
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze._
@@ -46,13 +47,13 @@ object WebServer extends IOApp with Logger {
   // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware ...
   private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
     "/"              -> GZip(WebResourcesRoute(config, this.contextShift)),
-    "/swagger"       -> SwaggerRoutes(),
+    "/swagger"       -> SwaggerRoutes(IOAppTimer.blocker),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
     "/webrpc"        -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
     "/hardware"      -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
     "/ws"            -> WebsocketRoutes(authService, hostManager),
     "/auth"          -> authService.authService,
-    "/language"      -> GZip(LanguageService())
+    "/language"      -> LanguageService()
   )
 
   override def run(args: List[String]): IO[ExitCode] = {

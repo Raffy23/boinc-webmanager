@@ -27,7 +27,7 @@ object WebRPCRoutes extends ResponseEncodingHelper {
       println("========================================================")
       println("        : " + server)
       println("========================================================")
-      Ok(WebRPC.getServerStatus(server), request)
+      Ok(WebRPC.getServerStatus(server)(), request)
 
   }
 

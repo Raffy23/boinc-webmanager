@@ -57,8 +57,10 @@ object BoincManager {
 }
 class BoincManager(poolSize: Int, encoding: String, blocker: Blocker)(implicit val scheduler: ScheduledExecutorService, cS: ContextShift[IO]) extends Logger with AutoCloseable {
 
+  // TODO: make these variable configurable ...
   private val timeout        = 5 minutes
   private val deathCollector = 30 minutes
+  private val healthTimeout  = 14 minutes
   private val boincClients = new TrieMap[String, BoincClientEntry]()
   private val clientGroups = new TrieMap[String, ListBuffer[String]]()
 
@@ -101,6 +103,12 @@ class BoincManager(poolSize: Int, encoding: String, blocker: Blocker)(implicit v
       updateVersion()
 
   }, deathCollector.toMinutes, deathCollector.toMinutes, TimeUnit.MINUTES)
+
+  private val healthChecker = scheduler.scheduleWithFixedDelay(() => {
+    boincClients.values.map(entry =>
+      cS.blockOn(blocker)(entry.client.checkConnection()).unsafeRunAsyncAndForget()
+    )
+  }, (1 minutes).toMinutes, healthTimeout.toMinutes, TimeUnit.MINUTES)
 
   def get(name: String): Option[PooledBoincClient] = {
     // Update time only if Client exists
@@ -197,6 +205,7 @@ class BoincManager(poolSize: Int, encoding: String, blocker: Blocker)(implicit v
   override def close(): Unit = {
     autoCloser.cancel(false)
     connectionCloser.cancel(false)
+    healthChecker.cancel(false)
     destroy()
   }
 

@@ -5,10 +5,16 @@ import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.io.{Source, Codec => IOCodec}
-import scala.util.Try
+import scala.util.{Random, Try}
 import upickle.default._
 import cats.effect._
-import org.http4s._, org.http4s.dsl.io._
+import org.http4s._
+import org.http4s.dsl.io._
+import java.security.MessageDigest
+
+import at.happywetter.boinc.server.WebResourcesRoute.indexContentEtag
+import org.http4s.headers.`Content-Length`
+import org.http4s.server.middleware.GZip
 
 /**
   * Created by: 
@@ -18,7 +24,7 @@ import org.http4s._, org.http4s.dsl.io._
   */
 object LanguageService extends ResponseEncodingHelper {
 
-  val languages: List[(String, String, String)] =
+  private val languages: List[(String, String, String)] =
     ResourceWalker
       .listFiles("/lang")
       .filter(_.endsWith(".conf"))
@@ -28,12 +34,18 @@ object LanguageService extends ResponseEncodingHelper {
         (language, lang("language_name"), lang("language_icon"))
       })
 
-  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  private val langETags: Map[String, String] = languages.map { case (name, _, _) =>
+    (name, loadETag(name))
+  }.toMap
 
-    case request @ GET -> Root => Ok(languages, request)
-    case request @ GET -> Root / lang => Try(Ok(load(lang), request)).getOrElse(NotFound())
-
-  }
+  def apply(): HttpRoutes[IO] = GZip(
+    HttpRoutes.of[IO] {
+      case request @ GET -> Root                                     => Ok(languages, request)
+      case request @ GET -> Root / lang if  langETags.contains(lang) => OkWithEtag(load(lang), langETags(lang), request)
+      case request @ GET -> Root / lang if !langETags.contains(lang) => NotFound()
+    },
+    isZippable = (response: Response[IO]) => response.headers.get(`Content-Length`).exists(_.value.toInt > 1024)
+  )
 
   private def load(lang: String): Map[String, String] = {
     val path      = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
@@ -50,6 +62,17 @@ object LanguageService extends ResponseEncodingHelper {
 
     import pureconfig._
     ConfigSource.fromConfig(hocon).loadOrThrow[Map[String,  String]]
+  }
+
+  private def loadETag(lang: String): String = {
+    val path      = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
+    val bufSource = ResourceWalker.getStream(path)
+
+    val digest = MessageDigest.getInstance("MD5")
+    val hash = digest.digest(bufSource.readAllBytes())
+    bufSource.close()
+
+    hash.map("%02x" format _).mkString.take(12)
   }
 
 }
