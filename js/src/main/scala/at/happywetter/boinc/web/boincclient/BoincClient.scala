@@ -17,13 +17,23 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.07.2017
   */
-class BoincClient(val hostname: String) extends WebmanagerClient[Future] {
+class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) extends WebmanagerClient[Future] {
   import at.happywetter.boinc.shared.parser._
 
-  private val baseURI = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
-  @inline def uri(cmd: BoincRPC.Command.Command): String = baseURI + cmd
-  @inline def uri(cmd: BoincRPC.Command.Command, p: String) = baseURI + cmd + "/" + p
-  @inline def uri(cmd: String): String = baseURI + cmd
+  private val baseURI     = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
+  private val healthyFlag = "?healthy"
+
+  @inline def uri(cmd: BoincRPC.Command.Command): String =
+    if(queryHealthyOnly) baseURI + cmd + healthyFlag
+    else baseURI + cmd
+
+  @inline def uri(cmd: BoincRPC.Command.Command, p: String) =
+    if(queryHealthyOnly) baseURI + cmd + "/" + p + healthyFlag
+    else baseURI + cmd + "/" + p
+
+  @inline def uri(cmd: String): String =
+    if(queryHealthyOnly) baseURI + cmd + healthyFlag
+    else baseURI + cmd
 
   def getTasks(active: Boolean = true): Future[List[Result]] =
     FetchHelper.get[List[Result]](uri(if(active) "tasks" else "all_tasks"))
@@ -126,4 +136,7 @@ class BoincClient(val hostname: String) extends WebmanagerClient[Future] {
 
   override def getDashboardData: Future[DashboardDataEntry] =
     FetchHelper.get[DashboardDataEntry](s"/api/webmanager/dashboard/${dom.window.encodeURIComponent(hostname)}")
+
+  def asQueryOnlyHealthy(): BoincClient = new BoincClient(hostname, true)
+
 }

@@ -41,9 +41,8 @@ trait Layout {
     ClientManager
       .readClients()
       .map(DashboardMenuBuilder.renderClients)
+      .map(_ => done())
       .recover(ErrorDialogUtil.showDialog)
-
-    done()
   }
 
 }

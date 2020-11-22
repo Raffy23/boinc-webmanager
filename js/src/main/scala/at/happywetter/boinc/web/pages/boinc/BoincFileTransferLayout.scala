@@ -1,20 +1,16 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
-import at.happywetter.boinc.web.boincclient.BoincFormater
+import at.happywetter.boinc.shared.boincrpc.CCState
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.model.FileTransferTableModel.FileTransferTableRow
+import at.happywetter.boinc.web.pages.component.DataTable
+import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.util.GlobalOptions
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
-
-import scala.util.Try
-import scala.xml.Elem
-import BoincFormater.Implicits._
-import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.model.FileTransferTableModel.FileTransferTableRow
-import at.happywetter.boinc.web.model.WuDataTableModel.WuTableRow
-import at.happywetter.boinc.web.pages.component.DataTable
-import at.happywetter.boinc.web.util.GlobalOptions
 import org.scalajs.dom
+
+import scala.xml.Elem
 
 /**
   * Created by: 
@@ -47,8 +43,10 @@ class BoincFileTransferLayout extends BoincClientLayout {
     if (!refresh)
       boinc.getCCState.foreach(state => ccState := Some(state))
 
+    NProgress.start()
     boinc.getFileTransfer.foreach{ fileTransfers =>
       dataTable.reactiveData := fileTransfers.map(new FileTransferTableRow(_, ccState))
+      NProgress.done(true)
     }
   }
 

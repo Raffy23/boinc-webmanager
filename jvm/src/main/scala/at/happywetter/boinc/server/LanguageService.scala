@@ -69,7 +69,13 @@ object LanguageService extends ResponseEncodingHelper {
     val bufSource = ResourceWalker.getStream(path)
 
     val digest = MessageDigest.getInstance("MD5")
-    val hash = digest.digest(bufSource.readAllBytes())
+    val buffer = Array.ofDim[Byte](1024)
+    var nRead  = -1
+    while({nRead = bufSource.read(buffer, 0, buffer.length); nRead} != -1) {
+      digest.update(buffer, 0, nRead)
+    }
+
+    val hash = digest.digest()
     bufSource.close()
 
     hash.map("%02x" format _).mkString.take(12)

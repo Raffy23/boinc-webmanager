@@ -55,10 +55,10 @@ object AuthClient {
   }
 
   def validateSavedCredentials(): Future[Boolean] = {
-    val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
-    val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
-
-    this.validate(username, password)
+    this.validate(
+      dom.window.sessionStorage.getItem("username"),
+      dom.window.sessionStorage.getItem("password")
+    )
   }
 
   def validateAction(done: js.Function0[Unit]): Boolean = {

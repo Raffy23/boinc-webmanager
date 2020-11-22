@@ -48,6 +48,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
               Locale.save(lang_code)
 
               LayoutManager.render(this)
+
+              AppRouter.router.updatePageLinks()
               NProgress.done(true)
             })
         }, -35).component

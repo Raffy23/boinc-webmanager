@@ -17,20 +17,19 @@ object ErrorDialogUtil {
 
   val showDialog: PartialFunction[Throwable, Unit] = {
     case ex: FetchResponseException if ex.statusCode == 500 =>
-      NProgress.done(true)
+      printStackTraceAndStopProgress(ex)
 
       new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
         .renderToBody().show()
 
     case ex: FetchResponseException =>
-      NProgress.done(true)
+      printStackTraceAndStopProgress(ex)
 
       new OkDialog("dialog_error_header".localize, List(ex.reason.localize))
         .renderToBody().show()
 
     case ex: Exception =>
-      NProgress.done(true)
-      ex.printStackTrace()
+      printStackTraceAndStopProgress(ex)
 
       new OkDialog("dialog_error_header".localize, List(
         "ups_something_went_wrong".localize, <br/>, ex.getLocalizedMessage)
@@ -38,7 +37,11 @@ object ErrorDialogUtil {
 
   }
 
-
   def apply(): PartialFunction[Throwable, Unit] = ErrorDialogUtil.showDialog
+
+  private def printStackTraceAndStopProgress(ex: Throwable): Unit = {
+    NProgress.done(true)
+    ex.printStackTrace()
+  }
 
 }

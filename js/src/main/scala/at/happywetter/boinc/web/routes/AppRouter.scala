@@ -68,6 +68,11 @@ object AppRouter {
     dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
   }
 
+  val onClick: (Event) => Unit = (event) => {
+    event.preventDefault()
+    navigate(event.target.asInstanceOf[HTMLElement].getAttribute("href"))
+  }
+
   def current: String = dom.window.location.pathname
 
 }

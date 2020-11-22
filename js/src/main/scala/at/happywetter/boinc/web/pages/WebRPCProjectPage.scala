@@ -45,14 +45,24 @@ object WebRPCProjectPage extends Layout {
     selectorPlaceholder := "fetching_projects".localize
   }
 
+  override def already(): Unit = {
+    NProgress.start()
+    onRender()
+  }
+
   override def onRender(): Unit = {
     DashboardMenu.selectByMenuId("dashboard_webrpc")
+
     ClientManager.getClients.foreach(clients => {
       Future.sequence(
         clients.map(client =>
-          client.getProjects.map(_.map(p => (p.url, p.name))).recover { case _: Exception => List.empty }
+          client
+            .asQueryOnlyHealthy()
+            .getProjects
+            .map(_.map(p => (p.url, p.name)))
+            .recover { case _: Exception => List.empty }
         )
-      ).foreach{ projects =>
+      ).foreach { projects =>
         this.projects := projects.flatten.toMap
         this.selectorPlaceholder := "project_new_default_select".localize
 

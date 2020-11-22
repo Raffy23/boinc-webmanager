@@ -4,7 +4,7 @@ import at.happywetter.boinc.BoincManager.AddedByUser
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAction}
-import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, AddProjectBody, BoincModeChange, BoincProjectMetaData, BoincRPC, GlobalPrefsOverride, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
+import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, AddProjectBody, ApplicationError, BoincModeChange, BoincProjectMetaData, BoincRPC, GlobalPrefsOverride, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.rpc.DashboardDataEntry
 import at.happywetter.boinc.util.{IP, PooledBoincClient}
@@ -47,7 +47,9 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       hostManager.get(name).map(client => {
         implicit val params: Map[String, collection.Seq[String]] = requestParams
 
-        action match {
+        if (requestParams.contains("healthy") && client.deathCounter.get() >= 1) {
+          encode(RequestTimeout, ApplicationError("core_client_is_not_healthy"), request)
+        } else action match {
           case "tasks" => Ok(client.getTasks(), request)
           case "all_tasks" => Ok(client.getTasks(active = false), request)
           case "hostinfo" => Ok(client.getHostInfo, request)

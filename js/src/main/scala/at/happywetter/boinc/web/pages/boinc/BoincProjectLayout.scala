@@ -51,7 +51,10 @@ class BoincProjectLayout extends BoincClientLayout {
 
   override def render: Elem = {
     implicit val implicitDataTable: DataTable[ProjectTableRow] = dataTable
-    boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
+    boinc.getProjects.map { projects =>
+      dataTable.reactiveData := projects
+      NProgress.done(true)
+    }.recover(ErrorDialogUtil.showDialog)
 
     <div id="projects">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>

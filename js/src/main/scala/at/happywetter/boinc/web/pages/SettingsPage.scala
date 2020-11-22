@@ -62,6 +62,8 @@ object SettingsPage extends Layout {
                     // Force complete page re-render
                     LayoutManager.init()
                     this.beforeRender(null)
+
+                    AppRouter.router.updatePageLinks()
                     NProgress.done(true)
                   })
               }).component

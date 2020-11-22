@@ -4,11 +4,12 @@ import at.happywetter.boinc.shared.boincrpc.Result
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient._
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
 import at.happywetter.boinc.web.css.definitions.{Misc => Style}
+import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.pages.dashboard.{DashboardDataModel, HostData}
-import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress, Navigo}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper._
@@ -32,9 +33,9 @@ object Dashboard extends Layout {
 
   override val path = "dashboard"
 
-  override def already(): Unit = onRender()
-
   private val clientData = new DashboardDataModel()
+
+  override def already(): Unit = onRender()
 
   override def onRender(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -45,7 +46,6 @@ object Dashboard extends Layout {
       WebSocketClient.start()
     }
 
-    NProgress.start()
     clientData
       .load()
       .map(_ => NProgress.done(true))
@@ -110,7 +110,7 @@ object Dashboard extends Layout {
                 val client = ClientManager.clients(c._1)
 
                 <tr>
-                  <td>{injectErrorTooltip(client.hostname)}</td>
+                  <td>{injectErrorTooltip(hostLink(client.hostname))}</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.cpu) }</td>
                   <td class={Style.centeredText.htmlClass}>{getData(_.memory)}</td>
                   <td class={Style.centeredText.htmlClass}>{getNetwork()}</td>
@@ -158,7 +158,7 @@ object Dashboard extends Layout {
               {
                 clients.map(_.toList.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(client => {
                   <tr id={s"dashboard_${client._1}_details"}>
-                    <td>{injectErrorTooltip(client._1)(client._2.data)}</td>
+                    <td>{injectErrorTooltip(hostLink(client._1))(client._2.data)}</td>
                     {
                       projects.map(_.map(project => {
                         val rData = client._2.details.map(_.map(_.projects.getOrElse(project._1, List.empty)).getOrElse(List.empty)).now
@@ -235,25 +235,25 @@ object Dashboard extends Layout {
     </div>
   }
 
-  private def injectErrorTooltip(name: String)(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Seq[Node]] = {
+  private def injectErrorTooltip(name: Elem)(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Seq[Node]] = {
     data.map { dataOption =>
 
       dataOption.map { data =>
         data.fold(
-          _ => Seq(name.toXML),
+          _ => Seq(name),
           ex =>
             Seq(
               ex match {
                 case _: FetchResponseException => Tooltip.warningTriangle("offline").toXML
                 case _ => Tooltip.warningTriangle("error".localize).toXML
               },
-              name.toXML
+              name
             )
         )
       }.getOrElse(
         Seq(
           Tooltip.loadingSpinner("loading").toXML,
-          name.toXML
+          name
         )
       )
     }
@@ -272,6 +272,13 @@ object Dashboard extends Layout {
       )).getOrElse(default)
     }
   }
+
+  override def beforeRender(params: Dictionary[String]): Unit = {}
+
+  private def hostLink(hostname: String): Elem =
+    <a href={BoincClientLayout.link(hostname)} onclick={AppRouter.onClick} class={BoincProjectStyle.link.htmlClass}>
+      {hostname}
+    </a>
 
   private def getNetwork(errorTooltip: Boolean = false, default: String = "-- / --")(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Node] = {
     data.flatMap { dataOption =>
@@ -295,5 +302,4 @@ object Dashboard extends Layout {
     dom.document.getElementById("workunits_table_container").asInstanceOf[HTMLElement].style="margin-top:"+max+"px"
   }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {}
 }
