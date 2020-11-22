@@ -4,6 +4,7 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 import at.happywetter.boinc.shared.boincrpc._
+import at.happywetter.boinc.shared.rpc.DashboardDataEntry
 import org.scalajs.dom
 import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.util.FetchHelper
@@ -16,7 +17,7 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.07.2017
   */
-class BoincClient(val hostname: String) extends BoincCoreClient[Future] {
+class BoincClient(val hostname: String) extends WebmanagerClient[Future] {
   import at.happywetter.boinc.shared.parser._
 
   private val baseURI = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
@@ -122,4 +123,7 @@ class BoincClient(val hostname: String) extends BoincCoreClient[Future] {
 
   override def getVersion: Future[BoincVersion] =
     FetchHelper.get[BoincVersion](baseURI + "version")
+
+  override def getDashboardData: Future[DashboardDataEntry] =
+    FetchHelper.get[DashboardDataEntry](s"/api/webmanager/dashboard/${dom.window.encodeURIComponent(hostname)}")
 }

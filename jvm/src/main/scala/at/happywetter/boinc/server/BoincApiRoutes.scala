@@ -6,6 +6,7 @@ import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAction}
 import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, AddProjectBody, BoincModeChange, BoincProjectMetaData, BoincRPC, GlobalPrefsOverride, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.rpc.DashboardDataEntry
 import at.happywetter.boinc.util.{IP, PooledBoincClient}
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
@@ -66,6 +67,19 @@ object BoincApiRoutes extends ResponseEncodingHelper {
         }
       }).getOrElse(NotFound())
 
+    case request @ GET -> Root / "webmanager" / "dashboard" / name =>
+      hostManager.get(name).map(client => {
+
+        Ok(
+          client.getState.flatMap(state =>
+            client.getFileTransfer.map(fileTransfer =>
+              DashboardDataEntry(state, fileTransfer)
+            )
+          ),
+          request
+        )
+
+      }).getOrElse(NotFound())
 
     // Modification of Tasks and Projects
     case request @ POST -> Root / "boinc" / name / "tasks" / task =>

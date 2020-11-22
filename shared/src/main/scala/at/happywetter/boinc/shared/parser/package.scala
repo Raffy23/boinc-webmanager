@@ -56,4 +56,6 @@ package object parser {
 
   implicit val hostDetailsParser = macroRW[rpc.HostDetails]
 
+  implicit val dashboardDataEntryParser = macroRW[rpc.DashboardDataEntry]
+
 }

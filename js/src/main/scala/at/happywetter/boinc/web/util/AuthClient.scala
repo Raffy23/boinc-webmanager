@@ -8,6 +8,7 @@ import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.shared.parser._
 import org.scalajs.dom
+import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -51,6 +52,13 @@ object AuthClient {
           e.printStackTrace()
           false
       }
+  }
+
+  def validateSavedCredentials(): Future[Boolean] = {
+    val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
+    val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
+
+    this.validate(username, password)
   }
 
   def validateAction(done: js.Function0[Unit]): Boolean = {

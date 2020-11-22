@@ -3,6 +3,8 @@ package at.happywetter.boinc.web.util
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.web.pages.LoginPage
+import at.happywetter.boinc.web.routes.AppRouter
 import org.scalajs.dom
 import org.scalajs.dom.experimental.Response
 
@@ -42,12 +44,18 @@ object ResponseHelper {
 
     private def exceptionHandler[T]: PartialFunction[Throwable, T] = {
       case ex: Exception =>
-        dom.console.log("Error in tryGet: " + ex.getMessage)
-        //ex.printStackTrace()
-        throw FetchResponseException(
-          response.status,
-          ApplicationError("error_internal_error")
-        )
+        dom.console.log("Error can not fetch, reason: " + ex.getMessage)
+
+        if (response.status == 401) {
+          AuthClient.validateSavedCredentials().map { succ =>
+            if (!succ)
+              AppRouter.navigate(LoginPage.link)
+          }
+
+          throw FetchResponseException(response.status, ApplicationError("not_authenticated"))
+        }
+
+        throw FetchResponseException(response.status, ApplicationError("error_internal_error"))
     }
 
     @throws(classOf[FetchResponseException])

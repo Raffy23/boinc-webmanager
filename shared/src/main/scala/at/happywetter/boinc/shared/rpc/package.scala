@@ -11,4 +11,6 @@ package object rpc {
   final case class HostDetails(name: String, address: String, port: Int, password: String,
                                addedBy: String, errors: Int)
 
+  final case class DashboardDataEntry(state: boincrpc.BoincState, fileTransfers: List[boincrpc.FileTransfer])
+
 }

@@ -1,37 +1,26 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.shared.boincrpc.{Result, Workunit}
+import at.happywetter.boinc.shared.boincrpc.Result
+import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient._
+import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
-import at.happywetter.boinc.web.util.WebSocketClient
+import at.happywetter.boinc.web.css.definitions.{Misc => Style}
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
+import at.happywetter.boinc.web.pages.dashboard.{DashboardDataModel, HostData}
+import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper._
-import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable, Tooltip}
-import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
-import at.happywetter.boinc.web.storage.ProjectNameCache
-import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.web.util.{ErrorDialogUtil, WebSocketClient}
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.{Elem, Node}
-import at.happywetter.boinc.web.css.definitions.{Misc => Style}
-
-import scala.util.Try
-import BoincFormater.Implicits._
-import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
-import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
-import at.happywetter.boinc.web.model.StringTableRow
-
-import Ordering.Double.TotalOrdering
-import scala.collection.mutable
 
 /**
   * Created by: 
@@ -43,31 +32,9 @@ object Dashboard extends Layout {
 
   override val path = "dashboard"
 
-  import at.happywetter.boinc.shared.boincrpc.App
-  private case class DetailData(client: String, projects: Map[String, List[Result]] = Map().empty,
-                                workunits: List[Workunit] = List(), apps: Map[String, App] = Map().empty)
-
-  private case class HostData(cpu: String, memory: String, time: String, deadline: String,
-                              disk: String, disk_max: String, disk_value: String,
-                              network: Future[String])
-
-  private case class HostSumData(currentCPUs: Var[Int], sumCPUs: Var[Int], runtime: Var[Double],
-                                 networkUpload: Var[Double], networkDownload: Var[Double])
-
-  private case class ClientData(name: String, data: Var[Option[Either[HostData, Exception]]], details: Var[Option[DetailData]])
-  private object ClientData {
-
-    @inline
-    def apply(name: String): ClientData = new ClientData(name, Var(None), Var(None))
-
-    val Empty = new ClientData("", Var(None), Var(None))
-  }
-
-  private val clients = Var(Map.empty[String, ClientData])
-  private val projects = Var(Map.empty[String, String])
-  private val clientsDataSum = HostSumData(Var(0),Var(0),Var(0D),Var(0D),Var(0D))
-
   override def already(): Unit = onRender()
+
+  private val clientData = new DashboardDataModel()
 
   override def onRender(): Unit = {
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -78,37 +45,16 @@ object Dashboard extends Layout {
       WebSocketClient.start()
     }
 
-    ClientManager.readClients().map(clients => {
-      //DashboardMenuBuilder.renderClients(clients)
-      this.clients := clients.map(name => (name, ClientData(name))).toMap
-
-      // Sequence futures for the project names, data is partially updated with Rx[...] and Var[...]
-      Future.sequence(
-        clients
-          .map(name => (name, ClientManager.clients(name)))
-          .map{ case (name, client) =>
-            val future = fullyLoadData(name, client)
-
-            future
-          }
-      ).foreach(details => {
-        val projects = details.map(_._1).flatMap(d => d.projects.keySet).toSet
-
-        ProjectNameCache.getAll(projects.toList)
-          .map( projectNameData => projectNameData.map{ case (url, maybeUrl) => (url, maybeUrl.getOrElse(url)) })
-          .map( projectNameData => projectNameData.toMap)
-          .map( projectNames => {
-            this.projects := projectNames
-            NProgress.done(true)
-          })
-      })
-    }).recover(ErrorDialogUtil.showDialog)
+    NProgress.start()
+    clientData
+      .load()
+      .map(_ => NProgress.done(true))
+      .recover(ErrorDialogUtil.showDialog)
   }
-
-
 
   override def render: Elem = {
     import at.happywetter.boinc.web.facade.NodeListConverter._
+    import clientData.{clients, clientsDataSum, projects}
 
     <div>
       <div class={FloatingMenu.root.htmlClass}>
@@ -134,7 +80,7 @@ object Dashboard extends Layout {
           dom.window.document.getElementById("dashboard_home_table").asInstanceOf[HTMLElement].style="display:none"
           dom.window.document.getElementById("dashboard_workunits_table").asInstanceOf[HTMLElement].style=""
 
-          calculateOffsetOfWoruntsTable()
+          calculateOffsetOfWorkunitsTable()
         }}>
           {"dashboard_workunits".localize}
         </a>
@@ -330,13 +276,13 @@ object Dashboard extends Layout {
   private def getNetwork(errorTooltip: Boolean = false, default: String = "-- / --")(implicit data: Rx[Option[Either[HostData, Exception]]]): Rx[Node] = {
     data.flatMap { dataOption =>
       dataOption.map(_.fold(
-        hostData => hostData.network.map(_.toXML).toRx(default),
+        hostData => Var(hostData.network.toXML),
         ex => { ex.printStackTrace(); Var(if(errorTooltip) "ERROR".toXML else "".toXML) }
       )).getOrElse(Var(default))
     }
   }
 
-  private def calculateOffsetOfWoruntsTable(): Unit = {
+  private def calculateOffsetOfWorkunitsTable(): Unit = {
     import at.happywetter.boinc.web.facade.NodeListConverter._
 
     var max = 0D
@@ -347,87 +293,6 @@ object Dashboard extends Layout {
     })
 
     dom.document.getElementById("workunits_table_container").asInstanceOf[HTMLElement].style="margin-top:"+max+"px"
-  }
-
-  private def fullyLoadData(name: String, client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
-    loadStateData(name, client)
-  }
-
-  private def loadStateData(name: String, client: BoincClient): Future[(DetailData, Either[HostData, Exception])] = {
-    clientsDataSum.currentCPUs := 0
-    clientsDataSum.networkDownload := 0D
-    clientsDataSum.networkUpload := 0D
-    clientsDataSum.runtime := 0D
-    clientsDataSum.sumCPUs := 0
-
-    client.getState.map(state => {
-      val details = DetailData(client.hostname, state.results.groupBy(f => f.project), state.workunits, state.apps)
-      var cpus = 0
-      val taskRuntime = state.results.map(r => r.remainingCPU).sum
-      val hostData = HostData(
-        s"${
-          cpus = state.results
-            .filter(p => p.activeTask.nonEmpty)
-            .filter(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
-            .map(p =>
-              state.workunits
-                .find(wu => wu.name == p.wuName)
-                .flatMap(wu => state.apps.get(wu.appName))
-                .map(app => if (app.nonCpuIntensive) 0 else app.version.maxCpus.getOrElse(1.0D).ceil.toInt)
-                .getOrElse(0)
-            ).sum
-
-          cpus
-        } / ${state.hostInfo.cpus}",
-        s"${
-          state.results
-            .filter(_.activeTask.nonEmpty)
-            .map(_.activeTask.get)
-            .map(_.workingSet)
-            .sum
-            .toSize} / ${state.hostInfo.memory.toSize}",
-        if (cpus > 0) BoincFormater.convertTime(taskRuntime / cpus) else BoincFormater.convertTime(0D),
-        Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D).toDate,
-        s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
-        state.hostInfo.diskTotal.toString,
-        (state.hostInfo.diskTotal - state.hostInfo.diskFree).toString,
-        loadFileTransferData(client)
-      )
-
-      clientsDataSum.currentCPUs.update(_ + cpus)
-      clientsDataSum.sumCPUs.update(_ + state.hostInfo.cpus)
-      if (cpus > 0) clientsDataSum.runtime.update(_ + (taskRuntime / cpus))
-
-      ClientCacheHelper.updateCache(client.hostname, state)
-      this.clients.map { clients =>
-        val entry = clients(name)
-        entry.data := Some(Left(hostData))
-        entry.details := Some(details)
-      }.now
-
-      (details, Left(hostData).asInstanceOf[Either[HostData, Exception]])
-    }).recover {
-      case e: Exception =>
-        e.printStackTrace()
-        this.clients.map { clients =>
-          val entry = clients(name)
-          entry.data := Some(Right(e))
-        }.now
-
-        (DetailData(client.hostname), Right(e))
-    }
-  }
-
-  private def loadFileTransferData(client: BoincClient): Future[String] = {
-    client.getFileTransfer.map(transfers => {
-      val upload = transfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-      val download = transfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
-
-      clientsDataSum.networkUpload.update(_ + upload)
-      clientsDataSum.networkDownload.update(_ + download)
-
-      upload.toSize + " / " + download.toSize
-    })
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
