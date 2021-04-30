@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.{Message, Notice}
 import at.happywetter.boinc.web.boincclient.BoincClient
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.components.{FloatingMenu, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincMessageStyle => Style}

@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{App, Result, Task}
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormatter}
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
@@ -17,7 +17,7 @@ import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import BoincFormater.Implicits._
+import BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
 /**

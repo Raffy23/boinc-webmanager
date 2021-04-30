@@ -264,6 +264,8 @@ package object boincrpc {
 
   }
 
+  final case class DayEntry(day: Int, cpu: (Double, Double), network: (Double, Double))
+
   final case class GlobalPrefsOverride(runOnBatteries: Boolean
                                        ,batteryChargeMinPct: Double
                                        ,batteryMaxTemperature: Double
@@ -291,8 +293,7 @@ package object boincrpc {
                                        ,networkWifiOnly: Boolean
                                        ,cpuTime: (Double, Double)
                                        ,netTime: (Double, Double)
-                                       ,cpuTimes: List[(Double, Double)]    // length == 7
-                                       ,netTimes: List[(Double, Double)]    // length == 7
+                                       ,dayPrefs: List[DayEntry]
                                       )
 
   final case class TimeSpan(start: Double, end: Double)
@@ -355,6 +356,7 @@ package object boincrpc {
       val ReadGlobalPrefsOverride = Value("global_prefs_override")
       val GetNotices = Value("notices")
       val RetryFileTransfer = Value("retry_file_transfer")
+      val UpdateProject = Value("project")
 
       import scala.language.implicitConversions
       implicit def unapply(arg: Command): String = arg.toString

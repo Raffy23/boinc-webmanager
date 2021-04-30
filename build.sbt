@@ -50,6 +50,11 @@ lazy val serverJVM = (project in file ("jvm"))
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
 
+    mappings in (Compile, packageBin) ++= Seq(
+      ((resourceManaged in Compile).value / "web-root" / "boinc-webmanager_client-jsdeps.min.js") -> "web-root/boinc-webmanager_client-jsdeps.min.js",
+      ((resourceManaged in Compile).value / "web-root" / "boinc-webmanager_client-opt.js") -> "web-root/boinc-webmanager_client-opt.js"
+    ),
+
     libraryDependencies ++= Seq(
       "ch.qos.logback"         %  "logback-classic"     % "1.2.3",
       "ch.qos.logback"         %  "logback-core"        % "1.2.3",
@@ -106,8 +111,7 @@ lazy val clientJS = (project in file ("js"))
       "com.lihaoyi"  %%% "upack"             % uPickleVersion,
       "com.lihaoyi"  %%% "upickle"           % uPickleVersion,
 
-      // Note: local published artifact build against ScalaJS 1.0.0
-      "in.nvilla"    %%% "monadic-html"      % "0.4.1-SNAPSHOT",
+      "in.nvilla"    %%% "monadic-html"      % "0.4.1",
     ),
 
     resolvers += "WebJars-BinTray" at "https://dl.bintray.com/webjars/maven",

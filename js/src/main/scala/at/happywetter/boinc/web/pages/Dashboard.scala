@@ -128,10 +128,10 @@ object Dashboard extends Layout {
               <td class={Style.centeredText.htmlClass}>{clientsDataSum.currentCPUs.map(c => s"$c / ${clientsDataSum.sumCPUs.now}")}</td>
               <td class={Style.centeredText.htmlClass}></td>
               <td class={Style.centeredText.htmlClass}>
-                {clientsDataSum.networkUpload.map(u => BoincFormater.convertSize(u))} /
-                {clientsDataSum.networkDownload.map(d => BoincFormater.convertSize(d))}
+                {clientsDataSum.networkUpload.map(u => BoincFormatter.convertSize(u))} /
+                {clientsDataSum.networkDownload.map(d => BoincFormatter.convertSize(d))}
               </td>
-              <td class={Style.centeredText.htmlClass}>{clientsDataSum.runtime.map(r => BoincFormater.convertTime(r))}</td>
+              <td class={Style.centeredText.htmlClass}>{clientsDataSum.runtime.map(r => BoincFormatter.convertTime(r))}</td>
               <td class={Style.centeredText.htmlClass}></td>
               <td class={Style.centeredText.htmlClass}></td>
             </tr>
@@ -177,7 +177,7 @@ object Dashboard extends Layout {
                               Seq(
                                 <span>{active} / {rData.size}</span>,
                                 <br/>,
-                                <small>{if (time > 0) Some(BoincFormater.convertTime(time)) else None}</small>
+                                <small>{if (time > 0) Some(BoincFormatter.convertTime(time)) else None}</small>
                               )
                             } else {
                               Seq("".toXML)
@@ -217,7 +217,7 @@ object Dashboard extends Layout {
                             Seq(
                               <span>{data._1} / {data._2}</span>,
                               <br/>,
-                              <small>{if (data._3 > 0) Some(BoincFormater.convertTime(data._3)) else None}</small>
+                              <small>{if (data._3 > 0) Some(BoincFormatter.convertTime(data._3)) else None}</small>
                             )
                           } else {
                             Seq("".toXML)

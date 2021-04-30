@@ -93,84 +93,28 @@ object FetchHelper {
       future.map(data => f(controller, data))
   }
 
-  private def requestGetParameters(_signal: UndefOr[AbortSignal] = js.undefined): RequestInit = new RequestInit {
-    override var method: UndefOr[HttpMethod] = HttpMethod.GET
-    override var headers: UndefOr[HeadersInit] = header
-    override var body: UndefOr[BodyInit] = js.undefined
-    override var referrer: UndefOr[String] = js.undefined
-    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
-    override var mode: UndefOr[RequestMode] = js.undefined
-    override var credentials: UndefOr[RequestCredentials] = js.undefined
-    override var cache: UndefOr[RequestCache] = js.undefined
-    override var redirect: UndefOr[RequestRedirect] = js.undefined
-    override var integrity: UndefOr[String] = js.undefined
-    override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = _signal
-    override var window: UndefOr[Null] = js.undefined
-  }
-  private def requestPostParameters(content: String): RequestInit = new RequestInit {
-    override var method: UndefOr[HttpMethod] = HttpMethod.POST
-    override var headers: UndefOr[HeadersInit] = header
-    override var body: UndefOr[BodyInit] = content
-    override var referrer: UndefOr[String] = js.undefined
-    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
-    override var mode: UndefOr[RequestMode] = js.undefined
-    override var credentials: UndefOr[RequestCredentials] = js.undefined
-    override var cache: UndefOr[RequestCache] = js.undefined
-    override var redirect: UndefOr[RequestRedirect] = js.undefined
-    override var integrity: UndefOr[String] = js.undefined
-    override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = js.undefined
-    override var window: UndefOr[Null] = js.undefined
+  private def requestGetParameters(_signal: UndefOr[AbortSignal] = js.undefined) = new RequestInit {
+    this.method  = HttpMethod.GET
+    this.headers = header
+    this.signal  = _signal
   }
 
-  // WTF?
-  private def requestPostParameters(content: Array[Byte]): RequestInit = new RequestInit {
-    override var method: UndefOr[HttpMethod] = HttpMethod.POST
-    override var headers: UndefOr[HeadersInit] = header
-    override var body: UndefOr[BodyInit] = content.map(_.toShort).mkString("")
-    override var referrer: UndefOr[String] = js.undefined
-    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
-    override var mode: UndefOr[RequestMode] = js.undefined
-    override var credentials: UndefOr[RequestCredentials] = js.undefined
-    override var cache: UndefOr[RequestCache] = js.undefined
-    override var redirect: UndefOr[RequestRedirect] = js.undefined
-    override var integrity: UndefOr[String] = js.undefined
-    override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = js.undefined
-    override var window: UndefOr[Null] = js.undefined
+  private def requestPostParameters(content: String) = new RequestInit {
+    this.method = HttpMethod.POST
+    this.headers = header
+    this.body    = content
   }
 
-  private def requestPatchParameters(content: UndefOr[BodyInit] = js.undefined): RequestInit = new RequestInit {
-    override var method: UndefOr[HttpMethod] = HttpMethod.PATCH
-    override var headers: UndefOr[HeadersInit] = header
-    override var body: UndefOr[BodyInit] = content
-    override var referrer: UndefOr[String] = js.undefined
-    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
-    override var mode: UndefOr[RequestMode] = js.undefined
-    override var credentials: UndefOr[RequestCredentials] = js.undefined
-    override var cache: UndefOr[RequestCache] = js.undefined
-    override var redirect: UndefOr[RequestRedirect] = js.undefined
-    override var integrity: UndefOr[String] = js.undefined
-    override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = js.undefined
-    override var window: UndefOr[Null] = js.undefined
+  private def requestPatchParameters(content: UndefOr[BodyInit] = js.undefined) = new RequestInit {
+    this.method  = HttpMethod.PATCH
+    this.headers = header
+    this.body    = content
   }
 
-  private def requestDeleteParameters(content: UndefOr[BodyInit] = js.undefined): RequestInit = new RequestInit {
-    override var method: UndefOr[HttpMethod] = HttpMethod.DELETE
-    override var headers: UndefOr[HeadersInit] = header
-    override var body: UndefOr[BodyInit] = content
-    override var referrer: UndefOr[String] = js.undefined
-    override var referrerPolicy: UndefOr[ReferrerPolicy] = js.undefined
-    override var mode: UndefOr[RequestMode] = js.undefined
-    override var credentials: UndefOr[RequestCredentials] = js.undefined
-    override var cache: UndefOr[RequestCache] = js.undefined
-    override var redirect: UndefOr[RequestRedirect] = js.undefined
-    override var integrity: UndefOr[String] = js.undefined
-    override var keepalive: UndefOr[Boolean] = js.undefined
-    override var signal: UndefOr[AbortSignal] = js.undefined
-    override var window: UndefOr[Null] = js.undefined
+  private def requestDeleteParameters(content: UndefOr[BodyInit] = js.undefined) = new RequestInit {
+    this.method  = HttpMethod.DELETE
+    this.headers = header
+    this.body    = content
   }
 
 }

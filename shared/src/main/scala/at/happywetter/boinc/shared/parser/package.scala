@@ -30,6 +30,7 @@ package object parser {
   implicit val pFilexFerParser = macroRW[boincrpc.PersistentFileXfer]
   implicit val fileXFerParser = macroRW[boincrpc.FileXfer]
   implicit val fileTransferParser = macroRW[boincrpc.FileTransfer]
+  implicit val dayEntryParser = macroRW[boincrpc.DayEntry]
   implicit val globalPrefsParser = macroRW[boincrpc.GlobalPrefsOverride]
   implicit val dailyStatsParser = macroRW[boincrpc.DailyStatistic]
   implicit val statisticParser = macroRW[boincrpc.Statistics]

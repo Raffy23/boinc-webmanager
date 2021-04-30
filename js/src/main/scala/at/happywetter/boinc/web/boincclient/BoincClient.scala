@@ -64,7 +64,7 @@ class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) e
 
   override def project(url: String, action: ProjectAction): Future[Boolean] =
     FetchHelper.patch[ProjectRequestBody, Boolean](
-      uri(BoincRPC.Command.GetProjectStatus),
+      uri(BoincRPC.Command.UpdateProject),
       ProjectRequestBody(url, action.toString)
     )
 
@@ -109,7 +109,7 @@ class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) e
 
   def attachProject(url: String, username: String, password: String, name: String): Future[Boolean] =
     FetchHelper.post[AddProjectBody, Boolean](
-      uri("project"),
+      uri(BoincRPC.Command.UpdateProject),
       AddProjectBody(url, name, username, password)
     )
 

@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.shared.boincrpc.DiskUsage
-import at.happywetter.boinc.web.boincclient.BoincFormater
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.boincclient.BoincFormatter
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
@@ -36,7 +36,7 @@ class BoincDiskLayout extends BoincClientLayout {
   private val names = Var(Map.empty[String, String])
 
   private def getSize(f: (DiskUsage) => Double): Rx[Option[String]] =
-    data.map(opt => opt.map(x => BoincFormater.convertSize(f(x))))
+    data.map(opt => opt.map(x => BoincFormatter.convertSize(f(x))))
 
   override def render: Elem = {
     boinc.getDiskUsage.foreach(diskUsage => {
@@ -83,7 +83,7 @@ class BoincDiskLayout extends BoincClientLayout {
                       <tr>
                         <td style="width:32px"><div style={"height:24px;width:24px;background-color:"+color}></div></td>
                         <td >{names.map(_.getOrElse(name, name))}</td>
-                        <td>{BoincFormater.convertSize(usage)}</td>
+                        <td>{BoincFormatter.convertSize(usage)}</td>
                       </tr>
                   }
                 }))

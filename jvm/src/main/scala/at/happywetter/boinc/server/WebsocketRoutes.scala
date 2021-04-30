@@ -60,7 +60,6 @@ object WebsocketRoutes {
             case SubscribeToGroupChanges if boincManager.versionChangeListeners.contains(client.state.callback) => NACK
             case SubscribeToGroupChanges =>
               boincManager.versionChangeListeners.add(client.state.callback)
-              println("Subscribed!")
               ACK
 
             case UnsubscribeToGroupChanges =>

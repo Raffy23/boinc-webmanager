@@ -1,10 +1,10 @@
 package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormatter}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.pages.component.DataTable.{DoubleColumn, LinkColumn, StringColumn, TableColumn}
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import mhtml.{Rx, Var}
 import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
@@ -73,7 +73,7 @@ object FileTransferTableModel {
 
     if (transfer.projectBackoff > 0) {
       builder.append(", ")
-      builder.append("retry_at".localize.format(BoincFormater.convertDate(transfer.xfer.nextRequest)))
+      builder.append("retry_at".localize.format(BoincFormatter.convertDate(transfer.xfer.nextRequest)))
     }
 
     Try(

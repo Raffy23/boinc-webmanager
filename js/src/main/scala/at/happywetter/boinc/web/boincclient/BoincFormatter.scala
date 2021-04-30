@@ -8,7 +8,7 @@ import scala.scalajs.js.Date
   * @author Raphael
   * @version 17.08.2017
   */
-object BoincFormater {
+object BoincFormatter {
 
   def convertDate(date: Date): String = date.toLocaleDateString() + " " + date.toLocaleTimeString()
 
@@ -81,6 +81,22 @@ object BoincFormater {
     value
   }
 
+  def convertTimeHHMM(double: Double): String = {
+    val intPart = double.toInt
+    val fracPart = double - intPart.toDouble
+
+    val minutes = 60 * fracPart
+    intPart.formatted("%02d") + ":" + minutes.formatted("%02.0f")
+  }
+
+  def convertTimeHHMMtoDouble(time: String): Double ={
+    val splitted = time.split(":")
+    if (splitted.length != 2)
+      return -1
+
+    splitted(0).toInt + splitted(1).toInt / 60D
+  }
+
   object Implicits {
 
     implicit class BoincFormatNumber(double: Double) {
@@ -91,6 +107,7 @@ object BoincFormater {
       def fromSpeedValue(step: Int): Double = convertFromSpeedValue(double, step)
       def toTime: String = convertTime(double)
       def toDate: String = convertDate(double)
+      def toTimeHHMM: String = convertTimeHHMM(double)
 
     }
 

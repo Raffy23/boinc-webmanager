@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.shared.boincrpc.{App, BoincState, Result, Workunit}
-import at.happywetter.boinc.web.boincclient.BoincFormater
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.web.boincclient.BoincFormatter
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.util.boincrpc.Implicits._
 import mhtml.Var
 
@@ -29,7 +29,7 @@ package object dashboard {
     def apply(state: BoincState, usedCpus: Int, upload: Double, download: Double, taskRuntime: Double): HostData = HostData(
       s"${usedCpus} / ${state.hostInfo.cpus}",
       s"${state.getCurrentUsedMemory.toSize} / ${state.hostInfo.memory.toSize}",
-      if (usedCpus > 0) BoincFormater.convertTime(taskRuntime / usedCpus) else BoincFormater.convertTime(0D),
+      if (usedCpus > 0) BoincFormatter.convertTime(taskRuntime / usedCpus) else BoincFormatter.convertTime(0D),
       Try(state.results.map(f => f.reportDeadline).min).getOrElse(-1D).toDate,
       s"%.1f %%".format((state.hostInfo.diskTotal - state.hostInfo.diskFree)/state.hostInfo.diskTotal*100),
       state.hostInfo.diskTotal.toString,

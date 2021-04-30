@@ -6,6 +6,7 @@ import at.happywetter.boinc.util.IOAppTimer.scheduler
 import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, IOAppTimer, Logger}
 import cats.effect._
+import org.http4s.blaze.channel.ChannelOptions
 import org.http4s.{HttpRoutes, Response}
 import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Length`
@@ -14,6 +15,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze._
 import org.http4s.server.middleware.GZip
 
+import java.net.SocketOptions
 import scala.io.StdIn
 
 /**

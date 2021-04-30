@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.model
 
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.Project
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormater, ClientManager}
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormatter, ClientManager}
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
 import at.happywetter.boinc.web.util.RichRx._
@@ -175,7 +175,7 @@ object ProjectDataTableModel {
               <tr><td><b>{"login_username".localize}</b></td><td>{project.data.userName}</td></tr>
               <tr><td><b>{"project_dialog_teamname".localize}</b></td><td>{project.data.teamName}</td></tr>
               <tr><td><b>{"resource_share".localize}</b></td><td>{project.data.resourceShare}</td></tr>
-              <tr><td><b>{"disk_usage".localize}</b></td><td>{BoincFormater.convertSize(project.data.desiredDiskUsage)}</td></tr>
+              <tr><td><b>{"disk_usage".localize}</b></td><td>{BoincFormatter.convertSize(project.data.desiredDiskUsage)}</td></tr>
               <tr><td><b>{"project_dialog_cpid".localize}</b></td><td>{project.data.cpid}</td></tr>
               <tr>
                 <td><b>{"project_dialog_host_id".localize}</b></td>
