@@ -26,7 +26,7 @@ import at.happywetter.boinc.web.util.RichRx._
 class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAction: (String, String, String, String) => Future[Boolean]) extends Dialog("modal-dialog") {
 
   private val selected: Var[Option[BoincProjectMetaData]] = Var(None)
-  private val dialogID = Random.alphanumeric.take(5).mkString
+  private val projectDialogID = Random.alphanumeric.take(5).mkString
 
   //TODO: convert to mthml.Rx stuff:
   private lazy val jsOnChangeListener: (Event) => Unit = (event) => {
@@ -73,7 +73,7 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
               <input class={LoginPageStyle.input.htmlClass}
                      placeholder="example@boinc-user.com"
                      style="margin:0"
-                     id={s"$dialogID-username"}>
+                     id={s"$projectDialogID-username"}>
               </input>
             </td>
           </tr>
@@ -83,7 +83,7 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
               <input class={LoginPageStyle.input.htmlClass}
                      placeholder={"login_password".localize}
                      style="margin:0"
-                     id={s"$dialogID-password"}
+                     id={s"$projectDialogID-password"}
                      type="password">
               </input>
             </td>
@@ -101,8 +101,8 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
       selected.now.foreach { element =>
         NProgress.start()
 
-        val username = dom.document.getElementById(s"$dialogID-username").asInstanceOf[HTMLInputElement].value
-        val password = dom.document.getElementById(s"$dialogID-password").asInstanceOf[HTMLInputElement].value
+        val username = dom.document.getElementById(s"$projectDialogID-username").asInstanceOf[HTMLInputElement].value
+        val password = dom.document.getElementById(s"$projectDialogID-password").asInstanceOf[HTMLInputElement].value
 
         submitAction(element.url, username, password, element.name).foreach( state => {
           if (state)
@@ -116,7 +116,7 @@ class ProjectAddDialog(projectData: Map[String, BoincProjectMetaData], submitAct
   )
 
   def focusUsernameFiled(): Unit = {
-    dom.document.getElementById(s"$dialogID-username").asInstanceOf[HTMLInputElement].focus()
+    dom.document.getElementById(s"$projectDialogID-username").asInstanceOf[HTMLInputElement].focus()
   }
 
   override def render(): Elem = dialog.render()

@@ -41,4 +41,10 @@ trait BoincCoreClient[F[_]] {
   def setGpu(mode: BoincRPC.Modes.Value, duration: Double = 0): F[Boolean]
   def setNetwork(mode: BoincRPC.Modes.Value, duration: Double = 0): F[Boolean]
   def setRun(mode: BoincRPC.Modes.Value, duration: Double = 0): F[Boolean]
+
+  // Other stuff
+  def getAppConfig(url: String): F[AppConfig]
+  def setAppConfig(url: String, config: AppConfig): F[Boolean]
+
+  def quit(): F[Unit]
 }

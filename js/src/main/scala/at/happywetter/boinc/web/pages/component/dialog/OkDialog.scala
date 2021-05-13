@@ -23,6 +23,7 @@ class OkDialog(title: String, content: List[Node], action: OkDialog => Unit = _ 
         event.preventDefault()
         action(this)
         this.hide()
+        this.destroy()
       }} autofocus="autofocus">
         {"dialog_ok".localize}
       </button>
@@ -33,6 +34,7 @@ class OkDialog(title: String, content: List[Node], action: OkDialog => Unit = _ 
 
   override def show(): Unit = {
     super.show()
-    dom.document.querySelector("#modal-dialog-type1 button[name='dialog_ok_btn']").asInstanceOf[HTMLElement].focus()
+    dom.document.querySelector(s"#$dialogID button[name='dialog_ok_btn']").asInstanceOf[HTMLElement].focus()
   }
+
 }

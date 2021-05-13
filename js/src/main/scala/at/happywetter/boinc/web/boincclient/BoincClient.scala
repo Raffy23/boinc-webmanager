@@ -139,4 +139,11 @@ class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) e
 
   def asQueryOnlyHealthy(): BoincClient = new BoincClient(hostname, true)
 
+  override def getAppConfig(url: String): Future[AppConfig] =
+    FetchHelper.get[AppConfig](uri(s"app_config?url=${dom.window.encodeURIComponent(url)}"))
+
+  override def setAppConfig(url: String, config: AppConfig): Future[Boolean] =
+    FetchHelper.post[AppConfig, Boolean](uri(s"app_config?url=${dom.window.encodeURIComponent(url)}"), config)
+
+  override def quit(): Future[Unit] = ???
 }

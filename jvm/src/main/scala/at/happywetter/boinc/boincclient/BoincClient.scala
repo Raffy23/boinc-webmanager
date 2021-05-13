@@ -3,8 +3,8 @@ package at.happywetter.boinc.boincclient
 import java.io.InputStream
 import java.net.{InetAddress, Socket}
 import java.util.concurrent.locks.{ReentrantLock, StampedLock}
-
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.boincclient.parser.AppConfigParser
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
@@ -55,7 +55,6 @@ object BoincClient {
     val GetGlobalPrefsOverride = Value("<get_global_prefs_working/>")
     val ReadGlobalPrefsFile = Value("<read_global_prefs_override/>")
     val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
-    val getStatistics = Value("<get_statistics/>")
   }
 
 }
@@ -140,6 +139,8 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
   private def executeAction[T](action: String, f: String => IO[T]): IO[T] = {
     import cats.implicits._
 
+    var now = System.currentTimeMillis()
+
     (
       if (!this.authenticated) {
         authenticate().flatMap { auth =>
@@ -147,7 +148,11 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
           else exchangeVersion().whenA(version.isEmpty)
         }
       } else IO.unit
-    ) *> f(action)
+    ) *> f(action).map { x =>
+      val future = System.currentTimeMillis()
+      println("BoincCore client interaction ("+action.take(10)+") took " + (future-now) + "ms")
+      x
+    }
   }
 
   @inline private def execAction(action: String): IO[NodeSeq] = {
@@ -311,17 +316,25 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     ).map(_ \ "success" xml_== <success/>)
 
   override def getStatistics: IO[Statistics] =
-    logTrace("Getting Statistics from " + address + ":" + port) *>
+    logTrace("Getting Statistics") *>
     execCommand(BoincClient.Command.GetStatistics).map(_.toStatistics)
 
   override def readGlobalPrefsOverride: IO[Boolean] =
-    this.execCommand(BoincClient.Command.ReadGlobalPrefsFile).map(_\ "success" xml_== <success/>)
+    logTrace("Reading global prefs override") *>
+    this.execCommand(BoincClient.Command.ReadGlobalPrefsFile).map{ response =>
+      val succ = response \ "success" xml_== <success/>
+      if (!succ) {
+        val status = (response \ "status").text.toInt
+      }
+      // ???
+      succ
+    }
 
   def isAuthenticated: Boolean = this.authenticated
 
   def close(): Unit = {
     if (socket != null && socket.isConnected) {
-      logTrace("Closing Socket for " + address + ":" + port)
+      logTrace("Closing Socket").unsafeRunSync();
       socket.close()
     }
 
@@ -333,6 +346,23 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     else getCCState.map(_ => version.get)
   }
 
-  private def logTrace(msg: String): IO[Unit] = IO { logger.trace(s"($address:$port): " + msg) }
+  private def logTrace(msg: String): IO[Unit] = IO { logger.trace(s"[$address:$port]: " + msg) }
+
+  // TODO: Implement AppConfig XML parsing
+  override def getAppConfig(url: String): IO[AppConfig] =
+    logTrace(s"Getting app_config.xml for $url") *>
+    this.execAction(
+      <get_app_config>
+        <url>${url}</url>
+      </get_app_config>
+    ).map(node => AppConfigParser.fromXML(node \ "app_config"))
+
+  // TODO: Implement AppConfig XML parsing
+  override def setAppConfig(url: String, config: AppConfig): IO[Boolean] = ???
+
+  override def quit(): IO[Unit] =
+    logTrace("Sending quit") *>
+    this.execAction(<quit/>) *>
+    IO.unit
 
 }

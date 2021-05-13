@@ -59,4 +59,9 @@ package object parser {
 
   implicit val dashboardDataEntryParser = macroRW[rpc.DashboardDataEntry]
 
+  implicit val appConfigGpuVersionParser = macroRW[boincrpc.AppConfig.GpuVersions]
+  implicit val appConfigAppVersionParser = macroRW[boincrpc.AppConfig.AppVersion]
+  implicit val appConfigAppParser = macroRW[boincrpc.AppConfig.App]
+  implicit val appConfigParser = macroRW[boincrpc.AppConfig]
+
 }

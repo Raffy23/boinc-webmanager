@@ -46,7 +46,7 @@ object WebServer extends IOApp with Logger {
   }
 
   // Create top level routes
-  // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware ...
+  // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware so they are outside /api for now ...
   private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
     "/"              -> GZip(WebResourcesRoute(config, this.contextShift)),
     "/swagger"       -> SwaggerRoutes(IOAppTimer.blocker),
@@ -66,6 +66,9 @@ object WebServer extends IOApp with Logger {
       database    <- Database()
       xmlPStore   <- XMLProjectStore(database, config)
       hostManager <- BoincManager(config, database, IOAppTimer.blocker)
+
+      // TODO: for Linux with systemd privileged socket can be inherited,
+      //       how to convince Blaze to use it?
       webserver   <- BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
                         .enableHttp2(false) // Can't use web sockets if http2 is enabled (since 0.21.0-M2)
                         .withOptionalSSL(config)

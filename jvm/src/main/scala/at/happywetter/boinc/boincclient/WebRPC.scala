@@ -59,7 +59,7 @@ object WebRPC {
     ServerStatusParser.fromXML(request.asXML)
   }
 
-  def lookupAccount(url: String, email: String, password: Option[String] = None): IO[(Boolean, Option[String])] = IO {
+  def lookupAccount(url: String, email: String, password: Option[String] = None): IO[(Boolean, Option[String])] = IO.async { callback =>
     var request = Http(s"$url/lookup_account.php")
       .param("email_addr", email)
       .option(HttpOptions.followRedirects(true))
@@ -68,13 +68,15 @@ object WebRPC {
       request = request.param("passwd_hash", BoincCryptoHelper.md5(password.get+email.toLowerCase()))
 
     //TODO: Give a Error Code to UI
-    Try {
-      val response = XML.loadString(request.asString.body)
-      ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
-    }.recover{
-      case _: Exception =>
-        (false, Some("err_unable_to_read_webrpc_response"))
-    }.get
+    callback(
+      Try {
+        val response = XML.loadString(request.asString.body)
+        ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
+      }.recover{
+        case _: Exception =>
+          (false, Some("err_unable_to_read_webrpc_response"))
+      }.toEither
+    )
   }
 
   private implicit class XMLHttpResponse(httpRequest: HttpRequest) {

@@ -100,7 +100,7 @@ lazy val clientJS = (project in file ("js"))
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
 
-    // Publish fullOpt + dependencies diretly to managed resource directory of the server
+    // Publish fullOpt + dependencies directly to managed resource directory of the server
     crossTarget in fullOptJS in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
     crossTarget in packageMinifiedJSDependencies in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
 

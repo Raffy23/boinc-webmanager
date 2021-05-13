@@ -78,4 +78,21 @@ object BasicModalCSS extends StyleSheet.Standalone {
     )
   )
 
+  action.cssName -(
+    userSelect :=! "none",
+    color(c"#333"),
+    cursor.pointer,
+    textDecoration := "underline",
+
+    &.hover(
+      color(c"#428bca")
+    )
+  )
+
+  actionList.cssName - (
+    unsafeChild("li")(
+      padding(0.3 em)
+    )
+  )
+
 }

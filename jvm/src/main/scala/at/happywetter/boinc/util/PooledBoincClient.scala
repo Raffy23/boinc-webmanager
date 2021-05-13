@@ -135,4 +135,13 @@ class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 3141
 
   override def getVersion: IO[BoincVersion] =
     connection(_.getVersion)
+
+  override def getAppConfig(url: String): IO[AppConfig] =
+    connection(_.getAppConfig(url))
+
+  override def setAppConfig(url: String, config: AppConfig): IO[Boolean] =
+    connection(_.setAppConfig(url, config))
+
+  override def quit(): IO[Unit] =
+    connection(_.quit())
 }

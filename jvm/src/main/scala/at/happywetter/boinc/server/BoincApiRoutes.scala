@@ -64,6 +64,16 @@ object BoincApiRoutes extends ResponseEncodingHelper {
           case "messages" => Ok(client.getMessages(getIntParameter("seqno")), request)
           case "notices" => Ok(client.getNotices(getIntParameter("seqno")), request)
           case "version" => Ok(client.getVersion, request)
+          case "app_config" => {
+            val now = System.currentTimeMillis()
+            Ok(client.getAppConfig(params("url").head), request).map(r => {
+              val future = System.currentTimeMillis()
+              val delta = future - now
+              System.out.println("GET app_config took " + delta + "ms")
+
+              r
+            })
+          }
 
           case _ => NotAcceptable()
         }
@@ -164,6 +174,10 @@ object BoincApiRoutes extends ResponseEncodingHelper {
         // TODO: Implement correct state stuff ...
         Ok(true, request)
       }
+
+
+    case request @ POST -> Root / "boinc" / "app_config" =>
+      Ok("Not Implemented", request)
 
     case request @ DELETE -> Root / "boinc" / name =>
       db.clients.delete(name).runAsyncAndForget(monix.execution.Scheduler.Implicits.global)

@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient
 
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 /**
   * Created by: 
@@ -18,11 +18,11 @@ package object parser {
     def existsNode: Boolean = node != null
 
     def optionalText: Option[String] =
-      if (node == null || node.text == null) None
+      if (node == null || node.text == null) Option.empty
       else Some(node.text)
 
     def toOptionDouble: Option[Double] =
-      if (node == null || node.text == null || node.text.isEmpty) None
+      if (node == null || node.text == null || node.text.isEmpty) Option.empty
       else Some(node.text.toDouble)
 
     def tryToDouble: Double =
@@ -36,6 +36,13 @@ package object parser {
     def tryToLong: Long =
       if (node == null || node.text == null || node.text.isEmpty) 0L
       else java.lang.Long.parseLong(node.text)
+
+    def toIntOption: Option[Int] =
+      if (node == null || node.text == null || node.text.isEmpty) Option.empty
+      else Some(node.text.toInt)
+
+    def toOption: Option[NodeSeq] =
+      if (node == null) Option.empty else Some(node)
 
   }
 

@@ -7,7 +7,7 @@ package at.happywetter.boinc.shared
   * @version 05.07.2019
   */
 package object boincrpc {
-
+  
   final case class BoincVersion(major: Int, minor: Int, release: Int) extends Ordered[BoincVersion] {
     override def toString: String = s"$major.$minor.$release"
     override def compare(that: BoincVersion): Int =
@@ -407,5 +407,24 @@ package object boincrpc {
   final case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
 
   final case class AddNewHostRequestBody(address: String, port: Int, password: String)
+
+  final case class AppConfig(apps: List[AppConfig.App],
+                             appVersions: List[AppConfig.AppVersion],
+                             projectMaxConcurrent: Option[Int],
+                             reportResultsImmediately: Boolean)
+  object AppConfig {
+
+    final case class App(name: String,
+                         maxConcurrent: Int,
+                         reportResultsImmediately: Boolean,
+                         fractionDoneExact: Boolean,
+                         gpuVersions: Option[GpuVersions])
+
+    final case class GpuVersions(gpuUsage: Double, cpuUsage: Double)
+
+    final case class AppVersion(appName: String, planClass: String, avgCpus: Int, ngpus: Int, cmdline: String)
+
+  }
+
 
 }
