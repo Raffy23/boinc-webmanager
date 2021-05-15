@@ -1,5 +1,6 @@
 package at.happywetter.boinc.web.pages.dashboard
 
+import at.happywetter.boinc.shared.boincrpc.Result
 import at.happywetter.boinc.shared.rpc.DashboardDataEntry
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.storage.ProjectNameCache
@@ -29,13 +30,17 @@ class DashboardDataModel {
       this.clientsDataSum.clear()
 
       // Sequence futures for the project names, data is partially updated with Rx[...] and Var[...]
-      Future.sequence(
-        clients
-          .map(name => (name, ClientManager.clients(name)))
-          .map{ case (name, client) => loadStateData(name, client) }
-      ).flatMap(details =>
-        updateProjectNameCache(details.map(_._1).flatMap(_.projects.keySet).toSet)
-      )
+      //Future.sequence(
+      clients
+        .map(name => (name, ClientManager.clients(name)))
+        .map { case (name, client) =>
+          loadStateData(name, client).map { case (detailData, error) =>
+            updateProjectNameCache(detailData.projects.keySet)
+          }
+        }
+      //).flatMap(details =>
+      //  updateProjectNameCache(details.map(_._1).flatMap(_.projects.keySet).toSet)
+      //)
     })
   }
 
@@ -43,7 +48,7 @@ class DashboardDataModel {
     client.getDashboardData.map{ case DashboardDataEntry(state, fileTransfers) =>
       val clientData = this.clients.now(name)
       val usedCPUs = state.getCurrentUsedCPUs
-      val taskRuntime = state.results.map(r => r.remainingCPU).sum
+      val taskRuntime = state.results.filter(_.state == Result.State.Result_New.id).map(r => r.remainingCPU).sum
 
       val upload = fileTransfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
       val download = fileTransfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
@@ -79,7 +84,7 @@ class DashboardDataModel {
       .map( projectNameData => projectNameData.map{ case (url, maybeUrl) => (url, maybeUrl.getOrElse(url)) })
       .map( projectNameData => projectNameData.toMap)
       .map( projectNames => {
-        this.projects := projectNames
+        this.projects.update(_ ++ projectNames)
       })
   }
 

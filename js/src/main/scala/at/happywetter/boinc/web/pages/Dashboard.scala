@@ -10,6 +10,7 @@ import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, Tooltip}
 import at.happywetter.boinc.web.pages.dashboard.{DashboardDataModel, HostData}
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress, Navigo}
+import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper._
@@ -46,6 +47,14 @@ object Dashboard extends Layout {
       WebSocketClient.start()
     }
 
+    /* "force" to reload cache, probably should be a little bit smarter than that ... */
+    if (dom.window.sessionStorage.getItem("session_project_cache_populated") == null) {
+      ClientManager.queryCompleteProjectList().map(data => {
+        ProjectNameCache.saveAll(data.toList.map { case (url, project) => (url, project.name) })
+        dom.window.sessionStorage.setItem("session_project_cache_populated", "true")
+      })
+    }
+
     clientData
       .load()
       .map(_ => NProgress.done(true))
@@ -55,6 +64,9 @@ object Dashboard extends Layout {
   override def render: Elem = {
     import at.happywetter.boinc.web.facade.NodeListConverter._
     import clientData.{clients, clientsDataSum, projects}
+
+    val sortedProjects = projects.map(_.toSeq.sortBy(_._1)(ord = StringLengthAlphaOrdering))
+    val sortedClients = clients.map(_.toSeq.sortBy(_._1)(ord = StringLengthAlphaOrdering))
 
     <div>
       <div class={FloatingMenu.root.htmlClass}>
@@ -105,7 +117,7 @@ object Dashboard extends Layout {
           </thead>
           <tbody>
             {
-              clients.map(_.toList.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(c => {
+              sortedClients.map(_.map(c => {
                 implicit val data: Rx[Option[Either[HostData, Exception]]] = c._2.data
                 val client = ClientManager.clients(c._1)
 
@@ -143,7 +155,7 @@ object Dashboard extends Layout {
               <tr id="dashbord_project_header">
                 <th style="width:220px;text-align:left">{"table_host".localize}</th>
                 {
-                  projects.map(_.map(project => {
+                  sortedProjects.map(_.map(project => {
                     <th class={TableTheme.verticalText.htmlClass}>
                       <div>
                         <span>{project._2}</span>
@@ -156,45 +168,51 @@ object Dashboard extends Layout {
             </thead>
             <tbody>
               {
-                clients.map(_.toList.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(client => {
-                  <tr id={s"dashboard_${client._1}_details"}>
-                    <td>{injectErrorTooltip(hostLink(client._1))(client._2.data)}</td>
-                    {
-                      projects.map(_.map(project => {
-                        val rData = client._2.details.map(_.map(_.projects.getOrElse(project._1, List.empty)).getOrElse(List.empty)).now
+                sortedClients.zip(sortedProjects).map { case (clients, projects) =>
+                  clients.map(client => {
+                    <tr id={s"dashboard_${client._1}_details"}>
+                      <td>{injectErrorTooltip(hostLink(client._1))(client._2.data)}</td>
+                      {
+                        projects.map(project => {
+                          val rData = client._2.details.map(_.map(_.projects.getOrElse(project._1, List.empty)).getOrElse(List.empty)).now
 
-                        val active = rData
-                          .filter(p => p.activeTask.nonEmpty)
-                          .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
+                          val active = rData
+                            .filter(p => p.activeTask.nonEmpty)
+                            .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
 
-                        val time = rData
-                          .filter(r => !r.plan.contains("nci"))
-                          .map(r => r.remainingCPU).sum / (if(active == 0) 1 else active)
+                          val done = rData
+                            .filter(p => p.activeTask.isEmpty)
+                            .count(t => t.state >= 3)
 
-                        <td>
-                          {
-                            if (rData.nonEmpty) {
-                              Seq(
-                                <span>{active} / {rData.size}</span>,
-                                <br/>,
-                                <small>{if (time > 0) Some(BoincFormatter.convertTime(time)) else None}</small>
-                              )
-                            } else {
-                              Seq("".toXML)
-                            }
-                         }
-                        </td>
-                      }).toList)
+                          val time = rData
+                            .filter(r => !r.plan.contains("nci"))
+                            .map(r => r.remainingCPU).sum / (if(active == 0) 1 else active)
+
+                          <td>
+                            {
+                              if (rData.nonEmpty) {
+                                Seq(
+                                  <span>{done} / {rData.size}</span>,
+                                  <br/>,
+                                  <small>{if (time > 0) Some(BoincFormatter.convertTime(time)) else None}</small>
+                                )
+                              } else {
+                                Seq("".toXML)
+                              }
+                           }
+                          </td>
+                      })
                     }
-                  </tr>
-                }).toSeq)
+                    </tr>
+                  })
+                }
               }
               <tr>
                 <td><b>{"sum".localize}</b></td>
                 {
                   projects.zip(clients).map { case (projects, clients) =>
                     projects.map { case (projectUrl, _) =>
-                      val data = clients.foldLeft((0, 0, 0D)) { case (x@(active, size, time), data) =>
+                      val data = clients.foldLeft((0, 0, 0D)) { case (x@(done, size, time), data) =>
                         data._2.details.now.map { details =>
                           val rData  = details.projects.getOrElse(projectUrl, List.empty)
 
@@ -202,17 +220,21 @@ object Dashboard extends Layout {
                             .filter(p => p.activeTask.nonEmpty)
                             .count(t => !t.supsended && Result.ActiveTaskState(t.activeTask.get.activeTaskState) == Result.ActiveTaskState.PROCESS_EXECUTING)
 
+                          val doneClient = rData
+                            .filter(p => p.activeTask.isEmpty)
+                            .count(t => t.state >= 3)
+
                           val timeClient = rData
                             .filter(r => !r.plan.contains("nci"))
-                            .map(r => r.remainingCPU).sum / (if(active == 0) 1 else active)
+                            .map(r => r.remainingCPU).sum / (if(activeClient == 0) 1 else activeClient)
 
-                          (active + activeClient, size + rData.length, time + timeClient)
+                          (done + doneClient, size + rData.length, time + timeClient)
                         }.getOrElse(x)
                       }
 
                       <td>
                         {
-                          println(projectUrl, data)
+                          // println(projectUrl, data)
                           if (data._2 > 0) {
                             Seq(
                               <span>{data._1} / {data._2}</span>,

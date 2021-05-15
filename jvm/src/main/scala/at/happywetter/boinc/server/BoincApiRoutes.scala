@@ -40,7 +40,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     case request @ GET -> Root / "config"  => Ok(AppConfig.sharedConf, request)
     case request @ GET -> Root / "groups"  => Ok(hostManager.getSerializableGroups, request)
     case request @ GET -> Root / "version" => Ok(hostManager.getVersion, request)
-    case request @ GET -> Root / "boinc" / "project_list" => Ok(projects.getProjects, request)
+    case request @ GET -> Root / "boinc" / "project_list" => OkWithEtag(projects.getProjects, projects.eTag, request)
 
     // Main route for Boinc Data
     case request @ GET -> Root / "boinc" / name / action :? requestParams =>

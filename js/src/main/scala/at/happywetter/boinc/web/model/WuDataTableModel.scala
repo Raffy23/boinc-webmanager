@@ -212,7 +212,7 @@ object WuDataTableModel {
   private def prettyPrintStatus(result: Result): String = {
     Result.State(result.state) match {
       case Result.State.Result_New => "boinc_status_new".localize
-      case Result.State.Result_Aborted => "boinc_status_aborted".localize
+      case Result.State.Result_Aborted => "boinc_status_abort".localize
       case Result.State.Result_Compute_Error => "boinc_status_error".localize
       case Result.State.Result_Files_Downloaded =>
         result.activeTask.map(task => Result.ActiveTaskState(task.activeTaskState) match {

@@ -24,4 +24,11 @@ object ProjectNameCache extends DatabaseProvider {
   def getAll(urls: List[String]): Future[List[(String, Option[String])]] =
     Future.sequence(urls.map(url => ProjectNameCache.get(url).map(name => (url, name))))
 
+  def saveAll(urls: List[(String, String)]): Future[Unit] =
+    transaction(f => {
+      urls.foreach { case (url, name) =>
+        f.put(name, url)
+      }
+    })
+
 }

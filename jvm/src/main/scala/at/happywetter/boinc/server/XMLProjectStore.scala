@@ -2,7 +2,6 @@ package at.happywetter.boinc.server
 
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
-
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.Database
 import at.happywetter.boinc.dto.DatabaseDTO.Project
@@ -13,6 +12,8 @@ import cats.effect.concurrent._
 
 import scala.xml.XML
 import monix.execution.Scheduler.Implicits.global
+
+import java.security.MessageDigest
 
 
 /**
@@ -27,6 +28,8 @@ class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
 
   def importFrom(config: Config): IO[Map[String, BoincProjectMetaData]] = IO {
     projects.updateAndGet(_ ++ config.boinc.projects.customProjects.map { case (name, project) =>
+      computeETag(project.url)
+
       name -> BoincProjectMetaData(
         name, project.url, project.generalArea, "", project.description, project.organization, List()
       )
@@ -38,6 +41,21 @@ class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
   def addProject(name: String, project: BoincProjectMetaData): IO[Unit] = IO {
     db.projects.insert(Project(project)).to[IO].unsafeRunSync()
     projects.updateAndGet(_ + (name -> project))
+    computeETag(project.url)
+  }
+
+  private val digest = MessageDigest.getInstance("SHA-1");
+
+  private def computeETag(projectURL: String): Unit = {
+    digest.synchronized {
+      digest.update(projectURL.getBytes)
+    }
+  }
+
+  def eTag: String = {
+    digest.synchronized {
+      digest.digest().map("%02x" format _).mkString.take(12)
+    }
   }
 
 }

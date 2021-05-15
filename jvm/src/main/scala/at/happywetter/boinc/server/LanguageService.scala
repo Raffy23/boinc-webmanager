@@ -68,7 +68,7 @@ object LanguageService extends ResponseEncodingHelper {
     val path      = s"${ResourceWalker.RESOURCE_ROOT}/lang/$lang.conf"
     val bufSource = ResourceWalker.getStream(path)
 
-    val digest = MessageDigest.getInstance("MD5")
+    val digest = MessageDigest.getInstance("SHA-1")
     val buffer = Array.ofDim[Byte](1024)
     var nRead  = -1
     while({nRead = bufSource.read(buffer, 0, buffer.length); nRead} != -1) {

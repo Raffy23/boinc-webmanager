@@ -138,9 +138,6 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
 
   private def executeAction[T](action: String, f: String => IO[T]): IO[T] = {
     import cats.implicits._
-
-    var now = System.currentTimeMillis()
-
     (
       if (!this.authenticated) {
         authenticate().flatMap { auth =>
@@ -148,11 +145,7 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
           else exchangeVersion().whenA(version.isEmpty)
         }
       } else IO.unit
-    ) *> f(action).map { x =>
-      val future = System.currentTimeMillis()
-      println("BoincCore client interaction ("+action.take(10)+") took " + (future-now) + "ms")
-      x
-    }
+    ) *> f(action)
   }
 
   @inline private def execAction(action: String): IO[NodeSeq] = {

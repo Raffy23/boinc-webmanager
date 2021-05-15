@@ -66,7 +66,7 @@ object ProjectInfoDialog {
             <li>
               <a class={BasicModalStyle.action.htmlClass} href="#deleteProject"
                  onclick={jsOnDelete}>
-                {"delete".localize}
+                {"project_delete".localize}
               </a>
             </li>
             <li>
