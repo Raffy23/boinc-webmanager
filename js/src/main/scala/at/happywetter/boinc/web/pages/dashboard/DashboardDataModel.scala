@@ -48,7 +48,7 @@ class DashboardDataModel {
     client.getDashboardData.map{ case DashboardDataEntry(state, fileTransfers) =>
       val clientData = this.clients.now(name)
       val usedCPUs = state.getCurrentUsedCPUs
-      val taskRuntime = state.results.filter(_.state == Result.State.Result_New.id).map(r => r.remainingCPU).sum
+      val taskRuntime = state.results.filter(_.state < 3).map(r => r.remainingCPU).sum
 
       val upload = fileTransfers.filter(p => p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum
       val download = fileTransfers.filter(p => !p.xfer.isUpload).map(p => p.byte - p.fileXfer.bytesXfered).sum

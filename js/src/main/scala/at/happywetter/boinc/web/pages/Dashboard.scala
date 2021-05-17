@@ -210,7 +210,7 @@ object Dashboard extends Layout {
               <tr>
                 <td><b>{"sum".localize}</b></td>
                 {
-                  projects.zip(clients).map { case (projects, clients) =>
+                  sortedProjects.zip(clients).map { case (projects, clients) =>
                     projects.map { case (projectUrl, _) =>
                       val data = clients.foldLeft((0, 0, 0D)) { case (x@(done, size, time), data) =>
                         data._2.details.now.map { details =>

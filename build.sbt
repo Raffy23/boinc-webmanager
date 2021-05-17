@@ -1,11 +1,13 @@
-import sbtbuildinfo.BuildInfoPlugin.autoImport.buildInfoPackage
+import java.io.{FileInputStream, FileOutputStream}
+import java.util.zip.GZIPOutputStream
+import scala.io.Source
 
 enablePlugins(GitVersioning)
 
 name := "Boinc-Webmanager"
 
-scalaVersion in ThisBuild := "2.13.1"
-scalacOptions in ThisBuild ++= Seq(
+ThisBuild / scalaVersion := "2.13.1"
+ThisBuild / scalacOptions ++= Seq(
   "-unchecked",
   "-deprecation",
   "-feature",
@@ -37,6 +39,8 @@ lazy val shared = crossProject(JSPlatform, JVMPlatform)
 lazy val sharedJVM = shared.jvm
 lazy val sharedJS  = shared.js
 
+lazy val gzip = taskKey[Unit]("GZip managed resources")
+
 lazy val serverJVM = (project in file ("jvm"))
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaServerAppPackaging)
@@ -44,15 +48,20 @@ lazy val serverJVM = (project in file ("jvm"))
   .dependsOn(sharedJVM, cssRenderer)
   .settings(
     name := "Boinc-Webmanager_server",
-    mainClass := Some("at.happywetter.boinc.WebServer"),
+    Compile / mainClass := Some("at.happywetter.boinc.WebServer"),
 
     buildInfoKeys    := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
 
-    mappings in (Compile, packageBin) ++= Seq(
-      ((resourceManaged in Compile).value / "web-root" / "boinc-webmanager_client-jsdeps.min.js") -> "web-root/boinc-webmanager_client-jsdeps.min.js",
-      ((resourceManaged in Compile).value / "web-root" / "boinc-webmanager_client-opt.js") -> "web-root/boinc-webmanager_client-opt.js"
+    (Compile / packageBin) := ((Compile / packageBin) dependsOn gzip).value,
+    Compile / packageBin / mappings ++= Seq(
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-jsdeps.min.js")    -> "web-root/boinc-webmanager_client-jsdeps.min.js",
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-opt.js")           -> "web-root/boinc-webmanager_client-opt.js",
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-jsdeps.min.js.gz") -> "web-root/boinc-webmanager_client-jsdeps.min.js.gz",
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-opt.js.gz")        -> "web-root/boinc-webmanager_client-opt.js.gz",
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-opt.js.map")       -> "web-root/boinc-webmanager_client-opt.js.map",
+      ((Compile / resourceManaged).value / "web-root" / "boinc-webmanager_client-opt.js.map.gz")    -> "web-root/boinc-webmanager_client-opt.js.map.gz",
     ),
 
     libraryDependencies ++= Seq(
@@ -84,7 +93,34 @@ lazy val serverJVM = (project in file ("jvm"))
       "org.webjars.bower"      %  "nprogress"           % "0.2.0",
       "org.webjars.npm"        %  "flag-icon-css"       % "3.5.0",
       "org.webjars.npm"        %  "purecss"             % "2.0.3"
-    )
+    ),
+
+    gzip := {
+      val logger = sLog.value
+
+      Seq(
+        "boinc-webmanager_client-jsdeps.min.js",
+        "boinc-webmanager_client-opt.js",
+        "boinc-webmanager_client-opt.js.map"
+      ).foreach { file =>
+        logger.info(s"gzipping managed resource: ${(Compile / resourceManaged).value / "web-root" / file}")
+
+        val in  = new FileInputStream((Compile / resourceManaged).value / "web-root" / file)
+        val out = new FileOutputStream((Compile / resourceManaged).value / "web-root" / (file + ".gz"))
+        val gzipOut = new GZIPOutputStream(out, 4096)
+
+        val buffer = new Array[Byte](4096)
+        Iterator
+          .continually(in.read(buffer))
+          .takeWhile(_ != -1)
+          .foreach(read => gzipOut.write(buffer,0,read))
+
+        gzipOut.finish()
+        gzipOut.close()
+        out.close()
+        in.close()
+      }
+    }
   )
 
 lazy val clientJS = (project in file ("js"))
@@ -94,15 +130,15 @@ lazy val clientJS = (project in file ("js"))
   .dependsOn(sharedJS, clientCssJS)
   .settings(
     name := "Boinc-Webmanager_client",
-    mainClass := Some("at.happywetter.boinc.web.Main"),
+    Compile / mainClass := Some("at.happywetter.boinc.web.Main"),
 
     buildInfoKeys    := Seq[BuildInfoKey](version, scalaVersion, sbtVersion, git.gitCurrentBranch),
     buildInfoPackage := "at.happywetter.boinc",
     buildInfoOptions += BuildInfoOption.BuildTime,
 
     // Publish fullOpt + dependencies directly to managed resource directory of the server
-    crossTarget in fullOptJS in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
-    crossTarget in packageMinifiedJSDependencies in Compile := ((resourceManaged in serverJVM in Compile).value / "web-root"),
+    Compile / fullOptJS / crossTarget                     := (serverJVM / Compile / resourceManaged).value / "web-root",
+    Compile / packageMinifiedJSDependencies / crossTarget := (serverJVM / Compile / resourceManaged).value / "web-root",
 
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom"       % "1.0.0",
