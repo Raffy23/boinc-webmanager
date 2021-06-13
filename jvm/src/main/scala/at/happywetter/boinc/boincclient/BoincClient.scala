@@ -341,7 +341,6 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
 
   private def logTrace(msg: String): IO[Unit] = IO { logger.trace(s"[$address:$port]: " + msg) }
 
-  // TODO: Implement AppConfig XML parsing
   override def getAppConfig(url: String): IO[AppConfig] =
     logTrace(s"Getting app_config.xml for $url") *>
     this.execAction(

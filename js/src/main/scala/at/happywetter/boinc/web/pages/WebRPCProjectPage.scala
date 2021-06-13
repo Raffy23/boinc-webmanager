@@ -16,6 +16,7 @@ import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLSelectElement
+import at.happywetter.boinc.web.util.RichRx._
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -33,7 +34,7 @@ object WebRPCProjectPage extends Layout {
   override val path: String = "project_overview"
 
   private val projects: Var[Map[String, String]] = Var(Map.empty)
-  private val currentSelection: Var[Option[Either[ServerStatus, Exception]]] = Var(None)
+  private val currentSelection: Var[Option[(String, Either[ServerStatus, Exception])]] = Var(None)
   private val selectorPlaceholder: Var[String] = Var("fetching_projects".localize)
 
   private var currentRequest: Option[FetchRequest[ServerStatus]] = None
@@ -53,17 +54,45 @@ object WebRPCProjectPage extends Layout {
   override def onRender(): Unit = {
     DashboardMenu.selectByMenuId("dashboard_webrpc")
 
+    ClientManager
+      .queryCompleteProjectList()
+      .foreach(projects => {
+        this.projects := projects.map { case (_, project) => (removeTrailingSlash(project.url), project.name) }
+        this.selectorPlaceholder := "project_new_default_select".localize
+
+        NProgress.done(true)
+      })
+  }
+
+  private def filterDuplicateHttpEntries(projects: Map[String, String]): Map[String, String] = {
+    projects.filter { case (url, _) =>
+      !(url.startsWith("http") && projects.contains("https" + url.drop(4)))
+    }
+  }
+
+  private def removeTrailingSlash(url: String): String = {
+    if (url.last == '/') url.dropRight(1) else url
+  }
+
+  private def loadProjectsFromClients(): Unit = {
+    NProgress.start()
+    selectorPlaceholder := "fetching_projects".localize
+
     ClientManager.getClients.foreach(clients => {
       Future.sequence(
         clients.map(client =>
           client
             .asQueryOnlyHealthy()
             .getProjects
-            .map(_.map(p => (p.url, p.name)))
+            .map(_.map(p => (removeTrailingSlash(p.url), p.name)))
             .recover { case _: Exception => List.empty }
         )
       ).foreach { projects =>
-        this.projects := projects.flatten.toMap
+        this.projects.update { map =>
+          filterDuplicateHttpEntries(
+            map ++ projects.flatten.toMap
+          )
+        }
         this.selectorPlaceholder := "project_new_default_select".localize
 
         NProgress.done(true)
@@ -107,7 +136,7 @@ object WebRPCProjectPage extends Layout {
   override def render: Elem =
     <div id="project_overview">
 
-      <div class={FloatingMenu.root.htmlClass} style="border-left:solid 1px #AAA;border-right:solid 1px #AAA;border-top:solid 1px #AAA;margin-top:-6px">
+      <div class={FloatingMenu.root.htmlClass} style="display:flex;border-left:solid 1px #AAA;border-right:solid 1px #AAA;border-top:solid 1px #AAA;margin-top:-9px">
         {
           <select class={LoginPageStyle.input.htmlClass} style="margin:0" id="project" onchange={jsOnChangeListener}>
             <option disabled={true} selected="selected">{selectorPlaceholder}</option>
@@ -116,6 +145,10 @@ object WebRPCProjectPage extends Layout {
             }
           </select>
         }
+
+        <a class={FloatingMenu.active.htmlClass} style="max-width:max-content" href="#loadAll" onclick={_: Event => loadProjectsFromClients()}>
+          {"load_from_clients".localize}
+        </a>
       </div>
 
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>
@@ -126,13 +159,21 @@ object WebRPCProjectPage extends Layout {
       {
         currentSelection.map {
           case None => <br/>
-          case Some(Right(ex)) =>
+          case Some((selectedURL, Right(ex))) =>
             <div>
+                <div>
+                  <b>{"project".localize}:</b>{projects.now.get(selectedURL)}<br/>
+                  <b>{"project_url".localize}:</b>{selectedURL}
+                </div>
                 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
                 <b>{"webrpc_could_not_load_project_status".localize}</b>
             </div>
-          case Some(Left(status)) =>
+          case Some((selectedURL, Left(status))) =>
             <div>
+              <div>
+                <b>{"project".localize}:</b>{projects.now.get(selectedURL)}<br/>
+                <b>{"project_url".localize}:</b>{selectedURL}
+              </div>
               <h3>{"daemon_status".localize}</h3>
               { convertDaemonStatus(status) }
 
@@ -142,6 +183,7 @@ object WebRPCProjectPage extends Layout {
               <h3>{"database_status".localize}</h3>
               { convertDBStatus(status) }
 
+              <br/>
             </div>
         }
       }
@@ -153,12 +195,13 @@ object WebRPCProjectPage extends Layout {
     currentSelection := None
     currentRequest.foreach(_.controller.abort())
 
-    val resp = FetchHelper.getCancelable[ServerStatus](uri(event.target.asInstanceOf[HTMLSelectElement].value))
+    val selectedURL = event.target.asInstanceOf[HTMLSelectElement].value
+    val resp = FetchHelper.getCancelable[ServerStatus](uri(selectedURL))
     currentRequest = Some(resp)
 
     resp.future.map { status =>
       currentRequest = None
-      currentSelection := Some(Left(status))
+      currentSelection := Some((selectedURL, Left(status)))
       NProgress.done(true)
     }.recover {
       case _: js.JavaScriptException =>
@@ -167,7 +210,7 @@ object WebRPCProjectPage extends Layout {
 
       case ex: Exception =>
         NProgress.done(true)
-        currentSelection := Some(Right(ex))
+        currentSelection := Some((selectedURL, Right(ex)))
     }
 
   }
