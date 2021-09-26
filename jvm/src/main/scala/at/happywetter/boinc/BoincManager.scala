@@ -1,21 +1,20 @@
 package at.happywetter.boinc
 
-import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.{ConcurrentLinkedQueue, ScheduledExecutorService, TimeUnit}
-
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.BoincManager.{AddedBy, AddedByConfig, AddedByDiscovery, AddedByUser, BoincClientEntry}
+import at.happywetter.boinc.BoincManager._
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.rpc.HostDetails
-import at.happywetter.boinc.util.{IP, Logger, PooledBoincClient}
-import cats.effect.{Blocker, ContextShift, IO, Resource}
+import at.happywetter.boinc.util.{Logger, Observer, PooledBoincClient}
+import cats.data.OptionT
+import cats.effect.{IO, Ref, Resource, Spawn}
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import cats.implicits._
 
 /**
   * Created by: 
@@ -30,17 +29,40 @@ object BoincManager {
   object AddedByDiscovery extends AddedBy
   object AddedByUser extends AddedBy
 
-  private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, var lastUsed: Long)
+  private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, finalizer: IO[Unit], var lastUsed: Long)
 
-  def apply(config: Config, db: Database, blocker: Blocker)(implicit scheduler: ScheduledExecutorService, cS: ContextShift[IO]): Resource[IO, BoincManager] =
-    Resource.fromAutoCloseable(
-      IO.pure(new BoincManager(config.boinc.connectionPool, config.boinc.encoding, blocker)).map { hostManager =>
-        config.boinc.hosts.foreach(hostManager.add)
-        config.hostGroups.foreach{ case (group, hosts) => hostManager.addGroup(group, hosts)}
+  private val timeout        =  5 minutes
+  private val deathCollector = 30 minutes
+  private val healthTimeout  = 14 minutes
 
-        import monix.execution.Scheduler.Implicits.global
-        db.clients.queryAll().runSyncUnsafe().foreach(coreClient => {
-          hostManager.add(
+  def apply(config: Config, db: Database): Resource[IO, BoincManager] = for {
+
+    observer <- Observer.unbounded[BoincManager]
+    manager <- Resource.make(
+      for {
+
+        logger      <- Slf4jLogger.fromClass[IO](BoincManager.getClass)
+        hostManager <- IO { new BoincManager(config.boinc.connectionPool, observer, logger) }
+
+        /* Initialize the manager from the config */
+        _ <- config.boinc.hosts.map(hostManager.add).toList.sequence_
+        _ <- config.hostGroups.map { case (group, hosts) => hostManager.addGroup(group, hosts) }.toList.sequence_
+
+      } yield hostManager
+    )(_.close())
+
+    /* Start all background tasks for the manager */
+    _ <- Spawn[IO].background[Nothing](manager.autoCloser)
+    _ <- Spawn[IO].background[Nothing](manager.connectionCloser)
+
+
+    /* Initialize the manager with all the clients that are stored in the DB
+     * do this lazily in the background so we don't block the creation ...
+     */
+    _ <- Spawn[IO].background(
+      db.clients.queryAll().map { coreClients =>
+        coreClients.foreach { coreClient =>
+          manager.add(
             coreClient.name,
             coreClient.address, coreClient.port, coreClient.password,
             coreClient.addedBy match {
@@ -48,165 +70,260 @@ object BoincManager {
               case CoreClient.ADDED_BY_USER      => AddedByUser
             }
           )
-        })
-
-        hostManager
+        }
       }
     )
+  } yield manager
 
 }
-class BoincManager(poolSize: Int, encoding: String, blocker: Blocker)(implicit val scheduler: ScheduledExecutorService, cS: ContextShift[IO]) extends Logger with AutoCloseable {
 
-  // TODO: make these variable configurable ...
-  private val timeout        = 5 minutes
-  private val deathCollector = 30 minutes
-  private val healthTimeout  = 14 minutes
-  private val boincClients = new TrieMap[String, BoincClientEntry]()
-  private val clientGroups = new TrieMap[String, ListBuffer[String]]()
+class BoincManager private (poolSize: Int, val changeListener: Observer[BoincManager], logger: SelfAwareStructuredLogger[IO]) extends Logger {
 
-  private val version = new AtomicLong(0L)
-  val versionChangeListeners = new ConcurrentLinkedQueue[BoincManager => Unit]()
+  private val boincClients: Ref[IO, Map[String, BoincClientEntry]] = Ref.unsafe(Map.empty)
+  private val clientGroups: Ref[IO, Map[String, ListBuffer[String]]] = Ref.unsafe(Map.empty)
+  private val version: Ref[IO, Long] = Ref.unsafe(0L)
 
   // Close connections periodically
-  private val autoCloser = scheduler.scheduleWithFixedDelay(() => {
-    val curTime = System.currentTimeMillis() - timeout.toMillis
+  private val autoCloser: IO[Nothing] =
+    IO
+      .sleep(timeout)
+      .flatMap { _ =>
+        import cats.implicits._
 
-    boincClients.foreach { case (name, BoincClientEntry(client, _, time)) =>
-      if (time < curTime && client.hasOpenConnections) {
-        LOG.info("Close Socket Connection from " + name)
-        client.closeOpen(timeout.toMillis)
+        val curTime = System.currentTimeMillis() - timeout.toMillis
+        boincClients.get.flatMap {
+          _.map {
+            case (name, BoincClientEntry(client, _, _, time)) =>
+              client
+                .hasOpenConnections
+                .map(_ && time < curTime)
+                .ifM(
+                  logger.info("Close Socket Connection from " + name) *>
+                  client.close(),
+                  IO.unit
+                )
+          }
+          .toList
+          .sequence
+        }
       }
-    }
-  }, timeout.toMinutes, timeout.toMinutes, TimeUnit.MINUTES )
+      .foreverM
 
   // Throw out all dead boinc core clients
-  private val connectionCloser = scheduler.scheduleWithFixedDelay(() => {
-    var somethingChanged = false
-    boincClients.foreach {
-      case (name, BoincClientEntry(client, AddedByConfig, _)) =>
-        if (!client.hasOpenConnections && client.deathCounter.get() > 10) {
-          LOG.info(s"Client '$name' does have over ${client.deathCounter.get()} errored connections, not removing added by config ...")
-        }
+  private val connectionCloser =
+    IO
+      .sleep(deathCollector)
+      .flatMap { _ =>
+        import cats.implicits._
 
-      case (name, BoincClientEntry(client, AddedByDiscovery, _)) =>
-        if (!client.hasOpenConnections && client.deathCounter.get() > 10) {
-          client.checkConnection().map(isAvailable => if (!isAvailable) {
-            LOG.info(s"Removing client '$name', has ${client.deathCounter.get()} errored connections and can't be reached!")
-            boincClients.remove(name)
+        boincClients.get.flatMap(_
+          .map {
+            case (name, BoincClientEntry(client, AddedByConfig, _, _)) =>
+              client
+                .hasOpenConnections
+                .both(client.deathCounter.get)
+                .map { case (openConnections, deathCounter) => !openConnections && deathCounter > 10 }
+                .ifM(
+                  logger.info(s"Client '$name' does have over ___ errored connections, not removing added by config ...")
+                  ,
+                  IO.unit
+                ).map(_ => false)
 
-            somethingChanged = true
-          })
-        }
-    }
+            case (name, BoincClientEntry(client, AddedByDiscovery, _, _)) =>
+              client
+                .hasOpenConnections
+                .both(client.deathCounter.get)
+                .map { case (openConnections, deathCounter) => !openConnections && deathCounter > 10 }
+                .ifM(
+                  logger.info(s"Removing client '$name', has ___ errored connections and can't be reached!") *>
+                  boincClients.update(_ - name) *>
+                  IO.pure(true)
+                  ,
+                  IO.pure(false)
+                )
+          }.toList
+           .sequence
+        )
+        .map(_.find(identity).getOrElse(false))
+        .ifM(
+          IO { updateVersion() },
+          IO.unit
+        )
+      }
+      .foreverM
 
-    if (somethingChanged)
-      updateVersion()
+  def get(name: String): OptionT[IO, PooledBoincClient] =
+    OptionT(boincClients.get.map(_.get(name)))
+      .map { entry =>
+        entry.lastUsed = System.currentTimeMillis()
+        entry.client
+      }
 
-  }, deathCollector.toMinutes, deathCollector.toMinutes, TimeUnit.MINUTES)
-
-  private val healthChecker = scheduler.scheduleWithFixedDelay(() => {
-    boincClients.values.map(entry =>
-      cS.blockOn(blocker)(entry.client.checkConnection()).unsafeRunAsyncAndForget()
-    )
-  }, (1 minutes).toMinutes, healthTimeout.toMinutes, TimeUnit.MINUTES)
-
-  def get(name: String): Option[PooledBoincClient] = {
-    // Update time only if Client exists
-    if (boincClients.contains(name) )
-      boincClients(name).lastUsed = System.currentTimeMillis()
-
-    boincClients.get(name).map(_.client)
-  }
-
-  def add(name: String, client: PooledBoincClient, addedBy: AddedBy): Unit = {
-    if (!boincClients.contains(name)) {
-
-      LOG.debug(s"Adding new client $name")
-      boincClients += (name -> BoincClientEntry(client, addedBy, System.currentTimeMillis()))
-
-      updateVersion()
-    }
-  }
-
-  def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): Unit =
-    add(name, new PooledBoincClient(poolSize, address, port, password, encoding, blocker), addedBy)
-
-  protected def add(name: String, host: AppConfig.Host): Unit =
-    add(name, new PooledBoincClient(poolSize, host.address, host.port, host.password, encoding, blocker), AddedByConfig)
-
-  protected def add(config: (String, AppConfig.Host)): Unit = add(config._1, config._2)
-
-  def getAllHostNames: Seq[String] = boincClients.keys.toSeq
-
-  protected def destroy(): Unit = boincClients.foreach { case (_, BoincClientEntry(client, _, _)) => client.closeAll() }
-
-  def queryDeathCounter: Map[String, Int] =
-    boincClients.map { case (name, BoincClientEntry(client, _, _)) => (name, client.deathCounter.get()) }.toMap
-
-  def checkHealth: IO[Map[String, Boolean]] = {
-    import cats.implicits._
-
+  def add(name: String, client: Resource[IO, PooledBoincClient], addedBy: AddedBy): IO[Unit] = {
     boincClients
-      .map{ case(name, BoincClientEntry(client, _, _)) => client.checkConnection().map(state => (name, state))}
-      .toList
-      .sequence
-      .map(_.toMap)
+      .get
+      .map(_.contains(name))
+      .ifM(
+        IO.unit,
+        client
+          .allocated
+          .flatMap { case (client, finalizer) =>
+            boincClients.update(_ + (name -> BoincClientEntry(client, addedBy, finalizer, System.currentTimeMillis())))
+          } *>
+        updateVersion()
+      )
   }
 
-  def getAddresses: List[(String, Int)] = boincClients.values.map{ case BoincClientEntry(client, _, _) => (client.address, client.port)}.toList
+  def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): IO[Unit] =
+    add(name, PooledBoincClient(poolSize, address, port, password), addedBy)
 
-  def getGroups: TrieMap[String, ListBuffer[String]] = clientGroups
+  protected def add(name: String, host: AppConfig.Host): IO[Unit] =
+    add(name, PooledBoincClient(poolSize, host.address, host.port, host.password), AddedByConfig)
 
-  def getSerializableGroups: Map[String, List[String]] = getGroups.map{ case (key, value) => (key, value.toList)}.toMap
+  protected def add(config: (String, AppConfig.Host)): IO[Unit] =
+    add(config._1, config._2)
 
-  def getDetailedHosts: List[HostDetails] = boincClients.map { case (name, entry) =>
-    HostDetails(
-      name,
-      entry.client.address,
-      entry.client.port,
-      entry.client.password,
-      entry.addedBy match {
-        case AddedByDiscovery => "added_by_discovery"
-        case AddedByConfig    => "added_by_config"
-        case AddedByUser      => "added_by_user"
-      },
-      entry.client.deathCounter.get()
+
+  def getAllHostNames: IO[Seq[String]] = boincClients.get.map(_.keys.toSeq)
+
+  def queryDeathCounter: IO[Map[String, Int]] = {
+    boincClients
+      .get
+      .flatMap { clients =>
+        clients
+          .map { case (name, BoincClientEntry(client, _, _, _)) => client.deathCounter.get.map(c => (name, c)) }
+          .toList
+          .sequence
+          .map(_.toMap)
+      }
+  }
+
+  def getAddresses: IO[List[(String, Int)]] = {
+    boincClients
+      .get
+      .map(_
+        .values
+        .map{ case BoincClientEntry(client, _, _, _) => (client.details.address, client.details.port) }
+        .toList
+      )
+  }
+
+  def getGroups: Ref[IO, Map[String, ListBuffer[String]]] = clientGroups
+
+  def getSerializableGroups: IO[Map[String, List[String]]] =
+    clientGroups
+      .get
+      .map(_
+        .map { case (key, value) => (key, value.toList)}.toMap
+      )
+
+  def getDetailedHosts: IO[List[HostDetails]] =
+    boincClients
+      .get
+      .flatMap(_
+        .map { case (name, entry) =>
+          entry
+            .client
+            .deathCounter
+            .get
+            .map(deathCounter =>
+              HostDetails(
+                name,
+                entry.client.details.address,
+                entry.client.details.port,
+                entry.client.details.password,
+                entry.addedBy match {
+                  case AddedByDiscovery => "added_by_discovery"
+                  case AddedByConfig    => "added_by_config"
+                  case AddedByUser      => "added_by_user"
+                },
+                deathCounter
+              )
+            )
+        }.toList
+         .sequence
     )
-  }.toList
 
-  def addToGroup(group: String, hostname: String): Unit = {
-    clientGroups.getOrElseUpdate(group, ListBuffer.empty) += hostname
+  def addToGroup(group: String, hostname: String): IO[Unit] = {
+    clientGroups.update(groups =>
+      if (groups.contains(group)) {
+        groups(group) += hostname
+        groups
+
+      } else {
+        groups + (group -> ListBuffer(hostname))
+      }
+    ) *>
     updateVersion()
   }
 
-  def removeFromGroup(group: String, hostname: String): Unit = {
-    clientGroups.getOrElseUpdate(group, ListBuffer.empty) -= hostname
-    updateVersion()
+  def removeFromGroup(group: String, hostname: String): IO[Unit] = {
+    clientGroups
+      .get
+      .map(_.contains(group))
+      .ifM(
+        clientGroups.update { map =>
+          map(group) -= hostname
+          map
+        } *>
+        updateVersion()
+        ,
+        IO.unit
+      )
   }
 
-  def addGroup(group: String, hosts: List[String]): Unit = {
-    clientGroups.getOrElseUpdate(group, new ListBuffer[String]()) ++= hosts
-    updateVersion()
+  def addGroup(group: String, hosts: List[String]): IO[Unit] = {
+    clientGroups
+      .get
+      .map(_.contains(group))
+      .ifM(
+        clientGroups.update { map =>
+          map(group) ++= hosts
+          map
+        }
+        ,
+        clientGroups.update { map =>
+          val buffer = new ListBuffer[String]()
+          buffer ++= hosts
+
+          map + (group -> buffer)
+        }
+      ) *>
+      updateVersion()
   }
 
-  def remove(name: String): Unit = {
-    boincClients.remove(name).foreach(_.client.closeAll())
-    clientGroups.keys.foreach(removeFromGroup(_, name))
-    updateVersion()
+  def remove(name: String): IO[Unit] = {
+    boincClients
+      .get
+      .map(_.contains(name))
+      .ifM(
+        boincClients
+          .getAndUpdate(_ - name)
+          .map(_(name))
+          .flatMap { client =>
+            client.finalizer
+          } *>
+          updateVersion()
+        ,
+        IO.unit
+      )
   }
 
-  def getVersion: Long = version.get()
+  def getVersion: IO[Long] = version.get
 
-  private def updateVersion(): Unit = {
-    version.set(System.currentTimeMillis())
-    versionChangeListeners.forEach(_(this))
+  private def updateVersion(): IO[Unit] = {
+    version.set(System.currentTimeMillis()) *>
+    changeListener.enqueue(this)
   }
 
-  override def close(): Unit = {
-    autoCloser.cancel(false)
-    connectionCloser.cancel(false)
-    healthChecker.cancel(false)
-    destroy()
+  def close(): IO[Unit] = {
+    boincClients
+      .get
+      .flatMap(_
+        .map { case (_, BoincClientEntry(_, _, finalizer, _)) => finalizer }
+        .toList
+        .sequence_
+      )
   }
 
 }

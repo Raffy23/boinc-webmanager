@@ -44,7 +44,7 @@ object LanguageService extends ResponseEncodingHelper {
       case request @ GET -> Root / lang if  langETags.contains(lang) => OkWithEtag(load(lang), langETags(lang), request)
       case request @ GET -> Root / lang if !langETags.contains(lang) => NotFound()
     },
-    isZippable = (response: Response[IO]) => response.headers.get(`Content-Length`).exists(_.value.toInt > 1024)
+    isZippable = (response: Response[IO]) => response.headers.get[`Content-Length`].exists(_.length > 1024)
   )
 
   private def load(lang: String): Map[String, String] = {

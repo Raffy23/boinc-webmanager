@@ -1,6 +1,6 @@
 package at.happywetter.boinc.server
 
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.IO
 import org.http4s.dsl.io._
 import org.http4s.headers.Location
 import org.http4s.{HttpRoutes, Response, StaticFile, Uri}
@@ -22,7 +22,7 @@ object SwaggerRoutes {
       .getOrElse(NotFound())
   }
 
-  def apply(blocker: Blocker)(implicit cS: ContextShift[IO]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case path@GET -> Root =>
       val queryParameters = Map("url" -> Seq("swagger-config.yaml"))
@@ -34,13 +34,13 @@ object SwaggerRoutes {
 
     case GET -> Root / file ~ "yaml" =>
       StaticFile
-        .fromResource[IO](s"/swagger/$file.yaml", blocker)
+        .fromResource[IO](s"/swagger/$file.yaml")
         .getOrElseF(NotFound())
 
     case GET -> Root / file =>
       val filePath = s"/META-INF/resources/webjars/swagger-ui/3.25.0/$file"
       StaticFile
-        .fromResource[IO](filePath, blocker)
+        .fromResource[IO](filePath)
         .getOrElseF(NotFound())
 
   }

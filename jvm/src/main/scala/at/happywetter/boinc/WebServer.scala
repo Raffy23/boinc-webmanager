@@ -2,20 +2,16 @@ package at.happywetter.boinc
 
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.util.IOAppTimer.scheduler
 import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
-import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, IOAppTimer, Logger}
+import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, Logger}
 import cats.effect._
-import org.http4s.blaze.channel.ChannelOptions
-import org.http4s.{HttpRoutes, Response}
+import org.http4s.HttpRoutes
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
-import org.http4s.headers.`Content-Length`
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.blaze._
 import org.http4s.server.middleware.GZip
 
-import java.net.SocketOptions
 import scala.io.StdIn
 
 /**
@@ -48,8 +44,8 @@ object WebServer extends IOApp with Logger {
   // Create top level routes
   // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware so they are outside /api for now ...
   private def routes(hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database) = Router(
-    "/"              -> GZip(WebResourcesRoute(config, this.contextShift)),
-    "/swagger"       -> SwaggerRoutes(IOAppTimer.blocker),
+    "/"              -> GZip(WebResourcesRoute(config)),
+    "/swagger"       -> SwaggerRoutes(),
     "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
     "/webrpc"        -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
     "/hardware"      -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
@@ -60,16 +56,16 @@ object WebServer extends IOApp with Logger {
 
   override def run(args: List[String]): IO[ExitCode] = {
     LOG.info("Boinc-Webmanager: current Version: " + BuildInfo.version)
-    LOG.info(s"Using scheduler with ${IOAppTimer.cores} cores as pool size")
+    LOG.info(s"Using scheduler with ${Runtime.getRuntime.availableProcessors} cores as pool size")
 
     (for {
       database    <- Database()
       xmlPStore   <- XMLProjectStore(database, config)
-      hostManager <- BoincManager(config, database, IOAppTimer.blocker)
+      hostManager <- BoincManager(config, database)
 
       // TODO: for Linux with systemd privileged socket can be inherited,
       //       how to convince Blaze to use it?
-      webserver   <- BlazeServerBuilder[IO](IOAppTimer.defaultExecutionContext)
+      webserver   <- BlazeServerBuilder[IO]
                         .enableHttp2(false) // Can't use web sockets if http2 is enabled (since 0.21.0-M2)
                         .withOptionalSSL(config)
                         .bindHttp(config.server.port, config.server.address)
@@ -86,13 +82,10 @@ object WebServer extends IOApp with Logger {
       ).as(ExitCode.Success)
   }
 
-  private val serviceMode = IO { println("Running in service mode, waiting for signal ...") } *> IO.never
-  private val interactive = IO.async[Unit] { resolve =>
-    println("Press ENTER to exit the server ...")
-    StdIn.readLine()
-
-    scheduler.shutdownNow()
-    resolve(Right(()))
+  private val serviceMode = IO.println("Running in service mode, waiting for signal ...") *> IO.never
+  private val interactive = {
+    IO.println("Press ENTER to exit the server ...") *>
+    IO.readLine
   }
 
 }

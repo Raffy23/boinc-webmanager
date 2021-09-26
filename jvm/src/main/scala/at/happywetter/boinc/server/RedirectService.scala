@@ -17,7 +17,7 @@ object RedirectService {
 
   def apply(config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case request =>
-      request.headers.get(Host) match {
+      request.headers.get[Host] match {
         case Some(Host(host, _)) => MovedPermanently(buildUri(request, host, config.server.port))
         case _ => BadRequest()
       }

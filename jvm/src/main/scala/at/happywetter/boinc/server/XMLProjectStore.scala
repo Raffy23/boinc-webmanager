@@ -6,13 +6,10 @@ import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.Database
 import at.happywetter.boinc.dto.DatabaseDTO.Project
 import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
-import at.happywetter.boinc.util.IOAppTimer
 import cats.effect._
-import cats.effect.concurrent._
+import cats.effect.unsafe.implicits.global
 
 import scala.xml.XML
-import monix.execution.Scheduler.Implicits.global
-
 import java.security.MessageDigest
 
 
@@ -22,7 +19,7 @@ import java.security.MessageDigest
   * @author Raphael
   * @version 10.08.2017
   */
-class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
+class XMLProjectStore(db: Database) {
 
   private val projects = new AtomicReference[Map[String, BoincProjectMetaData]](Map.empty)
 
@@ -62,29 +59,29 @@ class XMLProjectStore(db: Database)(implicit contextShift: ContextShift[IO]) {
 
 object XMLProjectStore {
 
-  def apply(db: Database, config: Config)(implicit contextShift: ContextShift[IO]): Resource[IO, XMLProjectStore] =
-    Resource.liftF(IO
-      .pure(new XMLProjectStore(db))
-      .flatMap { projectStore =>
+  def apply(db: Database, config: Config): Resource[IO, XMLProjectStore] =
+    Resource.eval(
+      IO
+        .pure(new XMLProjectStore(db))
+        .flatMap { projectStore =>
 
-        // Read projects from projects.xml in the background
-        contextShift.blockOn(IOAppTimer.blocker)(IO {
-          projectStore.projects.updateAndGet(_ ++
-            (XML.loadFile(new File(config.boinc.projects.xmlSource)) \ "project").map(node =>
-              (node \ "name").text ->
-                BoincProjectMetaData(
-                  (node \ "name").text,
-                  (node \ "url").text,
-                  (node \ "general_area").text,
-                  (node \ "specific_area").text,
-                  (node \ "description").text,
-                  (node \ "home").text,
-                  (node \ "platforms" \ "name").theSeq.map(name => name.text).toList
-                )
-            ).toMap
-          )
-        }
-        ) *>
+          // Read projects from projects.xml in the background
+          IO.blocking {
+            projectStore.projects.updateAndGet(_ ++
+              (XML.loadFile(new File(config.boinc.projects.xmlSource)) \ "project").map(node =>
+                (node \ "name").text ->
+                  BoincProjectMetaData(
+                    (node \ "name").text,
+                    (node \ "url").text,
+                    (node \ "general_area").text,
+                    (node \ "specific_area").text,
+                    (node \ "description").text,
+                    (node \ "home").text,
+                    (node \ "platforms" \ "name").theSeq.map(name => name.text).toList
+                  )
+              ).toMap
+            )
+          } *>
         projectStore.importFrom(config).map(_ => projectStore)
       }
     )

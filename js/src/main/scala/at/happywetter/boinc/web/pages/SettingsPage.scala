@@ -39,7 +39,7 @@ object SettingsPage extends Layout {
           <tbody>
             <tr><td><b>{"verion".localize}</b></td><td>{BuildInfo.version}</td></tr>
             <tr><td><b>{"git_branch".localize}</b></td><td>{BuildInfo.gitCurrentBranch}</td></tr>
-            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis).toLocaleDateString()}</td></tr>
+            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis.toDouble).toLocaleDateString()}</td></tr>
             <tr><td><b>{"scala_version".localize}</b></td><td>{BuildInfo.scalaVersion}</td></tr>
           </tbody>
         </table>

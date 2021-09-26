@@ -15,7 +15,7 @@ package object websocket {
   object SubscribeToGroupChanges extends WebSocketMessage
   object UnsubscribeToGroupChanges extends WebSocketMessage
 
-  case class HostInformationChanged(hosts: List[String], groups: Map[String, List[String]]) extends WebSocketMessage
+  case class HostInformationChanged(hosts: Seq[String], groups: Map[String, List[String]]) extends WebSocketMessage
 
   object ACK extends WebSocketMessage
   object NACK extends WebSocketMessage

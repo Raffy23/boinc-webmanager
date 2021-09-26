@@ -1,21 +1,26 @@
 package at.happywetter.boinc.boincclient
 
-import java.io.InputStream
-import java.net.{InetAddress, Socket}
-import java.util.concurrent.locks.{ReentrantLock, StampedLock}
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.boincclient.parser.AppConfigParser
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.data.Chain
+import cats.effect.{IO, Ref}
+import cats.effect.kernel.Resource
+import cats.effect.std.Semaphore
+import com.comcast.ip4s.SocketAddress
+import fs2.io.net.{Network, Socket}
+import fs2.{Chunk, text}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.{Logger, LoggerFactory}
+import com.comcast.ip4s.{Host, Port}
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import java.nio.ByteBuffer
 import scala.language.postfixOps
 import scala.xml.{NodeSeq, XML}
 
@@ -57,104 +62,107 @@ object BoincClient {
     val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
   }
 
+  def tryConnect(address: String, port: Int = 31416, password: String): Resource[IO, Option[BoincClient]] =
+    BoincClient(address, port, password)
+      .map(client => Some(client))
+      .handleErrorWith {
+        _: Throwable => Resource.pure[IO, Option[BoincClient]](Option.empty)
+      }
+
+  def apply(address: String, port: Int = 31416, password: String): Resource[IO, BoincClient] = {
+
+    for {
+      socket <- Network[IO].client(SocketAddress(Host.fromString(address).get, Port.fromInt(port).get))
+      client <- Resource.make(
+        for {
+          logger  <- Slf4jLogger.fromClass[IO](BoincClient.getClass)
+          lock    <- Semaphore[IO](1)
+          version <- Ref.of[IO, Option[BoincVersion]](Option.empty)
+
+          client <- IO { new BoincClient(socket, lock, version, logger, s"[$address:$port]: ") }
+
+          _ <- client
+            .authenticate(password)
+            .ifM(IO.unit, IO.raiseError(new RuntimeException("Unable to authenticate core client!")))
+
+          _ <- client.exchangeVersion().flatMap(v => version.set(Some(v)))
+
+        } yield client
+      )(_.close())
+
+    } yield client
+
+  }
+
 }
-class BoincClient(address: String, port: Int = 31416, password: String, encoding: String = "UTF-8")(implicit cS: ContextShift[IO], blocker: Blocker) extends BoincCoreClient[IO] with AutoCloseable {
-  var socket: Socket = _
-  var reader: InputStream = _
 
-  @volatile var authenticated = false
-  @volatile var version: Option[BoincVersion] = Option.empty
-  private val socketLock = new ReentrantLock()
+class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version: Ref[IO, Option[BoincVersion]], logger: SelfAwareStructuredLogger[IO], logHeader: String) extends BoincCoreClient[IO] {
 
-  protected val logger: Logger = LoggerFactory.getLogger(BoincClient.getClass.getCanonicalName)
+  private def sendData(data: String): IO[Unit] = IO {
+      val builder = Chunk.newBuilder[Byte]
 
-  private def connect(): Unit = {
-    this.socket = new Socket(InetAddress.getByName(address), port)
-    this.reader = this.socket.getInputStream
-  }
+      builder += Chunk.array("<boinc_gui_rpc_request>\n".getBytes())
+      builder += Chunk.array(data.getBytes())
+      builder += Chunk.array("\n</boinc_gui_rpc_request>\n".getBytes())
+      builder += Chunk.array("\u0003".getBytes())
 
-  private def sendData(data: String): Unit =
-    this.socket.getOutputStream.write(("<boinc_gui_rpc_request>\n" + data + "\n</boinc_gui_rpc_request>\n\u0003").getBytes)
-
-  private def readXML(): NodeSeq = XML.loadString(readStringFromSocket())
-  private def readHMTL(): Document =
-    Jsoup.parse(new String(readStringFromSocket().getBytes(encoding), "UTF-8"))
-
-  private def readStringFromSocket(): String = LazyList.continually(read).takeWhile(_ != '\u0003').mkString
-
-  private def read: Char = {
-    val c = reader.read()
-
-    if (c == -1) {
-      logTrace(s"Input stream seems to be closed, closing socket (${socket.getInetAddress})")
-      authenticated = false
-      socket.close()
-
-      return '\u0003'
+      builder.result
     }
-    c.toChar
-  }
+    .flatMap(socket.write)
 
-  private def doRPC[T](data: String, receiveMethod: () => T): IO[T] = cS.blockOn(blocker)(IO {
-    try {
-      socketLock.lock()
-      this.handleSocketConnection()
+  private def readXML(): IO[NodeSeq] =
+    socket
+      .reads
+      .takeWhile(_ != '\u0003')
+      .through(text.utf8.decode)
+      .compile
+      .string
+      .map(XML.loadString)
 
-      sendData(data)
-      receiveMethod()
-    } finally {
-      socketLock.unlock()
-    }
-  })
+  private def readHMTL(): IO[Document] =
+    socket
+      .reads
+      .takeWhile(_ != '\u0003')
+      .compile
+      .toVector
+      .map(vec =>
+        // TODO: Sometimes the encoding is different from different websites
+        //       not all are iso or utf8, wrongly displayed content may
+        //       be the result of this:
+        Jsoup.parse(new String(vec.toArray, "iso-8859-1"))
+      )
 
-  private def xmlRpc(data: String): IO[NodeSeq] = doRPC(data, readXML)
+  private def doRPC[T](data: String, receiveMethod: () => IO[T]): IO[T] =
+    for {
+      _      <- lock.acquire
+      _      <- sendData(data)
+      result <- receiveMethod()
+      _      <- lock.release
+    } yield result
 
+
+  private def xmlRpc(data: String): IO[NodeSeq]   = doRPC(data, readXML)
   private def htmlRpc(data: String): IO[Document] = doRPC(data, readHMTL)
 
-  @inline private def handleSocketConnection(): Unit = {
-    if (socket == null || socket.isClosed || !socket.isConnected) {
-      this.connect()
-    }
-  }
+  private def authenticate(password: String): IO[Boolean] =
+    for {
+      _      <- logTrace(s"Sending auth challenge to core client")
 
-  def authenticate(): IO[Boolean] = {
-    (for {
-      _      <- logTrace(s"Sending AUTH Challenge")
       nonce  <- xmlRpc("<auth1>").map(_ \ "nonce" text)
       result <- xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
-    } yield result).map(result => {
-      authenticated = (result \ "_").xml_==(<authorized/>)
-      logTrace(s"Client connection is${if(authenticated) "" else " *NOT* "}authenticated!")
 
-      authenticated
-    })
-  }
+      auth   <- IO { (result \ "_").xml_==(<authorized/>) }
 
-  @inline def execCommand(cmd: BoincClient.Command.Value): IO[NodeSeq] = execAction(cmd.toString)
-  @inline def execHtmlCommand(cmd: BoincClient.Command.Value): IO[Document] = execHTMLAction(cmd.toString)
+    } yield auth
 
-  @inline private def execAction(action: NodeSeq): IO[NodeSeq] = execAction(action.toString())
-  @inline private def execHTMLAction(action: NodeSeq): IO[Document] = execHTMLAction(action.toString())
+  @inline def execCommand(cmd: BoincClient.Command.Value): IO[NodeSeq] = xmlRpc(cmd.toString)
+  @inline def execHtmlCommand(cmd: BoincClient.Command.Value): IO[Document] = htmlRpc(cmd.toString)
 
-  private def executeAction[T](action: String, f: String => IO[T]): IO[T] = {
-    import cats.implicits._
-    (
-      if (!this.authenticated) {
-        authenticate().flatMap { auth =>
-          if (!auth) IO.raiseError(new RuntimeException("Not Authenticated"))
-          else exchangeVersion().whenA(version.isEmpty)
-        }
-      } else IO.unit
-    ) *> f(action)
-  }
+  @inline private def execAction(action: NodeSeq): IO[NodeSeq] = xmlRpc(action.toString())
+  @inline private def execAction(action: String): IO[NodeSeq] = xmlRpc(action)
 
-  @inline private def execAction(action: String): IO[NodeSeq] = {
-    executeAction(action, xmlRpc)
-  }
-
-  @inline private def execHTMLAction(action: String): IO[Document] = {
-    executeAction(action, htmlRpc)
-  }
+  @inline private def execHTMLAction(action: NodeSeq): IO[Document] = htmlRpc(action.toString())
+  @inline private def execHTMLAction(action: String): IO[Document] = htmlRpc(action)
 
   private def exchangeVersion(): IO[BoincVersion] = {
     import BoincClient._
@@ -220,15 +228,15 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
     ).map(_ \ "success" xml_== <success/>)
 
   override def getCCState: IO[CCState] =
-    logTrace("Get CCState from " + address + ":" + port) *>
+    logTrace("Get CCState") *>
     execCommand(BoincClient.Command.GetCCStatus).map(_ \ "cc_status" toCCState)
 
   override def getGlobalPrefsOverride: IO[GlobalPrefsOverride] =
-    logTrace("Get GlobalPrefsOverride for " + address + ":" + port) *>
+    logTrace("Get GlobalPrefsOverride for") *>
     execCommand(BoincClient.Command.GetGlobalPrefsOverride).map(_ \ "global_preferences" toGlobalPrefs)
 
   override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): IO[Boolean] =
-    logTrace("Setting GlobalPrefsOverride at " + address + ":" + port) *>
+    logTrace("Setting GlobalPrefsOverride") *>
     IO {
       println(s"<set_global_prefs_override>${globalPrefsOverride.toXML}</set_global_prefs_override>")
     } *>
@@ -323,23 +331,14 @@ class BoincClient(address: String, port: Int = 31416, password: String, encoding
       succ
     }
 
-  def isAuthenticated: Boolean = this.authenticated
+  override def getVersion: IO[BoincVersion] =
+    version.get.map(_.get)
 
-  def close(): Unit = {
-    if (socket != null && socket.isConnected) {
-      logTrace("Closing Socket").unsafeRunSync();
-      socket.close()
-    }
-
-    authenticated = false
+  def close(): IO[Unit] = {
+    socket.endOfInput.flatMap(_ => socket.endOfOutput)
   }
 
-  override def getVersion: IO[BoincVersion] = {
-    if (version.isDefined) IO.pure(version.get)
-    else getCCState.map(_ => version.get)
-  }
-
-  private def logTrace(msg: String): IO[Unit] = IO { logger.trace(s"[$address:$port]: " + msg) }
+  private def logTrace(msg: String): IO[Unit] = logger.trace(logHeader + msg)
 
   override def getAppConfig(url: String): IO[AppConfig] =
     logTrace(s"Getting app_config.xml for $url") *>

@@ -1,17 +1,13 @@
 package at.happywetter.boinc.util
 
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.atomic.AtomicInteger
-
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
-import at.happywetter.boinc.util.PooledBoincClient.ConnectionException
-import cats.effect.ExitCase.{Canceled, Completed, Error}
-import cats.effect.{Blocker, ContextShift, IO}
-
-import scala.collection.concurrent.TrieMap
+import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException}
+import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
+import cats.effect.std.Semaphore
+import cats.effect.{IO, Ref, Resource}
 
 /**
   * Created by: 
@@ -23,62 +19,113 @@ object PooledBoincClient {
 
   case class ConnectionException(e: Throwable) extends RuntimeException(e)
 
+  case class BoincClientParameters(address: String, val port: Int, password: String)
+
+  def apply(poolSize: Int, address: String, port: Int = 31416, password: String): Resource[IO, PooledBoincClient] =
+    Resource.make(
+      for {
+        lock   <- Semaphore[IO](poolSize)
+        client <- IO {
+          new PooledBoincClient(lock, BoincClientParameters(address, port, password))
+        }
+      } yield client
+    )(_.close())
+
 }
-class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, val password: String, encoding: String, blocker: Blocker)(implicit cS: ContextShift[IO]) extends BoincCoreClient[IO] {
+class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientParameters) extends BoincCoreClient[IO] {
 
-  val deathCounter = new AtomicInteger(0)
+  val deathCounter: Ref[IO, Int] = Ref.unsafe(0)
 
-  private def all = lastUsed.keys.toList
-  private val lastUsed = new TrieMap[BoincClient, Long]()
-  private val pool = new LinkedBlockingDeque[BoincClient]
-  (0 to poolSize).foreach(_ => {
-    val client = new BoincClient(address, port, password, encoding)(implicitly, blocker)
+  private def all = lastUsed.get.map(_.keys.toSeq)
 
-    pool.offer(client)
-    lastUsed += (client -> 0)
-  })
+  private val lastUsed: Ref[IO, Map[BoincClient, Long]] = Ref.unsafe(Map.empty)
+  private val finalizer: Ref[IO, Map[BoincClient, IO[Unit]]] = Ref.unsafe(Map.empty)
+  private val pool: Ref[IO, List[BoincClient]] = Ref.unsafe(List.empty)
 
-  @inline private def takeConnection(): IO[BoincClient] = cS.blockOn(blocker)(IO {
-    val con = pool.takeFirst()
-    lastUsed(con) = System.currentTimeMillis()
+  private def makeConnection(): IO[BoincClient] = {
+    BoincClient(details.address, details.port, details.password)
+      .allocated
+      .flatTap { case (client, finalizer) =>
+        this.finalizer.update(_ + (client -> finalizer)) *>
+        this.lastUsed.update(_ + (client -> System.currentTimeMillis()))
+      }
+      .map(_._1)
+  }
 
-    con
-  })
+  private def takeConnection(): IO[BoincClient] =
+    for {
+
+      _   <- lock.acquire
+      con <- pool.get.flatMap {
+        case _ :: _ => pool.getAndUpdate(_.tail).map(_.head)
+        case Nil    => makeConnection()
+      }
+
+      _   <- lastUsed.update(_ + (con -> System.currentTimeMillis()))
+      _   <- lock.release
+
+    } yield con
+
 
   private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
    takeConnection().bracketCase(extractor) {
-     case (connection, Completed) => IO { pool.addFirst(connection) }
-     case (connection, Canceled)  => IO { pool.addFirst(connection) }
-     case (connection, Error(e))  => IO {
-       pool.addFirst(connection)
-       deathCounter.incrementAndGet()
+     case (connection, Succeeded(_)) => pool.update(connection :: _)
+     case (connection, Canceled())   => pool.update(connection :: _)
+     case (connection, Errored(e))   => for {
 
-       IO.raiseError(ConnectionException(e))
-     }
+       _ <- deathCounter.update(_ + 1)
+       _ <- closeConnection(connection)
+       _ <- IO.raiseError(ConnectionException(e))
+
+     } yield ()
    }
   }
 
-  def checkConnection(): IO[Boolean] =
-    connection(_.getCCState).map{_ =>
-      deathCounter.set(0)
-      true
-    }.handleErrorWith(_ => IO {
-      deathCounter.incrementAndGet()
-      false
-    })
+  private def closeConnection(connection: BoincClient): IO[Unit] = for {
+    _ <- lastUsed.update(_ - connection)
 
-  def closeAll(): Unit = all.foreach(_.close())
-  def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
-  def closeOpen(timeout: Long): Unit = {
-    val current = System.currentTimeMillis()
+    finalizer <- this.finalizer.get.map(_(connection))
+    _         <- this.finalizer.update(_ - connection)
 
-    lastUsed.foreach {
-      case (client, timestamp) if (timestamp+timeout) < current => client.close()
-      case _ => /* Do nothing ... */
-    }
+    _ <- finalizer
+
+  } yield ()
+
+  def close(): IO[Unit] = {
+    import cats.implicits._
+
+    all
+      .flatMap(_
+        .map(closeConnection)
+        .sequence
+      )
+      .void
   }
 
-  def hasOpenConnections: Boolean = all.exists(_.isAuthenticated)
+  def close(timeout: Long): IO[Unit] = {
+    import cats.implicits._
+    val current = System.currentTimeMillis()
+
+    lastUsed.get.flatMap(_
+      .map {
+        case (client, timestamp) if (timestamp+timeout) < current =>
+          for {
+            _ <- lock.acquire
+            _ <- pool.update(_.filterNot(_ == client))
+            _ <- closeConnection(client)
+            _ <- lock.release
+          } yield ()
+
+        case _ =>
+          IO.unit
+      }
+      .toList
+      .sequence
+      .void
+    )
+  }
+
+  def hasOpenConnections: IO[Boolean] = pool.get.map(_.nonEmpty)
 
   override def getTasks(active: Boolean): IO[List[Result]] = connection(_.getTasks(active))
 

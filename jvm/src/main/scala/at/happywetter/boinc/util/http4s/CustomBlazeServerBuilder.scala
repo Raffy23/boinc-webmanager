@@ -2,10 +2,10 @@ package at.happywetter.boinc.util.http4s
 
 import java.io.FileInputStream
 import java.security.KeyStore
-
 import at.happywetter.boinc.AppConfig.Config
+import org.http4s.blaze.server.BlazeServerBuilder
+
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
-import org.http4s.server.blaze.BlazeServerBuilder
 
 /**
  * Created by: 

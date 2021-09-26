@@ -29,7 +29,7 @@ object FetchHelper {
   }
 
   def hasToken: Boolean = {
-    header.get("Authorization") != null && header.get("Authorization").map(_.nonEmpty).getOrElse(false)
+    header.get("Authorization") != null && header.get("Authorization").nonEmpty
   }
 
   def get[A](uri: String)(implicit decoder: Reader[A]): Future[A] = {

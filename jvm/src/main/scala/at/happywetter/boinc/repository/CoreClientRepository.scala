@@ -3,8 +3,8 @@ package at.happywetter.boinc.repository
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.util.IP
 import cats.data.OptionT
-import io.getquill.{H2MonixJdbcContext, SnakeCase}
-import monix.eval.Task
+import cats.effect.IO
+import io.getquill.{H2JdbcContext, SnakeCase}
 
 /**
  * Created by: 
@@ -12,28 +12,34 @@ import monix.eval.Task
  * @author Raphael
  * @version 08.07.2020
  */
-class CoreClientRepository(ctx: H2MonixJdbcContext[SnakeCase]) {
-  import ctx._
+class CoreClientRepository(ctx: H2JdbcContext[SnakeCase]) {
+  import ctx.{IO => _, _}
 
-  def insert(coreClient: CoreClient): Task[Long] = run {
-    quote {
-      query[CoreClient].insert(lift(coreClient))
+  def insert(coreClient: CoreClient): IO[Long] = IO.blocking {
+    run {
+      quote {
+        query[CoreClient].insert(lift(coreClient))
+      }
     }
   }
 
-  def queryAll(): Task[List[CoreClient]] = run {
-    quote {
-      query[CoreClient]
+  def queryAll(): IO[List[CoreClient]] = IO.blocking {
+    run {
+      quote {
+        query[CoreClient]
+      }
     }
   }
 
-  def exists(name: String): Task[Boolean] = run {
-    quote {
-      query[CoreClient].filter(_.name == lift(name))
-    }.size
-  }.map(_ > 0)
+  def exists(name: String): IO[Boolean] = IO.blocking {
+    run {
+      quote {
+        query[CoreClient].filter(_.name == lift(name))
+      }.size
+    } > 0
+  }
 
-  def update(coreClient: CoreClient): Task[Long] =
+  def update(coreClient: CoreClient): IO[Long] =
     exists(coreClient.name).flatMap {
       case false => insert(coreClient)
       case _     => delete(coreClient.name).flatMap(_ => insert(coreClient))
@@ -51,18 +57,22 @@ class CoreClientRepository(ctx: H2MonixJdbcContext[SnakeCase]) {
     }
   }*/
 
-  def delete(name: String): Task[Long] = run {
-    quote {
-      query[CoreClient].filter(_.name == lift(name)).delete
+  def delete(name: String): IO[Long] = IO.blocking {
+    run {
+      quote {
+        query[CoreClient].filter(_.name == lift(name)).delete
+      }
     }
   }
 
-  def searchBy(ip: IP, port: Int): OptionT[Task, CoreClient] = OptionT(
-    run {
-      quote {
-        query[CoreClient].filter(c => c.address == lift(ip.toString) && c.port == lift(port))
-      }
-    }.map(_.headOption)
+  def searchBy(ip: IP, port: Int): OptionT[IO, CoreClient] = OptionT(
+    IO.blocking {
+      run {
+        quote {
+          query[CoreClient].filter(c => c.address == lift(ip.toString) && c.port == lift(port))
+        }
+      }.headOption
+    }
   )
 
 }

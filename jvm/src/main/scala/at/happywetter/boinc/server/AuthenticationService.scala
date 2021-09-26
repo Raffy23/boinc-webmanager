@@ -7,7 +7,6 @@ import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import org.http4s.util.CaseInsensitiveString
 
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
@@ -42,8 +41,8 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper with 
 
     case request @ GET -> Root / "refresh" =>
       request.headers.get(CIString("Authorization")).map(header => {
-        validate(header.value) match {
-          case Success(true) => Ok(refreshToken(header.value), request)
+        validate(header.head.value) match {
+          case Success(true) => Ok(refreshToken(header.head.value), request)
           case _ => encode(status = Unauthorized, body = ApplicationError("error_invalid_token"), request)
         }
 
@@ -67,7 +66,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper with 
 
   def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
     req.headers.get(CIString("Authorization")).map(header => {
-      validate(header.value.substring("Bearer ".length)) match {
+      validate(header.head.value.substring("Bearer ".length)) match {
         case Success(true)  => service(req)
         case Success(false) => denyService("error_invalid_token", req)(req)
         case Failure(ex)     =>

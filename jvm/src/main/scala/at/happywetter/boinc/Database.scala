@@ -1,12 +1,9 @@
 package at.happywetter.boinc
 
 import at.happywetter.boinc.repository.{CoreClientRepository, ProjectRepository}
-import at.happywetter.boinc.util.IOAppTimer
-import cats.effect.{ContextShift, IO, Resource}
+import cats.effect.{IO, Resource}
 import com.typesafe.config.ConfigFactory
-import io.getquill.context.monix.Runner
-import io.getquill.{H2MonixJdbcContext, SnakeCase}
-import monix.execution.Scheduler
+import io.getquill.{H2JdbcContext, SnakeCase}
 
 /**
  * Created by: 
@@ -14,25 +11,25 @@ import monix.execution.Scheduler
  * @author Raphael
  * @version 02.07.2020
  */
-class Database private (ctx: H2MonixJdbcContext[SnakeCase]) extends AutoCloseable {
+class Database private (ctx: H2JdbcContext[SnakeCase]) extends AutoCloseable {
 
   val clients  = new CoreClientRepository(ctx)
   val projects = new ProjectRepository(ctx)
+  //val jobs = ???
 
   override def close(): Unit = ctx.close()
 
 }
 object Database {
 
-  def apply()(implicit contextShift: ContextShift[IO]): Resource[IO, Database] =
-    Resource.fromAutoCloseableBlocking(IOAppTimer.blocker)(IO {
+  def apply(): Resource[IO, Database] =
+    Resource.fromAutoCloseable(IO.blocking {
       new Database(
-        new H2MonixJdbcContext(
+        new H2JdbcContext(
           SnakeCase,
           ConfigFactory
             .parseResources("database/database.conf")
-            .resolveWith(AppConfig.typesafeConfig),
-          Runner.using(Scheduler.io())
+            .resolveWith(AppConfig.typesafeConfig)
         )
       )
     })

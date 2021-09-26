@@ -12,11 +12,10 @@ import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import at.happywetter.boinc.{AppConfig, BoincManager, Database}
 import cats.effect._
+import cats.effect.unsafe.implicits.global
 import org.http4s._
 import org.http4s.dsl.io._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.util.Try
 
 /**
@@ -36,7 +35,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
 
     // Basic Meta States
     case request @ GET -> Root / "boinc"   => Ok(hostManager.getAllHostNames, request)
-    case request @ GET -> Root / "health"  => Ok(hostManager.checkHealth, request)
+ // case request @ GET -> Root / "health"  => Ok(hostManager.checkHealth, request)
     case request @ GET -> Root / "config"  => Ok(AppConfig.sharedConf, request)
     case request @ GET -> Root / "groups"  => Ok(hostManager.getSerializableGroups, request)
     case request @ GET -> Root / "version" => Ok(hostManager.getVersion, request)
@@ -44,10 +43,10 @@ object BoincApiRoutes extends ResponseEncodingHelper {
 
     // Main route for Boinc Data
     case request @ GET -> Root / "boinc" / name / action :? requestParams =>
-      hostManager.get(name).map(client => {
+      hostManager.get(name).semiflatMap(client => {
         implicit val params: Map[String, collection.Seq[String]] = requestParams
 
-        if (requestParams.contains("healthy") && client.deathCounter.get() >= 1) {
+        if (requestParams.contains("healthy") && client.deathCounter.get.unsafeRunSync() >= 1) {
           encode(RequestTimeout, ApplicationError("core_client_is_not_healthy"), request)
         } else action match {
           case "tasks" => Ok(client.getTasks(), request)
@@ -77,10 +76,10 @@ object BoincApiRoutes extends ResponseEncodingHelper {
 
           case _ => NotAcceptable()
         }
-      }).getOrElse(NotFound())
+      }).getOrElseF(NotFound())
 
     case request @ GET -> Root / "webmanager" / "dashboard" / name =>
-      hostManager.get(name).map(client => {
+      hostManager.get(name).semiflatMap(client => {
 
         Ok(
           client.getState.flatMap(state =>
@@ -91,7 +90,7 @@ object BoincApiRoutes extends ResponseEncodingHelper {
           request
         )
 
-      }).getOrElse(NotFound())
+      }).getOrElseF(NotFound())
 
     // Modification of Tasks and Projects
     case request @ POST -> Root / "boinc" / name / "tasks" / task =>
@@ -139,9 +138,9 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       })
 
     case request @ PATCH -> Root / "boinc" / name / "global_prefs_override" =>
-      hostManager.get(name).map(client => {
+      hostManager.get(name).semiflatMap(client => {
         Ok(client.readGlobalPrefsOverride, request)
-      }).getOrElse(BadRequest())
+      }).getOrElseF(BadRequest())
 
     case request @ POST -> Root / "boinc" / name / "retry_file_transfer" =>
       executeForClient[RetryFileTransferBody, Boolean](hostManager, name, request, (client, requestBody) => {
@@ -152,21 +151,19 @@ object BoincApiRoutes extends ResponseEncodingHelper {
     // Add / Remove boinc hosts
     case request @ POST -> Root / "boinc" / name =>
       request.decodeJson[AddNewHostRequestBody] { host =>
-        db.clients
-          .insert(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
-          .runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
-
-        hostManager.add(name, host.address, host.port, host.password, AddedByUser)
 
         // TODO: Implement correct state stuff ...
-        Ok(true, request)
+        Ok(
+          db.clients.insert(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER)) *>
+          hostManager.add(name, host.address, host.port, host.password, AddedByUser) *>
+          IO.pure(true),
+          request
+        )
       }
 
     case request @ PATCH -> Root / "boinc" / name =>
       request.decodeJson[AddNewHostRequestBody] { host =>
-        db.clients
-          .update(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
-          .runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
+        db.clients.update(CoreClient(name, host.address, host.port, host.password, CoreClient.ADDED_BY_USER))
 
         hostManager.remove(name)
         hostManager.add(name, host.address, host.port, host.password, AddedByUser)
@@ -180,11 +177,12 @@ object BoincApiRoutes extends ResponseEncodingHelper {
       Ok("Not Implemented", request)
 
     case request @ DELETE -> Root / "boinc" / name =>
-      db.clients.delete(name).runAsyncAndForget(monix.execution.Scheduler.Implicits.global)
-      hostManager.remove(name)
-
-      // TODO: Implement correct state stuff ...
-      Ok(true, request)
+      Ok(
+        db.clients.delete(name)  *>
+        hostManager.remove(name) *>
+        IO.pure(true),
+        request
+      )
 
 
     // More details
@@ -205,11 +203,13 @@ object BoincApiRoutes extends ResponseEncodingHelper {
   }
 
   private def executeForClient[IN, OUT](hostManager: BoincManager, name: String, request: Request[IO], f: (PooledBoincClient, IN) => IO[OUT])(implicit decoder: upickle.default.Reader[IN], encoder: upickle.default.Writer[OUT]): IO[Response[IO]] = {
-    hostManager.get(name).map(client => {
-      request.decodeJson[IN]{ requestBody =>
-        Ok(f(client, requestBody), request)
-      }
-    }).getOrElse(BadRequest())
+    hostManager
+      .get(name)
+      .semiflatMap(client =>
+        request.decodeJson[IN]{ requestBody =>
+          Ok(f(client, requestBody), request)
+        }
+      ).getOrElseF(BadRequest())
   }
 
 }
