@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
 import at.happywetter.boinc.web.boincclient.{ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.AppCSSRegistry
 import at.happywetter.boinc.web.pages._
@@ -13,6 +14,7 @@ import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, LanguageDataProvider, ServerConfig}
 import org.scalajs.dom
 
+import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.util.Try
 
@@ -26,7 +28,18 @@ import scala.util.Try
 object Main {
 
   @JSExport
+  @Deprecated
   def launch(): Unit = main(Array.empty)
+
+  @JSExport
+  def launch(config: js.Dynamic): Unit = {
+    ServerConfig.config := ServerSharedConfig(
+      config.selectDynamic("hostNameCacheTimeout").asInstanceOf[Int],
+      config.selectDynamic("hardware").asInstanceOf[Boolean]
+    )
+
+    main(Array.empty)
+  }
 
   @JSExport
   def main(args: Array[String]): Unit = {
@@ -83,6 +96,7 @@ object Main {
     AppRouter += SettingsPage
     AppRouter += WebRPCProjectPage
     AppRouter += HardwarePage
+    AppRouter += JobManagerPage
 
     // Settings pages:
     AppRouter += HostSettings

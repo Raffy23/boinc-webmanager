@@ -1,6 +1,6 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
+import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, JobManagerPage, SettingsPage, WebRPCProjectPage}
 import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
@@ -71,6 +71,14 @@ object DashboardMenu {
            data-navigo={true} data-menu-id="settings">
           <i class="fa fa-cog" aria-hidden="true"></i>
           {"dashboard_menu_settings".localize}
+        </a>
+      </li>
+
+      <li class={Style.elem.htmlClass}>
+        <a href={JobManagerPage.link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="jobs">
+          <i class="fa fa-cogs" aria-hidden="true"></i>
+          {"dashboard_menu_jobs".localize}
         </a>
       </li>
 

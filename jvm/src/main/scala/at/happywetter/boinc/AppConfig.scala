@@ -51,6 +51,7 @@ object AppConfig {
                            port: Int,
                            enabled: Boolean,
                            scanTimeout: Int,
+                           maxScanRequests: Int = 10,
                            password: List[String])
 
   case class Hardware(enabled: Boolean,

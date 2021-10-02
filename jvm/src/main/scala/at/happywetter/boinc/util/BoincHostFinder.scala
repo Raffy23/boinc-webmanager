@@ -19,6 +19,7 @@ import java.net.InetAddress
   */
 class BoincHostFinder private (config: Config, boincManager: BoincManager, db: Database) extends Logger {
 
+  /*
   private def beginSearch(autoDiscovery: BoincDiscoveryService): IO[Unit] =
     if (config.autoDiscovery.enabled) {
       LOG.info("Starting to search for boinc core clients ...")
@@ -26,6 +27,7 @@ class BoincHostFinder private (config: Config, boincManager: BoincManager, db: D
     } else {
       IO.unit
     }
+  */
 
   case class FoundCoreClient(name: String, password: String)
 
@@ -94,7 +96,7 @@ object BoincHostFinder {
   def apply(config: Config, boincManager: BoincManager, db: Database): Resource[IO, BoincHostFinder] = for {
     hostFinder    <- Resource.pure(new BoincHostFinder(config, boincManager, db))
     autoDiscovery <- BoincDiscoveryService(config.autoDiscovery, hostFinder.discoveryCompleted)
-    _             <- hostFinder.beginSearch(autoDiscovery).background
+    // _             <- hostFinder.beginSearch(autoDiscovery).background
   } yield hostFinder
 
 }

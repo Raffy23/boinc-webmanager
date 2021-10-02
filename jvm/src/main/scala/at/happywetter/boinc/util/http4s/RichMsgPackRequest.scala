@@ -26,7 +26,7 @@ object RichMsgPackRequest {
       request.decode[Array[Byte]] { body =>
         Try(readBinary(body))
           .map(f)
-          .map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_MSGPACK))))
+          //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_MSGPACK))))
           .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError)) }
           .get
       }
@@ -35,7 +35,7 @@ object RichMsgPackRequest {
       request.decode[Array[Byte]] { body =>
         Try(read(body))
           .map(f)
-          .map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_JSON))))
+          //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_JSON))))
           .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}
           .get
       }

@@ -1,6 +1,6 @@
 package at.happywetter.boinc
 
-import at.happywetter.boinc.repository.{CoreClientRepository, ProjectRepository}
+import at.happywetter.boinc.repository.{CoreClientRepository, JobRepository, ProjectRepository}
 import cats.effect.{IO, Resource}
 import com.typesafe.config.ConfigFactory
 import io.getquill.{H2JdbcContext, SnakeCase}
@@ -15,7 +15,7 @@ class Database private (ctx: H2JdbcContext[SnakeCase]) extends AutoCloseable {
 
   val clients  = new CoreClientRepository(ctx)
   val projects = new ProjectRepository(ctx)
-  //val jobs = ???
+  val jobs = new JobRepository(ctx)
 
   override def close(): Unit = ctx.close()
 

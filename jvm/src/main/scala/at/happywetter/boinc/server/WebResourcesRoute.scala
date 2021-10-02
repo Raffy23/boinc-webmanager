@@ -1,17 +1,17 @@
 package at.happywetter.boinc.server
 
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneOffset, ZonedDateTime}
+import at.happywetter.boinc.AppConfig
 import at.happywetter.boinc.AppConfig.Config
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
+import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper.withNotMatchingEtag
 import at.happywetter.boinc.util.webjar.ResourceResolver
 import at.happywetter.boinc.web.css.CSSRenderer
 import cats.effect._
-import org.http4s.ContentCoding.gzip
 import org.http4s.dsl.io._
 import org.http4s.headers.{ETag, `Content-Encoding`, `Content-Type`, `Last-Modified`}
 import org.slf4j.LoggerFactory
-import org.typelevel.ci.CIString
+import upickle.default.write
 
 import scala.util.Random
 
@@ -40,7 +40,7 @@ object WebResourcesRoute {
   private val pureCssPath     = ResourceResolver.getResourceRoot(repo="npm"  , name="purecss")
 
   private val indexContentEtag = Random.alphanumeric.take(12).mkString
-  private lazy val indexContent: String = {
+  private def indexContent(config: ServerSharedConfig): String = {
     import scalatags.Text.all._
 
     "<!DOCTYPE html>" +
@@ -71,7 +71,7 @@ object WebResourcesRoute {
         ),
 
         script( `type` := "text/javascript", src := "/files/app.js"),
-        script( `type` := "text/javascript", launchScript )
+        script( `type` := "text/javascript", raw(launchScript(config)) )
       )
     ).render
   }
@@ -80,17 +80,17 @@ object WebResourcesRoute {
   private val cssEtag = Random.alphanumeric.take(12).mkString
   private lazy val cssContent: String = CSSRenderer.render()
 
-  private lazy val launchScript =
-    """
+  private def launchScript(config: ServerSharedConfig) =
+    s"""
       | if(Main === undefined) {
       |   alert('Can not start Application, maybe app.js could not be loaded?')
       | } else {
-      |   Main.launch()
+      |   Main.launch(${write(config)})
       | }
     """.stripMargin
 
-  private def indexPage =
-    Ok(indexContent,
+  private def indexPage(sharedConfig: ServerSharedConfig) =
+    Ok(indexContent(sharedConfig),
       `Content-Type`(MediaType.text.html, Charset.`UTF-8`),
       `Last-Modified`(bootUpDate),
       ETag(indexContentEtag)
@@ -99,7 +99,7 @@ object WebResourcesRoute {
   def apply(implicit config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     // Normal index Page which is served
-    case request@GET -> Root => withNotMatchingEtag(request, indexContentEtag) { indexPage }
+    case request@GET -> Root => withNotMatchingEtag(request, indexContentEtag) { indexPage(AppConfig.sharedConf) }
 
     case request@GET -> Root / "files" / "app.js" => completeWithGipFile(appJS, request)
 
@@ -135,7 +135,7 @@ object WebResourcesRoute {
     case request@GET -> "files" /: file => completeWithGipFile(file.segments.mkString("/"), request)
 
     // To alow the SPA to work any view will render the index page
-    case request@GET -> "view" /: _ => withNotMatchingEtag(request, indexContentEtag) { indexPage }
+    case request@GET -> "view" /: _ => withNotMatchingEtag(request, indexContentEtag) { indexPage(AppConfig.sharedConf) }
 
     // Default Handler
     case _ => NotFound(/* TODO: Implement Default 404-Page */)

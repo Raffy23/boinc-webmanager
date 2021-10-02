@@ -7,6 +7,7 @@ import at.happywetter.boinc.shared.websocket._
 import at.happywetter.boinc.util.http4s.Implicits._
 import cats.effect.IO
 import cats.effect.std.{Queue, Supervisor}
+import cats.effect.unsafe.implicits.global
 import fs2.Pipe
 import org.http4s.dsl.io._
 import org.http4s.server.websocket._
@@ -121,7 +122,7 @@ object WebsocketRoutes {
                       )
                     }
                     .getOrElse(IO.unit)
-                )
+                ).unsafeRunAndForget()
           }
 
         val send = fs2.Stream.fromQueueNoneTerminated(client.responseQueue)

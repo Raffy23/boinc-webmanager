@@ -1,5 +1,7 @@
 package at.happywetter.boinc.util
 
+import at.happywetter.boinc.{BoincManager, Database}
+import at.happywetter.boinc.shared.rpc
 import at.happywetter.boinc.util.JobManager._
 import cats.effect.kernel.Fiber
 import cats.effect.std.Supervisor
@@ -17,29 +19,43 @@ object JobManager {
   case object Running extends Status
   case object Stopped extends Status
 
-  sealed case class Job(id: UUID, owner: Owner, status: Status, effect: IO[Unit], fiber: Fiber[IO, Throwable, Unit])
+  sealed case class Job(id: UUID, owner: Owner, status: Status, effect: IO[Unit], fiber: Fiber[IO, Throwable, Unit], dto: rpc.jobs.Job)
 
-  def apply(): Resource[IO, JobManager] = for {
+  def apply(manager: BoincManager, database: Database): Resource[IO, JobManager] = for {
     supervisor <- Supervisor[IO]
     jobManager <- Resource.eval(
       for {
         jobRefs    <- Ref.of[IO, Map[UUID, Job]](Map.empty)
-        jobManager <- IO.pure(new JobManager(supervisor, jobRefs))
+        jobManager <- IO(new JobManager(supervisor, jobRefs, manager))
       } yield jobManager
     )
+
+    // Load data in background from database
+    _ <- database
+      .jobs
+      .queryAll()
+      .flatMap { jobList =>
+        import cats.implicits._
+
+        jobList
+          .map(job => jobManager.add(User("admin"), job))
+          .sequence_
+      }
+      .background
 
   } yield jobManager
 
 }
 
-class JobManager(supervisor: Supervisor[IO], jobs: Ref[IO, Map[UUID, Job]]) {
+class JobManager(supervisor: Supervisor[IO], jobs: Ref[IO, Map[UUID, Job]], manager: BoincManager) {
 
-  def add(owner: Owner, effect: IO[Unit]): IO[UUID] = for {
-    uuid  <- IO.pure(UUID.randomUUID())
-    fiber <- supervisor.supervise(effect)
+  def add(owner: Owner, rpcJob: rpc.jobs.Job): IO[UUID] = for {
+    uuid   <- IO { rpcJob.id.getOrElse(UUID.randomUUID()) }
+    effect <- JobEffectUtil.mkEffect(rpcJob, manager)
+    fiber  <- supervisor.supervise(effect)
 
     _ <- jobs.update(
-      _ + (uuid -> Job(uuid, owner, Running, effect, fiber))
+      _ + (uuid -> Job(uuid, owner, Running, effect, fiber, rpcJob))
     )
 
   } yield uuid
@@ -68,6 +84,16 @@ class JobManager(supervisor: Supervisor[IO], jobs: Ref[IO, Map[UUID, Job]]) {
 
   } yield ()
 
+  def delete(id: UUID): IO[Unit] = {
+    jobs
+      .get
+      .map(_.contains(id))
+      .ifM(
+        stop(id) *>
+        jobs.update(_ - id),
+        IO.unit
+      )
+  }
 
   def start(id: UUID): IO[Unit] = for {
     job   <- jobs.get.map(_(id))
@@ -77,5 +103,7 @@ class JobManager(supervisor: Supervisor[IO], jobs: Ref[IO, Map[UUID, Job]]) {
 
   } yield ()
 
+  def all(): IO[List[Job]] =
+    jobs.get.map(_.values.toList)
 
 }

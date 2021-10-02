@@ -1,5 +1,12 @@
 package at.happywetter.boinc.shared
 
+import at.happywetter.boinc.shared.boincrpc.BoincRPC
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
+
+import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
+
 /**
   * Created by: 
   *
@@ -63,5 +70,25 @@ package object parser {
   implicit val appConfigAppVersionParser = macroRW[boincrpc.AppConfig.AppVersion]
   implicit val appConfigAppParser = macroRW[boincrpc.AppConfig.App]
   implicit val appConfigParser = macroRW[boincrpc.AppConfig]
+
+  implicit val localDateTimeParser = readwriter[String].bimap[LocalDateTime](
+    _.format(DateTimeFormatter.ISO_DATE_TIME),
+    str => LocalDateTime.parse(str, DateTimeFormatter.ISO_DATE_TIME)
+  )
+
+  implicit val jobModeAtParser = macroRW[rpc.jobs.At]
+  implicit val jobModeEveryParser = macroRW[rpc.jobs.Every]
+  implicit val jobModeParser = macroRW[rpc.jobs.JobMode]
+
+  implicit val boincRpcModesParser = readwriter[Int].bimap[BoincRPC.Modes.Value](_.id, BoincRPC.Modes(_))
+  implicit val projectActionParser = readwriter[Int].bimap[ProjectAction](_.id, ProjectAction(_))
+
+  implicit val jobRunModeTargetParser = macroRW[rpc.jobs.BoincRunModeTarget]
+
+  implicit val jobProjectActionParser = macroRW[rpc.jobs.BoincProjectAction]
+  implicit val jobRunModeAction = macroRW[rpc.jobs.BoincRunModeAction]
+  implicit val jobActionParser = macroRW[rpc.jobs.JobAction]
+
+  implicit val jobParser = macroRW[rpc.jobs.Job]
 
 }

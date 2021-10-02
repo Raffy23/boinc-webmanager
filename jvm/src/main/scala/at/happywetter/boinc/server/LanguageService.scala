@@ -5,14 +5,12 @@ import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.io.{Source, Codec => IOCodec}
-import scala.util.{Random, Try}
 import upickle.default._
 import cats.effect._
 import org.http4s._
 import org.http4s.dsl.io._
 import java.security.MessageDigest
 
-import at.happywetter.boinc.server.WebResourcesRoute.indexContentEtag
 import org.http4s.headers.`Content-Length`
 import org.http4s.server.middleware.GZip
 

@@ -4,7 +4,7 @@
 
 -- Store all auto-discovered core clients persistently in this table
 CREATE TABLE IF NOT EXISTS core_client (
-    name        VARCHAR(64) PRIMARY KEY,        -- Usually the hostname, but can be set freely
+    name        VARCHAR(254) PRIMARY KEY,       -- Usually the hostname, but can be set freely
     address     VARCHAR(256),                   -- max length of FQDN, dns or ip can be used
     port        INTEGER,                        -- the port of the core client
     password    VARCHAR(256),                   -- the password, must be saved in clear text since
@@ -22,3 +22,9 @@ CREATE TABLE IF NOT EXISTS project (
     home            TEXT,
     platforms       ARRAY                         --
 );
+
+-- List of jobs that the Webmanager has stored
+CREATE TABLE IF NOT EXISTS job (
+    uuid            UUID PRIMARY KEY,
+    contents        VARBINARY(4096)
+)
