@@ -81,13 +81,12 @@ class BoincDiscoveryService private (config: AutoDiscovery, autoScanCallback: Li
 
 object BoincDiscoveryService {
 
-  def apply(config: AutoDiscovery, autoScanCallback: List[IP] => IO[Unit]): Resource[IO, BoincDiscoveryService] = (
+  def apply(config: AutoDiscovery, autoScanCallback: List[IP] => IO[Unit]): Resource[IO, BoincDiscoveryService] =
     for {
       lock    <- Resource.eval(Semaphore[IO](config.maxScanRequests))
       service <- Resource.pure(new BoincDiscoveryService(config, autoScanCallback, lock))
       _       <- service.task.background
 
     } yield service
-  ).onFinalize(IO.println("onFinalize"))
 
 }

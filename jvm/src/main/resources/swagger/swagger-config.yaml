@@ -945,6 +945,53 @@ paths:
         '200':
           description: TODO
 
+  /jobs/:
+    get:
+      tags:
+        - JobManager
+      security:
+        -  bearerAuth: []
+      responses:
+        '200':
+          description: TODO
+    post:
+      tags:
+        - JobManager
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: TODO
+
+  /jobs/{uuid}:
+    delete:
+      tags:
+        - JobManager
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: TODO
+
+  /jobs/{uuid}/start:
+    post:
+      tags:
+        - JobManager
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: TODO
+
+  /jobs/{uuid}/stop:
+    post:
+      tags:
+        - JobManager
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: TODO
 
 components:
   securitySchemes:

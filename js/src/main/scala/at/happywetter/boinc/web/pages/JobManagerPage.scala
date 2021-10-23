@@ -1,12 +1,7 @@
 package at.happywetter.boinc.web.pages
-import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
-import at.happywetter.boinc.shared.rpc.jobs
-import at.happywetter.boinc.shared.rpc.jobs.{Job, Running}
 import at.happywetter.boinc.web.JobManagerClient
-import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle => Style}
 import at.happywetter.boinc.web.model.JobTableModel.JobTableRow
-import at.happywetter.boinc.web.pages.WebRPCProjectPage.removeTrailingSlash
 import at.happywetter.boinc.web.pages.component.dialog.{JobAddDialog, OkDialog}
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
@@ -27,6 +22,7 @@ object JobManagerPage extends Layout {
     ("table_hosts".localize, true),
     ("table_mode".localize, true),
     ("table_action".localize, true),
+    ("table_status".localize, true),
     ("", false)
   )
 

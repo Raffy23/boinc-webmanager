@@ -38,7 +38,7 @@ object SwaggerRoutes {
         .getOrElseF(NotFound())
 
     case GET -> Root / file =>
-      val filePath = s"/META-INF/resources/webjars/swagger-ui/3.25.0/$file"
+      val filePath = s"/META-INF/resources/webjars/swagger-ui/3.51.2/$file"
       StaticFile
         .fromResource[IO](filePath)
         .getOrElseF(NotFound())

@@ -98,6 +98,15 @@ object JobTableModel {
               <tr><td><b>{"job_status".localize}</b></td><td>{entry.status.toString}</td></tr>
               <tr><td><b>{"job_mode".localize}</b></td><td>{entry.mode.toString}</td></tr>
               <tr><td><b>{"job_action".localize}</b></td><td>{entry.action.toString}</td></tr>
+              <tr><td><b>{"hosts".localize}</b></td>
+                <td>
+                  <ul>
+                    {
+                      entry.action.hosts.map(host => <li>{host}</li>)
+                    }
+                  </ul>
+                </td>
+              </tr>
             </tbody>
           </table>,
           <h4 class={BoincClientStyle.h4.htmlClass}>{"project_actions".localize}</h4>,

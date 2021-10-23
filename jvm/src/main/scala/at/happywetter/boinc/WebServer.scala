@@ -87,8 +87,7 @@ object WebServer extends IOApp with Logger {
   private val serviceMode = IO.println("Running in service mode, waiting for signal ...") *> IO.never
   private val interactive = {
     IO.println("Press ENTER to exit the server ...") *>
-    IO.readLine *>
-    IO.println("Exiting")
+    IO.readLine
   }
 
 }
