@@ -14,15 +14,22 @@ package object jobs {
   case class Every(interval: FiniteDuration, until: Option[LocalDateTime] = None) extends JobMode
   case class At(timestamp: LocalDateTime) extends JobMode
 
-  sealed trait JobAction
-  case class BoincProjectAction(host: String, url: String, action: ProjectAction) extends JobAction
-  case class BoincRunModeAction(host: String, target: BoincRunModeTarget, mode: BoincRPC.Modes.Value, duration: Double = 0) extends JobAction
+  sealed trait JobAction {
+    def hosts: List[String]
+  }
+  case class BoincProjectAction(hosts: List[String], url: String, action: ProjectAction) extends JobAction
+  case class BoincRunModeAction(hosts: List[String], target: BoincRunModeTarget, mode: BoincRPC.Modes.Value, duration: Double = 0) extends JobAction
 
   sealed trait BoincRunModeTarget
   case object CPU extends BoincRunModeTarget
   case object GPU extends BoincRunModeTarget
   case object Network extends BoincRunModeTarget
 
-  final case class Job(id: Option[UUID], mode: JobMode, action: JobAction)
+  sealed trait JobStatus
+  case object Running extends JobStatus
+  case object Stopped extends JobStatus
+  case class Errored(exception: String) extends JobStatus
+
+  final case class Job(id: Option[UUID], name: String, mode: JobMode, action: JobAction, status: JobStatus)
 
 }

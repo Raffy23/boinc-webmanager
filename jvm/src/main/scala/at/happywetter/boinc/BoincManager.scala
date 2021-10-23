@@ -15,6 +15,8 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import cats.implicits._
 
+import java.util.concurrent.TimeUnit
+
 /**
   * Created by: 
   *
@@ -30,7 +32,7 @@ object BoincManager {
 
   private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, finalizer: IO[Unit], var lastUsed: Long)
 
-  private val timeout        =  5 minutes
+  private val timeout        =  1 minutes
   private val deathCollector = 30 minutes
   private val healthTimeout  = 14 minutes
 
@@ -95,10 +97,10 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
             case (name, BoincClientEntry(client, _, _, time)) =>
               client
                 .hasOpenConnections
-                .map(_ && time < curTime)
+                // .map(_ && time < curTime)
                 .ifM(
-                  logger.info("Close Socket Connection from " + name) *>
-                  client.close(),
+                  logger.info("Close Socket Connection for " + name) *>
+                  client.close(TimeUnit.MINUTES.toMinutes(5)),
                   IO.unit
                 )
           }

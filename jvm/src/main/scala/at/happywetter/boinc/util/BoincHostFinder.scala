@@ -73,9 +73,9 @@ class BoincHostFinder private (config: Config, boincManager: BoincManager, db: D
 
             } yield ()
 
-        }
-      ).parSequence
-       .value
+        }.value
+         .handleError(_ => LOG.info(s"Could not add core client ($ip), client timed out"))
+      ).parSequence_
     }.as(())
   }
 
@@ -98,5 +98,6 @@ object BoincHostFinder {
     autoDiscovery <- BoincDiscoveryService(config.autoDiscovery, hostFinder.discoveryCompleted)
     // _             <- hostFinder.beginSearch(autoDiscovery).background
   } yield hostFinder
+
 
 }

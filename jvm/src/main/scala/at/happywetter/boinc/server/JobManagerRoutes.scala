@@ -4,10 +4,9 @@ import at.happywetter.boinc.Database
 import at.happywetter.boinc.util.JobManager
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.shared.parser._
-import at.happywetter.boinc.shared.rpc.jobs.Job
-import at.happywetter.boinc.util.JobManager.{Running, Stopped}
+import at.happywetter.boinc.shared.rpc.jobs.{Job, Running, Stopped}
 import cats.effect.IO
-import org.http4s.{EntityDecoder, HttpRoutes}
+import org.http4s.HttpRoutes
 import org.http4s.dsl.io._
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 

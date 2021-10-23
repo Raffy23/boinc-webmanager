@@ -1,10 +1,13 @@
 package at.happywetter.boinc.web.pages.component.dialog
+import at.happywetter.boinc.shared.boincrpc.AppConfig.AppVersion
 import at.happywetter.boinc.shared.boincrpc.{AppConfig, Project}
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.css.definitions.components.{TableTheme, BasicModalStyle => Style}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.storage.TaskSpecCache
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
@@ -12,7 +15,7 @@ import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.Var
+import mhtml.{Rx, Var}
 
 import scala.xml.Elem
 
@@ -61,6 +64,7 @@ class AppConfigDialog(parentID: String, project: Project)(implicit boinc: BoincC
               <th class={TableTheme.verticalText.htmlClass}><div style="margin-left:calc(100% - 8px);margin-bottom:1px"><span>{"fraction_done_exact".localize}</span></div></th>
               <th class={TableTheme.verticalText.htmlClass}><div style="margin-left:calc(100% - 8px);margin-bottom:1px"><span>{"gpu_usage".localize}</span></div></th>
               <th class={TableTheme.verticalText.htmlClass}><div style="margin-left:calc(100% - 8px);margin-bottom:1px"><span>{"cpu_usage".localize}</span></div></th>
+              <th></th>
             </thead>
             <tbody>
               {
@@ -75,19 +79,37 @@ class AppConfigDialog(parentID: String, project: Project)(implicit boinc: BoincC
                   apps.toSeq.sortBy(_._2.name)(StringLengthAlphaOrdering).map { case (_, app) =>
                     val appCfg = appConfig.get(app.name)
                     val appVer = appVersion.get(app.name)
+                    val taskSpec =
+                      TaskSpecCache
+                        .get(boinc.hostname, app.name)
+                        .map(_.map(app => AppVersion(app.name, app.version.planClass.getOrElse(""), app.version.avgCpus.ceil.toInt, 0, "")))
+
+                    val appVerRx: Rx[Option[AppVersion]] =
+                      if (appVer.isDefined) Var(appVer)
+                      else taskSpec.toRx(Option.empty)
 
                     <tr>
                       <td>{app.userFriendlyName}</td>
                       <td>{app.name}</td>
-                      <td>{appVer.map(_.ngpus)}</td>
-                      <td>{appVer.map(_.avgCpus)}</td>
-                      <td>{appVer.map(_.planClass)}</td>
-                      <td>{appVer.map(_.cmdline)}</td>
-                      <td>{appCfg.map(_.reportResultsImmediately.localize)}</td>
-                      <td>{appCfg.map(_.maxConcurrent)}</td>
-                      <td>{appCfg.map(_.fractionDoneExact.localize)}</td>
-                      <td>{appCfg.map(_.gpuVersions.map(_.gpuUsage.toString).getOrElse("not_set".localize))}</td>
-                      <td>{appCfg.map(_.gpuVersions.map(_.gpuUsage.toString).getOrElse("not_set".localize))}</td>
+                      <td><input style="width:70px" type="number" value={appVerRx.map(_.map(_.ngpus.toString).getOrElse(""))}/></td>
+                      <td><input style="width:70px" type="number" value={appVerRx.map(_.map(_.avgCpus.toString).getOrElse(""))}/></td>
+                      <td><input style="width:70px" type="text" value={appVerRx.map(_.map(_.planClass).getOrElse(""))}/></td>
+                      <td><input style="width:70px" type="text" value={appVerRx.map(_.map(_.cmdline))}/></td>
+                      <td><input style="width:70px" type="checkbox" value={appCfg.map(_.reportResultsImmediately.localize)}/></td>
+                      <td><input style="width:70px" type="number" value={appCfg.map(_.maxConcurrent.toString)}/></td>
+                      <td><input style="width:70px" type="checkbox" value={appCfg.map(_.fractionDoneExact.localize)}/></td>
+                      <td><input style="width:70px" type="number" value={appCfg.map(_.gpuVersions.map(_.gpuUsage.toString).getOrElse("not_set".localize))}/></td>
+                      <td><input style="width:70px" type="number" value={appCfg.map(_.gpuVersions.map(_.gpuUsage.toString).getOrElse("not_set".localize))}/></td>
+                      <td style="width: 70px;text-align: center;">
+                      {
+                        new Tooltip(
+                          Var("save".localize),
+                          <a href="#save-app_config" style="color:#333;text-decoration:none;font-size:30px" onclick={jsSaveRowAction}>
+                            <i class="fas fa-save"></i>
+                          </a>
+                        ).toXML
+                      }
+                      </td>
                     </tr>
                   }
 
@@ -112,8 +134,14 @@ class AppConfigDialog(parentID: String, project: Project)(implicit boinc: BoincC
   private val maxHeight = dom.window.innerHeight - 350.0D
 
   private val jsBackgroundAction: Event => Unit = { event =>
+    event.preventDefault()
     if (event.target.asInstanceOf[HTMLElement].id == "appconfig-dialog")
       this.hide()
+  }
+
+  private val jsSaveRowAction: Event => Unit = { event =>
+    event.preventDefault()
+    dom.window.alert("Not implemented!")
   }
 
   override def show(): Unit = {

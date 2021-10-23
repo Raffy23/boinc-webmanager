@@ -77,7 +77,7 @@ object DashboardMenu {
       <li class={Style.elem.htmlClass}>
         <a href={JobManagerPage.link} onclick={masterSelectionListener}
            data-navigo={true} data-menu-id="jobs">
-          <i class="fa fa-cogs" aria-hidden="true"></i>
+          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
           {"dashboard_menu_jobs".localize}
         </a>
       </li>

@@ -1,11 +1,13 @@
 package at.happywetter.boinc.boincclient
 
 import at.happywetter.boinc.BuildInfo
+import at.happywetter.boinc.boincclient.BoincClient.CLIENT_READ_TIMEOUT
 import at.happywetter.boinc.boincclient.parser.AppConfigParser
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
+import cats.ApplicativeError
 import cats.data.Chain
 import cats.effect.{IO, Ref}
 import cats.effect.kernel.Resource
@@ -21,7 +23,9 @@ import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.nio.ByteBuffer
-import scala.language.postfixOps
+import scala.concurrent.TimeoutException
+import scala.concurrent.duration.DurationInt
+import scala.language.{existentials, postfixOps}
 import scala.xml.{NodeSeq, XML}
 
 /**
@@ -35,6 +39,7 @@ object BoincClient {
 
   private val CLIENT_IDENTIFER = s"BOINC WebManager ${BuildInfo.version}"
   private val CLIENT_VERSION   = BoincVersion(major = 7, minor = 16, release = 6)
+  private val CLIENT_READ_TIMEOUT = 5 seconds
 
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
@@ -62,11 +67,15 @@ object BoincClient {
     val GetGlobalPrefsWorking = Value("<get_global_prefs_working/>")
   }
 
+
   def tryConnect(address: String, port: Int = 31416, password: String): Resource[IO, Option[BoincClient]] =
     BoincClient(address, port, password)
       .map(client => Some(client))
       .handleErrorWith {
-        _: Throwable => Resource.pure[IO, Option[BoincClient]](Option.empty)
+        ex: Throwable => ex match {
+          case _: RuntimeException => Resource.pure[IO, Option[BoincClient]](Option.empty)
+          case t: TimeoutException => Resource.eval(IO.raiseError(t))
+        }
       }
 
   def apply(address: String, port: Int = 31416, password: String): Resource[IO, BoincClient] = {
@@ -110,18 +119,21 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
     }
     .flatMap(socket.write)
 
-  private def readXML(): IO[NodeSeq] =
+  private def readXML(): IO[NodeSeq] = {
     socket
       .reads
+      .interruptScope
       .takeWhile(_ != '\u0003')
       .through(text.utf8.decode)
       .compile
       .string
       .map(XML.loadString)
+  }
 
   private def readHMTL(): IO[Document] =
     socket
       .reads
+      .interruptScope
       .takeWhile(_ != '\u0003')
       .compile
       .toVector
@@ -148,7 +160,12 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
     for {
       _      <- logTrace(s"Sending auth challenge to core client")
 
-      nonce  <- xmlRpc("<auth1>").map(_ \ "nonce" text)
+      // Assume clients that don't answer with a nonce in less then 5s are
+      // actually clients, should probably be configurable
+      nonce  <- xmlRpc("<auth1>")
+        .map(_ \ "nonce" text)
+        .timeout(5 seconds)
+
       result <- xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
       auth   <- IO { (result \ "_").xml_==(<authorized/>) }

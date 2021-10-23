@@ -5,6 +5,7 @@ import at.happywetter.boinc.server._
 import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, JobManager, Logger}
 import cats.effect._
+import cats.effect.unsafe.IORuntime
 import org.http4s.HttpRoutes
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
@@ -74,7 +75,7 @@ object WebServer extends IOApp with Logger {
                         .resource
 
       autoDiscovery <- BoincHostFinder(config, hostManager, database)
-    } yield (database, webserver, autoDiscovery))
+    } yield (()))
       .use(_ =>
         if (config.serviceMode)
           serviceMode
@@ -86,7 +87,8 @@ object WebServer extends IOApp with Logger {
   private val serviceMode = IO.println("Running in service mode, waiting for signal ...") *> IO.never
   private val interactive = {
     IO.println("Press ENTER to exit the server ...") *>
-    IO.readLine
+    IO.readLine *>
+    IO.println("Exiting")
   }
 
 }

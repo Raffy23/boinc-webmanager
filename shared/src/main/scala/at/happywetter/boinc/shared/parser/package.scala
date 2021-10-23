@@ -83,6 +83,9 @@ package object parser {
   implicit val boincRpcModesParser = readwriter[Int].bimap[BoincRPC.Modes.Value](_.id, BoincRPC.Modes(_))
   implicit val projectActionParser = readwriter[Int].bimap[ProjectAction](_.id, ProjectAction(_))
 
+  implicit val jobStatusErroredParser = macroRW[rpc.jobs.Errored]
+  implicit val jobStatusParser = macroRW[rpc.jobs.JobStatus]
+
   implicit val jobRunModeTargetParser = macroRW[rpc.jobs.BoincRunModeTarget]
 
   implicit val jobProjectActionParser = macroRW[rpc.jobs.BoincProjectAction]

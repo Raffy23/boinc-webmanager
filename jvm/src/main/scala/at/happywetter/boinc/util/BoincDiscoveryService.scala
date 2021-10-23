@@ -35,8 +35,7 @@ class BoincDiscoveryService private (config: AutoDiscovery, autoScanCallback: Li
       )
 
   def search(): IO[List[IP]] = {
-    LOG.info(s"Start probing range ${start} - ${end}")
-
+    IO { LOG.info(s"Start probing range ${start} - ${end}") } *>
     probeRange(config.port)
       .map(_.filter { case (ip, found) => excludeIP(ip, found) }.map(_._1) )
   }
@@ -82,12 +81,13 @@ class BoincDiscoveryService private (config: AutoDiscovery, autoScanCallback: Li
 
 object BoincDiscoveryService {
 
-  def apply(config: AutoDiscovery, autoScanCallback: List[IP] => IO[Unit]): Resource[IO, BoincDiscoveryService] = for {
+  def apply(config: AutoDiscovery, autoScanCallback: List[IP] => IO[Unit]): Resource[IO, BoincDiscoveryService] = (
+    for {
       lock    <- Resource.eval(Semaphore[IO](config.maxScanRequests))
       service <- Resource.pure(new BoincDiscoveryService(config, autoScanCallback, lock))
       _       <- service.task.background
 
     } yield service
-
+  ).onFinalize(IO.println("onFinalize"))
 
 }

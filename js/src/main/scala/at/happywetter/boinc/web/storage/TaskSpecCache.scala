@@ -24,7 +24,7 @@ object TaskSpecCache extends DatabaseProvider {
   private implicit val storeNames: js.Array[String] = js.Array(objStore)
 
   def save(boincName: String, appName: String, app: App): Future[Unit] =
-    transaction(f => f.add(write(app), boincName+"/"+appName))
+    transaction(f => f.put(write(app), boincName+"/"+appName))
 
   def get(boincName: String, appName: String): Future[Option[App]] =
     transactionAsync(f => unpack(f.get(boincName + "/" + appName)))
