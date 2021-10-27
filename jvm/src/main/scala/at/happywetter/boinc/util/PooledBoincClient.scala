@@ -4,7 +4,8 @@ import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
-import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, State}
+import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
+import cats.data.State
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
 import cats.effect.std.Semaphore
 import cats.effect.unsafe.implicits.global
@@ -22,12 +23,12 @@ object PooledBoincClient {
 
   case class BoincClientParameters(address: String, val port: Int, password: String)
 
-  private case class State(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
+  private case class PoolState(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
 
   def apply(poolSize: Int, address: String, port: Int = 31416, password: String): Resource[IO, PooledBoincClient] =
     Resource.make(
       for {
-        lock   <- Semaphore[IO](poolSize)
+        lock   <- Semaphore[IO](1)
         client <- IO {
           new PooledBoincClient(lock, BoincClientParameters(address, port, password))
         }
@@ -41,44 +42,54 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
 
   private def all = state.get.map(_.lastUsed.keys.toSeq)
 
-  private val state = Ref.unsafe[IO, State](State(Map.empty, Map.empty, List.empty))
+  private val state = Ref.unsafe[IO, PoolState](PoolState(Map.empty, Map.empty, List.empty))
 
   private def takeConnection(): IO[BoincClient] =
     for {
 
       _   <- lock.acquire
-      con <- state.modify { state =>
+      con <- state.modify[Either[Throwable, BoincClient]] { state =>
         state.pool match {
           case connection :: tail =>
             (
-              State(
+              PoolState(
                 state.lastUsed + (connection -> System.currentTimeMillis()),
                 state.finalizer,
                 tail
               ),
-              connection
+              Right(connection)
             )
 
           case Nil    =>
             // Kind of ugly, but effect must be atomic in this transaction
-            val (client, finalizer) =
-              BoincClient(details.address, details.port, details.password)
-                .allocated
-                .unsafeRunSync()
-
-            (
-              State(
-                state.lastUsed  + (client -> System.currentTimeMillis()),
-                state.finalizer + (client -> finalizer),
-                List.empty
-              ),
-              client
-            )
+            BoincClient(details.address, details.port, details.password)
+              .allocated
+              .map(Right(_))
+              .handleError(Left(_))
+              .unsafeRunSync()
+              .fold (
+                throwable =>
+                  (
+                    state,
+                    Left(throwable)
+                  )
+                ,
+                 boincClient =>
+                  (
+                    PoolState(
+                      state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
+                      state.finalizer + (boincClient._1 -> boincClient._2),
+                      List.empty
+                    ),
+                    Right(boincClient._1)
+                  )
+              )
         }
       }
       _   <- lock.release
+      r   <- con.fold(IO.raiseError, c => IO.pure(c))
 
-    } yield con
+    } yield r
 
 
   private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
@@ -99,7 +110,7 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
 
     finalizer <- state.modify(state =>
       (
-        State(
+        PoolState(
           state.lastUsed - connection,
           state.finalizer - connection,
           state.pool.filterNot(_ == connection)
@@ -139,7 +150,7 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
         .toList
 
       (
-        State(
+        PoolState(
           state.lastUsed  -- toBeClosed,
           state.finalizer -- toBeClosed,
           state.pool.filterNot(client => toBeClosed.contains(client))
