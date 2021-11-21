@@ -18,7 +18,7 @@ package object parser {
     def existsNode: Boolean = node != null
 
     def optionalText: Option[String] =
-      if (node == null || node.text == null) Option.empty
+      if (node == null || node.text == null || node.text.isEmpty) Option.empty
       else Some(node.text)
 
     def toOptionDouble: Option[Double] =

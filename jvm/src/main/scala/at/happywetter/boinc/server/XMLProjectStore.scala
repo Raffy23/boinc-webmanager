@@ -8,6 +8,7 @@ import at.happywetter.boinc.dto.DatabaseDTO.Project
 import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
 import cats.effect._
 import cats.effect.unsafe.implicits.global
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.xml.XML
 import java.security.MessageDigest
@@ -64,8 +65,9 @@ object XMLProjectStore {
       IO
         .pure(new XMLProjectStore(db))
         .flatMap { projectStore =>
+          val logger = Slf4jLogger.getLoggerFromClass[IO](getClass)
 
-          // Read projects from projects.xml in the background
+          logger.trace("Reading projects.xml") *>
           IO.blocking {
             projectStore.projects.updateAndGet(_ ++
               (XML.loadFile(new File(config.boinc.projects.xmlSource)) \ "project").map(node =>
@@ -82,7 +84,8 @@ object XMLProjectStore {
               ).toMap
             )
           } *>
-        projectStore.importFrom(config).map(_ => projectStore)
+        projectStore.importFrom(config).map(_ => projectStore) <*
+        logger.trace("Finished importing")
       }
     )
 

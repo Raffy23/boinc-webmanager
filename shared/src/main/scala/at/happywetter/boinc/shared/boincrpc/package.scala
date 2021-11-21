@@ -42,7 +42,8 @@ package object boincrpc {
                           reportDeadline: Double,
                           finalCPUTime: Double,
                           finalElapsedTime: Double,
-                          exitStatus: Int) {
+                          exitStatus: Int,
+                          resources: Option[String]) {
 
     override def equals(obj: scala.Any): Boolean = obj.asInstanceOf[Result].wuName.equals(wuName)
     override def hashCode(): Int = wuName.hashCode

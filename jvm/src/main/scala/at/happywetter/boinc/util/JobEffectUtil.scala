@@ -34,7 +34,8 @@ object JobEffectUtil {
           manager
             .get(host)
             .semiflatMap(client => {
-              client.project(url, action)
+              IO.println(s"${client.details.address}, ${url}, ${action.toString}") *>
+              client.project(url, action).flatMap(r => IO.println("result: " + r))
             }).value
         ).sequence_
     }
@@ -60,8 +61,10 @@ object JobEffectUtil {
         else if (until.isDefined) {
           IO
             .sleep(interval)
-            .flatMap(_ => effect)
-            .whileM_(IO { until.forall(_.isBefore(LocalDateTime.now())) } )
+            .flatMap(_ => IO.println("after sleep: " + interval))
+            .flatMap(_ => effect *> IO.println("after effect"))
+            .whileM_(IO { val x = until.forall(_.isAfter(LocalDateTime.now())); println(until, LocalDateTime.now(), until.get.isAfter(LocalDateTime.now()), x); x } ) *> IO.println("after every")
+            .handleError(_.printStackTrace()) *> IO.println("DONE")
         } else {
           IO
             .sleep(interval)

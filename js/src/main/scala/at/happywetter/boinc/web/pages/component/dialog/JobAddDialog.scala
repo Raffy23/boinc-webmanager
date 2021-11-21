@@ -27,12 +27,17 @@ class JobAddDialog(onComplete: Option[Job] => Unit) extends Dialog("job-modal-di
 
   private val jobSchedule = Var(Option.empty[String])
   private val jobAction = Var(Option.empty[String])
-  private val projects = Var(List.empty[String])
+  private val projects = Var(List.empty[(String, String)])
 
   ClientManager
     .queryCompleteProjectList()
     .foreach(projects => {
-      this.projects := projects.keys.toList
+
+      this.projects := projects.map {
+        case (name, project) => (name, project.url)
+      }.toList
+       .sortBy(_._1)
+
       NProgress.done(true)
     })
 
@@ -123,7 +128,7 @@ class JobAddDialog(onComplete: Option[Job] => Unit) extends Dialog("job-modal-di
                             <option disabled={true} selected={true}>{"select_project".localize}</option>
                             {
                             projects.map(projects => projects.map(project =>
-                              <option value={project}>{project}</option>
+                              <option value={project._2}>{project._1}</option>
                             ))
                             }
                           </select>

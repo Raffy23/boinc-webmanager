@@ -11,6 +11,8 @@ import cats.effect.std.Semaphore
 import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, Ref, Resource}
 
+import scala.concurrent.duration.FiniteDuration
+
 /**
   * Created by: 
   *
@@ -45,52 +47,51 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
   private val state = Ref.unsafe[IO, PoolState](PoolState(Map.empty, Map.empty, List.empty))
 
   private def takeConnection(): IO[BoincClient] =
-    for {
-
-      _   <- lock.acquire
-      con <- state.modify[Either[Throwable, BoincClient]] { state =>
-        state.pool match {
-          case connection :: tail =>
-            (
-              PoolState(
-                state.lastUsed + (connection -> System.currentTimeMillis()),
-                state.finalizer,
-                tail
-              ),
-              Right(connection)
-            )
-
-          case Nil    =>
-            // Kind of ugly, but effect must be atomic in this transaction
-            BoincClient(details.address, details.port, details.password)
-              .allocated
-              .map(Right(_))
-              .handleError(Left(_))
-              .unsafeRunSync()
-              .fold (
-                throwable =>
-                  (
-                    state,
-                    Left(throwable)
-                  )
-                ,
-                 boincClient =>
-                  (
-                    PoolState(
-                      state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
-                      state.finalizer + (boincClient._1 -> boincClient._2),
-                      List.empty
-                    ),
-                    Right(boincClient._1)
-                  )
+    lock
+      .permit
+      .use(_ =>
+        state.modify[Either[Throwable, BoincClient]] { state =>
+          state.pool match {
+            case connection :: tail =>
+              (
+                PoolState(
+                  state.lastUsed + (connection -> System.currentTimeMillis()),
+                  state.finalizer,
+                  tail
+                ),
+                Right(connection)
               )
-        }
-      }
-      _   <- lock.release
-      r   <- con.fold(IO.raiseError, c => IO.pure(c))
 
-    } yield r
-
+            case Nil    =>
+              // Kind of ugly, but effect must be atomic in this transaction
+              BoincClient(details.address, details.port, details.password)
+                .allocated
+                .map(Right(_))
+                .handleError(Left(_))
+                .unsafeRunSync()
+                .fold (
+                  throwable =>
+                    (
+                      state,
+                      Left(throwable)
+                    )
+                  ,
+                  boincClient =>
+                    (
+                      PoolState(
+                        state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
+                        state.finalizer + (boincClient._1 -> boincClient._2),
+                        List.empty
+                      ),
+                      Right(boincClient._1)
+                    )
+                )
+          }
+        }.flatMap(_.fold(IO.raiseError, c => IO.pure(c)))
+      ).handleErrorWith(cause =>
+        deathCounter.update(_ + 1) *>
+        IO.raiseError(new RuntimeException(s"Client ${details.address}:${details.port} is unavailable!", cause))
+      )
 
   private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
    takeConnection().bracketCase(extractor) {
@@ -134,14 +135,19 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
       .void
   }
 
+  def isAvailable: IO[Boolean] =
+    getHostInfo
+      .map(_ => true)
+      .handleError(_ => false)
 
-  def close(timeout: Long): IO[Unit] = {
+  def close(timeout: FiniteDuration): IO[Int] = {
     import cats.implicits._
     val current = System.currentTimeMillis()
+    val timeoutMillis = timeout.toMillis
 
     state.modify { state =>
       val toBeClosed = state.lastUsed.filter {
-        case (_, timestamp) => timestamp+timeout < current
+        case (_, timestamp) => timestamp+timeoutMillis < current
       }.keySet
 
       val finalizers = state.finalizer
@@ -155,13 +161,10 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
           state.finalizer -- toBeClosed,
           state.pool.filterNot(client => toBeClosed.contains(client))
         ),
-        finalizers
+        (finalizers,  toBeClosed.size)
       )
-    }.flatMap(_
-      .sequence
-      .void
-    )
-
+    }.flatTap(_._1.sequence_)
+     .map(_._2)
   }
 
   def hasOpenConnections: IO[Boolean] = state.get.map(_.pool.nonEmpty)

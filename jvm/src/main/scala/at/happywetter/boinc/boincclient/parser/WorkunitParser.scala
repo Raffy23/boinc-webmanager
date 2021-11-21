@@ -18,7 +18,9 @@ object WorkunitParser {
       ,(node \ "rsc_fpops_est").text.toDouble
       ,(node \ "rsc_fpops_bound").text.toDouble
       ,(node \ "rsc_memory_bound").text.toDouble
-      ,(node \ "rsc_disk_bound").text.toDouble)
+      ,(node \ "rsc_disk_bound").text.toDouble
+      // TODO: command_line, file_ref, version_num
+    )
   }
 
 }

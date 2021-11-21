@@ -7,7 +7,7 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.{ProjectAction, WorkunitAct
 import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, AddProjectBody, ApplicationError, BoincModeChange, BoincProjectMetaData, BoincRPC, GlobalPrefsOverride, ProjectRequestBody, RetryFileTransferBody, WorkunitRequestBody}
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.rpc.DashboardDataEntry
-import at.happywetter.boinc.util.{IP, PooledBoincClient}
+import at.happywetter.boinc.util.PooledBoincClient
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import at.happywetter.boinc.{AppConfig, BoincManager, Database}
@@ -80,16 +80,19 @@ object BoincApiRoutes extends ResponseEncodingHelper {
 
     case request @ GET -> Root / "webmanager" / "dashboard" / name =>
       hostManager.get(name).semiflatMap(client => {
+        for {
+          stateFiber     <- client.getState.map(v => Some(v)).handleError(_ => Option.empty).start
+          fTransferFiber <- client.getFileTransfer.map(v => Some(v)).handleError(_ => Option.empty).start
 
-        Ok(
-          client.getState.flatMap(state =>
-            client.getFileTransfer.map(fileTransfer =>
-              DashboardDataEntry(state, fileTransfer)
-            )
-          ),
-          request
-        )
+          state     <- stateFiber.joinWithNever
+          fTransfer <- fTransferFiber.joinWithNever
 
+          condition <- IO.pure(state.nonEmpty && fTransfer.nonEmpty)
+
+          result    <- if (condition) Ok(DashboardDataEntry(state.get, fTransfer.get), request)
+                       else           NotFound()
+
+        } yield result
       }).getOrElseF(NotFound())
 
     // Modification of Tasks and Projects

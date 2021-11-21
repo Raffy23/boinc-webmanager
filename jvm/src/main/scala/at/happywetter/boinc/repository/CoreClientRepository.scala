@@ -1,9 +1,9 @@
 package at.happywetter.boinc.repository
 
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
-import at.happywetter.boinc.util.IP
 import cats.data.OptionT
 import cats.effect.IO
+import com.comcast.ip4s.IpAddress
 import io.getquill.{H2JdbcContext, SnakeCase}
 
 /**
@@ -65,7 +65,7 @@ class CoreClientRepository(ctx: H2JdbcContext[SnakeCase]) {
     }
   }
 
-  def searchBy(ip: IP, port: Int): OptionT[IO, CoreClient] = OptionT(
+  def searchBy(ip: IpAddress, port: Int): OptionT[IO, CoreClient] = OptionT(
     IO.blocking {
       run {
         quote {

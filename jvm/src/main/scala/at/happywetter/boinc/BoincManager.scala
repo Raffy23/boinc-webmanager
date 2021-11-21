@@ -4,7 +4,7 @@ import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.BoincManager._
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.rpc.HostDetails
-import at.happywetter.boinc.util.{Logger, Observer, PooledBoincClient}
+import at.happywetter.boinc.util.{Observer, PooledBoincClient}
 import cats.data.OptionT
 import cats.effect.{IO, Ref, Resource, Spawn}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
@@ -32,9 +32,10 @@ object BoincManager {
 
   private case class BoincClientEntry(client: PooledBoincClient, addedBy: AddedBy, finalizer: IO[Unit], var lastUsed: Long)
 
-  private val timeout        =  1 minutes
-  private val deathCollector = 30 minutes
-  private val healthTimeout  = 14 minutes
+  private val timeout            =  1 minutes
+  private val deathCollector     = 30 minutes
+  private val healthTimeout      = 14 minutes
+  private val inactiveConnection =  5 minutes
 
   def apply(config: Config, db: Database): Resource[IO, BoincManager] = for {
 
@@ -61,24 +62,33 @@ object BoincManager {
      * do this lazily in the background so we don't block the creation ...
      */
     _ <- Spawn[IO].background(
-      db.clients.queryAll().map { coreClients =>
-        coreClients.foreach { coreClient =>
-          manager.add(
-            coreClient.name,
-            coreClient.address, coreClient.port, coreClient.password,
-            coreClient.addedBy match {
-              case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
-              case CoreClient.ADDED_BY_USER      => AddedByUser
-            }
-          )
-        }
-      }
+      db.clients.queryAll().flatMap { coreClients =>
+        for {
+          logger <- Slf4jLogger.fromClass[IO](BoincManager.getClass)
+
+          _     <- logger.info(s"Loading clients from database, found ${coreClients.size} entries")
+          added <- coreClients.map { coreClient =>
+            manager.add(
+              coreClient.name,
+              coreClient.address, coreClient.port, coreClient.password,
+              coreClient.addedBy match {
+                case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
+                case CoreClient.ADDED_BY_USER      => AddedByUser
+              }
+            )
+          }.parSequence
+           .map(_.count(identity))
+
+          _ <- logger.info(s"Successfully loaded $added clients from database")
+        } yield ()
+      }.handleErrorWith(ex => Slf4jLogger.fromClass[IO](BoincManager.getClass).flatMap(_.error(ex.getMessage)))
     )
+
   } yield manager
 
 }
 
-class BoincManager private (poolSize: Int, val changeListener: Observer[BoincManager], logger: SelfAwareStructuredLogger[IO]) extends Logger {
+class BoincManager private (poolSize: Int, val changeListener: Observer[BoincManager], logger: SelfAwareStructuredLogger[IO]) {
 
   private val boincClients: Ref[IO, Map[String, BoincClientEntry]] = Ref.unsafe(Map.empty)
   private val clientGroups: Ref[IO, Map[String, ListBuffer[String]]] = Ref.unsafe(Map.empty)
@@ -91,16 +101,16 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
       .flatMap { _ =>
         import cats.implicits._
 
-        val curTime = System.currentTimeMillis() - timeout.toMillis
         boincClients.get.flatMap {
           _.map {
             case (name, BoincClientEntry(client, _, _, time)) =>
               client
                 .hasOpenConnections
-                // .map(_ && time < curTime)
                 .ifM(
-                  logger.info("Close Socket Connection for " + name) *>
-                  client.close(TimeUnit.MINUTES.toMinutes(5)),
+                  client.close(inactiveConnection).flatMap { count =>
+                    if (count > 0) logger.info(s"Closed $count socket connections for $name")
+                    else           IO.unit
+                  },
                   IO.unit
                 )
           }
@@ -160,28 +170,33 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
         entry.client
       }
 
-  def add(name: String, client: Resource[IO, PooledBoincClient], addedBy: AddedBy): IO[Unit] = {
+  def add(name: String, client: Resource[IO, PooledBoincClient], addedBy: AddedBy): IO[Boolean] = {
     boincClients
       .get
       .map(_.contains(name))
       .ifM(
-        IO.unit,
+        IO.pure(false),
         client
           .allocated
           .flatMap { case (client, finalizer) =>
-            boincClients.update(_ + (name -> BoincClientEntry(client, addedBy, finalizer, System.currentTimeMillis())))
-          } *>
-        updateVersion()
+            boincClients.update(_ + (name -> BoincClientEntry(client, addedBy, finalizer, System.currentTimeMillis()))) *>
+            updateVersion() *>
+            client.isAvailable.ifM(
+              IO.pure(true),
+              logger.warn(s"Unable to query details for host ${client.details.address}:${client.details.port}!") *>
+              IO.pure(false)
+            )
+          }
       )
   }
 
-  def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): IO[Unit] =
+  def add(name: String, address: String, port: Int, password: String, addedBy: AddedBy): IO[Boolean] =
     add(name, PooledBoincClient(poolSize, address, port, password), addedBy)
 
-  protected def add(name: String, host: AppConfig.Host): IO[Unit] =
+  protected def add(name: String, host: AppConfig.Host): IO[Boolean] =
     add(name, PooledBoincClient(poolSize, host.address, host.port, host.password), AddedByConfig)
 
-  protected def add(config: (String, AppConfig.Host)): IO[Unit] =
+  protected def add(config: (String, AppConfig.Host)): IO[Boolean] =
     add(config._1, config._2)
 
 

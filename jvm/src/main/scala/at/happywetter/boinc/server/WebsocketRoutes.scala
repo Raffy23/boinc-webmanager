@@ -53,7 +53,7 @@ object WebsocketRoutes {
 
   private object JWTToken extends QueryParamDecoderMatcher[String]("token")
 
-  def apply(authService: AuthenticationService, boincManager: BoincManager): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(webSocketBuilder: WebSocketBuilder[IO], authService: AuthenticationService, boincManager: BoincManager): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case GET -> Root :? JWTToken(token) if !authService.validate(token).getOrElse(false) =>
       IO.pure(Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
@@ -127,7 +127,7 @@ object WebsocketRoutes {
 
         val send = fs2.Stream.fromQueueNoneTerminated(client.responseQueue)
 
-        WebSocketBuilder[IO].build(send, receive)
+        webSocketBuilder.build(send, receive)
       }
 
   }

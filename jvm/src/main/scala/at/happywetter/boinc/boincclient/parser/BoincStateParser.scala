@@ -70,6 +70,16 @@ object BoincStateParser {
             if (curApp.isEmpty)
               throw new RuntimeException("Unable get get app_version for " + (n \ "app_name").text)
 
+            @inline def coproc(nodeSeq: NodeSeq): Option[AppVersionCoProc] = {
+              if (nodeSeq == null || nodeSeq.isEmpty)
+                return None
+
+              Some(AppVersionCoProc(
+                (nodeSeq \ "type").text,
+                (nodeSeq \ "count").toScalaDouble
+              ))
+            }
+
             val app = curApp.dequeue()
             apps.put((app \ "name").text,
               App(
@@ -85,7 +95,7 @@ object BoincStateParser {
                   (n \ "api_version").text,
                   (n \ "plan_class").optionalText,
                   List.empty, // TODO: Implement FileRef parsing
-                  None, // TODO: Implement co-proc parsing
+                  coproc(n \ "coproc"),
                   (n \ "gpu_ram").toOptionDouble,
                   (n \ "dont_throttle").existsNode,
                   (n \ "needs_network").existsNode

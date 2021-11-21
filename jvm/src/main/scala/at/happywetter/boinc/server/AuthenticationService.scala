@@ -2,7 +2,6 @@ package at.happywetter.boinc.server
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
-
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import com.auth0.jwt.JWT
@@ -12,13 +11,13 @@ import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc.User
-import at.happywetter.boinc.util.Logger
 import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import cats.data.Kleisli
 import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import org.typelevel.ci.CIString
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 /**
   * Created by: 
@@ -26,7 +25,7 @@ import org.typelevel.ci.CIString
   * @author Raphael
   * @version 18.08.2017
   */
-class AuthenticationService(config: Config) extends ResponseEncodingHelper with Logger {
+class AuthenticationService(config: Config) extends ResponseEncodingHelper {
 
   import AuthenticationService.toDate
   import cats.effect._
@@ -64,18 +63,22 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper with 
     case _ => encode(status = Unauthorized, body = ApplicationError(errorText), request)
   }
 
-  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
-    req.headers.get(CIString("Authorization")).map(header => {
-      validate(header.head.value.substring("Bearer ".length)) match {
-        case Success(true)  => service(req)
-        case Success(false) => denyService("error_invalid_token", req)(req)
-        case Failure(ex)     =>
-          LOG.error(s"Exception occurred while validating JWT token: ${ex.getMessage}")
-          denyService("error_invalid_token", req)(req)
-      }
-    }).getOrElse(
-      denyService("error_no_token", req)(req)
-    )
+  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = {
+    val logger = Slf4jLogger.getLoggerFromClass[IO](getClass)
+
+    Kleisli { req: Request[IO] =>
+      req.headers.get(CIString("Authorization")).map(header => {
+        validate(header.head.value.substring("Bearer ".length)) match {
+          case Success(true)  => service(req)
+          case Success(false) => denyService("error_invalid_token", req)(req)
+          case Failure(ex)    =>
+            denyService("error_invalid_token", req)(req)
+            .semiflatTap(_ => logger.error(s"Exception occurred while validating JWT token: ${ex.getMessage}"))
+        }
+      }).getOrElse(
+        denyService("error_no_token", req)(req)
+      )
+    }
   }
 
   def validate(token: String): Try[Boolean] = Try(

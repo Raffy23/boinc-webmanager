@@ -144,14 +144,14 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
         Jsoup.parse(new String(vec.toArray, "iso-8859-1"))
       )
 
-  private def doRPC[T](data: String, receiveMethod: () => IO[T]): IO[T] =
-    for {
-      _      <- lock.acquire
-      _      <- sendData(data)
-      result <- receiveMethod()
-      _      <- lock.release
-    } yield result
-
+  private def doRPC[T](data: String, receiveMethod: () => IO[T]): IO[T] = {
+    lock
+      .permit
+      .use[T](_ =>
+        sendData(data) *>
+        receiveMethod()
+      )
+  }
 
   private def xmlRpc(data: String): IO[NodeSeq]   = doRPC(data, readXML)
   private def htmlRpc(data: String): IO[Document] = doRPC(data, readHMTL)

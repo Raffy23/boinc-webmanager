@@ -29,6 +29,7 @@ object ResultParser {
       (node \ "final_cpu_time").tryToDouble,
       (node \ "final_elapsed_time").tryToDouble,
       (node \ "exit_status").tryToInt,
+      (node \ "resources").optionalText
     )
   }
 

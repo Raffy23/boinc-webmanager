@@ -20,6 +20,8 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 
+import java.text.DecimalFormat
+
 /**
   * Created by: 
   *
@@ -56,9 +58,10 @@ object WuDataTableModel {
       }).toRx(None)
 
     val uiStatus: Rx[String] =
-      Var(prettyPrintStatus(result)).zip(app.map(x => prettyPrintAppStatus(x))).map(x => x._1 + x._2)
+      Var(prettyPrintStatus(result)).zip(app.map(x => prettyPrintAppStatus(x, result))).map(x => x._1 + x._2)
 
     val exitStatus: Int = result.exitStatus
+    @inline def resource: Option[String] = result.resources
   }
 
   class WuTableRow(val result: ReactiveResult)(implicit boinc: BoincClient) extends DataTable.TableRow {
@@ -182,6 +185,7 @@ object WuDataTableModel {
               }))
             }
             <tr><td><b>{"wu_dialog_plan_class".localize}</b></td><td>{result.plan}</td></tr>
+            <tr><td><b>{"wu_dialog_resource".localize}</b></td><td>{result.resource.getOrElse("")}</td></tr>
             <tr><td><b>{"wu_dialog_exist_status".localize}</b></td><td>{result.exitStatus}</td></tr>
           </tbody>
         </table>
@@ -230,18 +234,49 @@ object WuDataTableModel {
     }
   }
 
-  private def prettyPrintAppStatus(app: Option[App]): String = {
+  // private val decimalFormat = new DecimalFormat("0.##")
+  private def prettyPrintAppStatus(app: Option[App], result: Result): String = {
     app.map(app => {
       val stringBuilder = new StringBuilder()
+      var props = List.empty[String]
 
-      if (app.nonCpuIntensive || app.version.avgCpus > 1) {
-        if (app.nonCpuIntensive)
-          stringBuilder.append("boinc_flags_nci".localize)
+      if (app.nonCpuIntensive)
+        props = "boinc_flags_nci".localize :: props
 
-        if (app.version.avgCpus > 1) {
-          stringBuilder.append(" ")
-          stringBuilder.append(s" (${app.version.avgCpus} CPUs)")
+      /*
+      if (app.version.coproc.isDefined) {
+        val count   = decimalFormat.format(app.version.coproc.map(_.count).get)
+        val gpuType = app.version.coproc.map(_.`type`).get match {
+          case "ATI"       => "AMD/ATI"
+          case "intel_gpu" => "Intel"
+          case "NVIDIA"    => "Nvidia"
+          case other       => other
         }
+
+        // TODO: Where to get device id from?
+        props = s"$count $gpuType GPU (device ?)" :: props
+      }
+      */
+
+      if (result.resources.isDefined)
+        props = result.resources.get :: props
+
+      if (app.version.avgCpus != 1 && !app.nonCpuIntensive && result.resources.isEmpty)
+        props = s"${app.version.avgCpus.formatted("%.2f")} CPUs" :: props
+
+      /*
+      if (app.version.planClass.isDefined) {
+        val planClass = app.version.planClass.get
+
+        if (!(planClass.equals("nci") || planClass.isEmpty))
+          props = app.version.planClass.get :: props
+      }
+      */
+
+      if (props.nonEmpty) {
+        stringBuilder.append(" (")
+        stringBuilder.append(props.mkString(", "))
+        stringBuilder.append(")")
       }
 
       stringBuilder.toString()
