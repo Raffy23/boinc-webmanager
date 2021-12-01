@@ -26,13 +26,9 @@ object LoginPageCSS extends StyleSheet.Standalone {
   )
 
   input.cssName -(
-    backgroundColor(c"#f2f2f2"),
     width(100%%),
-    border :=! "1px solid #DDD",
-    margin(0 px, 0 px, 15 px, 0 px),
     padding(15 px),
-    boxSizing.borderBox,
-    fontSize(14 px)
+    margin(0 px, 0 px, 15 px, 0 px),
   )
 
   headerBar.cssName -(

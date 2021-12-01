@@ -4,9 +4,9 @@ import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincProjectStyle => Style}
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.helper.table.DataModelConverter._
-import at.happywetter.boinc.web.helper.table.ProjectDataTableModel.ProjectTableRow
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.model.DataModelConverter._
+import at.happywetter.boinc.web.model.ProjectDataTableModel.ProjectTableRow
 import at.happywetter.boinc.web.pages.component.dialog.{OkDialog, ProjectAddDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
@@ -16,8 +16,8 @@ import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.table.DataModelConverter
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.model.DataModelConverter
 
 import scala.xml.Elem
 
@@ -45,12 +45,16 @@ class BoincProjectLayout extends BoincClientLayout {
     List(
       TableTheme.table,
       TableTheme.lastRowSmall
-    )
+    ),
+    paged = true
   )
 
   override def render: Elem = {
     implicit val implicitDataTable: DataTable[ProjectTableRow] = dataTable
-    boinc.getProjects.foreach(projects => dataTable.reactiveData := projects)
+    boinc.getProjects.map { projects =>
+      dataTable.reactiveData := projects
+      NProgress.done(true)
+    }.recover(ErrorDialogUtil.showDialog)
 
     <div id="projects">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>

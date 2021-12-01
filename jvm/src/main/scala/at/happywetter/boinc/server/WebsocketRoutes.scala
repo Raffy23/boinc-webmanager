@@ -1,23 +1,21 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.BoincManager
-import at.happywetter.boinc.shared.webrpc.ApplicationError
-import cats.effect.{Concurrent, IO}
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
+import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.websocket._
+import at.happywetter.boinc.util.http4s.Implicits._
+import cats.effect.IO
+import cats.effect.std.{Queue, Supervisor}
+import cats.effect.unsafe.implicits.global
 import fs2.Pipe
-import fs2.concurrent.Queue
-import org.http4s.{HttpRoutes, Response}
 import org.http4s.dsl.io._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame._
-
+import org.http4s.{HttpRoutes, Response}
 import scodec.bits.ByteVector
-import upickle.default.{readBinary, writeBinary, Writer}
-import at.happywetter.boinc.shared.parser._
-import at.happywetter.boinc.shared.websocket._
-import at.happywetter.boinc.util.http4s.Implicits._
-import scala.concurrent.duration._
-import at.happywetter.boinc.util.IOAppTimer.timer
+import upickle.default.{Writer, readBinary, writeBinary}
 
 import scala.language.implicitConversions
 
@@ -29,60 +27,108 @@ import scala.language.implicitConversions
   */
 object WebsocketRoutes {
 
-  private case class State(callback: BoincManager => Unit)
-  private case class Client(token: String, responseQueue: Queue[IO, WebSocketFrame], state: State)
+  private case class State(supervisor: Supervisor[IO], finalizer: IO[Unit], callback: BoincManager => IO[Unit])
+  private case class Client(token: String, responseQueue: Queue[IO, Option[WebSocketFrame]], state: State)
   private object Client {
-    def apply(token: String)(implicit concurrent: Concurrent[IO]): Client = {
-      val responseQueue = Queue.unbounded[IO, WebSocketFrame].unsafeRunSync()
-      val callback: BoincManager => Unit = manager => {
-        responseQueue
-          .enqueue1(HostInformationChanged(manager.getAllHostNames.toList, manager.getSerializableGroups))
-          .unsafeRunAsyncAndForget()
-      }
+    def apply(token: String): IO[Client] = {
+      for {
+        supervisor <- Supervisor[IO].allocated
+        result     <- Queue
+          .unbounded[IO, Option[WebSocketFrame]]
+          .map { responseQueue =>
+            val callback: BoincManager => IO[Unit] = manager => for {
+              names <- manager.getAllHostNames
+              groups <- manager.getSerializableGroups
 
-      new Client(token, responseQueue, State(callback))
+              _ <- responseQueue.offer(
+                Some(HostInformationChanged(names, groups))
+              )
+            } yield ()
+
+            new Client(token, responseQueue, State(supervisor._1, supervisor._2, callback))
+          }
+      } yield result
     }
   }
 
   private object JWTToken extends QueryParamDecoderMatcher[String]("token")
 
-  def apply(authService: AuthenticationService, boincManager: BoincManager)(implicit c: Concurrent[IO]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(webSocketBuilder: WebSocketBuilder[IO], authService: AuthenticationService, boincManager: BoincManager): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case GET -> Root :? JWTToken(token) if !authService.validate(token).getOrElse(false) =>
-      IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
+      IO.pure(Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
 
     case GET -> Root :? JWTToken(token) if authService.validate(token).getOrElse(false) =>
-      val client = Client(token)
-      val echoReply: Pipe[IO, WebSocketFrame, WebSocketFrame] =
-        _.collect {
+
+      Client(token).flatMap { client =>
+        val clientReply: PartialFunction[WebSocketFrame, IO[WebSocketFrame]] = {
           case Binary(msg, _) => readBinary[WebSocketMessage](msg.toArray) match {
 
-            case SubscribeToGroupChanges if boincManager.versionChangeListeners.contains(client.state.callback) => NACK
             case SubscribeToGroupChanges =>
-              boincManager.versionChangeListeners.add(client.state.callback)
-              println("Subscribed!")
-              ACK
+              boincManager
+                .changeListener
+                .contains(client.state.callback)
+                .ifM(
+                  IO.pure(NACK),
+                  IO {
+                    boincManager.changeListener.register(client.state.callback)
+                    ACK
+                  }
+                )
 
             case UnsubscribeToGroupChanges =>
-              if (boincManager.versionChangeListeners.remove(client.state.callback)) ACK else NACK
-
+              boincManager
+                .changeListener
+                .contains(client.state.callback)
+                .ifM(
+                  boincManager.changeListener.unregister(client.state.callback).map(_ => ACK),
+                  IO.pure(NACK)
+                )
           }
 
           case Close(_) =>
-            boincManager.versionChangeListeners.remove(client.state.callback)
-            CloseGracefully
+            boincManager
+              .changeListener
+              .contains(client.state.callback)
+              .ifM(
+                boincManager.changeListener.unregister(client.state.callback),
+                IO.unit
+              )
+              .flatMap(_ => client.state.finalizer)
+              .as(CloseGracefully)
 
-          case _ => CloseWithUnknownRequst
+          case _ =>
+            boincManager
+              .changeListener
+              .contains(client.state.callback)
+              .ifM(
+                boincManager.changeListener.unregister(client.state.callback),
+                IO.unit
+              )
+              .flatMap(_ => client.state.finalizer)
+              .as(CloseWithUnknownRequst)
+
         }
 
-      Queue
-        .unbounded[IO, WebSocketFrame]
-        .flatMap { q =>
-          val d = q.dequeue.through(echoReply).merge(client.responseQueue.dequeue)
-          val e = q.enqueue
+        val receive: Pipe[IO, WebSocketFrame, Unit] =
+          _.collect {
+            case payload =>
+                client.state.supervisor.supervise(
+                  clientReply
+                    .lift(payload)
+                    .map { responseIO =>
+                      responseIO.flatMap(response =>
+                        client.responseQueue.offer(Some(response))
+                      )
+                    }
+                    .getOrElse(IO.unit)
+                ).unsafeRunAndForget()
+          }
 
-          WebSocketBuilder[IO].build(d, e)
-        }
+        val send = fs2.Stream.fromQueueNoneTerminated(client.responseQueue)
+
+        webSocketBuilder.build(send, receive)
+      }
 
   }
 

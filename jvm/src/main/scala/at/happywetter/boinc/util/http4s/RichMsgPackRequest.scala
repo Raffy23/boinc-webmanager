@@ -2,7 +2,8 @@ package at.happywetter.boinc.util.http4s
 
 import cats.{Applicative, Monad}
 import org.http4s.dsl.io._
-import org.http4s.{EntityDecoder, Header, Headers, Request, Response}
+import org.http4s.headers.`Content-Type`
+import org.http4s._
 import upickle.default.{Reader, read, readBinary}
 
 import scala.language.higherKinds
@@ -16,8 +17,8 @@ import scala.util.Try
   */
 object RichMsgPackRequest {
 
-  private val HEADER_MSGPACK = "application/messagepack"
-  private val HEADER_JSON    = "application/json; charset=utf-8"
+  private val HEADER_MSGPACK = `Content-Type`(CustomMediaTypes.messagepack)
+  private val HEADER_JSON    = `Content-Type`(MediaType.application.json)
 
   implicit class RichMsgPacKResponse[F[_]: Applicative](request: Request[F]) {
 
@@ -25,7 +26,7 @@ object RichMsgPackRequest {
       request.decode[Array[Byte]] { body =>
         Try(readBinary(body))
           .map(f)
-          .map(resp => F.map(resp)(_.withHeaders(Headers.of(Header("Content-Type", HEADER_MSGPACK)))))
+          //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_MSGPACK))))
           .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError)) }
           .get
       }
@@ -34,10 +35,11 @@ object RichMsgPackRequest {
       request.decode[Array[Byte]] { body =>
         Try(read(body))
           .map(f)
-          .map(resp => F.map(resp)(_.withHeaders(Headers.of(Header("Content-Type", HEADER_JSON)))))
+          //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_JSON))))
           .recover{ case ex: Exception => ex.printStackTrace(); F.pure(Response[F](status = InternalServerError))}
           .get
       }
+
   }
 
 }

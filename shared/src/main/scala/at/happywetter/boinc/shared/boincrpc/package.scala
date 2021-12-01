@@ -7,7 +7,14 @@ package at.happywetter.boinc.shared
   * @version 05.07.2019
   */
 package object boincrpc {
-
+  
+  final case class BoincVersion(major: Int, minor: Int, release: Int) extends Ordered[BoincVersion] {
+    override def toString: String = s"$major.$minor.$release"
+    override def compare(that: BoincVersion): Int =
+      (this.major - that.major) * 100 +
+      (this.minor - that.minor) * 10  +
+      (this.release - that.release)
+  }
 
   final case class Task(activeTaskState: Int // 0=>inactive,1=>active,9=>pause(time)
                         ,appVersionNum: Int
@@ -22,17 +29,21 @@ package object boincrpc {
                         ,workingSet: Double
                         ,progress: Double)
 
-  final case class Result(name: String
-                          ,wuName: String
-                          ,platfrom: String
-                          ,version: String
-                          ,plan: String
-                          ,project: String
-                          ,state: Int
-                          ,supsended: Boolean
-                          ,activeTask: Option[Task]
-                          ,remainingCPU: Double
-                          ,reportDeadline: Double) {
+  final case class Result(name: String,
+                          wuName: String,
+                          platfrom: String,
+                          version: String, // version_num
+                          plan: String, // plan_class
+                          project: String,
+                          state: Int,
+                          supsended: Boolean,
+                          activeTask: Option[Task],
+                          remainingCPU: Double, // estimated_cpu_time_remaining
+                          reportDeadline: Double,
+                          finalCPUTime: Double,
+                          finalElapsedTime: Double,
+                          exitStatus: Int,
+                          resources: Option[String]) {
 
     override def equals(obj: scala.Any): Boolean = obj.asInstanceOf[Result].wuName.equals(wuName)
     override def hashCode(): Int = wuName.hashCode
@@ -44,7 +55,7 @@ package object boincrpc {
       val Result_File_Downloading = Value(1)
       val Result_Files_Downloaded = Value(2)
       val Result_Compute_Error = Value(3)
-      val Result_Files_Uploading = Value(4)
+      val Result_Files_Uploading = Value(4) // aka. Task finished computing
       val Result_Files_Uploaded = Value(5)
       val Result_Aborted = Value(6)
       val Result_Upload_Failed = Value(7)
@@ -92,7 +103,7 @@ package object boincrpc {
 
   final case class CoProcessorOpenCL(name: String
                                      ,vendor: String
-                                     ,platfromVersion: String
+                                     ,platformVersion: String
                                      ,deviceVersion: String
                                      ,driverVersion: String)
 
@@ -120,6 +131,7 @@ package object boincrpc {
       val GiveUpDownload: Status.Value = Value(-114)
       val GiveUpUpload: Status.Value = Value(-115)
       val Normal: Status.Value = Value(1)
+      val Default: Status.Value = Value(0)
     }
   }
 
@@ -130,7 +142,7 @@ package object boincrpc {
                                       ,lastBytesXfered: Double
                                       ,isUpload: Boolean)
 
-  final case class FileXfer(bytesXfered: Double,xferSpeed: Double,url: String)
+  final case class FileXfer(bytesXfered: Double, xferSpeed: Double, url: String)
 
   final case class NetworkStatus(isNetworkAvailable: Boolean)
 
@@ -168,7 +180,21 @@ package object boincrpc {
                               platform: String,
                               flops: Double,
                               avgCpus: Double,
-                              maxCpus: Double)
+                              maxCpus: Option[Double],
+                              apiVersion: String,
+                              planClass: Option[String],
+                              files: List[FileRef],
+                              coproc: Option[AppVersionCoProc],
+                              gpuRam: Option[Double],
+                              dontThrottle: Boolean,
+                              needsNetwork: Boolean)
+
+  final case class FileRef(fileName: String,
+                           openName: Option[String],
+                           mainProgram: Boolean,
+                           copyFile: Boolean)
+
+  final case class AppVersionCoProc(`type`: String, count: Double)
 
   final case class BoincState(hostInfo: HostInfo,
                               projects: List[Project],
@@ -231,12 +257,15 @@ package object boincrpc {
   object CCState {
 
     object State extends Enumeration {
-      val Enabled: State.Value = Value(1)
-      val Auto: State.Value = Value(2)
+      val Default: State.Value  = Value(0)
+      val Enabled: State.Value  = Value(1)
+      val Auto: State.Value     = Value(2)
       val Disabled: State.Value = Value(3)
     }
 
   }
+
+  final case class DayEntry(day: Int, cpu: (Double, Double), network: (Double, Double))
 
   final case class GlobalPrefsOverride(runOnBatteries: Boolean
                                        ,batteryChargeMinPct: Double
@@ -265,8 +294,7 @@ package object boincrpc {
                                        ,networkWifiOnly: Boolean
                                        ,cpuTime: (Double, Double)
                                        ,netTime: (Double, Double)
-                                       ,cpuTimes: List[(Double, Double)]    // length == 7
-                                       ,netTimes: List[(Double, Double)]    // length == 7
+                                       ,dayPrefs: List[DayEntry]
                                       )
 
   final case class TimeSpan(start: Double, end: Double)
@@ -328,6 +356,8 @@ package object boincrpc {
       val GetFileTransfer = Value("filetransfers")
       val ReadGlobalPrefsOverride = Value("global_prefs_override")
       val GetNotices = Value("notices")
+      val RetryFileTransfer = Value("retry_file_transfer")
+      val UpdateProject = Value("project")
 
       import scala.language.implicitConversions
       implicit def unapply(arg: Command): String = arg.toString
@@ -360,5 +390,42 @@ package object boincrpc {
     }
 
   }
+
+  final case class WorkunitRequestBody(project: String, action: String)
+
+  final case class ProjectRequestBody(project: String, action: String)
+
+  final case class BoincModeChange(mode: String, duration: Double)
+
+  final case class RetryFileTransferBody(project: String, file: String)
+
+  final case class AddProjectBody(projectUrl: String, projectName: String, user: String, password: String)
+
+  final case class ApplicationError(reason: String)
+
+  final case class ServerSharedConfig(hostNameCacheTimeout: Long, hardware: Boolean)
+
+  final case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
+
+  final case class AddNewHostRequestBody(address: String, port: Int, password: String)
+
+  final case class AppConfig(apps: List[AppConfig.App],
+                             appVersions: List[AppConfig.AppVersion],
+                             projectMaxConcurrent: Option[Int],
+                             reportResultsImmediately: Boolean)
+  object AppConfig {
+
+    final case class App(name: String,
+                         maxConcurrent: Int,
+                         reportResultsImmediately: Boolean,
+                         fractionDoneExact: Boolean,
+                         gpuVersions: Option[GpuVersions])
+
+    final case class GpuVersions(gpuUsage: Double, cpuUsage: Double)
+
+    final case class AppVersion(appName: String, planClass: String, avgCpus: Int, ngpus: Int, cmdline: String)
+
+  }
+
 
 }

@@ -11,7 +11,7 @@ import scala.xml.Elem
   * @author Raphael
   * @version 31.08.2017
   */
-abstract class Dialog(dialogID: String) {
+abstract class Dialog(protected val dialogID: String) {
 
   def render(): Elem
 
@@ -24,6 +24,15 @@ abstract class Dialog(dialogID: String) {
     this
   }
 
-  def hide(): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style = ""
-  def show(): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style = "display:block;"
+  def hide(): Unit = Dialog.hideByID(dialogID)
+  def show(): Unit = Dialog.showByID(dialogID)
+  def destroy(): Unit = dom.document.body.removeChild(dom.document.getElementById(dialogID))
+
+}
+object Dialog {
+
+  def exists(dialogID: String): Boolean = dom.document.getElementById(dialogID) != null
+  def hideByID(dialogID: String): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style = ""
+  def showByID(dialogID: String): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style = "display:block;"
+
 }

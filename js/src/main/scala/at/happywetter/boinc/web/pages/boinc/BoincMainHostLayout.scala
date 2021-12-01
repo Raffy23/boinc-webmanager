@@ -3,10 +3,10 @@ package at.happywetter.boinc.web.pages.boinc
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes.Mode
 import at.happywetter.boinc.shared.boincrpc.{CCState, HostInfo}
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
-import at.happywetter.boinc.web.boincclient.{BoincFormater, ClientCacheHelper}
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
+import at.happywetter.boinc.web.boincclient.{BoincFormatter, ClientCacheHelper}
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.css.definitions.pages.{BoincMainHostStyle => Style}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
@@ -122,10 +122,10 @@ class BoincMainHostLayout extends BoincClientLayout {
             <tr><td><b>{"boinc_info_#cpu".localize}</b></td><td>{clientData.map(_.hostInfo.cpus)}</td></tr>
             <tr><td><b>{"boinc_info_ip".localize}</b></td><td>{clientData.map(_.hostInfo.ipAddr)}</td></tr>
             <tr><td><b>{"boinc_info_ram".localize}</b></td>
-              <td>{clientData.map(x => BoincFormater.convertSize(x.hostInfo.memory))}</td>
+              <td>{clientData.map(x => BoincFormatter.convertSize(x.hostInfo.memory))}</td>
             </tr>
             <tr><td><b>{"boinc_info_swap".localize}</b></td>
-              <td>{clientData.map(x => BoincFormater.convertSize(x.hostInfo.swap))}</td>
+              <td>{clientData.map(x => BoincFormatter.convertSize(x.hostInfo.swap))}</td>
             </tr>
             <tr><td><b>{"boinc_info_disk".localize}</b></td> <td>
               <span class={BoincClientStyle.progressBar.htmlClass} >

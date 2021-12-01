@@ -1,18 +1,19 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
-import at.happywetter.boinc.web.boincclient.BoincFormater.Implicits._
+import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
+import at.happywetter.boinc.web.boincclient.BoincFormatter
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.FloatingMenu
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincSwarmPageStyle, BoincGlobalPrefsStyle => Style}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}
 import org.scalajs.dom
-import org.scalajs.dom.Event
+import org.scalajs.dom.{Event, document, window}
 import org.scalajs.dom.raw.HTMLInputElement
 
 import scala.language.postfixOps
@@ -29,16 +30,19 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
 
   override val path = "global_prefs"
 
-  private var globalPrefsOverride = Var(
-    GlobalPrefsOverride(false,0D,0D,false,false,0D,0D,false,false,0D,0D,0D,0D,0D,0D,0D,0D, 0D,0D,0D,0D,0D,0D,0,false,(-1D,-1D),(-1D,-1D),List(),List())
+  private val globalPrefsOverride = Var(
+    GlobalPrefsOverride(false,0D,0D,false,false,0D,0D,false,false,0D,0D,0D,0D,0D,0D,0D,0D, 0D,0D,0D,0D,0D,0D,0,false,(-1D,-1D),(-1D,-1D),List.empty)
   )
 
   override def already(): Unit = onRender()
 
   override def render: Elem = {
-    def v[T](x: (GlobalPrefsOverride) => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
-    def b[T](x: (GlobalPrefsOverride) => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
+    @inline def v[T](x: GlobalPrefsOverride => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
+    @inline def b[T](x: GlobalPrefsOverride => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
+    @inline def r[T](x: GlobalPrefsOverride => T): Rx[T] = globalPrefsOverride.map(x)
 
+    @inline def orDefault[T](x: GlobalPrefsOverride => Double, default: String = ""): Rx[String] =
+      globalPrefsOverride.map(x.andThen(d => if (d > 0D) d.toString else ""))
 
     <div id="global_prefs" class={Style.rootPane.htmlClass}>
       <div class={Seq(FloatingMenu.root.htmlClass, BoincClientStyle.inTextIcon).mkString(" ")}>
@@ -150,19 +154,126 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       </label>
       <br/>
 
+
+      <h4 class={Seq(BoincClientStyle.h4, Style.h4Padding).map(_.htmlClass).mkString(" ")}>
+        {"timetable".localize}
+      </h4>
+      <div>
+        <b>CPU:</b>
+        <label for="cpu_start">{"start".localize}</label>
+        <input class={Style.input.htmlClass} id="cpu_start" placeholder="00:00"/>
+        <label for="cpu_end">{"end".localize}</label>
+        <input class={Style.input.htmlClass} id="cpu_end" placeholder="24:00"/>
+        <br/>
+        {
+          globalPrefsOverride.map(globalPrefsOverride => {
+            val itr = globalPrefsOverride.dayPrefs.iterator;
+            var cur = itr.nextOption()
+
+            (1 to 7).map { dayIndex =>
+              val day = cur.getOrElse(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)))
+
+              var r: Node = null
+              if (day.day == dayIndex) {
+                r = renderDay(day, _.cpu, "cpu")
+                cur = itr.nextOption()
+              } else {
+                r = renderDay(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)), _.cpu, "cpu")
+              }
+
+              r
+            }
+          })
+        }
+      </div>
+      <br/>
+      <br/>
+      <div>
+        <b>Network:</b>
+        <label for="network_start">{"start".localize}</label>
+        <input class={Style.input.htmlClass} id="network_start" placeholder="00:00"/>
+        <label for="network_end">{"end".localize}</label>
+        <input class={Style.input.htmlClass} id="network_end" placeholder="24:00"/>
+        <br/>
+        {
+          globalPrefsOverride.map(globalPrefsOverride => {
+            val itr = globalPrefsOverride.dayPrefs.iterator;
+            var cur = itr.nextOption()
+
+            (1 to 7).map { dayIndex =>
+              val day = cur.getOrElse(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)))
+
+              var r: Node = null
+              if (day.day == dayIndex) {
+                r = renderDay(day, _.network, "net")
+                cur = itr.nextOption()
+              } else {
+                r = renderDay(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)), _.network, "net")
+              }
+
+              r
+            }
+          })
+        }
+      </div>
     </div>
+  }
+
+  private def renderDay(day: DayEntry, f: DayEntry => (Double,Double), prefix: String): Node = {
+    @inline def fmt(double: Double): String = if (double > 0) double.toTimeHHMM else ""
+
+    <span>{weekday(day).localize}:
+      <label for={s"${prefix}_start_${day.day}"}>{"from".localize}</label>
+      <input class={Style.input.htmlClass} id={s"${prefix}_start_${day.day}"} placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._1)}/>
+      <label for={s"${prefix}_end_${day.day}"}>{"to".localize}</label>
+      <input class={Style.input.htmlClass} id={s"${prefix}_end_${day.day}"} placeholder="24:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._2)}/>
+      <br/>
+    </span>
+  }
+
+  private def weekday(day: DayEntry): String = {
+    day.day match {
+      case 1 => "monday"
+      case 2 => "tuesday"
+      case 3 => "wednesday"
+      case 4 => "thursday"
+      case 5 => "friday"
+      case 6 => "saturday"
+      case 7 => "sunday"
+    }
   }
 
   override def onRender(): Unit = {
     boinc.getGlobalPrefsOverride
       .map(f => this.globalPrefsOverride := f)
       .recover(ErrorDialogUtil.showDialog)
+      .foreach(_ => NProgress.done(true))
   }
 
   private val jsOnSubmitListener: (Event) => Unit = (event) => {
     NProgress.start()
 
     val globalPrefsOverride = this.globalPrefsOverride.now
+
+    import at.happywetter.boinc.web.facade.NodeListConverter._
+
+    case class MutableDayEntry(var cpuStart: Double = -1D, var cpuEnd: Double = -1D, var netStart: Double = -1D, var netEnd: Double = -1D)
+    val dayPrefsData = IndexedSeq(
+      MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry()
+    )
+
+    document.querySelectorAll("[id^='net_start_']").forEach {
+      case (node, index, unit) => dayPrefsData(index).netStart = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    }
+    document.querySelectorAll("[id^='net_end_']").forEach {
+      case (node, index, unit) => dayPrefsData(index).netEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    }
+    document.querySelectorAll("[id^='cpu_start_']").forEach {
+      case (node, index, unit) => dayPrefsData(index).cpuStart = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    }
+    document.querySelectorAll("[id^='cpu_end_']").forEach {
+      case (node, index, unit) => dayPrefsData(index).cpuEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    }
 
     boinc.setGlobalPrefsOverride(
       GlobalPrefsOverride(
@@ -193,8 +304,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
         globalPrefsOverride.networkWifiOnly,
         globalPrefsOverride.cpuTime,
         globalPrefsOverride.netTime,
-        globalPrefsOverride.cpuTimes,
-        globalPrefsOverride.netTimes
+        dayPrefsData.zipWithIndex.map {
+          case (day, index) => DayEntry(index+1, (day.cpuStart, day.cpuEnd), (day.netStart, day.netEnd))
+        }.toList
       )
     ).map(result => {
 

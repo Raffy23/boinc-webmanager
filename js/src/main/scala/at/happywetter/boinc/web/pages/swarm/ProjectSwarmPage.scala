@@ -6,8 +6,8 @@ import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.css.definitions.components.{TableTheme, Tooltip => TooltipStyle}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, ProjectSwarmPageStyle => Style}
 import at.happywetter.boinc.web.css.definitions.components.{Dialog => DialogStyle}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.pages.component.dialog._
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
@@ -239,7 +239,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
     val result = new ListBuffer[String]()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => {
       if (node.asInstanceOf[HTMLInputElement].checked)
         result += node.asInstanceOf[HTMLInputElement].value
@@ -253,7 +253,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
     event.preventDefault()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => node.asInstanceOf[HTMLInputElement].checked = true)
   }
 

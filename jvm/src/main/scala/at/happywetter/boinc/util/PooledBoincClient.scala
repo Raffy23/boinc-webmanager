@@ -1,18 +1,17 @@
 package at.happywetter.boinc.util
 
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.atomic.AtomicInteger
-
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared.boincrpc._
-import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
+import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
+import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
+import cats.data.State
+import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
+import cats.effect.std.Semaphore
+import cats.effect.unsafe.implicits.global
+import cats.effect.{IO, Ref, Resource}
 
-import scala.collection.concurrent.TrieMap
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Created by: 
@@ -20,101 +19,218 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * @author Raphael
   * @version 12.09.2017
   */
-class PooledBoincClient(poolSize: Int, val address: String, val port: Int = 31416, password: String, encoding: String) extends BoincCoreClient {
+object PooledBoincClient {
 
-  val deathCounter = new AtomicInteger(0)
+  case class ConnectionException(e: Throwable) extends RuntimeException(e)
 
-  private def all = lastUsed.keys.toList
-  private val lastUsed = new TrieMap[BoincClient, Long]()
-  private val pool = new LinkedBlockingQueue[BoincClient]
-  (0 to poolSize).foreach(_ => {
-    val client = new BoincClient(address, port, password, encoding)
+  case class BoincClientParameters(address: String, val port: Int, password: String)
 
-    pool.offer(client)
-    lastUsed += (client -> 0)
-  })
+  private case class PoolState(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
 
-  private def takeConnection(): Future[BoincClient] = Future {
-    val con = pool.take()
-    lastUsed(con) = System.currentTimeMillis()
+  def apply(poolSize: Int, address: String, port: Int = 31416, password: String): Resource[IO, PooledBoincClient] =
+    Resource.make(
+      for {
+        lock   <- Semaphore[IO](1)
+        client <- IO {
+          new PooledBoincClient(lock, BoincClientParameters(address, port, password))
+        }
+      } yield client
+    )(_.close())
 
-    con
+}
+class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientParameters) extends BoincCoreClient[IO] {
+
+  val deathCounter: Ref[IO, Int] = Ref.unsafe(0)
+
+  private def all = state.get.map(_.lastUsed.keys.toSeq)
+
+  private val state = Ref.unsafe[IO, PoolState](PoolState(Map.empty, Map.empty, List.empty))
+
+  private def takeConnection(): IO[BoincClient] =
+    lock
+      .permit
+      .use(_ =>
+        state.modify[Either[Throwable, BoincClient]] { state =>
+          state.pool match {
+            case connection :: tail =>
+              (
+                PoolState(
+                  state.lastUsed + (connection -> System.currentTimeMillis()),
+                  state.finalizer,
+                  tail
+                ),
+                Right(connection)
+              )
+
+            case Nil    =>
+              // Kind of ugly, but effect must be atomic in this transaction
+              BoincClient(details.address, details.port, details.password)
+                .allocated
+                .map(Right(_))
+                .handleError(Left(_))
+                .unsafeRunSync()
+                .fold (
+                  throwable =>
+                    (
+                      state,
+                      Left(throwable)
+                    )
+                  ,
+                  boincClient =>
+                    (
+                      PoolState(
+                        state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
+                        state.finalizer + (boincClient._1 -> boincClient._2),
+                        List.empty
+                      ),
+                      Right(boincClient._1)
+                    )
+                )
+          }
+        }.flatMap(_.fold(IO.raiseError, c => IO.pure(c)))
+      ).handleErrorWith(cause =>
+        deathCounter.update(_ + 1) *>
+        IO.raiseError(new RuntimeException(s"Client ${details.address}:${details.port} is unavailable!", cause))
+      )
+
+  private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
+   takeConnection().bracketCase(extractor) {
+     case (connection, Succeeded(_)) => state.update(old => old.copy(pool = connection :: old.pool))
+     case (connection, Canceled())   => state.update(old => old.copy(pool = connection :: old.pool))
+     case (connection, Errored(e))   => for {
+
+       _ <- deathCounter.update(_ + 1)
+       _ <- closeConnection(connection)
+       _ <- IO.raiseError(ConnectionException(e))
+
+     } yield ()
+   }
   }
 
-  private def connection[R](extractor: BoincClient => Future[R]): Future[R] =
-    takeConnection()
-      .map(client => (client, extractor(client)))
-      .flatMap{ case (client, result) => pool.offer(client); result }
-      .recover{ case e: Exception => deathCounter.incrementAndGet(); throw e }
+  private def closeConnection(connection: BoincClient): IO[Unit] = for {
 
+    finalizer <- state.modify(state =>
+      (
+        PoolState(
+          state.lastUsed - connection,
+          state.finalizer - connection,
+          state.pool.filterNot(_ == connection)
+        ),
+        state.finalizer(connection)
+      )
+    )
 
-  def checkConnection(): Future[Boolean] =
-    connection(_.getCCState)
+    _ <- finalizer
+
+  } yield ()
+
+  def close(): IO[Unit] = {
+    import cats.implicits._
+
+    all
+      .flatMap(_
+        .map(closeConnection)
+        .sequence
+      )
+      .void
+  }
+
+  def isAvailable: IO[Boolean] =
+    getHostInfo
       .map(_ => true)
-      .recover{ case _: Exception =>
-        deathCounter.incrementAndGet()
-        false
-      }
+      .handleError(_ => false)
 
-  def closeAll(): Unit = all.foreach(_.close())
-  def closeOpen(): Unit = pool.iterator().forEachRemaining(_.close())
-  def closeOpen(timeout: Long): Unit = {
+  def close(timeout: FiniteDuration): IO[Int] = {
+    import cats.implicits._
     val current = System.currentTimeMillis()
+    val timeoutMillis = timeout.toMillis
 
-    lastUsed.foreach{
-      case (client, timestamp) if timestamp+timeout < current => client.close()
-    }
+    state.modify { state =>
+      val toBeClosed = state.lastUsed.filter {
+        case (_, timestamp) => timestamp+timeoutMillis < current
+      }.keySet
+
+      val finalizers = state.finalizer
+        .filter(entry => toBeClosed.contains(entry._1))
+        .values
+        .toList
+
+      (
+        PoolState(
+          state.lastUsed  -- toBeClosed,
+          state.finalizer -- toBeClosed,
+          state.pool.filterNot(client => toBeClosed.contains(client))
+        ),
+        (finalizers,  toBeClosed.size)
+      )
+    }.flatTap(_._1.sequence_)
+     .map(_._2)
   }
 
-  def hasOpenConnections: Boolean = all.exists(_.isAuthenticated)
+  def hasOpenConnections: IO[Boolean] = state.get.map(_.pool.nonEmpty)
 
-  override def getTasks(active: Boolean): Future[List[Result]] = connection(_.getTasks(active))
+  override def getTasks(active: Boolean): IO[List[Result]] = connection(_.getTasks(active))
 
-  override def getHostInfo: Future[HostInfo] = connection(_.getHostInfo)
+  override def getHostInfo: IO[HostInfo] = connection(_.getHostInfo)
 
-  override def isNetworkAvailable: Future[Boolean] = connection(_.isNetworkAvailable)
+  override def isNetworkAvailable: IO[Boolean] = connection(_.isNetworkAvailable)
 
-  override def getDiskUsage: Future[DiskUsage] = connection(_.getDiskUsage)
+  override def getDiskUsage: IO[DiskUsage] = connection(_.getDiskUsage)
 
-  override def getProjects: Future[List[Project]] = connection(_.getProjects)
+  override def getProjects: IO[List[Project]] = connection(_.getProjects)
 
-  override def getState: Future[BoincState] = connection(_.getState)
+  override def getState: IO[BoincState] = connection(_.getState)
 
-  override def getFileTransfer: Future[List[FileTransfer]] = connection(_.getFileTransfer)
+  override def getFileTransfer: IO[List[FileTransfer]] = connection(_.getFileTransfer)
 
-  override def getCCState: Future[CCState] = connection(_.getCCState)
+  override def getCCState: IO[CCState] = connection(_.getCCState)
 
-  override def getStatistics: Future[Statistics] = connection(_.getStatistics)
+  override def getStatistics: IO[Statistics] = connection(_.getStatistics)
 
-  override def getGlobalPrefsOverride: Future[GlobalPrefsOverride] = connection(_.getGlobalPrefsOverride)
+  override def getGlobalPrefsOverride: IO[GlobalPrefsOverride] = connection(_.getGlobalPrefsOverride)
 
-  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): Future[Boolean] =
+  override def setGlobalPrefsOverride(globalPrefsOverride: GlobalPrefsOverride): IO[Boolean] =
     connection(_.setGlobalPrefsOverride(globalPrefsOverride))
 
-  override def workunit(project: String, name: String, action: WorkunitAction): Future[Boolean] =
+  override def workunit(project: String, name: String, action: WorkunitAction): IO[Boolean] =
     connection(_.workunit(project, name, action))
 
-  override def project(name: String, action: ProjectAction): Future[Boolean] =
+  override def project(name: String, action: ProjectAction): IO[Boolean] =
     connection(_.project(name, action))
 
-  override def attachProject(url: String, authenticator: String, name: String): Future[Boolean] =
+  override def attachProject(url: String, authenticator: String, name: String): IO[Boolean] =
     connection(_.attachProject(url, authenticator, name))
 
-  override def setCpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
+  override def setCpu(mode: BoincRPC.Modes.Value, duration: Double): IO[Boolean] =
     connection(_.setCpu(mode, duration))
 
-  override def setGpu(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
+  override def setGpu(mode: BoincRPC.Modes.Value, duration: Double): IO[Boolean] =
     connection(_.setGpu(mode, duration))
 
-  override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
+  override def setNetwork(mode: BoincRPC.Modes.Value, duration: Double): IO[Boolean] =
     connection(_.setNetwork(mode, duration))
 
-  override def setRun(mode: BoincRPC.Modes.Value, duration: Double): Future[Boolean] =
+  override def setRun(mode: BoincRPC.Modes.Value, duration: Double): IO[Boolean] =
     connection(_.setRun(mode, duration))
 
-  override def getMessages(seqno: Int): Future[List[Message]] = connection(_.getMessages(seqno))
+  override def getMessages(seqno: Int): IO[List[Message]] = connection(_.getMessages(seqno))
 
-  override def getNotices(seqno: Int): Future[List[Notice]] = connection(_.getNotices(seqno))
+  override def getNotices(seqno: Int): IO[List[Notice]] = connection(_.getNotices(seqno))
 
-  override def readGlobalPrefsOverride: Future[Boolean] = connection(_.readGlobalPrefsOverride)
+  override def readGlobalPrefsOverride: IO[Boolean] = connection(_.readGlobalPrefsOverride)
+
+  override def retryFileTransfer(project: String, file: String): IO[Boolean] =
+    connection(_.retryFileTransfer(project, file))
+
+  override def getVersion: IO[BoincVersion] =
+    connection(_.getVersion)
+
+  override def getAppConfig(url: String): IO[AppConfig] =
+    connection(_.getAppConfig(url))
+
+  override def setAppConfig(url: String, config: AppConfig): IO[Boolean] =
+    connection(_.setAppConfig(url, config))
+
+  override def quit(): IO[Unit] =
+    connection(_.quit())
 }

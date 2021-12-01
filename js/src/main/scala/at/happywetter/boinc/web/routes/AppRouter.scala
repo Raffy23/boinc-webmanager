@@ -7,7 +7,6 @@ import org.scalajs.dom.raw.HTMLElement
 
 import scala.collection.mutable
 import scala.scalajs.js
-import scala.util.Try
 
 /**
   * Created by: 
@@ -45,9 +44,11 @@ object AppRouter {
     )
   }
 
-  def navigate(layout: Layout): Unit = this.navigate(layout.link)
+  def navigate(layout: Layout): Unit = {
+    this.navigate(layout.link)
+  }
+
   def navigate(page: String): Unit = {
-    //println(s"AppRouter.navigate($page)")
     router.navigate(page, absolute = true)
   }
 
@@ -55,7 +56,6 @@ object AppRouter {
     this.navigate(layout)
     e.preventDefault()
   }
-
 
   def href(page: Layout): String = page.link.replaceAll("\\/:\\w*[$]?","")
 
@@ -66,6 +66,11 @@ object AppRouter {
   val openExternal: (Event) => Unit = (event) => {
     event.preventDefault()
     dom.window.open(event.target.asInstanceOf[HTMLElement].getAttribute("href"), "_blank")
+  }
+
+  val onClick: (Event) => Unit = (event) => {
+    event.preventDefault()
+    navigate(event.target.asInstanceOf[HTMLElement].getAttribute("href"))
   }
 
   def current: String = dom.window.location.pathname

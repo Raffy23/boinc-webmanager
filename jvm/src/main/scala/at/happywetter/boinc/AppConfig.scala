@@ -1,9 +1,9 @@
 package at.happywetter.boinc
 
+import java.io.File
 import java.util.concurrent.TimeUnit
 
-import at.happywetter.boinc.boincclient.webrpc.ProjectRules
-import at.happywetter.boinc.shared.webrpc.ServerSharedConfig
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 import scala.concurrent.duration.FiniteDuration
@@ -30,10 +30,12 @@ object AppConfig {
                     port: Short,
                     username: String,
                     password: String,
+                    secureEndpoint: Boolean,
                     webroot: String = "",
-                    secret: String, ssl: SSLConfig)
+                    secret: String,
+                    ssl: SSLConfig)
 
-  case class Host(address: String, port: Short, password: String)
+  case class Host(address: String, port: Int, password: String)
 
   case class Boinc(hosts: Map[String, Host], projects: Projects, connectionPool: Int, encoding: String)
 
@@ -41,7 +43,7 @@ object AppConfig {
 
   case class ProjectEntry(url: String, generalArea: String, description: String, organization: String)
 
-  case class SSLConfig(keystore: String, password: String)
+  case class SSLConfig(enabled: Boolean, keystore: String, password: String)
 
   case class AutoDiscovery(startIp: String,
                            endIp: String,
@@ -49,6 +51,7 @@ object AppConfig {
                            port: Int,
                            enabled: Boolean,
                            scanTimeout: Int,
+                           maxScanRequests: Int = 10,
                            password: List[String])
 
   case class Hardware(enabled: Boolean,
@@ -62,24 +65,15 @@ object AppConfig {
   //case class Parser(default: Int = ProjectRules.UseXMLParser)
   //case class WebRPCRule(serverStatus: Int)
 
+  val typesafeConfig: TypesafeConfig = ConfigFactory.parseFile(new File("./application.conf"))
 
   val conf: Config = {
-    val confString: String = {
-      val source = Source.fromFile("./application.conf")
-      val result = source.getLines().mkString("\n")
-      source.close()
-
-      result
-    }
-
-    val hocon: TypesafeConfig = ConfigFactory.parseString(confString).resolve()
-
     import pureconfig._
     import pureconfig.generic.auto._
-    ConfigSource.fromConfig(hocon).loadOrThrow[Config]
+    ConfigSource.fromConfig(typesafeConfig).loadOrThrow[Config]
   }
 
-  lazy val sharedConf = ServerSharedConfig(
+  lazy val sharedConf: ServerSharedConfig = ServerSharedConfig(
     if (conf.autoDiscovery.enabled) FiniteDuration(conf.autoDiscovery.scanTimeout, TimeUnit.MINUTES).toMillis
     else FiniteDuration(12, TimeUnit.HOURS).toMillis,
     conf.hardware.exists(_.enabled)

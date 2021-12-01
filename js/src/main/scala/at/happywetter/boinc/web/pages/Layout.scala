@@ -1,8 +1,11 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
 
 import scala.scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.xml.Elem
 
 /**
@@ -21,7 +24,7 @@ trait Layout {
 
   def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
     NProgress.start()
-    done()
+    AuthClient.validateAction(authenticatedHook(done))
   }
 
   def after(): Unit = {}
@@ -30,5 +33,16 @@ trait Layout {
 
   def onRender(): Unit = {}
   def beforeRender(params: js.Dictionary[String]): Unit
+
+  private def authenticatedHook(done: js.Function0[Unit]): () => Unit = () => {
+    PageLayout.clearNav()
+    PageLayout.showMenu()
+
+    ClientManager
+      .readClients()
+      .map(DashboardMenuBuilder.renderClients)
+      .map(_ => done())
+      .recover(ErrorDialogUtil.showDialog)
+  }
 
 }

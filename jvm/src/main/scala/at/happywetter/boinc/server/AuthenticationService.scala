@@ -2,21 +2,22 @@ package at.happywetter.boinc.server
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
-
 import at.happywetter.boinc.AppConfig.Config
-import at.happywetter.boinc.shared.webrpc.{ApplicationError, User}
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import org.http4s.util.CaseInsensitiveString
 
 import scala.util.{Failure, Random, Success, Try}
 import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.webrpc.User
 import upickle.default.writeBinary
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import cats.data.Kleisli
 import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+import org.typelevel.ci.CIString
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 /**
   * Created by: 
@@ -34,54 +35,75 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
   private val jwtBuilder = JWT.create()
   private val jwtVerifyer = JWT.require(algorithm)
 
-  // TODO: Error handling response json/messagepack ...
-
   def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
 
     case request @ GET -> Root / "refresh" =>
-      request.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-        validate(header.value) match {
-          case Success(true) => Ok(refreshToken(header.value), request)
-          case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_invalid_token"))))
+      request.headers.get(CIString("Authorization")).map(header => {
+        validate(header.head.value) match {
+          case Success(true) => Ok(refreshToken(header.head.value), request)
+          case _ => encode(status = Unauthorized, body = ApplicationError("error_invalid_token"), request)
         }
 
       }).getOrElse(
-        IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
+        encode(status = Unauthorized, body = ApplicationError("error_no_token"), request)
       )
 
     case request @ POST -> Root =>
       request.decodeJson[User]{ user =>
-        if (config.server.username.equals(user.username)
-          && user.passwordHash.equals(AuthenticationService.sha256Hash(user.nonce + config.server.password)))
+        if (config.server.username.equals(user.username) && checkPassword(user) )
           Ok(buildToken(user.username), request)
         else
-          BadRequest(writeBinary(ApplicationError("error_invalid_credentials")))
+          encode(status = BadRequest, body = ApplicationError("error_invalid_credentials"), request)
       }
 
   }
 
-  private def denyService(errorText: String): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case _ => IO.pure(new Response[IO](status = Unauthorized, body = writeBinary(ApplicationError(errorText))))
+  private def denyService(errorText: String, request: Request[IO]): HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case _ => encode(status = Unauthorized, body = ApplicationError(errorText), request)
   }
 
-  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = Kleisli { req: Request[IO] =>
-    req.headers.get(CaseInsensitiveString("X-Authorization")).map(header => {
-      validate(header.value) match {
-        case Success(true) => service(req)
-        case Success(false) => denyService("error_invalid_token")(req)
-        case Failure(_) => denyService("error_invalid_token")(req)
-      }
-    }).getOrElse(denyService("error_no_token")(req))
+  def protectedService(service: HttpRoutes[IO]): HttpRoutes[IO] = {
+    val logger = Slf4jLogger.getLoggerFromClass[IO](getClass)
+
+    Kleisli { req: Request[IO] =>
+      req.headers.get(CIString("Authorization")).map(header => {
+        validate(header.head.value.substring("Bearer ".length)) match {
+          case Success(true)  => service(req)
+          case Success(false) => denyService("error_invalid_token", req)(req)
+          case Failure(ex)    =>
+            denyService("error_invalid_token", req)(req)
+            .semiflatTap(_ => logger.error(s"Exception occurred while validating JWT token: ${ex.getMessage}"))
+        }
+      }).getOrElse(
+        denyService("error_no_token", req)(req)
+      )
+    }
   }
 
-  def validate(token: String): Try[Boolean] = Try(jwtVerifyer.build().verify(token).getExpiresAt.after(new Date()))
-  def buildToken(user: String): String = jwtBuilder.withClaim("user", user).withExpiresAt(LocalDateTime.now().plusHours(1)).sign(algorithm)
+  def validate(token: String): Try[Boolean] = Try(
+    jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())
+  )
+
+  def buildToken(user: String): String =
+    jwtBuilder
+      .withClaim("user", user)
+      .withExpiresAt(LocalDateTime.now().plusHours(1))
+      .sign(algorithm)
+
   def refreshToken(token: String): String = {
     val jwtToken = jwtVerifyer.build().verify(token)
     val curUser  = jwtToken.getClaim("user")
 
     buildToken(curUser.asString())
+  }
+
+  def checkPassword(user: User): Boolean = {
+    if (config.server.secureEndpoint) {
+      user.passwordHash == AuthenticationService.sha256Hash(user.nonce + config.server.password)
+    } else {
+      user.passwordHash == config.server.password
+    }
   }
 }
 

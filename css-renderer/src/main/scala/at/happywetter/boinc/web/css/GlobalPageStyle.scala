@@ -46,4 +46,28 @@ object GlobalPageStyle extends StyleSheet.Standalone {
     Button.normal
   )
 
+  "input" - (
+    border :=! "1px solid #AAA",
+    padding(7 px),
+    boxSizing.borderBox,
+    fontSize(14 px),
+
+    &.focus - (
+      outlineColor(c"#999"),
+      outlineWidth(2 px)
+    )
+  )
+
+  "select" - (
+    border :=! "1px solid #AAA",
+    padding(7 px),
+    boxSizing.borderBox,
+    fontSize(14 px),
+
+    &.focus - (
+      outlineColor(c"#999"),
+      outlineWidth(2 px)
+    )
+  )
+
 }

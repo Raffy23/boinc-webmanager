@@ -10,7 +10,7 @@ import mhtml.{Rx, Var}
   */
 object SwarmTopNavigation extends TopNavigation {
 
-  override protected var selected = "boinc"
+  override protected var selected: Var[String] = Var("boinc")
 
   override protected val links = List(
     ("boinc", "head_menu_boinc", "fas fa-address-card"),
@@ -24,7 +24,7 @@ object SwarmTopNavigation extends TopNavigation {
     //("global_prefs", "head_menu_prefs".localize, "fa fa-cogs")
   )
 
-  override protected val componentId: String = "swarm_page_top_nav"
+  override val componentId: String = "swarm_page_top_nav"
 
   override protected def link(nav: String): Rx[String] = Var(s"/view/swarm/$nav")
 }

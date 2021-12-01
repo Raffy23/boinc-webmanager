@@ -31,20 +31,6 @@ package object webrpc {
   case class ServerStatusApp(id: Int, name: String, unsent: Int, in_progress: Int, avg_runtime: Double,
                              min_runtime: Double, max_runtime: Double, users: Int)
 
-  final case class WorkunitRequestBody(project: String, action: String)
-
-  final case class ProjectRequestBody(project: String, action: String)
-
   final case class User(username: String, passwordHash: String, nonce: String)
-
-  final case class BoincModeChange(mode: String, duration: Double)
-
-  final case class AddProjectBody(projectUrl: String, projectName: String, user: String, password: String)
-
-  final case class ApplicationError(reason: String)
-
-  final case class ServerSharedConfig(hostNameCacheTimeout: Long, hardware: Boolean)
-
-  final case class BoincProjectMetaData(name: String, url: String, general_area: String, specific_area: String, description: String, home: String, platforms: List[String])
 
 }

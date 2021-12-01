@@ -15,8 +15,9 @@ object BoincMessageStyle extends StyleDefinitions {
   val dateCol = CSSIdentifier("date_column")
   val tableRow = CSSIdentifier("table_row")
   val noticeList = CSSIdentifier("notice_list")
+  val filterBox = CSSIdentifier("filter_box")
 
   override private[css] def styles =
-    Seq(dateCol, tableRow, noticeList)
+    Seq(dateCol, tableRow, noticeList, filterBox)
 
 }

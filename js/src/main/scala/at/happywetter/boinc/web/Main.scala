@@ -1,24 +1,20 @@
 package at.happywetter.boinc.web
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeBuilder
-
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.web.boincclient.ClientCacheHelper
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
+import at.happywetter.boinc.web.boincclient.{ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.css.AppCSSRegistry
-import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
+import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.settings.HostSettings
 import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
-import at.happywetter.boinc.web.storage.AppSettingsStorage
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
-import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, LanguageDataProvider, ServerConfig}
 import org.scalajs.dom
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.util.Try
 
@@ -32,10 +28,21 @@ import scala.util.Try
 object Main {
 
   @JSExport
-  def launch(): Unit = main()
+  @Deprecated
+  def launch(): Unit = main(Array.empty)
 
   @JSExport
-  def main(): Unit = {
+  def launch(config: js.Dynamic): Unit = {
+    ServerConfig.config := ServerSharedConfig(
+      config.selectDynamic("hostNameCacheTimeout").asInstanceOf[Int],
+      config.selectDynamic("hardware").asInstanceOf[Boolean]
+    )
+
+    main(Array.empty)
+  }
+
+  @JSExport
+  def main(args: Array[String]): Unit = {
     dom.console.log("Booting Application ...")
     dom.console.log("Current Version: " + BuildInfo.version)
 
@@ -43,10 +50,21 @@ object Main {
     val registeredStyles = AppCSSRegistry.registerCSSNames()
     dom.console.log(s"Registered $registeredStyles css classes")
 
-    AuthClient.loadFromLocalStorage()
+    if (!AuthClient.isSecureEndpoint)
+      dom.console.warn("Server endpoint is not secure, crypto API will be disabled ...")
+
+    val haveToken = AuthClient.loadFromLocalStorage()
+    dom.console.log("Is old token available: " + haveToken)
     dom.console.log("Early load Locale from SessionStorage: " + Locale.load)
 
+    if (haveToken)
+      ServerConfig.query
+
     ClientCacheHelper.init()
+    ClientManager.cacheInvalidationCallback += (_ => {
+      DashboardMenu.clearSubmenus()
+      DashboardMenuBuilder.invalidateCache()
+    })
 
     // Load Languages before jumping to UI
     import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -78,6 +96,10 @@ object Main {
     AppRouter += SettingsPage
     AppRouter += WebRPCProjectPage
     AppRouter += HardwarePage
+    AppRouter += JobManagerPage
+
+    // Settings pages:
+    AppRouter += HostSettings
 
     // Swarm pages:
     AppRouter += new BoincSwarmPage

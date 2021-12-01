@@ -61,7 +61,7 @@ class ContextMenu(contextMenuId: String) {
     if(elements != null) {
       println(elements)
 
-      import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+      import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
       elements.forEach((node, _, _) => contextMenu.removeChild(node.parentNode))
     }
   }

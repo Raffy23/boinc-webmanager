@@ -1,13 +1,12 @@
 package at.happywetter.boinc.web.pages.boinc
 
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
-import at.happywetter.boinc.web.hacks.Implicits._
-import at.happywetter.boinc.web.helper.AuthClient
+import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.BoincTopNavigation
 import at.happywetter.boinc.web.pages.{Dashboard, Layout}
 import at.happywetter.boinc.web.routes.AppRouter
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -32,17 +31,18 @@ abstract class BoincClientLayout extends Layout {
 
   implicit var boincClientName: String = _
 
+  def linkForHost(host: String) =
+    s"/view/boinc-client/${dom.window.encodeURIComponent(host)}/$path"
+
   override def link: String =
     if(boincClientName != null)
-      s"/view/boinc-client/${dom.window.encodeURIComponent(boincClientName)}/$path"
+      linkForHost(boincClientName)
     else
       s"/view/boinc-client/:client/$path"
 
   protected implicit var boinc: BoincClient = _
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    //println(s"BoincClientLayout.beforeRender(${params.toList})")
-
     if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]]) {
       dom.console.error("Unable to instantiate Boinc Client Layout without params!")
       if (boinc == null) {
@@ -56,15 +56,12 @@ abstract class BoincClientLayout extends Layout {
     }
 
     BoincTopNavigation.clientName := boincClientName
-    BoincTopNavigation.render(path)
-
-    DashboardMenuBuilder.renderClients()
-    DashboardMenu.selectMenuItemByContent(boincClientName)
+    BoincTopNavigation.render(Some(path))
   }
 
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    AuthClient.validateAction(done)
-    parse(params)
+    DashboardMenuBuilder.afterRenderHooks += (() => DashboardMenu.selectMenuItemByContent(boincClientName))
+    super.before(() => {parse(params); done()}, params)
   }
 
   private def parse(params: js.Dictionary[String]): Unit = {

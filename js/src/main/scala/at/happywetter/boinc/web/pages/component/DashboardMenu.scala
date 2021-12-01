@@ -1,14 +1,14 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.helper.ServerConfig
-import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, SettingsPage, WebRPCProjectPage}
+import at.happywetter.boinc.web.pages.{Dashboard, HardwarePage, JobManagerPage, SettingsPage, WebRPCProjectPage}
 import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
 import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.Var
+import at.happywetter.boinc.web.util.ServerConfig
+import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLElement
+import org.scalajs.dom.raw.{HTMLAnchorElement, HTMLElement}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
@@ -23,8 +23,19 @@ import scala.xml.Elem
 object DashboardMenu {
 
   private val viewState: Var[String] = Var("display:block")
-  private val hwMenuEntry: Var[Elem] = Var(<li><span id="config-hardware-disabled"></span></li>)
-  processSeverConfig()
+  private val hwMenuEntry: Rx[Elem] =
+    ServerConfig.config.map { config =>
+      if (config.hardware) {
+        <li class={Style.elem.htmlClass}>
+          <a href={HardwarePage.link} onclick={masterSelectionListener}
+             data-navigo={true} data-menu-id="dashboard_hardware">
+            <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
+          </a>
+        </li>
+      } else {
+        <li><span id="config-hardware-disabled"></span></li>
+      }
+    }
 
   class MenuEntry(val name: String, val href: String)
   case class TopLevelEntry(override val name: String, override val href: String, reference: Option[String]=None) extends MenuEntry(name, href)
@@ -60,6 +71,14 @@ object DashboardMenu {
            data-navigo={true} data-menu-id="settings">
           <i class="fa fa-cog" aria-hidden="true"></i>
           {"dashboard_menu_settings".localize}
+        </a>
+      </li>
+
+      <li class={Style.elem.htmlClass}>
+        <a href={JobManagerPage.link} onclick={masterSelectionListener}
+           data-navigo={true} data-menu-id="jobs">
+          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          {"dashboard_menu_jobs".localize}
         </a>
       </li>
 
@@ -153,29 +172,16 @@ object DashboardMenu {
   def show(): Unit = viewState := "display:block"
   def hide(): Unit = viewState := "display:none"
 
-  def processSeverConfig(): Unit = {
-    ServerConfig.get.foreach(config => {
-      if (config == null)
-        dom.console.error("ServerConfig is null!")
-
-      if (config.hardware) {
-        hwMenuEntry :=
-          <li class={Style.elem.htmlClass}>
-            <a href={HardwarePage.link} onclick={masterSelectionListener}
-               data-navigo={true} data-menu-id="dashboard_hardware">
-              <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
-            </a>
-          </li>
-      }
-    })
-  }
-
   def onMenuItemClick(event: Event): Unit = {
     val element = dom.document.querySelector(s"ul[id='dashboard-menu'] a[class='${Style.active.htmlClass}']")
     if( element != null)
       element.setAttribute("class", "")
 
-    val me = event.target.asInstanceOf[HTMLElement]
+    var me = event.target.asInstanceOf[HTMLElement]
+    while (me.nodeName.toLowerCase() != "a") {
+      me = me.parentElement
+    }
+
     me.setAttribute("class", Style.active.htmlClass)
   }
 
@@ -195,7 +201,7 @@ object DashboardMenu {
     val elements = dom.document.querySelectorAll("ul[id='dashboard-menu'] a[data-menu-id='"+reference+"']")
 
     if(elements != null) {
-      import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+      import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
       elements.forEach((node, _, _) => {
         menuNode.removeChild(node.parentNode)
       })
@@ -225,24 +231,20 @@ object DashboardMenu {
 
   private def subMenuListener(entry: SublistEntry): (Event) => Unit = (event) => entry.visible.update(!_)
 
-  private var selected: String = _
   def selectMenuItemByContent(content: String): Unit = {
-    val rootElement = dom.document.getElementById("dashboard-menu")
-    var marked = false
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
+    dom.document.querySelectorAll("#dashboard-menu li a").forEach((a, _, _) => {
+      val element = a.asInstanceOf[HTMLAnchorElement]
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
-    rootElement.childNodes.forEach((li, _, _) => {
-      if (li.firstChild != null && li.firstChild.textContent == content) {
-        li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
-        marked = true
-      } else if(li.firstChild == null && li.textContent == content) {
-        li.firstChild.asInstanceOf[HTMLElement].setAttribute("class",Style.active.htmlClass)
-        marked = true
-      }
+      if (element.text.trim() == content)
+        element.classList.add(Style.active.htmlClass)
     })
 
-    if (!marked) selected = content
-    else selected = null
+  }
+
+  def clearSubmenus(): Unit = {
+    menuComputers := List.empty
+    menuGroups := List.empty
   }
 
 }

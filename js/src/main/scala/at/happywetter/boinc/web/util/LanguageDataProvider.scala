@@ -1,6 +1,5 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.web.helper.FetchHelper
 import at.happywetter.boinc.web.util.I18N.Locale
 import org.scalajs.dom
 
@@ -23,7 +22,6 @@ object LanguageDataProvider {
   var available = new ListBuffer[(String, String, String)]
 
   def bootstrap: Future[Map[String,String]] = {
-    dom.console.log("LanguageDataProvider.bootstrap(): BEGIN")
     fetchAvailableLanguages
       .flatMap(languages => {
         languages.foreach(available += _)

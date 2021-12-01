@@ -3,15 +3,18 @@ package at.happywetter.boinc.web.pages.component
 import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.Misc
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, Dialog, TableTheme}
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper.toXMLTextNode
+import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
+import at.happywetter.boinc.web.model.TableModel
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
+import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N
 import mhtml.{Rx, Var}
 import org.scalajs.dom.raw.{Event, HTMLElement, HTMLInputElement}
 import at.happywetter.boinc.web.util.I18N._
 
+import scala.scalajs.js
 import scala.util.Random
 import scala.xml.{Elem, Node, Text}
 
@@ -25,10 +28,37 @@ object DataTable {
 
   abstract class TableColumn(val content: Rx[Node], val datasource: TableRow, val dataEntry: Option[String] = None) extends Ordered[TableColumn] {}
 
+  class LinkColumn(val source: Rx[(String, String)]) extends TableColumn(
+    source.map( data =>
+      <a href={data._2} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
+        {data._1}
+      </a>
+    ), null
+  ) {
+    override def compare(that: TableColumn): Int = source.now._1.compareTo(that.asInstanceOf[LinkColumn].source.now._1)
+  }
+
   class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
   }
-  class DoubleColumn(val source: Rx[Double]) extends TableColumn(content = source.map("%.4f".format(_)), null, dataEntry = Some("number")) {
+
+  class IntegerColumn(val source: Rx[Int]) extends TableColumn(
+    datasource = null,
+    dataEntry = Some("number"),
+    content = source.map(int => {
+      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+      int.asInstanceOf[JSNumberOps].toLocaleString()
+    })) {
+    override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[IntegerColumn].source.now)
+  }
+
+  class DoubleColumn(val source: Rx[Double]) extends TableColumn(
+    datasource = null,
+    dataEntry = Some("number"),
+    content = source.map(number => {
+      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+      number.asInstanceOf[JSNumberOps].toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2, "maximumFractionDigits" -> 2))
+    })) {
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
   }
 
@@ -36,6 +66,8 @@ object DataTable {
   val DefaultPageSize = 30
 
   abstract class TableRow {
+
+    protected[component] var weakTableRef: DataTable[TableRow] = _
 
     val columns: List[TableColumn]
     val contextMenuHandler: (Event) => Unit = (_) => {}
@@ -45,7 +77,14 @@ object DataTable {
         {columns.map(column => <td data-type={column.dataEntry}>{column.content}</td>)}
       </tr>
     }
+
   }
+
+  def of[A, T <: TableRow](model: TableModel[A,T], paged: Boolean = false) = new DataTable[T](
+    model.header,
+    paged = paged
+  )
+
 }
 
 class DataTable[T <: TableRow](headers: List[(String, Boolean)],
@@ -63,17 +102,19 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
         if(paged) {
           Some(
             <div>
-              {
-                "table_page_size_select".localizeTags(
-                  <select onchange={onPageSizeChange}>
-                    {
-                    DataTable.PageSizes.map(s =>
-                      <option value={s.toString} selected={if(s == curPageSize.now) Some("") else None}>{s.toString}</option>
-                    )
-                    }
-                  </select>
-                )
-              }
+              <label>
+                {
+                  "table_page_size_select".localizeTags(
+                    <select onchange={onPageSizeChange}>
+                      {DataTable.PageSizes.map(s =>
+                      <option value={s.toString} selected={if (s == curPageSize.now) Some("") else None}>
+                        {s.toString}
+                      </option>
+                    )}
+                    </select>
+                  )
+                }
+              </label>
             </div>
           )
         } else None
@@ -99,10 +140,10 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
           if(paged) {
             currentPage.zip(curPageSize).zip(reactiveData).map { case ((page, size), data) =>
               val start = (page-1) * size
-              data.slice(start, start + size).map(_.htmlRow)
+              data.slice(start, start + size).map(renderAndBindRow)
             }
           } else {
-            reactiveData.map(_.map(_.htmlRow))
+            reactiveData.map(_.map(renderAndBindRow))
           }
           }
         </tbody>
@@ -119,7 +160,9 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
               </a>
               {
               currentPage.zip(pages).map { case (page, pages) =>
-                <input type="number" value={page.toString} onchange={onPageChange} min="1" max={(pages+1).toString}></input>
+                <input type="number" value={page.toString} onchange={onPageChange} style={s"padding:7px;width:${3.5 + (pages/100)}em"}
+                       min="1" max={(pages+1).toString} aria-label={"current_page".localize}>
+                </input>
               }
               }
               / { pages }
@@ -132,6 +175,11 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
         } else None
       }
     </div>
+  }
+
+  private def renderAndBindRow(row: T): Elem = {
+    row.weakTableRef = this.asInstanceOf[DataTable[TableRow]]
+    row.htmlRow
   }
 
   private val onPageSizeChange: Event => Unit = { event =>
@@ -163,7 +211,7 @@ class DataTable[T <: TableRow](headers: List[(String, Boolean)],
   }
 
   private def tableSortFunction(idx: Int): (Event) => Unit = (event) => {
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
 
     var target = event.target.asInstanceOf[HTMLElement]
     while (target.nodeName != "TH") {

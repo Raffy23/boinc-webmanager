@@ -57,5 +57,11 @@ object BoincMessageCSS extends StyleSheet.Standalone {
     )
   )
 
+  filterBox.cssName - (
+    marginBottom(10 px),
+    unsafeChild("label")(
+      marginLeft(8 px)
+    )
+  )
 
 }

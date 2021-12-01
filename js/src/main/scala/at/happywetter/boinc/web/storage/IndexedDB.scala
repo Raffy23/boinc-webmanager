@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.storage
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.IDBDatabase
+import org.scalajs.dom.raw.{IDBDatabase, IDBFactory}
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -19,7 +19,12 @@ object IndexedDB {
   val DATABASE_VERSION = 1
 
   private[storage] lazy val database: Future[IDBDatabase] = new Promise[IDBDatabase]((resolve, reject) => {
-    val db = dom.window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION)
+    if (js.isUndefined(dom.window.indexedDB))
+      throw new RuntimeException("IndexDB is undefined!")
+
+    val indexedDB = dom.window.indexedDB.asInstanceOf[IDBFactory]
+    val db = indexedDB.open(DATABASE_NAME, DATABASE_VERSION)
+
     db.onerror = reject
     db.onsuccess = (_) => resolve(db.result.asInstanceOf[IDBDatabase])
     db.onupgradeneeded = (_) => {
@@ -43,7 +48,7 @@ object IndexedDB {
   }).toFuture
 
   def deleteDatabase(): Future[Boolean] = new Promise[Boolean]((resolve, reject) => {
-    val result = dom.window.indexedDB.deleteDatabase(IndexedDB.DATABASE_NAME)
+    val result = dom.window.indexedDB.asInstanceOf[IDBFactory].deleteDatabase(IndexedDB.DATABASE_NAME)
     result.onerror = reject
     result.onsuccess = (_) => resolve(js.isUndefined(result.result))
   }).toFuture

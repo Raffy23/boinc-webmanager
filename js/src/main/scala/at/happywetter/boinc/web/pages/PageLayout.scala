@@ -1,12 +1,15 @@
 package at.happywetter.boinc.web.pages
 
 import at.happywetter.boinc.web.css.definitions.components.{PageLayoutStyle => Style}
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.pages.component.topnav.TopNavigation
+import at.happywetter.boinc.web.util.{AuthClient, ServerConfig}
+import at.happywetter.boinc.web.util.XMLHelper._
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.scalajs.js
 import scala.xml.{Elem, Node}
 
 /**
@@ -17,6 +20,7 @@ import scala.xml.{Elem, Node}
   */
 object PageLayout {
 
+  var navComponentID: String = ""
   val nav: Var[Node] = Var("")
 
   val hamburgerMenuAction: Event => Unit = event => {
@@ -56,6 +60,16 @@ object PageLayout {
     else content.style.marginLeft = "5px"
   }
 
-  def clearNav(): Unit = nav := ""
+  def setNav(nav: TopNavigation): Unit = {
+    if (navComponentID != nav.componentId) {
+      navComponentID = nav.componentId
+      this.nav := nav.component
+    }
+  }
+
+  def clearNav(): Unit = {
+    navComponentID = ""
+    nav := ""
+  }
 
 }

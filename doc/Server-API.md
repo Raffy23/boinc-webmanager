@@ -2,11 +2,16 @@ Webserver - API Documentation
 =============================
 This Document gives a short overview of the REST Service which is provided by the 
 Webserver. This functions are used by the Webclient but can also be used by any other
-Program. 
+application that can process JSON or messagepack encoded HTTP requests. 
 
 POST requests that are made by the client encode the data into the JSON format, while the
-server will encode the responses in either json or the message pack format.
-If the client does support gzip compression it will used to compress the `/language` endpoint. 
+server will encode the responses in either JSON, or the message pack format.
+If the client does support gzip compression it will be used to compress the `/language` endpoint. 
+
+### Swagger Documentation 
+The Webserver provides a swagger endpoint under `/swagger/`, which can be used to browse
+the API Endpoint that is provided by the server. The sections below also provide a short 
+overview about the REST Endpoint.
 
 ### Authentication
 To be able to use all REST functions the client has to login and retrieve a JWT-Token.
@@ -29,8 +34,7 @@ calls and provide the data as JSON or messapack depending on the requested encod
 * **GET** `/config`: Some Settings from the `application.conf` 
 * **GET** `/project_list`: A list of Projects (url and name) which can be added to a Client
 * **GET** `/health`: A Map for all clients which indicates if the client has Connection problems or not
-* **GET** `/:client/:action`
-  * Values for the `:action` Parameter:
+* **GET** `/:client/:action`: Various actions for a specific client. Values for the `:action` Parameter:
   * `tasks`: A list of active Tasks
   * `all_tasks`: A list of all Tasks in the Client 
   * `hostinfo`: Information about the Host (BOINC)
@@ -44,9 +48,11 @@ calls and provide the data as JSON or messapack depending on the requested encod
   * `statistics`: Statistics Object which contains all Projects
   * `messages`: List of Log Message from the Core Client
   * `notices`: Notices from Projects and the Core Client
+  * `version`: Get the version stringof the Core Client
+  * `app_config`: Returns the contents of the app_config.xml for a project (`url` parameter)
 
-* **POST** `/:client/:action`
-  * Values for the `:action` Parameter:
+
+* **POST** `/:client/:action`: Values for the `:action` Parameter:
   * `project`: Adds a new Project to the Core Client. Post Parameters: `projecturl, user, password`
   * `projects`: Change the Project state of a Project
   * `run_mode`: Change the run-mode of the BOINC Client
@@ -59,6 +65,7 @@ calls and provide the data as JSON or messapack depending on the requested encod
   
 * **POST** `/:client/tasks/:task`: Change the state of the given Task
 
+
 * **PATCH** `/:client/global_prefs_override`: Let's the client reload the Settings file
   
 ### BOINC WebRPC
@@ -68,7 +75,7 @@ every project*
 The URL root of the WebRPC endpoint is `/api/webrpc/` and does follow the same rules as the BOINC RPC
 endpoint.
 
-* **GET** `statu?server=:project_uri`: Requests the project server status, content may vary depending on the project
+* **GET** `status?server=:project_uri`: Requests the project server status, content may vary depending on the project
 
 ### Extensions
 * The Hardware Extensions is found at `/api/hardware`. ([Documentation](extension/Hardware.md))

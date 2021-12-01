@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.webrpc.BoincProjectMetaData
-import at.happywetter.boinc.web.helper.{FetchHelper, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, BoincProjectMetaData}
 import org.scalajs.dom
 import upickle.default._
 
@@ -11,9 +10,15 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
 import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket
-import upickle.default
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, FetchHelper, ServerConfig, WebSocketClient}
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.facade.Implicits._
+import at.happywetter.boinc.web.pages.Dashboard
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by: 
@@ -24,7 +29,7 @@ import upickle.default
 object ClientManager {
 
   private val baseURI = "/api/boinc"
-  private def cacheTimeout = ServerConfig.get.map(_.hostNameCacheTimeout)
+  private val cacheTimeout = ServerConfig.config.map(_.hostNameCacheTimeout)
 
   private val CACHE_CLIENTS = "clientmanager/clients"
   private val CACHE_GROUPS  = "clientmanager/groups"
@@ -33,6 +38,8 @@ object ClientManager {
 
   val clients: mutable.Map[String, BoincClient] = new mutable.HashMap[String, BoincClient]()
   val healthy: mutable.Map[String, Boolean] = new mutable.HashMap[String, Boolean]()
+
+  val cacheInvalidationCallback: mutable.ListBuffer[Unit => Unit] = ListBuffer.empty
 
   private var groups: Map[String, List[String]] = _
 
@@ -47,11 +54,12 @@ object ClientManager {
         groups = newGroups
         clients.clear()
         newHosts.foreach(c => clients += (c -> new BoincClient(c)))
+        cacheInvalidationCallback.foreach(_(()))
 
       case _ => /* Do nothing, other messages ... */
     }
 
-    val serverVersion = FetchHelper.get[Long]("/api/groups/version")
+    val serverVersion = FetchHelper.get[Long]("/api/version")
     serverVersion.foreach { serverVersion =>
       if (loadFromLocalStorage[Long](CACHE_VERSION).getOrElse(0L) != serverVersion) {
         dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
@@ -64,23 +72,23 @@ object ClientManager {
   }
 
   private def persistClientsIntoStorage(clients: List[String]): Unit = {
-    cacheTimeout.foreach(cacheTimeout => {
-      val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
-      timestamp.fold(
-        _ => {
+    val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
+    timestamp.fold(
+      _ => {
+        saveToCache(clients)
+        dom.console.log("[Client Manager] Could not read timestamp, persisting current dataset")
+      },
+      date => {
+        val current = new Date()
+        if (current.getTime() - date.getTime() > cacheTimeout.now) {
           saveToCache(clients)
-          dom.console.log("Clientmanager: Could not read timestamp, persisting current dataset")
-        },
-        date => {
-          val current = new Date()
-          if (current.getTime() - date.getTime() > cacheTimeout) {
-            saveToCache(clients)
-            dom.console.log("Clientmanager: Updated Clientlist")
-          }
+          notifyCacheInvalidation(Future.successful(()))
+          dom.console.log("[Client Manager] Updated Clientlist")
         }
-      )
-    })
+      }
+    )
   }
+
 
   private def saveToCache(clients: List[String]): Unit = {
     dom.window.localStorage.setItem(CACHE_REFRESH_TIME, new Date().toUTCString())
@@ -91,27 +99,28 @@ object ClientManager {
   private def readClientsFromServer(): Future[List[String]] = {
     val timestamp = Try(new Date(dom.window.localStorage.getItem(CACHE_REFRESH_TIME)))
 
-    cacheTimeout.flatMap(cacheTimeout => {
-      timestamp.map(date => {
-        val current = new Date()
+    timestamp.map(date => {
+      val current = new Date()
 
-        if (current.getTime() - date.getTime() > cacheTimeout) {
-          println("Old Cache, reloading groups and clients ...")
-          queryGroups.flatMap(data => {
-            groups = data
-            queryClientsFromServer()
-          })
-        } else {
-          Future { clients.keys.toList }
-        }
+      if (current.getTime() - date.getTime() > cacheTimeout.now) {
+        println("[Client Manager] Old Cache, reloading groups and clients ...")
+        queryGroups.flatMap(data => {
+          groups = data
+          notifyCacheInvalidation(queryClientsFromServer())
+        })
+      } else {
+        Future { clients.keys.toList }
+      }
 
-      }).recover{ case _: Exception => queryClientsFromServer() }.get
-    }).map(_.sorted)
+    }).recover{ case _: Exception => queryClientsFromServer() }
+      .get
+      .map(_.sorted)
   }
+
 
   def readClients(): Future[List[String]] = {
     readClientsFromServer().map(data => {
-      data.foreach(c => if(clients.get(c).isEmpty) clients += (c -> new BoincClient(c)))
+      data.foreach(c => if(!clients.contains(c)) clients += (c -> new BoincClient(c)))
       persistClientsIntoStorage(data)
 
       data.sorted(ord = StringLengthAlphaOrdering)
@@ -134,6 +143,33 @@ object ClientManager {
   }
   */
 
+  def addClient(name: String, address: String, port: Int, password: String): Future[Boolean] =
+    FetchHelper
+      .post[AddNewHostRequestBody, Boolean](
+        s"$baseURI/${dom.window.encodeURIComponent(name)}",
+        AddNewHostRequestBody(address, port, password)
+      ).map(result => {
+        invalidateCache()
+        result
+      })
+
+  def updateClient(name: String, address: String, port: Int, password: String): Future[Boolean] =
+    FetchHelper.patch[AddNewHostRequestBody, Boolean](
+      s"$baseURI/${dom.window.encodeURIComponent(name)}",
+      AddNewHostRequestBody(address, port, password)
+    )
+
+  def removeClient(name: String): Future[Boolean] =
+    FetchHelper
+      .delete[Boolean](s"$baseURI/${dom.window.encodeURIComponent(name)}")
+      .map(result => {
+        invalidateCache()
+        result
+      })
+
+  def queryClientDetails(): Future[List[HostDetails]] =
+    FetchHelper.get[List[HostDetails]](s"$baseURI/host_details")
+
   def queryClientHealth(): Future[Map[String, Boolean]] =
     FetchHelper.get[Map[String, Boolean]](baseURI + "/health")
 
@@ -148,6 +184,16 @@ object ClientManager {
 
   private def queryClientsFromCache(): Future[List[String]] = Future {
     read[List[String]](dom.window.localStorage.getItem(CACHE_CLIENTS))
+  }
+
+  private def notifyCacheInvalidation[T](of: Future[T]): Future[T] = of.map { t =>
+    cacheInvalidationCallback.foreach(_(()))
+    t
+  }
+
+  private def invalidateCache(): Unit = {
+    dom.window.localStorage.removeItem(CACHE_REFRESH_TIME)
+    notifyCacheInvalidation(readClientsFromServer())
   }
 
   private def loadFromLocalStorage[T](name: String)(implicit r: Reader[T]): Option[T] = {

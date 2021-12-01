@@ -1,6 +1,6 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
+import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
 
 import scala.util.Try
 import scala.xml.{NodeSeq, Text}
@@ -59,8 +59,21 @@ object GlobalPrefsParser {
       (node \ "net_start_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble,
       (node \ "net_end_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble
     ),
-    (node \ "start_hour").theSeq.zip(node \ "end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
-    (node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
+
+    (node \ "day_prefs").theSeq.map { dayNode =>
+      DayEntry(
+        (dayNode \ "day_of_week").text.toInt,
+        (
+          (dayNode \ "start_hour").text.tryToDouble,
+          (dayNode \ "end_hour").text.tryToDouble,
+        ),
+        (
+          (dayNode \ "net_start_hour").text.tryToDouble,
+          (dayNode \ "net_end_hour").text.tryToDouble,
+        )
+      )
+    }.toList,
+    //(node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
   )
 
   def toXML(globalPrefsOverride: GlobalPrefsOverride): NodeSeq = {
@@ -92,34 +105,36 @@ object GlobalPrefsParser {
       <daily_xfer_period_days>{g.dailyXFerPeriodDays.toBoincDouble}</daily_xfer_period_days>
       <network_wifi_only>{g.networkWifiOnly.toBoincString}</network_wifi_only>
       {
-        if (g.cpuTime._1 > -1 && g.cpuTime._2 > -1) {
+        if (g.cpuTime._1 > 0D && g.cpuTime._2 > 0D) {
           <start_hour>{g.cpuTime._1.toBoincDouble}</start_hour>
           <end_hour>{g.cpuTime._2.toBoincDouble}</end_hour>
         }
       }
       {
-        if (g.netTime._1 > -1 && g.netTime._2 > -1) {
+        if (g.netTime._1 > 0D && g.netTime._2 > 0D) {
           <net_start_hour>{g.netTime._1.toBoincDouble}</net_start_hour>
           <net_end_hour>{g.netTime._2.toBoincDouble}</net_end_hour>
         }
       }
-
-      
-      {/* Seems Wrong:
-      <day_prefs>
-        {
-          globalPrefsOverride.cpuTimes.zip(globalPrefsOverride.netTimes).zipWithIndex.map {
-            case (((start, end), (net_start, net_end)), idx) =>
-              <day_of_week>
-                {idx}
-                <start_hour>{start}</start_hour>
-                <end_hour>{end}</end_hour>
-                <net_start_hour>{net_start}</net_start_hour>
-                <net_end_hour>{net_end}</net_end_hour>
-              </day_of_week>
-          }
+      {
+        globalPrefsOverride.dayPrefs.map { case DayEntry(day, (start, end), (net_start, net_end)) =>
+            <day_prefs>
+              <day_of_week>{day}</day_of_week>
+              {
+                if (start > 0D && end > 0D) {
+                  <start_hour>{start}</start_hour>
+                  <end_hour>{end}</end_hour>
+                }
+              }
+              {
+                if (net_start > 0D && net_end > 0D) {
+                  <net_start_hour>{net_start}</net_start_hour>
+                  <net_end_hour>{net_end}</net_end_hour>
+                }
+              }
+              </day_prefs>
         }
-      </day_prefs>*/}
+      }
     </global_preferences>
   }
 

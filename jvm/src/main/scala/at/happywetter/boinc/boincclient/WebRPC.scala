@@ -2,6 +2,7 @@ package at.happywetter.boinc.boincclient
 
 import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
 import at.happywetter.boinc.shared.webrpc._
+import cats.effect.IO
 import scalaj.http.{Http, HttpOptions, HttpRequest}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,8 +41,9 @@ object WebRPC {
   //  Http(url+"/get_project_config.php").option(HttpOptions.followRedirects(true)).asString.body.toProjectConfig
   //}
 
+  //TODO: Use blocker for http fetching stuff ...
   //TODO:
-  def getServerStatus(url: String)(/*implicit config: AppConfig.WebRPC*/): Future[ServerStatus] = Future {
+  def getServerStatus(url: String)(/*implicit config: AppConfig.WebRPC*/): IO[ServerStatus] = IO {
     val request =
       Http(s"$url/server_status.php?xml=1")
         .header("Accept", "application/xml")
@@ -57,7 +59,7 @@ object WebRPC {
     ServerStatusParser.fromXML(request.asXML)
   }
 
-  def lookupAccount(url: String, email: String, password: Option[String] = None): Future[(Boolean, Option[String])] = Future {
+  def lookupAccount(url: String, email: String, password: Option[String] = None): IO[(Boolean, Option[String])] = IO.blocking{
     var request = Http(s"$url/lookup_account.php")
       .param("email_addr", email)
       .option(HttpOptions.followRedirects(true))
@@ -66,17 +68,11 @@ object WebRPC {
       request = request.param("passwd_hash", BoincCryptoHelper.md5(password.get+email.toLowerCase()))
 
     //TODO: Give a Error Code to UI
-    Try {
-      val response = XML.loadString(request.asString.body)
-      ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
-    }.recover{
-      case _: Exception =>
-        (false, Some("err_unable_to_read_webrpc_response"))
-    }.get
-
+    val response = XML.loadString(request.asString.body)
+    ((response \ "success").xml_==(<success/>), (response \ "authenticator").headOption.map(a => a.text))
+  }.handleError {
+    _: Throwable => (false, Some("err_unable_to_read_webrpc_response"))
   }
-
-
 
   private implicit class XMLHttpResponse(httpRequest: HttpRequest) {
     def asXML: NodeSeq = XML.loadString(httpRequest.asString.body)

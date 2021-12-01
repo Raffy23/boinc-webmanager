@@ -15,7 +15,6 @@ import scala.xml.Elem
   */
 class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int = 0) {
 
-  private val imgStyle = "height:2em;vertical-align:middle;margin-left:6px"
   private val languages = Var(LanguageDataProvider.available.toList)
   private val selectedLang = Var(
     LanguageDataProvider.available.find{ case (c,_,_) => c == Locale.current}.get
@@ -28,7 +27,9 @@ class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int 
         selectedLang.map{
           case (_, name, icon) =>
             <span>
-              <img src={s"/files/images/$icon"} alt={name} style={imgStyle}></img>
+              <span style="padding-right:10px">
+                <span class={s"flag-icon flag-icon-${icon}"}></span>
+              </span>
               {name}
             </span>
         }
@@ -39,8 +40,9 @@ class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int 
         selectedLang.update(_ => (lang_code, lang_name, icon))
         langChangeAction(event, lang_code)
       }}>
-        <img src={s"/files/images/$icon"} alt={lang_name} style={imgStyle} >
-        </img>
+        <span style="padding-right:10px">
+          <span class={s"flag-icon flag-icon-${icon}"}></span>
+        </span>
         {lang_name}
       </a>
     }),

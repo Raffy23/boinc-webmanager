@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.css.definitions.pages.{LoginPageStyle => Style}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.{LanguageDataProvider, ServerConfig}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
@@ -48,6 +48,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
               Locale.save(lang_code)
 
               LayoutManager.render(this)
+
+              AppRouter.router.updatePageLinks()
               NProgress.done(true)
             })
         }, -35).component
@@ -85,9 +87,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
         dom.window.sessionStorage.setItem("password", password)
 
         AppRouter.navigate(event, Dashboard)
-
         PageLayout.showMenu()
-        DashboardMenu.processSeverConfig()
+        ServerConfig.query
 
       case _ =>
         new OkDialog(
@@ -112,7 +113,11 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
 
     if (usr != null && pwd != null) {
       loginValidator(usr, pwd).foreach {
-        case true => AppRouter.navigate(Dashboard.link)
+        case true =>
+          AppRouter.navigate(Dashboard.link)
+          PageLayout.showMenu()
+          ServerConfig.query
+
         case _ =>
           dom.window.sessionStorage.removeItem("username")
           dom.window.sessionStorage.removeItem("password")
@@ -127,4 +132,5 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
+
 }

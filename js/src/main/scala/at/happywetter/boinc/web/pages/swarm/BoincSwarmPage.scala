@@ -7,8 +7,8 @@ import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseExcepti
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincSwarmPageStyle => Style}
-import at.happywetter.boinc.web.helper.RichRx._
-import at.happywetter.boinc.web.helper.XMLHelper._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
@@ -217,7 +217,7 @@ class BoincSwarmPage extends SwarmPageLayout {
     event.preventDefault()
     NProgress.start()
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
     val changeList = new mutable.ArrayBuffer[Future[(String, ComputingMode, Boolean)]](boxes.length)
 
@@ -265,7 +265,7 @@ class BoincSwarmPage extends SwarmPageLayout {
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
     val checked = checkAllState.now
 
-    import at.happywetter.boinc.web.hacks.NodeListConverter.convNodeList
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
     boxes.forEach((node, _, _) => node.asInstanceOf[HTMLInputElement].checked = checked)
 
     checkAllState.update(!_)

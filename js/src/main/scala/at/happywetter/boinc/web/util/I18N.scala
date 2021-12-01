@@ -1,7 +1,8 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.webrpc.ApplicationError
+import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
+import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLElement
 
@@ -52,7 +53,7 @@ object I18N {
   implicit class TranslatableString(private val str: String) extends AnyVal {
     def localize: String = LanguageDataProvider.languageData(Locale.current).getOrElse(str, {println(s"[Warning]: Could not translate: $str into ${Locale.current}"); str})
     def localizeTags(nodes: Node*): Seq[Node] = {
-      import at.happywetter.boinc.web.helper.XMLHelper._
+      import XMLHelper._
       val captureGroup = "(\\$\\d+)".r
 
       val indexNodes = nodes.toIndexedSeq
@@ -75,7 +76,7 @@ object I18N {
   }
 
   implicit class HtmlString(private val str: String) extends AnyVal {
-    import at.happywetter.boinc.web.helper.XMLHelper._
+    import XMLHelper._
 
     def toTags: Seq[Node] =
       if (str.contains("\n")) {

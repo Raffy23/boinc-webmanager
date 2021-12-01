@@ -18,8 +18,10 @@ object BasicModalStyle extends StyleDefinitions {
   val header = CSSIdentifier("header")
   val footer = CSSIdentifier("footer")
   val button =  CSSIdentifier("button")
+  val actionList = CSSIdentifier("action_list")
+  val action = CSSIdentifier("action")
 
   override private[css] def styles =
-    Seq(modal, content, body, header, footer, button)
+    Seq(modal, content, body, header, footer, button, actionList, action)
 
 }

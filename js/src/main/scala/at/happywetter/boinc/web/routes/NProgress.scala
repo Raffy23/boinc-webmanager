@@ -10,7 +10,7 @@ import scala.scalajs.js.annotation.JSGlobal
   * @version 24.07.2017
   */
 @js.native
-@JSGlobal
+@JSGlobal//@JSImport("nprogress", JSImport.Namespace)
 object NProgress extends js.Object {
 
   def start(): Unit = js.native

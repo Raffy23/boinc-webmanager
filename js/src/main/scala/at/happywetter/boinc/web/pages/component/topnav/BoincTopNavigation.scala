@@ -11,7 +11,9 @@ import mhtml.{Rx, Var}
   */
 object BoincTopNavigation extends TopNavigation {
 
-  override protected var selected = "boinc"
+  val clientName: Var[String] = Var("none")
+
+  override protected var selected: Var[String] = Var("boinc")
 
   override protected val links = List(
     ("boinc", "head_menu_boinc", "fa fa-address-card"),
@@ -24,11 +26,9 @@ object BoincTopNavigation extends TopNavigation {
     ("global_prefs", "head_menu_prefs", "fa fa-cogs")
   )
 
-  override protected val componentId: String = "boinc_top_navigation"
+  override val componentId: String = "boinc_top_navigation"
 
   override protected def link(nav: String): Rx[String] =
     clientName.map(clientName => BoincClientLayout.link(clientName, nav))
-
-  val clientName: Var[String] = Var("none")
 
 }

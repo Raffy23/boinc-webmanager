@@ -18,15 +18,16 @@ object BoincRootLayout extends BoincClientLayout {
   override val path: String = ""
 
   override def render: Elem = {
-    <div>__ROOT_LAYOUT__</div>
+    <div>
+      <!-- __ROOT_LAYOUT__ -->
+      Boinc Webmanager is loading the Boinc layout ...
+    </div>
   }
 
   override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    println(currentController)
-
-    currentController.before(() => {AppRouter.navigate(currentController.link); done()}, params)
+    AppRouter.navigate(currentController.linkForHost(params("client")))
   }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {}
+  override def beforeRender(params: Dictionary[String]): Unit = { }
 
 }

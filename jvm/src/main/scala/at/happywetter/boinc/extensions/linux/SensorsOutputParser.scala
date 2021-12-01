@@ -40,7 +40,6 @@ object SensorsOutputParser {
             case NumberPattern(num, unit) => (num, unit)
           }
 
-          println(data(0))
           (data(0).trim,
             SensorsRow(
               nV._1.toDouble,

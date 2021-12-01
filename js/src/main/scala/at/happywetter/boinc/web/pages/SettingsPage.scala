@@ -3,12 +3,12 @@ package at.happywetter.boinc.web.pages
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.helper.AuthClient
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.pages.component.topnav.SettingsTopNavigation
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
 
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Dictionary}
@@ -23,7 +23,6 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   */
 object SettingsPage extends Layout {
   override val path: String = "settings"
-
 
   override def render: Elem = {
     <div id="settings">
@@ -40,7 +39,7 @@ object SettingsPage extends Layout {
           <tbody>
             <tr><td><b>{"verion".localize}</b></td><td>{BuildInfo.version}</td></tr>
             <tr><td><b>{"git_branch".localize}</b></td><td>{BuildInfo.gitCurrentBranch}</td></tr>
-            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis).toLocaleDateString()}</td></tr>
+            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis.toDouble).toLocaleDateString()}</td></tr>
             <tr><td><b>{"scala_version".localize}</b></td><td>{BuildInfo.scalaVersion}</td></tr>
           </tbody>
         </table>
@@ -63,6 +62,8 @@ object SettingsPage extends Layout {
                     // Force complete page re-render
                     LayoutManager.init()
                     this.beforeRender(null)
+
+                    AppRouter.router.updatePageLinks()
                     NProgress.done(true)
                   })
               }).component
@@ -72,22 +73,13 @@ object SettingsPage extends Layout {
     </div>
   }
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
-    PageLayout.clearNav()
-    AuthClient.validateAction(done)
+  override def after(): Unit = {
+    NProgress.done(true)
   }
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
-    ClientManager.readClients().map(clients => {
-      DashboardMenuBuilder.renderClients(clients)
-
-      AppRouter.router.updatePageLinks()
-    }).recover(ErrorDialogUtil.showDialog)
-  }
-
-  override def onRender(): Unit = {
+    SettingsTopNavigation.render(Some(""))
     DashboardMenu.selectByMenuId("settings")
   }
+
 }

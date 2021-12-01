@@ -1,5 +1,4 @@
 <configuration>
-
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -9,6 +8,8 @@
   </appender>
 
   <logger name="org.http4s.blaze.*" level="WARN"/>
+  <logger name="org.http4s.blaze.channel.nio1.NIO1SocketServerGroup" level="WARN"/>
+  <logger name="org.http4s.blaze.channel.nio1.SelectorLoop" level="WARN"/>
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />

@@ -4,14 +4,14 @@ import at.happywetter.boinc.shared.boincrpc.{DailyStatistic, Statistics}
 import at.happywetter.boinc.web.chartjs._
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincStatisticsStyle => Style}
-import at.happywetter.boinc.web.helper.RichRx._
+import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
-import org.scalajs.dom.raw.{HTMLCanvasElement, HTMLInputElement}
+import org.scalajs.dom.raw.{HTMLCanvasElement, HTMLDivElement, HTMLInputElement}
 import org.scalajs.dom.{CanvasRenderingContext2D, Event}
 
 import scala.collection.mutable
@@ -105,8 +105,8 @@ class BoincStatisticsLayout extends BoincClientLayout {
             {"host_avg_credit".localize}
           </a>
         </div>
-        <div style="max-height:calc(100% - 500px)">
-          <canvas width="100%" height="100%" id="chart-area" style="margin-top:12px"/>
+        <div id="chart-container">
+          <canvas id="chart-area" style="width:100%;height:100%;margin-top:12px"/>
         </div>
       </div>
     </div>
@@ -133,11 +133,20 @@ class BoincStatisticsLayout extends BoincClientLayout {
   }
 
   private def buildChart(): Unit = {
-    val context =
-      dom.document.getElementById("chart-area")
-        .asInstanceOf[HTMLCanvasElement]
-        .getContext("2d")
-        .asInstanceOf[CanvasRenderingContext2D]
+    val container = dom.document.getElementById("chart-container")
+      .asInstanceOf[HTMLDivElement]
+
+    val height = (dom.window.innerHeight - container.getBoundingClientRect().top - 30).toInt
+    container.style = s"width:100%;height:${height}px;"
+
+    val context = dom.document.getElementById("chart-area")
+      .asInstanceOf[HTMLCanvasElement]
+      .getContext("2d")
+      .asInstanceOf[CanvasRenderingContext2D]
+
+    //val canvas = context.asInstanceOf[HTMLCanvasElement]
+    //canvas.height = canvas.offsetHeight.toInt
+    //canvas.width  = canvas.offsetWidth.toInt
 
     this.chart = new ChartJS(context, new ChartConfig {
       override val data: ChartData = new ChartData {
