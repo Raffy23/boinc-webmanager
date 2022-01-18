@@ -1,7 +1,7 @@
 package at.happywetter.boinc.boincclient
 
 import at.happywetter.boinc.BuildInfo
-import at.happywetter.boinc.boincclient.BoincClient.CLIENT_READ_TIMEOUT
+import at.happywetter.boinc.boincclient.BoincClient.CLIENT_AUTH_TIMEOUT
 import at.happywetter.boinc.boincclient.parser.AppConfigParser
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
@@ -19,6 +19,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.{Logger, LoggerFactory}
 import com.comcast.ip4s.{Host, Port}
+import fs2.concurrent.{Signal, SignallingRef}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -37,9 +38,9 @@ import scala.xml.{NodeSeq, XML}
   */
 object BoincClient {
 
-  private val CLIENT_IDENTIFER = s"BOINC WebManager ${BuildInfo.version}"
-  private val CLIENT_VERSION   = BoincVersion(major = 7, minor = 16, release = 6)
-  private val CLIENT_READ_TIMEOUT = 5 seconds
+  private val CLIENT_IDENTIFER    = s"BOINC WebManager ${BuildInfo.version}"
+  private val CLIENT_VERSION      = BoincVersion(major = 7, minor = 16, release = 6)
+  private val CLIENT_AUTH_TIMEOUT = 5 seconds
 
   object Mode extends Enumeration {
     val Always  = Value("<always/>")
@@ -87,8 +88,9 @@ object BoincClient {
           logger  <- Slf4jLogger.fromClass[IO](BoincClient.getClass)
           lock    <- Semaphore[IO](1)
           version <- Ref.of[IO, Option[BoincVersion]](Option.empty)
+          signal  <- SignallingRef[IO, Boolean](false)
 
-          client <- IO { new BoincClient(socket, lock, version, logger, s"[$address:$port]: ") }
+          client <- IO { new BoincClient(socket, lock, version, logger, s"[$address:$port]: ", signal) }
 
           _ <- client
             .authenticate(password)
@@ -105,7 +107,7 @@ object BoincClient {
 
 }
 
-class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version: Ref[IO, Option[BoincVersion]], logger: SelfAwareStructuredLogger[IO], logHeader: String) extends BoincCoreClient[IO] {
+class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version: Ref[IO, Option[BoincVersion]], logger: SelfAwareStructuredLogger[IO], logHeader: String, shutdownSignal: SignallingRef[IO, Boolean]) extends BoincCoreClient[IO] {
 
   private def sendData(data: String): IO[Unit] = IO {
       val builder = Chunk.newBuilder[Byte]
@@ -125,6 +127,7 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
       .interruptScope
       .takeWhile(_ != '\u0003')
       .through(text.utf8.decode)
+      .interruptWhen(shutdownSignal)
       .compile
       .string
       .map(XML.loadString)
@@ -135,6 +138,7 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
       .reads
       .interruptScope
       .takeWhile(_ != '\u0003')
+      .interruptWhen(shutdownSignal)
       .compile
       .toVector
       .map(vec =>
@@ -164,7 +168,7 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
       // actually clients, should probably be configurable
       nonce  <- xmlRpc("<auth1>")
         .map(_ \ "nonce" text)
-        .timeout(5 seconds)
+        .timeout(CLIENT_AUTH_TIMEOUT)
 
       result <- xmlRpc("<auth2>\n<nonce_hash>" + BoincCryptoHelper.md5(nonce + password) + "</nonce_hash>\n</auth2>")
 
@@ -351,9 +355,11 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
   override def getVersion: IO[BoincVersion] =
     version.get.map(_.get)
 
-  def close(): IO[Unit] = {
-    socket.endOfInput.flatMap(_ => socket.endOfOutput)
-  }
+  def close(): IO[Unit] = for {
+    _ <- shutdownSignal.set(true)
+    _ <- socket.endOfInput
+    _ <- socket.endOfOutput
+  } yield ()
 
   private def logTrace(msg: String): IO[Unit] = logger.trace(logHeader + msg)
 

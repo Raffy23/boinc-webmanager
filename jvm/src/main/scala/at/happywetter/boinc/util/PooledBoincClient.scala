@@ -3,9 +3,8 @@ package at.happywetter.boinc.util
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC, _}
+import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
-import cats.data.State
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
 import cats.effect.std.Semaphore
 import cats.effect.unsafe.implicits.global
