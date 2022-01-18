@@ -6,7 +6,7 @@ enablePlugins(GitVersioning)
 
 name := "Boinc-Webmanager"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / scalacOptions ++= Seq(
   "-unchecked",
   "-deprecation",
@@ -18,8 +18,8 @@ git.gitTagToVersionNumber := { tag: String =>
   else None
 }
 
-val http4sVersion  = "1.0.0-M29"
-val uPickleVersion = "1.4.1"
+val http4sVersion  = "1.0.0-M30"
+val uPickleVersion = "1.4.4"
 
 lazy val root = project.in(file(".")).
   aggregate(clientJS, serverJVM).
@@ -65,26 +65,26 @@ lazy val serverJVM = (project in file ("jvm"))
     ),
 
     libraryDependencies ++= Seq(
-      "ch.qos.logback"         %  "logback-classic"     % "1.2.3",
-      "ch.qos.logback"         %  "logback-core"        % "1.2.3",
+      "ch.qos.logback"         %  "logback-classic"     % "1.2.10",
+      "ch.qos.logback"         %  "logback-core"        % "1.2.10",
       "org.typelevel"          %% "log4cats-slf4j"      % "2.1.1",
 
       "org.http4s"             %% "http4s-dsl"          % http4sVersion,
       "org.http4s"             %% "http4s-blaze-server" % http4sVersion,
 
-      "com.github.pureconfig"  %% "pureconfig"          % "0.16.0",
+      "com.github.pureconfig"  %% "pureconfig"          % "0.17.1",
 
       "org.scala-lang.modules" %% "scala-xml"           % "2.0.1",
-      "com.lihaoyi"            %% "scalatags"           % "0.9.4",
+      "com.lihaoyi"            %% "scalatags"           % "0.11.0",
       "org.scalaj"             %% "scalaj-http"         % "2.4.2",
 
-      "org.webjars"            %  "swagger-ui"          % "3.51.2",
+      "org.webjars"            %  "swagger-ui"          % "4.1.3",
 
-      "org.jsoup"              %  "jsoup"               % "1.14.2",
-      "com.auth0"              %  "java-jwt"            % "3.18.1",
+      "org.jsoup"              %  "jsoup"               % "1.14.3",
+      "com.auth0"              %  "java-jwt"            % "3.18.3",
 
-      "com.h2database"         %  "h2"                  % "1.4.200",
-      "io.getquill"            %% "quill-jdbc"          % "3.10.0",
+      "com.h2database"         %  "h2"                  % "2.1.210",
+      "io.getquill"            %% "quill-jdbc"          % "3.12.0",
 
       "com.lihaoyi"            %% "upack"               % uPickleVersion,
       "com.lihaoyi"            %% "upickle"             % uPickleVersion,
@@ -92,10 +92,10 @@ lazy val serverJVM = (project in file ("jvm"))
 
 
       // Resources for the client:
-      "org.webjars"            %  "font-awesome"        % "5.15.1",
+      "org.webjars"            %  "font-awesome"        % "5.15.4",
       "org.webjars.bower"      %  "nprogress"           % "0.2.0",
       "org.webjars.npm"        %  "flag-icon-css"       % "3.5.0",
-      "org.webjars.npm"        %  "purecss"             % "2.0.3"
+      // "org.webjars.npm"        %  "purecss"             % "2.0.3"
     ),
 
     gzip := {
@@ -145,7 +145,7 @@ lazy val clientJS = (project in file ("js"))
 
     libraryDependencies ++= Seq(
       "org.scala-js"      %%% "scalajs-dom"       % "1.2.0",
-      "io.github.cquiroz" %%% "scala-java-time"   % "2.2.2",
+      "io.github.cquiroz" %%% "scala-java-time"   % "2.3.0",
 
       "com.lihaoyi"  %%% "upack"             % uPickleVersion,
       "com.lihaoyi"  %%% "upickle"           % uPickleVersion,

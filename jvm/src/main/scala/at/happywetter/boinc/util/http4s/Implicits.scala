@@ -15,9 +15,9 @@ import scala.language.implicitConversions
 object Implicits {
 
   implicit def convertStringToEntityBody(str: String): EntityBody[IO] =
-    EntityEncoder.stringEncoder[IO].toEntity(str).body
+    EntityEncoder.stringEncoder.toEntity(str).body
 
   implicit def convertByteArrayToEntityBody(array: Array[Byte]): EntityBody[IO] =
-    EntityEncoder.byteArrayEncoder[IO].toEntity(array).body
+    EntityEncoder.byteArrayEncoder.toEntity(array).body
 
 }

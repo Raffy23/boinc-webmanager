@@ -37,7 +37,7 @@ object WebResourcesRoute {
   private val nprogessPath    = ResourceResolver.getResourceRoot(repo="bower", name="nprogress")
   private val fontAwesomePath = ResourceResolver.getResourceRoot(repo=""     , name="font-awesome")
   private val flagIconCssPath = ResourceResolver.getResourceRoot(repo="npm"  , name="flag-icon-css")
-  private val pureCssPath     = ResourceResolver.getResourceRoot(repo="npm"  , name="purecss")
+  // private val pureCssPath     = ResourceResolver.getResourceRoot(repo="npm"  , name="purecss")
 
   private val indexContentEtag = Random.alphanumeric.take(12).mkString
   private def indexContent(config: ServerSharedConfig): String = {

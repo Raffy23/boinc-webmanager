@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS project (
     specific_area   TEXT,
     description     TEXT,
     home            TEXT,
-    platforms       ARRAY                         --
+    platforms       VARCHAR(64) ARRAY           --
 );
 
 -- List of jobs that the Webmanager has stored
