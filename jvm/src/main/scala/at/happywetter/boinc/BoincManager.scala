@@ -46,12 +46,17 @@ object BoincManager {
         logger      <- Slf4jLogger.fromClass[IO](BoincManager.getClass)
         hostManager <- IO { new BoincManager(config.boinc.connectionPool, observer, logger) }
 
-        /* Initialize the manager from the config */
-        _ <- config.boinc.hosts.map(hostManager.add).toList.sequence_
-        _ <- config.hostGroups.map { case (group, hosts) => hostManager.addGroup(group, hosts) }.toList.sequence_
-
       } yield hostManager
     )(_.close())
+
+    /* Initialize the manager from the config */
+    _ <- Spawn[IO].background[Unit]( for {
+      logger <- Slf4jLogger.fromClass[IO](BoincManager.getClass)
+      _ <- logger.info("Importing clients from configuration (application.conf)")
+      _ <- config.hostGroups.map { case (group, hosts) => manager.addGroup(group, hosts) }.toList.sequence_
+      _ <- config.boinc.hosts.map(manager.add).toList.parSequence_
+      _ <- logger.info("Finished importing clients from configuration")
+    } yield ())
 
     /* Start all background tasks for the manager */
     _ <- Spawn[IO].background[Nothing](manager.autoCloser)

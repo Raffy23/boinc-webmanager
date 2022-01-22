@@ -5,15 +5,14 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
+import cats.data.EitherT
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
-import cats.effect.std.Semaphore
-import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, Ref, Resource}
 
 import scala.concurrent.duration.FiniteDuration
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 12.09.2017
@@ -24,86 +23,83 @@ object PooledBoincClient {
 
   case class BoincClientParameters(address: String, val port: Int, password: String)
 
-  private case class PoolState(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
+  case class PoolState(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
 
   def apply(poolSize: Int, address: String, port: Int = 31416, password: String): Resource[IO, PooledBoincClient] =
     Resource.make(
       for {
-        lock   <- Semaphore[IO](1)
+        ref <- ExclusiveRef(PoolState(Map.empty, Map.empty, List.empty))
         client <- IO {
-          new PooledBoincClient(lock, BoincClientParameters(address, port, password))
+          new PooledBoincClient(BoincClientParameters(address, port, password), ref)
         }
       } yield client
     )(_.close())
 
 }
-class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientParameters) extends BoincCoreClient[IO] {
+
+class PooledBoincClient private(val details: BoincClientParameters, state: ExclusiveRef[PoolState]) extends BoincCoreClient[IO] {
 
   val deathCounter: Ref[IO, Int] = Ref.unsafe(0)
 
   private def all = state.get.map(_.lastUsed.keys.toSeq)
 
-  private val state = Ref.unsafe[IO, PoolState](PoolState(Map.empty, Map.empty, List.empty))
+  private def takeConnection(): IO[BoincClient] = {
+    state.modifyF[Either[Throwable, BoincClient]] { state =>
+      state.pool match {
+        case connection :: tail => IO.pure {
+          (
+            PoolState(
+              state.lastUsed + (connection -> System.currentTimeMillis()),
+              state.finalizer,
+              tail
+            ),
+            Right(connection)
+          )
+        }
 
-  private def takeConnection(): IO[BoincClient] =
-    lock
-      .permit
-      .use(_ =>
-        state.modify[Either[Throwable, BoincClient]] { state =>
-          state.pool match {
-            case connection :: tail =>
-              (
-                PoolState(
-                  state.lastUsed + (connection -> System.currentTimeMillis()),
-                  state.finalizer,
-                  tail
-                ),
-                Right(connection)
-              )
-
-            case Nil    =>
-              // Kind of ugly, but effect must be atomic in this transaction
-              BoincClient(details.address, details.port, details.password)
-                .allocated
-                .map(Right(_))
-                .handleError(Left(_))
-                .unsafeRunSync()
-                .fold (
-                  throwable =>
-                    (
-                      state,
-                      Left(throwable)
-                    )
-                  ,
-                  boincClient =>
-                    (
-                      PoolState(
-                        state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
-                        state.finalizer + (boincClient._1 -> boincClient._2),
-                        List.empty
-                      ),
-                      Right(boincClient._1)
-                    )
-                )
-          }
-        }.flatMap(_.fold(IO.raiseError, c => IO.pure(c)))
-      ).handleErrorWith(cause =>
-        deathCounter.update(_ + 1) *>
-        IO.raiseError(new RuntimeException(s"Client ${details.address}:${details.port} is unavailable!", cause))
-      )
+        case Nil    => EitherT(
+          BoincClient(details.address, details.port, details.password)
+            .allocated
+            .map(Right(_))
+            .handleError(Left(_))
+        ).fold (
+          throwable =>
+            (
+              state,
+              Left(throwable)
+            )
+          ,
+          boincClient =>
+            (
+              PoolState(
+                state.lastUsed  + (boincClient._1 -> System.currentTimeMillis()),
+                state.finalizer + (boincClient._1 -> boincClient._2),
+                List.empty
+              ),
+              Right(boincClient._1)
+            )
+        )
+      }
+    }
+    .flatMap(_.fold(IO.raiseError, c => IO.pure(c)))
+    .handleErrorWith(cause =>
+      deathCounter.update(_ + 1) *>
+      IO.raiseError(new RuntimeException(s"Client ${details.address}:${details.port} is unavailable!", cause))
+    )
+  }
 
   private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
-   takeConnection().bracketCase(extractor) {
-     case (connection, Succeeded(_)) => state.update(old => old.copy(pool = connection :: old.pool))
-     case (connection, Canceled())   => state.update(old => old.copy(pool = connection :: old.pool))
-     case (connection, Errored(e))   => for {
+    takeConnection().bracketCase(extractor) {
+      case (connection, Succeeded(_)) => state.update(old => old.copy(pool = connection :: old.pool))
+      case (connection, Canceled())   => state.update(old => old.copy(pool = connection :: old.pool))
+      case (connection, Errored(e))   => for {
 
-       _ <- deathCounter.update(_ + 1)
-       _ <- closeConnection(connection)
-       _ <- IO.raiseError(ConnectionException(e))
+        _ <- deathCounter.update(_ + 1)
+        _ <- closeConnection(connection)
+        _ <- IO.raiseError(ConnectionException(e))
 
-     } yield ()
-   }
+      } yield ()
+    }
   }
 
   private def closeConnection(connection: BoincClient): IO[Unit] = for {
@@ -137,7 +133,7 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
   def isAvailable: IO[Boolean] =
     getHostInfo
       .map(_ => true)
-      .handleError(_ => false)
+      .handleError(e => false)
 
   def close(timeout: FiniteDuration): IO[Int] = {
     import cats.implicits._
@@ -163,7 +159,7 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
         (finalizers,  toBeClosed.size)
       )
     }.flatTap(_._1.sequence_)
-     .map(_._2)
+      .map(_._2)
   }
 
   def hasOpenConnections: IO[Boolean] = state.get.map(_.pool.nonEmpty)
@@ -233,3 +229,4 @@ class PooledBoincClient private (lock: Semaphore[IO], val details: BoincClientPa
   override def quit(): IO[Unit] =
     connection(_.quit())
 }
+
