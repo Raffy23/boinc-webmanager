@@ -152,7 +152,7 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
                 .map { case (openConnections, deathCounter) => !openConnections && deathCounter > 10 }
                 .ifM(
                   logger.info(s"Removing client '$name', has ___ errored connections and can't be reached!") *>
-                  boincClients.update(_ - name) *>
+                  remove(name) *>
                   IO.pure(true)
                   ,
                   IO.pure(false)

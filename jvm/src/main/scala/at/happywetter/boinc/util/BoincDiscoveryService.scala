@@ -106,11 +106,15 @@ object BoincDiscoveryService {
     } yield service
 
   private implicit class IpAddressToAble(private val ip: IpAddress) extends AnyVal {
-    def to(end: IpAddress): Iterable[IpAddress] = Iterable.unfold(ip) { current =>
+
+    def to(end: IpAddress): Iterable[IpAddress] = until(end) ++ Iterable.single(end)
+
+    def until(end: IpAddress): Iterable[IpAddress] = Iterable.unfold(ip) { current =>
       val next = current.next
       if (next.equals(end)) None
       else                  Some((next, next))
     }
+
   }
 
 }
