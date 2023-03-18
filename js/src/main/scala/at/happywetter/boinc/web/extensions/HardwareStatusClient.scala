@@ -18,8 +18,8 @@ import scala.concurrent.Future
   * @version 03.11.2017
   */
 class HardwareStatusClient(val hostname: String) {
-  
-  private val baseURI = s"/hardware/${dom.window.encodeURIComponent(hostname)}/"
+
+  private val baseURI = s"/hardware/host/${dom.window.encodeURIComponent(hostname)}/"
 
   def getCpuFrequency: Future[Double] =
     FetchHelper.get[Double](baseURI + "cpufrequency")
@@ -32,10 +32,18 @@ class HardwareStatusClient(val hostname: String) {
 object HardwareStatusClient {
 
   def queryClients: Future[List[HardwareStatusClient]] =
-    FetchHelper.get[List[String]]("/hardware")
+    FetchHelper.get[List[String]]("/hardware/host")
       .map(_
         .sorted(ord = StringLengthAlphaOrdering)
         .map(new HardwareStatusClient(_))
       )
 
+  def queryActions: Future[List[String]] =
+    FetchHelper.get[List[String]]("/hardware/action")
+
+  def executeAction(host: String, action: String): Future[String] =
+    FetchHelper.post[String, String](
+      s"/hardware/host/${dom.window.encodeURIComponent(host)}/action/${dom.window.encodeURIComponent(action)}",
+      ""
+    )
 }

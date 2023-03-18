@@ -1,10 +1,12 @@
 package at.happywetter.boinc.util.http4s
 
+import at.happywetter.boinc.AppConfig.Config
+import cats.effect.Async
+import fs2.io.net.tls.TLSContext
+import org.http4s.ember.server.EmberServerBuilder
+
 import java.io.FileInputStream
 import java.security.KeyStore
-import at.happywetter.boinc.AppConfig.Config
-import org.http4s.blaze.server.BlazeServerBuilder
-
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
 /**
@@ -13,11 +15,11 @@ import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
  * @author Raphael
  * @version 27.02.2020
  */
-object CustomBlazeServerBuilder {
+object CustomEmberServerBuilder {
 
-  implicit class SSLContextBlazeServerBuilder[F[_]](val sb: BlazeServerBuilder[F]) extends AnyVal {
+  implicit class SSLContextBlazeServerBuilder[F[_]: Async](private val sb: EmberServerBuilder[F]) {
 
-    def withOptionalSSL(config: Config): BlazeServerBuilder[F] = {
+    def withOptionalSSL(config: Config): EmberServerBuilder[F] = {
       if (config.server.ssl.enabled) {
         val trustStoreInputStream = new FileInputStream(config.server.ssl.keystore)
         val trustStore = KeyStore.getInstance(KeyStore.getDefaultType)
@@ -33,7 +35,7 @@ object CustomBlazeServerBuilder {
         val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(keyManager.getKeyManagers, trustManager.getTrustManagers, null)
 
-        sb.withSslContext(sslContext)
+        sb.withTLS(TLSContext.Builder.forAsync[F].fromSSLContext(sslContext))
       } else {
         sb
       }

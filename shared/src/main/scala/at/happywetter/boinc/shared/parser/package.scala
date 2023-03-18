@@ -76,6 +76,9 @@ package object parser {
     str => LocalDateTime.parse(str, DateTimeFormatter.ISO_DATE_TIME)
   )
 
+  implicit val jobModeOnceParser = macroRW[rpc.jobs.Once.type]
+  implicit val jobModeRunningParser = macroRW[rpc.jobs.Running.type]
+  implicit val jobModeCPUParser = macroRW[rpc.jobs.CPU.type]
   implicit val jobModeAtParser = macroRW[rpc.jobs.At]
   implicit val jobModeEveryParser = macroRW[rpc.jobs.Every]
   implicit val jobModeParser = macroRW[rpc.jobs.JobMode]
@@ -84,8 +87,11 @@ package object parser {
   implicit val projectActionParser = readwriter[Int].bimap[ProjectAction](_.id, ProjectAction(_))
 
   implicit val jobStatusErroredParser = macroRW[rpc.jobs.Errored]
+  implicit val jobStatusStoppedParser = macroRW[rpc.jobs.Stopped.type]
   implicit val jobStatusParser = macroRW[rpc.jobs.JobStatus]
 
+  implicit val jobRunModeGPUParser = macroRW[rpc.jobs.GPU.type]
+  implicit val jobRunModeNetworkParser = macroRW[rpc.jobs.Network.type]
   implicit val jobRunModeTargetParser = macroRW[rpc.jobs.BoincRunModeTarget]
 
   implicit val jobProjectActionParser = macroRW[rpc.jobs.BoincProjectAction]

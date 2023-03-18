@@ -24,9 +24,6 @@ object DataModelConverter {
   (data: List[Project])(implicit boinc: BoincClient, table: DataTable[ProjectDataTableModel.ProjectTableRow]): List[ProjectDataTableModel.ProjectTableRow] =
     data.map(ProjectDataTableModel.convert)
 
-  implicit def hwClientConverter(data: List[HardwareStatusClient]): List[HardwareTableRow] =
-    HardwareTableModel.convert(data)
-
   implicit def messagesConvert(data: List[Message]): List[MessageTableModel.MessageTableRow] =
     data.map(MessageTableModel.convert)
 

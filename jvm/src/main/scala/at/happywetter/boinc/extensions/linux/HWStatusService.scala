@@ -1,9 +1,9 @@
 package at.happywetter.boinc.extensions.linux
 
 import java.util
-
 import at.happywetter.boinc.shared.extension.HardwareData.SensorsData
 import cats.effect.IO
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.collection.concurrent.TrieMap
 import scala.xml.XML
@@ -14,10 +14,12 @@ import scala.xml.XML
   * @author Raphael
   * @version 02.11.2017
   */
-class HWStatusService(resolverBinary: String, parameters: List[String], cacheTimeout: Long) {
+class HWStatusService(resolverBinary: String, parameters: List[String], cacheTimeout: Long, val actions: Map[String, Seq[String]]) {
   import HWStatusService._
 
   private val hostData = new TrieMap[String, (Timestamp, CPUFrequency, SensorsData)]()
+  private val logger = Slf4jLogger.getLoggerFromClass[IO](HWStatusService.getClass)
+
 
   private def executeResolver(host: String): (CPUFrequency, SensorsData) = {
     val procLine = new util.ArrayList[String]()
@@ -59,6 +61,33 @@ class HWStatusService(resolverBinary: String, parameters: List[String], cacheTim
       }
     }
   }
+
+  def executeAction(host: String, action: String): IO[Boolean] = {
+    logger.info(s"Executing action $action for $host") *>
+    IO.blocking {
+      val procBuilder = new ProcessBuilder(actions(action) ++ Seq(host): _*)
+      procBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE)
+      procBuilder.redirectError(ProcessBuilder.Redirect.PIPE)
+
+      val process = procBuilder.start()
+      process.getInputStream.close()
+
+      val exitCode = process.waitFor()
+
+      exitCode
+    }.flatMap { exitCode =>
+      if (exitCode == 0) {
+        logger.warn(s"Process exited with non-zero exit code: $exitCode") *>
+        IO.pure(true)
+      } else {
+        IO.pure(false)
+      }
+    }.handleErrorWith { ex =>
+       logger.error(s"Exception occured while exeuting action $action for host $host:\n${ex.getMessage}") *>
+       IO.pure(false)
+    }
+  }
+
 }
 
 object HWStatusService {

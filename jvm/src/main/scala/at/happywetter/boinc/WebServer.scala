@@ -2,19 +2,23 @@ package at.happywetter.boinc
 
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
-import at.happywetter.boinc.util.http4s.CustomBlazeServerBuilder._
+import at.happywetter.boinc.util.http4s.CustomEmberServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, JobManager}
 import cats.effect._
 import cats.effect.std.Semaphore
 import cats.effect.unsafe.IORuntime
+import com.comcast.ip4s.{Host, Port}
+import fs2.io.net.SocketGroup
 import org.http4s.HttpRoutes
-import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.middleware.GZip
 import org.http4s.server.websocket.WebSocketBuilder
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+import java.nio.channels.ServerSocketChannel
 
 
 /**
@@ -34,13 +38,17 @@ object WebServer extends IOApp {
     val authService = new AuthenticationService(config)
     val hw = {
       if (config.hardware.isDefined && config.hardware.get.enabled) {
-        val hwStatusService = new HWStatusService(
-          config.hardware.get.binary,
-          config.hardware.get.params,
-          config.hardware.get.cacheTimeout
+        HardwareAPIRoutes(
+          config.hardware.get.hosts.toSet,
+          config.hardware.map(hardware =>
+            new HWStatusService(
+              hardware.binary,
+              hardware.params,
+              hardware.cacheTimeout,
+              hardware.actions
+            )
+          ).get
         )
-
-        HardwareAPIRoutes(config.hardware.get.hosts.toSet, hwStatusService)
       } else {
         HttpRoutes.of[IO] {
           case GET -> Root => NotFound()
@@ -69,21 +77,23 @@ object WebServer extends IOApp {
         _           <- ConfigurationChecker.checkConfiguration(config, logger)
       } yield ())
 
-      database    <- Database()
-      xmlPStore   <- XMLProjectStore(database, config)
-      hostManager <- BoincManager(config, database)
-      jobManager  <- JobManager(hostManager, database)
+      database    <- Database().onFinalize(IO.println("DONE Database"))
+      xmlPStore   <- XMLProjectStore(database, config).onFinalize(IO.println("DONE XMLProjectStore"))
+      hostManager <- BoincManager(config, database).onFinalize(IO.println("DONE BoincManager")) // <-- problematic
+      jobManager  <- JobManager(hostManager, database).onFinalize(IO.println("DONE JobManager"))
 
       // TODO: for Linux with systemd privileged socket can be inherited,
       //       how to convince Blaze to use it?
-      webserver   <- BlazeServerBuilder[IO]
-                        .enableHttp2(false) // Can't use web sockets if http2 is enabled (since 0.21.0-M2)
+      webserver   <- EmberServerBuilder
+                        .default[IO]
                         .withOptionalSSL(config)
-                        .bindHttp(config.server.port, config.server.address)
+                        .withHostOption(Host.fromString(config.server.address))
+                        .withPort(Port.fromInt(config.server.port).get)
                         .withHttpWebSocketApp(wsBuilder => routes(wsBuilder, hostManager, xmlPStore, database, jobManager))
-                        .resource
+                        .build
+                        .onFinalize(IO.println("DONE EmberServerBuilder"))
 
-      autoDiscovery <- BoincHostFinder(config, hostManager, database)
+      autoDiscovery <- BoincHostFinder(config, hostManager, database).onFinalize(IO.println("DONE BoincHostFinder"))
     } yield (()))
       .use(_ =>
         if (config.serviceMode)
@@ -98,6 +108,7 @@ object WebServer extends IOApp {
     _     <- IO.println("Press ENTER to exit the server ...")
     fiber <- Spawn[IO].start(IO.readLine)
     _     <- fiber.join
+    _     <- IO.println("Shutting down server ...")
   } yield ()
 
 }

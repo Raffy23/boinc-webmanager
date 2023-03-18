@@ -5,6 +5,7 @@ import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper.withNotMatchingEtag
 import cats.effect.IO
 import org.http4s._
+import org.http4s.implicits._
 import org.http4s.dsl.io._
 import org.http4s.headers.{`Content-Type`, `Last-Modified`, ETag}
 import org.typelevel.ci.CIString
@@ -47,11 +48,16 @@ trait ResponseEncodingHelper {
   def encode[T](status: Status, body: T, request: Request[IO])(implicit encoder: Writer[T]): IO[Response[IO]] =
     IO.pure(
       request.headers.get(CIString("Accept")).map(_.head.value) match {
-        case Some("application/json")        => Response[IO](status = status, body = write(body), headers = Headers(HEADER_JSON))
-        //case Some("application/messagepack") => new Response[IO](status = status, body = writeBinary(body), headers = Headers.of(HEADER_MSGPACK))
-        //case Some("*/*")                     => new Response[IO](status = status, body = writeBinary(body), headers = Headers.of(HEADER_MSGPACK))
-
-        case _ => Response[IO](status = status, body = writeBinary(body), headers = Headers(HEADER_MSGPACK))
+        case Some("application/json")        => Response[IO](
+          status = status,
+          entity = write(body),
+          headers = Headers(HEADER_JSON)
+        )
+        case _ => Response[IO](
+          status = status,
+          entity = writeBinary(body),
+          headers = Headers(HEADER_MSGPACK)
+        )
       }
     )
 

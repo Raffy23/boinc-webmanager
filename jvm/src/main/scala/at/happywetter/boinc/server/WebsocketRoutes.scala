@@ -13,7 +13,7 @@ import org.http4s.dsl.io._
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame._
-import org.http4s.{HttpRoutes, Response}
+import org.http4s.{EntityEncoder, HttpRoutes, Response}
 import scodec.bits.ByteVector
 import upickle.default.{Writer, readBinary, writeBinary}
 
@@ -56,7 +56,12 @@ object WebsocketRoutes {
   def apply(webSocketBuilder: WebSocketBuilder[IO], authService: AuthenticationService, boincManager: BoincManager): HttpRoutes[IO] = HttpRoutes.of[IO] {
 
     case GET -> Root :? JWTToken(token) if !authService.validate(token).getOrElse(false) =>
-      IO.pure(Response[IO](status = Unauthorized, body = writeBinary(ApplicationError("error_no_token"))))
+      IO.pure(
+        Response[IO](
+          status = Unauthorized,
+          entity = EntityEncoder.byteArrayEncoder.toEntity(writeBinary(ApplicationError("error_no_token")))
+        )
+      )
 
     case GET -> Root :? JWTToken(token) if authService.validate(token).getOrElse(false) =>
 

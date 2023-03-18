@@ -23,7 +23,7 @@ object RichMsgPackRequest {
   implicit class RichMsgPacKResponse[F[_]: Applicative](request: Request[F]) {
 
     def decodeMessagePack[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] =
-      request.decode[Array[Byte]] { body =>
+      request.decode[F, Array[Byte]] { body =>
         Try(readBinary(body))
           .map(f)
           //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_MSGPACK))))
@@ -32,7 +32,7 @@ object RichMsgPackRequest {
       }
 
     def decodeJson[T](f: T => F[Response[F]])(implicit F: Monad[F], contentReader: Reader[T], entityDecoder: EntityDecoder[F, Array[Byte]]): F[Response[F]] =
-      request.decode[Array[Byte]] { body =>
+      request.decode[F, Array[Byte]] { body =>
         Try(read(body))
           .map(f)
           //.map(resp => F.map(resp)(_.withHeaders(Headers(HEADER_JSON))))

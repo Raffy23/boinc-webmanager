@@ -8,8 +8,10 @@ import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
+import at.happywetter.boinc.web.routes.{NProgress, Navigo}
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.Var
+import mhtml.{Rx, Var}
 import org.scalajs.dom.Event
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,7 +25,7 @@ import scala.xml.Node
   */
 object HardwareTableModel {
 
-  class HardwareTableRow(client: HardwareStatusClient) extends DataTable.TableRow {
+  class HardwareTableRow(client: HardwareStatusClient, actions: Rx[List[String]]) extends DataTable.TableRow {
     private val cpuFrequ = client.getCpuFrequency
     private val sensors  = client.getSensorsData
 
@@ -41,12 +43,23 @@ object HardwareTableModel {
       newColumn("+12.00V", "--- V"),
       new TableColumn(
         Var (
-           new Tooltip(
-             Var("more_values".localize),
-             <a href="add-project" style="color:#333;text-decoration:none;font-size:30px" onclick={jsAddProjectAction}>
-               <i class="fa fa-info-circle"></i>
-             </a>
-           ).toXML
+          <div>
+            {
+              new Tooltip(
+                Var("more_values".localize),
+                <a href="add-project" style="color:#333;text-decoration:none;font-size:30px" onclick={jsAddProjectAction}>
+                  <i class="fa fa-info-circle"></i>
+                </a>
+              ).toXML
+            }{
+              new Tooltip(
+                Var("show_functions".localize),
+                <a href="execute-functions" style="color:#333;text-decoration:none;font-size:30px" onclick={jsExecuteActions}>
+                  <i class="fa-solid fa-book"></i>
+                </a>
+              ).toXML
+            }
+          </div>
         )
         , this) {
         override def compare(that: TableColumn): Int = ???
@@ -106,9 +119,37 @@ object HardwareTableModel {
         )
       ).renderToBody().show()
     }
+
+    private lazy val jsExecuteActions: (Event) => Unit = (event) => {
+      event.preventDefault()
+
+      new OkDialog(
+        "execute_function".localize + " " + client.hostname,
+        List(
+          <ul style="list-style-type: none;">
+            {
+              actions.map(actions =>
+                actions.map(action =>
+                  <button class={Style.button.htmlClass} onclick={(event: Event) => {
+                    event.preventDefault()
+
+                    NProgress.start()
+                    HardwareStatusClient.executeAction(client.hostname, action).foreach(_ =>
+                      NProgress.done(true)
+                    )
+
+                  }}>{action}
+                  </button>
+                )
+              )
+            }
+          </ul>
+        )
+      ).renderToBody().show()
+    }
   }
 
-  def convert(data: List[HardwareStatusClient]): List[HardwareTableRow] =
-    data.map(new HardwareTableRow(_))
+  def convert(data: List[HardwareStatusClient], actions: Rx[List[String]]): List[HardwareTableRow] =
+    data.map(new HardwareTableRow(_, actions))
 
 }

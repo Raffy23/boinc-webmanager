@@ -1,18 +1,15 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
-import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
 import at.happywetter.boinc.web.model.DataModelConverter._
+import at.happywetter.boinc.web.model.HardwareTableModel
 import at.happywetter.boinc.web.model.HardwareTableModel.HardwareTableRow
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
-import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
+import mhtml.Var
 
 import scala.concurrent.Future
-import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 
@@ -26,7 +23,7 @@ object HardwarePage extends Layout {
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
 
-  private var clients: Future[List[HardwareStatusClient]] = _
+  private val actions: Var[List[String]] = Var(List.empty)
   private val tableHeaders: List[(String, Boolean)] = List(
     ("table_host".localize, true),
     ("table_cpu_freq".localize, true),
@@ -39,17 +36,20 @@ object HardwarePage extends Layout {
   private val dataTable: DataTable[HardwareTableRow] = new DataTable[HardwareTableRow](tableHeaders)
 
   override def beforeRender(params: Dictionary[String]): Unit = {
-    clients = HardwareStatusClient.queryClients
+    HardwareStatusClient.queryClients.foreach(clients =>
+      dataTable.reactiveData := HardwareTableModel.convert(clients, actions)
+    )
   }
 
   override def already(): Unit = {
-    clients = HardwareStatusClient.queryClients
-    clients.foreach(clients => dataTable.reactiveData := clients)
+    beforeRender(Dictionary.empty)
   }
 
   override def onRender(): Unit = {
     DashboardMenu.selectByMenuId("dashboard_hardware")
-    clients.foreach(clients => dataTable.reactiveData := clients)
+    HardwareStatusClient.queryActions.foreach(actions =>
+      this.actions := actions
+    )
   }
 
   override def render: Elem = {

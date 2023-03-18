@@ -61,6 +61,17 @@ To be able to view the values of sensors in the table, the sensors utility has t
 configured first. Only values which are named like the table header will show up, the 
 rest of the values will be shown in the more values dialog.
 
+### Actions
+Besides cpufreq and sensors also on-demand actions are supported. These actions can be 
+configured in the hardware section:  
+````
+hardware {
+  actions: {
+    "action_name": ["path/to/binary", "parameter"]
+  }
+}
+````
+
 ## Example script as Hardware Monitor
 If this script is made executable it can be called directly by the Server otherwise bash has to 
 be called with this script a parameter. Parameters can be modified with the parameters array

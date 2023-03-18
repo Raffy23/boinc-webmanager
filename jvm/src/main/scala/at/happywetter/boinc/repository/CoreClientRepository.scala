@@ -1,10 +1,12 @@
 package at.happywetter.boinc.repository
 
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
-import cats.data.OptionT
 import cats.effect.IO
 import com.comcast.ip4s.IpAddress
-import io.getquill.{H2JdbcContext, SnakeCase}
+import doobie.{Transactor, Write}
+import doobie.implicits.toSqlInterpolator
+import doobie.implicits._
+import doobie.h2.implicits._
 
 /**
  * Created by: 
@@ -12,67 +14,51 @@ import io.getquill.{H2JdbcContext, SnakeCase}
  * @author Raphael
  * @version 08.07.2020
  */
-class CoreClientRepository(ctx: H2JdbcContext[SnakeCase]) {
-  import ctx.{IO => _, _}
+class CoreClientRepository(xa: Transactor[IO]) {
 
-  def insert(coreClient: CoreClient): IO[Long] = IO.blocking {
-    run {
-      quote {
-        query[CoreClient].insert(lift(coreClient))
-      }
-    }
-  }
+  private implicit val CoreClientWrite: Write[CoreClient] = Write[(String, String, Int, String, String)].contramap( coreClient =>
+    (coreClient.name, coreClient.address, coreClient.port, coreClient.password, coreClient.addedBy)
+  )
 
-  def queryAll(): IO[List[CoreClient]] = IO.blocking {
-    run {
-      quote {
-        query[CoreClient]
-      }
-    }
-  }
+  private implicit val IPAddressWrite: Write[IpAddress] = Write[String].contramap(ip => ip.toInetAddress.getHostAddress)
 
-  def exists(name: String): IO[Boolean] = IO.blocking {
-    run {
-      quote {
-        query[CoreClient].filter(_.name == lift(name))
-      }.size
-    } > 0
-  }
+  def insert(coreClient: CoreClient): IO[Int] =
+    sql"""INSERT INTO core_client (name, address, port, password, added_by) VALUES ($coreClient)"""
+      .update
+      .run
+      .transact(xa)
 
-  def update(coreClient: CoreClient): IO[Long] =
+  def queryAll(): IO[List[CoreClient]] =
+    sql"""SELECT * FROM core_client"""
+      .query[CoreClient]
+      .to[List]
+      .transact(xa)
+
+  def exists(name: String): IO[Boolean] =
+    sql"""SELECT COUNT(*) FROM core_client WHERE name = $name"""
+      .query[Int]
+      .unique
+      .transact(xa)
+      .map(_ == 1)
+
+  def update(coreClient: CoreClient): IO[Int] =
     exists(coreClient.name).flatMap {
       case false => insert(coreClient)
-      case _     => delete(coreClient.name).flatMap(_ => insert(coreClient))
-    }
-
-  // Not Supported by H2 ...
-  /*run {
-    quote {
-      query[CoreClient].insert(lift(coreClient)).onConflictUpdate(_.name)(
-        (t, e) => t.ipAddress -> e.ipAddress,
-        (t, e) => t.port      -> e.port,
-        (t, e) => t.password  -> e.password,
-        (t, e) => t.addedBy   -> e.addedBy
+      case true  => delete(coreClient.name).flatMap(_ =>
+        insert(coreClient)
       )
     }
-  }*/
 
-  def delete(name: String): IO[Long] = IO.blocking {
-    run {
-      quote {
-        query[CoreClient].filter(_.name == lift(name)).delete
-      }
-    }
-  }
+  def delete(name: String): IO[Int] =
+    sql"""DELETE FROM core_client WHERE name = $name"""
+      .update
+      .run
+      .transact(xa)
 
-  def searchBy(ip: IpAddress, port: Int): OptionT[IO, CoreClient] = OptionT(
-    IO.blocking {
-      run {
-        quote {
-          query[CoreClient].filter(c => c.address == lift(ip.toString) && c.port == lift(port))
-        }
-      }.headOption
-    }
-  )
+  def searchBy(ip: IpAddress, port: Int): IO[List[CoreClient]] =
+    sql"""SELECT * FROM core_client WHERE address = $ip AND port = $port"""
+      .query[CoreClient]
+      .to[List]
+      .transact(xa)
 
 }

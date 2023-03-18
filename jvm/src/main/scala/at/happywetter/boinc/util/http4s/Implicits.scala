@@ -1,7 +1,7 @@
 package at.happywetter.boinc.util.http4s
 
 import cats.effect.IO
-import org.http4s.{EntityBody, EntityEncoder}
+import org.http4s.{Entity, EntityBody, EntityEncoder}
 
 import scala.language.higherKinds
 import scala.language.implicitConversions
@@ -14,10 +14,10 @@ import scala.language.implicitConversions
   */
 object Implicits {
 
-  implicit def convertStringToEntityBody(str: String): EntityBody[IO] =
-    EntityEncoder.stringEncoder.toEntity(str).body
+  implicit def convertStringToEntityBody(str: String): Entity[IO] =
+    EntityEncoder.stringEncoder.toEntity(str)
 
-  implicit def convertByteArrayToEntityBody(array: Array[Byte]): EntityBody[IO] =
-    EntityEncoder.byteArrayEncoder.toEntity(array).body
+  implicit def convertByteArrayToEntityBody(array: Array[Byte]): Entity[IO] =
+    EntityEncoder.byteArrayEncoder.toEntity(array)
 
 }

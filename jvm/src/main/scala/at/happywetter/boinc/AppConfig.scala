@@ -58,7 +58,8 @@ object AppConfig {
                       hosts: List[String],
                       binary: String,
                       params: List[String],
-                      cacheTimeout: Long
+                      cacheTimeout: Long,
+                      actions: Map[String, Seq[String]]
   )
 
   //case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])

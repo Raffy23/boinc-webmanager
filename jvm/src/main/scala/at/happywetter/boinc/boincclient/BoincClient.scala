@@ -82,7 +82,7 @@ object BoincClient {
   def apply(address: String, port: Int = 31416, password: String): Resource[IO, BoincClient] = {
 
     for {
-      socket <- Network[IO].client(SocketAddress(Host.fromString(address).get, Port.fromInt(port).get))
+      socket <- Network[IO].client(SocketAddress(Host.fromString(address).get, Port.fromInt(port).get)) // maybe move actual connection to func
       client <- Resource.make(
         for {
           logger  <- Slf4jLogger.fromClass[IO](BoincClient.getClass)
@@ -356,6 +356,7 @@ class BoincClient private (socket: Socket[IO], lock: Semaphore[IO], val version:
     version.get.map(_.get)
 
   def close(): IO[Unit] = for {
+    _ <- IO.println(s"CLOSING ${logHeader}")
     _ <- shutdownSignal.set(true)
     _ <- socket.endOfInput
     _ <- socket.endOfOutput

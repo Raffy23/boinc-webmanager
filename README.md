@@ -19,7 +19,7 @@ All other Dependencies are managed by SBT. To build the Project follow theses st
  - Execute following commands to Build the Javascript Client: `clientJS/fullOptJS`
  - Copy `boinc-webmanager--opt.js` and `boinc-webmanager--jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
  - *(Optional) gzip the `*.js` Files to lower the amount of bytes which are transferred*
- - Run sbt in Project folder and execute `serverJVM:universal:packageBin`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
+ - Run sbt in Project folder and execute `serverJVM/universal:packageBin`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-1.12/`
 
 *Note: this project does use the [native-packager](https://github.com/sbt/sbt-native-packager) and 
 therefore also linux/windows packages and a docker image can be build*

@@ -12,8 +12,7 @@ import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N.TranslatableString
 import mhtml.Var
 import org.scalajs.dom.raw.Event
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.language.implicitConversions
 import at.happywetter.boinc.web.util.RichRx._
 

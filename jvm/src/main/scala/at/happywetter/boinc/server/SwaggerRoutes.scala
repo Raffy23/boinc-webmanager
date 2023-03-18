@@ -13,7 +13,7 @@ import org.http4s.{Charset, Headers, HttpRoutes, MediaType, Response, StaticFile
  */
 object SwaggerRoutes {
 
-  private val SWAGGER_VERSION = "4.1.3"
+  private val SWAGGER_VERSION = "4.18.1"
 
   def redirectToEndpoint(): IO[Response[IO]] = {
     //val queryParameters = Map("url" -> Seq("swagger-config.yaml"))

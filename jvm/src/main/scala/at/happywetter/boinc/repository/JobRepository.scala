@@ -1,43 +1,40 @@
 package at.happywetter.boinc.repository
 
-import at.happywetter.boinc.dto.JobDTO.Job
-import at.happywetter.boinc.dto.JobDTO.JobConverter
+import at.happywetter.boinc.dto.JobDTO.{Job, JobConverter}
 import at.happywetter.boinc.shared.rpc.jobs.{Job => RpcJob}
 import cats.effect.IO
-import io.getquill.{H2JdbcContext, SnakeCase}
+import doobie.Transactor
+import doobie.implicits._
+import doobie.h2.implicits._
 
 import java.util.UUID
 
-class JobRepository(ctx: H2JdbcContext[SnakeCase]) {
-  import ctx.{IO => _, _}
+class JobRepository(xa: Transactor[IO]) {
 
   def insert(job: RpcJob): IO[RpcJob] = IO.blocking {
     val dbJob = job.toDB
 
-    run {
-      quote {
-        query[Job].insert(lift(dbJob))
-      }
-    }
+    sql"""INSERT INTO job (uuid, contents) VALUES (${dbJob.uuid}, ${dbJob.contents})"""
+      .update
+      .run
+      .transact(xa)
 
     job.copy(id = Some(dbJob.uuid))
   }
 
-  def queryAll(): IO[List[RpcJob]] = IO.blocking {
-    run {
-      quote {
-        query[Job]
-      }
-    }
-  }.map(_.map(_.toRPC))
+  def queryAll(): IO[List[RpcJob]] =
+    sql"""SELECT * FROM job"""
+      .query[Job]
+      .to[List]
+      .transact(xa)
+      .map(_.map(db => db.toRPC))
 
-  def exists(id: UUID): IO[Boolean] = IO.blocking {
-    run {
-      quote {
-        query[Job].filter(_.uuid == lift(id))
-      }.size
-    } > 0
-  }
+  def exists(id: UUID): IO[Boolean] =
+    sql"""SELECT COUNT(*) FROM job WHERE uuid = $id"""
+      .query[Int]
+      .unique
+      .transact(xa)
+      .map(_ == 1)
 
   def update(job: RpcJob): IO[RpcJob] = {
     job.id match {
@@ -49,12 +46,10 @@ class JobRepository(ctx: H2JdbcContext[SnakeCase]) {
     }
   }
 
-  def delete(id: UUID): IO[Long] = IO.blocking {
-    run {
-      quote {
-        query[Job].filter(_.uuid == lift(id)).delete
-      }
-    }
-  }
+  def delete(id: UUID): IO[Int] =
+    sql"""DELETE FROM job WHERE id = $id"""
+      .update
+      .run
+      .transact(xa)
 
 }

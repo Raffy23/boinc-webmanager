@@ -19,7 +19,11 @@ object MessageParser {
         element.getElementsByTag("project").first().text(),
         element.getElementsByTag("pri").first().text().toInt,
         element.getElementsByTag("seqno").first().text().toLong,
-        element.getElementsByTag("time").first().text().toLong,
+        {
+          val tag = element.getElementsByTag("time").first()
+          if (tag != null) tag.text().toLong
+          else 0
+        },
         element.textNodes().asScala.map(_.getWholeText).mkString("\n").trim
       )
     )

@@ -33,7 +33,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()
-  private val jwtVerifyer = JWT.require(algorithm)
+  private val jwtVerifyer = JWT.require(algorithm).build()
 
   def authService: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case request @ GET -> Root => Ok(AuthenticationService.nonce, request)
@@ -82,7 +82,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
   }
 
   def validate(token: String): Try[Boolean] = Try(
-    jwtVerifyer.build().verify(token).getExpiresAt.after(new Date())
+    jwtVerifyer.verify(token).getExpiresAt.after(new Date())
   )
 
   def buildToken(user: String): String =
@@ -92,7 +92,7 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper {
       .sign(algorithm)
 
   def refreshToken(token: String): String = {
-    val jwtToken = jwtVerifyer.build().verify(token)
+    val jwtToken = jwtVerifyer.verify(token)
     val curUser  = jwtToken.getClaim("user")
 
     buildToken(curUser.asString())

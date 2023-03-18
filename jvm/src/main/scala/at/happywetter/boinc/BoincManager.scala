@@ -59,35 +59,37 @@ object BoincManager {
     } yield ())
 
     /* Start all background tasks for the manager */
-    _ <- Spawn[IO].background[Nothing](manager.autoCloser)
-    _ <- Spawn[IO].background[Nothing](manager.connectionCloser)
+    _ <- Spawn[IO].background[Nothing](manager.autoCloser).onFinalize(IO.println("DONE #1"))
+    _ <- Spawn[IO].background[Nothing](manager.connectionCloser).onFinalize(IO.println("DONE #2"))
 
 
     /* Initialize the manager with all the clients that are stored in the DB
      * do this lazily in the background so we don't block the creation ...
      */
-    _ <- Spawn[IO].background(
+    _ <- Spawn[IO].background( // <--- problematic
       db.clients.queryAll().flatMap { coreClients =>
         for {
           logger <- Slf4jLogger.fromClass[IO](BoincManager.getClass)
 
           _     <- logger.info(s"Loading clients from database, found ${coreClients.size} entries")
           added <- coreClients.map { coreClient =>
-            manager.add(
+            IO.println(s"add start for ${coreClient.name}") *>
+            manager.add( // <-- initial open stuck endless
               coreClient.name,
               coreClient.address, coreClient.port, coreClient.password,
               coreClient.addedBy match {
                 case CoreClient.ADDED_BY_DISCOVERY => AddedByDiscovery
                 case CoreClient.ADDED_BY_USER      => AddedByUser
               }
-            )
+            ).flatTap(_ => IO.println(s"add completed for ${coreClient.name}"))
+
           }.parSequence
            .map(_.count(identity))
 
           _ <- logger.info(s"Successfully loaded $added clients from database")
         } yield ()
       }.handleErrorWith(ex => Slf4jLogger.fromClass[IO](BoincManager.getClass).flatMap(_.error(ex.getMessage)))
-    )
+    ) .onFinalize(IO.println("DONE #3"))
 
   } yield manager
 
@@ -192,6 +194,7 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
               IO.pure(false)
             )
           }
+
       )
   }
 
@@ -337,14 +340,18 @@ class BoincManager private (poolSize: Int, val changeListener: Observer[BoincMan
     changeListener.enqueue(this)
   }
 
-  def close(): IO[Unit] = {
-    boincClients
+  def close(): IO[Unit] = for {
+    t <- IO.realTime
+    _ <- IO.println("CLOSING")
+    _ <- boincClients
       .get
       .flatMap(_
         .map { case (_, BoincClientEntry(_, _, finalizer, _)) => finalizer }
         .toList
         .sequence_
       )
-  }
+   t1 <- IO.realTime
+   _  <- IO.println(t1 - t)
+  } yield ()
 
 }

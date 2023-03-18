@@ -21,7 +21,11 @@ package object websocket {
   object NACK extends WebSocketMessage
 
 
+  implicit val websocketAckParser = macroRW[ACK.type]
+  implicit val websocketNackParser = macroRW[NACK.type]
   implicit val hostInformationChangedParser = macroRW[HostInformationChanged]
+  implicit val subscribeToGroupChangesParser = macroRW[SubscribeToGroupChanges.type]
+  implicit val unsubscribeToGroupChangesParser = macroRW[UnsubscribeToGroupChanges.type]
   implicit val webSocketMessageParser = macroRW[WebSocketMessage]
 
 }

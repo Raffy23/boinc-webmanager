@@ -1,12 +1,16 @@
 package at.happywetter.boinc
 
 import at.happywetter.boinc.repository.{CoreClientRepository, JobRepository, ProjectRepository}
-import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, Resource}
 import com.typesafe.config.ConfigFactory
-import io.getquill.{H2JdbcContext, SnakeCase}
+import com.zaxxer.hikari.HikariConfig
+import doobie.h2.H2Transactor
+import doobie.hikari.HikariTransactor
+import doobie.{ExecutionContexts, Transactor}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+import java.util.Properties
 
 /**
  * Created by: 
@@ -14,39 +18,39 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
  * @author Raphael
  * @version 02.07.2020
  */
-class Database private (ctx: H2JdbcContext[SnakeCase], logger: SelfAwareStructuredLogger[IO]) extends AutoCloseable {
+class Database private (xa: Transactor[IO], logger: SelfAwareStructuredLogger[IO]) {
 
-  val clients  = new CoreClientRepository(ctx)
-  val projects = new ProjectRepository(ctx)
-  val jobs = new JobRepository(ctx)
-
-  override def close(): Unit = {
-    logger.trace("Closing database connection ...").unsafeRunSync()
-    ctx.close()
-  }
+  val clients  = new CoreClientRepository(xa)
+  val projects = new ProjectRepository(xa)
+  val jobs = new JobRepository(xa)
 
 }
 object Database {
 
   def apply(): Resource[IO, Database] =
-    Resource.fromAutoCloseable(for {
-      logger <- Slf4jLogger.fromClass[IO](getClass)
+    for {
+      logger <- Resource.eval(Slf4jLogger.fromClass[IO](getClass))
 
-      _ <- logger.trace("Connecting to database ...")
+      ce <- ExecutionContexts.fixedThreadPool[IO](4)
+      xa <- HikariTransactor.fromHikariConfig[IO]({
+        val properties = new Properties()
 
-      database <- IO.blocking {
-        new Database(
-          new H2JdbcContext(
-            SnakeCase,
-            ConfigFactory
-              .parseResources("database/database.conf")
-              .resolveWith(AppConfig.typesafeConfig)
-          ),
-          logger
-        )
-      }
+        ConfigFactory
+          .parseResources("database/database.conf")
+          .resolveWith(AppConfig.typesafeConfig)
+          .resolve()
+          .entrySet()
+          .forEach(entry => {
+            properties.put(entry.getKey, entry.getValue.unwrapped())
+          })
 
-      _ <- logger.trace("Connection established")
-    } yield database)
+        new HikariConfig(properties)
+      }, ce)
+
+      database <- Resource.eval(
+        IO.pure(new Database(xa, logger))
+      )
+
+    } yield database
 
 }
