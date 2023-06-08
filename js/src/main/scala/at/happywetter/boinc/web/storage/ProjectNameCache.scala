@@ -10,10 +10,10 @@ import scala.scalajs.js
   * @author Raphael
   * @version 01.08.2017
   */
-object ProjectNameCache extends DatabaseProvider {
+object ProjectNameCache extends DatabaseProvider:
 
-  private[storage] implicit val objStore: String = "project_name_cache"
-  private implicit val storeNames: js.Array[String] = js.Array(objStore)
+  implicit private[storage] val objStore: String = "project_name_cache"
+  implicit private val storeNames: js.Array[String] = js.Array(objStore)
 
   def save(projectUri: String, name: String): Future[Unit] =
     transaction(f => f.put(name, projectUri))
@@ -30,5 +30,3 @@ object ProjectNameCache extends DatabaseProvider {
         f.put(name, url)
       }
     })
-
-}

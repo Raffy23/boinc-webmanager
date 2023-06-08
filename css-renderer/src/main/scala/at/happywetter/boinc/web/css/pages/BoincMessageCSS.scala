@@ -9,17 +9,17 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincMessageCSS extends StyleSheet.Standalone {
+object BoincMessageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincMessageStyle._
   import dsl._
 
-  dateCol.cssName -(
+  dateCol.cssName - (
     whiteSpace.nowrap
   )
 
-  tableRow.cssName -(
+  tableRow.cssName - (
     &.attr("data-prio", "2")(
-      //fontWeight.bold,
+      // fontWeight.bold,
       color(c"#ff1a1a")
     ),
     &.attr("data-prio", "3")(
@@ -28,27 +28,22 @@ object BoincMessageCSS extends StyleSheet.Standalone {
     )
   )
 
-  noticeList.cssName -(
+  noticeList.cssName - (
     padding.`0`,
     listStyle := "none",
-
     unsafeChild("li")(
       unsafeChild("h4")(
         fontSize(21 px)
       ),
-
       unsafeChild("p")(
         lineHeight(1.4923),
         marginTop(-2 px),
-
         unsafeChild("a")(
           color(c"#0039e6")
         )
       ),
-
       unsafeChild("small")(
         color(c"#888"),
-
         unsafeChild("a")(
           color(c"#0039e6"),
           marginLeft(7 px)
@@ -63,5 +58,3 @@ object BoincMessageCSS extends StyleSheet.Standalone {
       marginLeft(8 px)
     )
   )
-
-}

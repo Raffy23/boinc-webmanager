@@ -9,11 +9,8 @@ import scalacss.internal.mutable.Settings
   * @author Raphael
   * @version 23.07.2017
   */
-object AppCSS {
+object AppCSS:
 
-  val CSSDefaults: Exports with Settings = {
+  val CSSDefaults: Exports with Settings =
     AppCSSRegistry.registerCSSNames()
-    scalacss.ProdDefaults//devOrProdDefaults
-  }
-
-}
+    scalacss.ProdDefaults // devOrProdDefaults

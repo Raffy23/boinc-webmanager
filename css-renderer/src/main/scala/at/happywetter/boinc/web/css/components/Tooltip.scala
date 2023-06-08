@@ -9,7 +9,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object Tooltip extends StyleSheet.Standalone {
+object Tooltip extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.Tooltip._
   import dsl._
 
@@ -32,7 +32,7 @@ object Tooltip extends StyleSheet.Standalone {
     textAlign.center,
     padding(5 px, 5 px, 5 px, 5 px),
     zIndex(101),
-    boxShadow := " 0 12px 18px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.22)",
+    boxShadow := " 0 12px 18px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.22)"
   )
 
   topText.cssName - (
@@ -51,12 +51,9 @@ object Tooltip extends StyleSheet.Standalone {
   tooltip.cssName - (
     position.relative,
     display.inlineBlock,
-
     &.hover(
       unsafeChild(s".${tooltipText.htmlClass}")(
         visibility.visible
       )
     )
   )
-
-}

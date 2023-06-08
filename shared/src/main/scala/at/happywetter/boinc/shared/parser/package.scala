@@ -13,91 +13,89 @@ import java.time.LocalDateTime
   * @author Raphael
   * @version 05.07.2019
   */
-package object parser {
-  import upickle.default._
+package object parser:
+  import upickle.default.{macroRW, readwriter, ReadWriter => RW}
 
-  implicit val fileRefParser = macroRW[boincrpc.FileRef]
-  implicit val appVersionCoProcParser = macroRW[boincrpc.AppVersionCoProc]
-  implicit val appVersionParser = macroRW[boincrpc.AppVersion]
-  implicit val appParser = macroRW[boincrpc.App]
-  implicit val coProcGlParser = macroRW[boincrpc.CoProcessorOpenCL]
-  implicit val coProcParser = macroRW[boincrpc.CoProcessor]
-  implicit val hostInfoParser = macroRW[boincrpc.HostInfo]
-  implicit val taskParser = macroRW[boincrpc.Task]
-  implicit val resultParser = macroRW[boincrpc.Result]
-  implicit val workunitParser = macroRW[boincrpc.Workunit]
-  implicit val projectGuiURLParser = macroRW[boincrpc.ProjectGuiURL]
-  implicit val projectParser = macroRW[boincrpc.Project]
-  implicit val netstatsParser = macroRW[boincrpc.NetStats]
-  implicit val timeStatsParser = macroRW[boincrpc.TimeStats]
-  implicit val boincStateParser = macroRW[boincrpc.BoincState]
-  implicit val ccStateParser = macroRW[boincrpc.CCState]
-  implicit val ccStatusParser = macroRW[boincrpc.CCStatus]
-  implicit val diskUsageParser = macroRW[boincrpc.DiskUsage]
-  implicit val pFilexFerParser = macroRW[boincrpc.PersistentFileXfer]
-  implicit val fileXFerParser = macroRW[boincrpc.FileXfer]
-  implicit val fileTransferParser = macroRW[boincrpc.FileTransfer]
-  implicit val dayEntryParser = macroRW[boincrpc.DayEntry]
-  implicit val globalPrefsParser = macroRW[boincrpc.GlobalPrefsOverride]
-  implicit val dailyStatsParser = macroRW[boincrpc.DailyStatistic]
-  implicit val statisticParser = macroRW[boincrpc.Statistics]
-  implicit val messageParser = macroRW[boincrpc.Message]
-  implicit val noticeParser = macroRW[boincrpc.Notice]
-  implicit val versionParser = macroRW[boincrpc.BoincVersion]
+  implicit val fileRefParser: RW[boincrpc.FileRef] = macroRW
+  implicit val appVersionCoProcParser: RW[boincrpc.AppVersionCoProc] = macroRW
+  implicit val appVersionParser: RW[boincrpc.AppVersion] = macroRW
+  implicit val appParser: RW[boincrpc.App] = macroRW
+  implicit val coProcGlParser: RW[boincrpc.CoProcessorOpenCL] = macroRW
+  implicit val coProcParser: RW[boincrpc.CoProcessor] = macroRW
+  implicit val hostInfoParser: RW[boincrpc.HostInfo] = macroRW
+  implicit val taskParser: RW[boincrpc.Task] = macroRW
+  implicit val resultParser: RW[boincrpc.Result] = macroRW
+  implicit val workunitParser: RW[boincrpc.Workunit] = macroRW
+  implicit val projectGuiURLParser: RW[boincrpc.ProjectGuiURL] = macroRW
+  implicit val projectParser: RW[boincrpc.Project] = macroRW
+  implicit val netstatsParser: RW[boincrpc.NetStats] = macroRW
+  implicit val timeStatsParser: RW[boincrpc.TimeStats] = macroRW
+  implicit val boincStateParser: RW[boincrpc.BoincState] = macroRW
+  implicit val ccStateParser: RW[boincrpc.CCState] = macroRW
+  implicit val ccStatusParser: RW[boincrpc.CCStatus] = macroRW
+  implicit val diskUsageParser: RW[boincrpc.DiskUsage] = macroRW
+  implicit val pFilexFerParser: RW[boincrpc.PersistentFileXfer] = macroRW
+  implicit val fileXFerParser: RW[boincrpc.FileXfer] = macroRW
+  implicit val fileTransferParser: RW[boincrpc.FileTransfer] = macroRW
+  implicit val dayEntryParser: RW[boincrpc.DayEntry] = macroRW
+  implicit val globalPrefsParser: RW[boincrpc.GlobalPrefsOverride] = macroRW
+  implicit val dailyStatsParser: RW[boincrpc.DailyStatistic] = macroRW
+  implicit val statisticParser: RW[boincrpc.Statistics] = macroRW
+  implicit val messageParser: RW[boincrpc.Message] = macroRW
+  implicit val noticeParser: RW[boincrpc.Notice] = macroRW
+  implicit val versionParser: RW[boincrpc.BoincVersion] = macroRW
 
-  implicit val retryFileTransferParser = macroRW[boincrpc.RetryFileTransferBody]
-  implicit val wuRBodyParser = macroRW[boincrpc.WorkunitRequestBody]
-  implicit val projRBodyParser = macroRW[boincrpc.ProjectRequestBody]
-  implicit val addProjectParser = macroRW[boincrpc.AddProjectBody]
-  implicit val boincModeChangeParser = macroRW[boincrpc.BoincModeChange]
-  implicit val projectMetaDataParser = macroRW[boincrpc.BoincProjectMetaData]
-  implicit val userParser = macroRW[webrpc.User]
-  implicit val appErrorParser = macroRW[boincrpc.ApplicationError]
-  implicit val serverCfgParser = macroRW[boincrpc.ServerSharedConfig]
-  implicit val swAppStatusParser = macroRW[webrpc.ServerStatusApp]
-  implicit val dbfileParser = macroRW[webrpc.DatabaseFileStates]
-  implicit val daemoParser = macroRW[webrpc.Daemon]
-  implicit val serverStatusParser = macroRW[webrpc.ServerStatus]
+  implicit val retryFileTransferParser: RW[boincrpc.RetryFileTransferBody] = macroRW
+  implicit val wuRBodyParser: RW[boincrpc.WorkunitRequestBody] = macroRW
+  implicit val projRBodyParser: RW[boincrpc.ProjectRequestBody] = macroRW
+  implicit val addProjectParser: RW[boincrpc.AddProjectBody] = macroRW
+  implicit val boincModeChangeParser: RW[boincrpc.BoincModeChange] = macroRW
+  implicit val projectMetaDataParser: RW[boincrpc.BoincProjectMetaData] = macroRW
+  implicit val userParser: RW[webrpc.User] = macroRW
+  implicit val appErrorParser: RW[boincrpc.ApplicationError] = macroRW
+  implicit val serverCfgParser: RW[boincrpc.ServerSharedConfig] = macroRW
+  implicit val swAppStatusParser: RW[webrpc.ServerStatusApp] = macroRW
+  implicit val dbfileParser: RW[webrpc.DatabaseFileStates] = macroRW
+  implicit val daemoParser: RW[webrpc.Daemon] = macroRW
+  implicit val serverStatusParser: RW[webrpc.ServerStatus] = macroRW
 
-  implicit val hwSensorsParser = macroRW[extension.HardwareData.SensorsRow]
-  implicit val addNewHostRequestBodyParser = macroRW[boincrpc.AddNewHostRequestBody]
+  implicit val hwSensorsParser: RW[extension.HardwareData.SensorsRow] = macroRW
+  implicit val addNewHostRequestBodyParser: RW[boincrpc.AddNewHostRequestBody] = macroRW
 
-  implicit val hostDetailsParser = macroRW[rpc.HostDetails]
+  implicit val hostDetailsParser: RW[rpc.HostDetails] = macroRW
 
-  implicit val dashboardDataEntryParser = macroRW[rpc.DashboardDataEntry]
+  implicit val dashboardDataEntryParser: RW[rpc.DashboardDataEntry] = macroRW
 
-  implicit val appConfigGpuVersionParser = macroRW[boincrpc.AppConfig.GpuVersions]
-  implicit val appConfigAppVersionParser = macroRW[boincrpc.AppConfig.AppVersion]
-  implicit val appConfigAppParser = macroRW[boincrpc.AppConfig.App]
-  implicit val appConfigParser = macroRW[boincrpc.AppConfig]
+  implicit val appConfigGpuVersionParser: RW[boincrpc.AppConfig.GpuVersions] = macroRW
+  implicit val appConfigAppVersionParser: RW[boincrpc.AppConfig.AppVersion] = macroRW
+  implicit val appConfigAppParser: RW[boincrpc.AppConfig.App] = macroRW
+  implicit val appConfigParser: RW[boincrpc.AppConfig] = macroRW
 
-  implicit val localDateTimeParser = readwriter[String].bimap[LocalDateTime](
+  implicit val localDateTimeParser: RW[LocalDateTime] = readwriter[String].bimap(
     _.format(DateTimeFormatter.ISO_DATE_TIME),
     str => LocalDateTime.parse(str, DateTimeFormatter.ISO_DATE_TIME)
   )
 
-  implicit val jobModeOnceParser = macroRW[rpc.jobs.Once.type]
-  implicit val jobModeRunningParser = macroRW[rpc.jobs.Running.type]
-  implicit val jobModeCPUParser = macroRW[rpc.jobs.CPU.type]
-  implicit val jobModeAtParser = macroRW[rpc.jobs.At]
-  implicit val jobModeEveryParser = macroRW[rpc.jobs.Every]
-  implicit val jobModeParser = macroRW[rpc.jobs.JobMode]
+  implicit val jobModeOnceParser: RW[rpc.jobs.Once.type] = macroRW
+  implicit val jobModeRunningParser: RW[rpc.jobs.Running.type] = macroRW
+  implicit val jobModeCPUParser: RW[rpc.jobs.CPU.type] = macroRW
+  implicit val jobModeAtParser: RW[rpc.jobs.At] = macroRW
+  implicit val jobModeEveryParser: RW[rpc.jobs.Every] = macroRW
+  implicit val jobModeParser: RW[rpc.jobs.JobMode] = macroRW
 
-  implicit val boincRpcModesParser = readwriter[Int].bimap[BoincRPC.Modes.Value](_.id, BoincRPC.Modes(_))
-  implicit val projectActionParser = readwriter[Int].bimap[ProjectAction](_.id, ProjectAction(_))
+  implicit val boincRpcModesParser: RW[BoincRPC.Modes.Value] = readwriter[Int].bimap(_.id, BoincRPC.Modes(_))
+  implicit val projectActionParser: RW[ProjectAction] = readwriter[Int].bimap(_.id, ProjectAction(_))
 
-  implicit val jobStatusErroredParser = macroRW[rpc.jobs.Errored]
-  implicit val jobStatusStoppedParser = macroRW[rpc.jobs.Stopped.type]
-  implicit val jobStatusParser = macroRW[rpc.jobs.JobStatus]
+  implicit val jobStatusErroredParser: RW[rpc.jobs.Errored] = macroRW
+  implicit val jobStatusStoppedParser: RW[rpc.jobs.Stopped.type] = macroRW
+  implicit val jobStatusParser: RW[rpc.jobs.JobStatus] = macroRW
 
-  implicit val jobRunModeGPUParser = macroRW[rpc.jobs.GPU.type]
-  implicit val jobRunModeNetworkParser = macroRW[rpc.jobs.Network.type]
-  implicit val jobRunModeTargetParser = macroRW[rpc.jobs.BoincRunModeTarget]
+  implicit val jobRunModeGPUParser: RW[rpc.jobs.GPU.type] = macroRW
+  implicit val jobRunModeNetworkParser: RW[rpc.jobs.Network.type] = macroRW
+  implicit val jobRunModeTargetParser: RW[rpc.jobs.BoincRunModeTarget] = macroRW
 
-  implicit val jobProjectActionParser = macroRW[rpc.jobs.BoincProjectAction]
-  implicit val jobRunModeAction = macroRW[rpc.jobs.BoincRunModeAction]
-  implicit val jobActionParser = macroRW[rpc.jobs.JobAction]
+  implicit val jobProjectActionParser: RW[rpc.jobs.BoincProjectAction] = macroRW
+  implicit val jobRunModeAction: RW[rpc.jobs.BoincRunModeAction] = macroRW
+  implicit val jobActionParser: RW[rpc.jobs.JobAction] = macroRW
 
-  implicit val jobParser = macroRW[rpc.jobs.Job]
-
-}
+  implicit val jobParser: RW[rpc.jobs.Job] = macroRW

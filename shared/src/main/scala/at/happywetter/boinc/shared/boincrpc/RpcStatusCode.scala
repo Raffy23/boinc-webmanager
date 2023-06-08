@@ -1,6 +1,6 @@
 package at.happywetter.boinc.shared.boincrpc
 
-object RpcStatusCode extends Enumeration {
+object RpcStatusCode extends Enumeration:
   type RpcStatusCode = Value
   val BOINC_SUCCESS = Value(0)
   val ERR_SELECT = Value(-100)
@@ -30,6 +30,3 @@ object RpcStatusCode extends Enumeration {
   val ERR_UPLOAD_PERMANENT = Value(-128)
   val ERR_IDLE_PERIOD = Value(-129)
   val ERR_ALREADY_ATTACHED = Value(-130)
-
-
-}

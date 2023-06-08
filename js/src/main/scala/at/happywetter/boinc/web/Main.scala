@@ -19,30 +19,29 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.util.Try
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 19.07.2017
   */
 @JSExportTopLevel("Main")
-object Main {
+object Main:
 
   @JSExport
   @Deprecated
   def launch(): Unit = main(Array.empty)
 
   @JSExport
-  def launch(config: js.Dynamic): Unit = {
+  def launch(config: js.Dynamic): Unit =
     ServerConfig.config := ServerSharedConfig(
       config.selectDynamic("hostNameCacheTimeout").asInstanceOf[Int],
       config.selectDynamic("hardware").asInstanceOf[Boolean]
     )
 
     main(Array.empty)
-  }
 
   @JSExport
-  def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit =
     dom.console.log("Booting Application ...")
     dom.console.log("Current Version: " + BuildInfo.version)
 
@@ -72,22 +71,20 @@ object Main {
       dom.console.log("Setting current language to: " + Locale.current)
       dom.console.log("Language Name: " + "language_name".localize)
 
-      Try{
+      Try {
         LayoutManager.init()
         initRouter()
         navigate()
-      }.recover {
-        case ex: Exception => ex.printStackTrace()
+      }.recover { case ex: Exception =>
+        ex.printStackTrace()
       }
     })
-  }
 
-  def navigate(): Unit = {
+  def navigate(): Unit =
     AppRouter.router.resolve()
     NProgress.done(true)
-  }
 
-  def initRouter(): Unit = {
+  def initRouter(): Unit =
     // Login Page:
     AppRouter += new LoginPage(AuthClient.validate)
 
@@ -116,7 +113,7 @@ object Main {
     AppRouter += new BoincStatisticsLayout
 
     AppRouter.router.on(() => AppRouter.navigate(Dashboard))
-    AppRouter.router.notFound((_) => {
+    AppRouter.router.notFound(_ => {
       dom.window.alert("page_not_found".localize)
       dom.console.error(s"Error: The page ('${AppRouter.current}') was not found!")
 
@@ -124,6 +121,3 @@ object Main {
     })
 
     AppRouter.router.updatePageLinks()
-  }
-
-}

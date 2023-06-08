@@ -19,7 +19,7 @@ import scala.xml.Elem
   * @author Raphael
   * @version 03.11.2017
   */
-object HardwarePage extends Layout {
+object HardwarePage extends Layout:
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   override val path: String = "hardware"
 
@@ -35,24 +35,19 @@ object HardwarePage extends Layout {
   )
   private val dataTable: DataTable[HardwareTableRow] = new DataTable[HardwareTableRow](tableHeaders)
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     HardwareStatusClient.queryClients.foreach(clients =>
       dataTable.reactiveData := HardwareTableModel.convert(clients, actions)
     )
-  }
 
-  override def already(): Unit = {
+  override def already(): Unit =
     beforeRender(Dictionary.empty)
-  }
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     DashboardMenu.selectByMenuId("dashboard_hardware")
-    HardwareStatusClient.queryActions.foreach(actions =>
-      this.actions := actions
-    )
-  }
+    HardwareStatusClient.queryActions.foreach(actions => this.actions := actions)
 
-  override def render: Elem = {
+  override def render: Elem =
     <div id="hardware">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-microchip" aria-hidden="true"></i>
@@ -61,5 +56,3 @@ object HardwarePage extends Layout {
 
       {dataTable.component}
     </div>
-  }
-}

@@ -23,74 +23,85 @@ import scala.xml.Node
   * @author Raphael
   * @version 03.11.2017
   */
-object HardwareTableModel {
+object HardwareTableModel:
 
-  class HardwareTableRow(client: HardwareStatusClient, actions: Rx[List[String]]) extends DataTable.TableRow {
+  class HardwareTableRow(client: HardwareStatusClient, actions: Rx[List[String]]) extends DataTable.TableRow:
     private val cpuFrequ = client.getCpuFrequency
-    private val sensors  = client.getSensorsData
+    private val sensors = client.getSensorsData
 
     override val columns: List[DataTable.TableColumn] = List(
       new StringColumn(Var(client.hostname)),
-      new TableColumn(cpuFrequ.map(_.formatted("%.2f GHz").toXML).toRx("--- GHz".toXML), this) {
+      new TableColumn(cpuFrequ.map("%.2f GHz".format(_).toXML).toRx("--- GHz".toXML), this) {
         override def compare(that: TableColumn): Int =
-          cpuFrequ.value.get.toOption.getOrElse(0D).compare(
-            that.datasource.asInstanceOf[HardwareTableRow].cpuFrequ.value.get.toOption.getOrElse(0D)
-          )
+          cpuFrequ.value.get.toOption
+            .getOrElse(0d)
+            .compare(
+              that.datasource.asInstanceOf[HardwareTableRow].cpuFrequ.value.get.toOption.getOrElse(0d)
+            )
       },
       newColumn("CPU Temp", "--- GHz"),
       newColumn("CPU Fan", "--- RPM"),
       newColumn("Vcore", "--- V"),
       newColumn("+12.00V", "--- V"),
       new TableColumn(
-        Var (
+        Var(
           <div>
             {
-              new Tooltip(
-                Var("more_values".localize),
-                <a href="add-project" style="color:#333;text-decoration:none;font-size:30px" onclick={jsAddProjectAction}>
+            new Tooltip(
+              Var("more_values".localize),
+              <a href="add-project" style="color:#333;text-decoration:none;font-size:30px" onclick={jsAddProjectAction}>
                   <i class="fa fa-info-circle"></i>
                 </a>
-              ).toXML
-            }{
-              new Tooltip(
-                Var("show_functions".localize),
-                <a href="execute-functions" style="color:#333;text-decoration:none;font-size:30px" onclick={jsExecuteActions}>
+            ).toXML
+          }{
+            new Tooltip(
+              Var("show_functions".localize),
+              <a href="execute-functions" style="color:#333;text-decoration:none;font-size:30px" onclick={
+                jsExecuteActions
+              }>
                   <i class="fa-solid fa-book"></i>
                 </a>
-              ).toXML
-            }
+            ).toXML
+          }
           </div>
-        )
-        , this) {
+        ),
+        this
+      ) {
         override def compare(that: TableColumn): Int = ???
       }
     )
 
-    private def renderValue(row: SensorsRow): Node = {
-      if (row.flags.contains("ALARM")) {
+    private def renderValue(row: SensorsRow): Node =
+      if (row.flags.contains("ALARM"))
         <span>
           {
-           Seq(
-             row.toValueUnitString.toXML,
-             Tooltip.warningTriangle("alarm".localize).toXML
-           )
-          }
-        </span>
-      } else {
-        row.toValueUnitString.toXML
-      }
-    }
-
-    private def newColumn(label: String, defaultValue: Node): TableColumn = {
-      new TableColumn(sensors.map(c => renderValue(c(label))).toRx(defaultValue),this) {
-        override def compare(that: TableColumn): Int =
-          sensors.value.get.toOption.map(_(label).value).getOrElse(0D).compare(
-            that.datasource.asInstanceOf[HardwareTableRow].sensors.value.get.toOption.map(_(label).value).getOrElse(0D)
+          Seq(
+            row.toValueUnitString.toXML,
+            Tooltip.warningTriangle("alarm".localize).toXML
           )
-      }
-    }
+        }
+        </span>
+      else
+        row.toValueUnitString.toXML
 
-    private lazy val jsAddProjectAction: (Event) => Unit = (event) => {
+    private def newColumn(label: String, defaultValue: Node): TableColumn =
+      new TableColumn(sensors.map(c => renderValue(c(label))).toRx(defaultValue), this):
+        override def compare(that: TableColumn): Int =
+          sensors.value.get.toOption
+            .map(_(label).value)
+            .getOrElse(0d)
+            .compare(
+              that.datasource
+                .asInstanceOf[HardwareTableRow]
+                .sensors
+                .value
+                .get
+                .toOption
+                .map(_(label).value)
+                .getOrElse(0d)
+            )
+
+    private lazy val jsAddProjectAction: (Event) => Unit = event => {
       event.preventDefault()
 
       new OkDialog(
@@ -104,23 +115,23 @@ object HardwareTableModel {
             </thead>
             <tbody>
               {
-                sensors.value.get.get.toList.sortBy(_._1).map { case (name, row) =>
-                  <tr>
+            sensors.value.get.get.toList.sortBy(_._1).map { case (name, row) =>
+              <tr>
                     <td>{name}</td>
-                    <td style={if(row.flags.contains("ALARM")) Some("color:red") else None}>
+                    <td style={if (row.flags.contains("ALARM")) Some("color:red") else None}>
                       {row.toValueUnitString}
                     </td>
                     <td>{row.flags}</td>
                   </tr>
-                }
-              }
+            }
+          }
             </tbody>
           </table>
         )
       ).renderToBody().show()
     }
 
-    private lazy val jsExecuteActions: (Event) => Unit = (event) => {
+    private lazy val jsExecuteActions: (Event) => Unit = event => {
       event.preventDefault()
 
       new OkDialog(
@@ -128,28 +139,25 @@ object HardwareTableModel {
         List(
           <ul style="list-style-type: none;">
             {
-              actions.map(actions =>
-                actions.map(action =>
-                  <button class={Style.button.htmlClass} onclick={(event: Event) => {
+            actions.map(actions =>
+              actions.map(action =>
+                <button class={Style.button.htmlClass} onclick={
+                  (event: Event) => {
                     event.preventDefault()
 
                     NProgress.start()
-                    HardwareStatusClient.executeAction(client.hostname, action).foreach(_ =>
-                      NProgress.done(true)
-                    )
+                    HardwareStatusClient.executeAction(client.hostname, action).foreach(_ => NProgress.done(true))
 
-                  }}>{action}
+                  }
+                }>{action}
                   </button>
-                )
               )
-            }
+            )
+          }
           </ul>
         )
       ).renderToBody().show()
     }
-  }
 
   def convert(data: List[HardwareStatusClient], actions: Rx[List[String]]): List[HardwareTableRow] =
     data.map(new HardwareTableRow(_, actions))
-
-}

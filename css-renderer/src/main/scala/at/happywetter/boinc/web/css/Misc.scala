@@ -10,12 +10,10 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object Misc extends StyleSheet.Standalone {
+object Misc extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.Misc._
   import dsl._
 
   centeredText.cssName - (
     textAlign.center.important
   )
-
-}

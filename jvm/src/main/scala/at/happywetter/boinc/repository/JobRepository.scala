@@ -9,18 +9,15 @@ import doobie.h2.implicits._
 
 import java.util.UUID
 
-class JobRepository(xa: Transactor[IO]) {
+class JobRepository(xa: Transactor[IO]):
 
-  def insert(job: RpcJob): IO[RpcJob] = IO.blocking {
+  def insert(job: RpcJob): IO[RpcJob] = IO.blocking:
     val dbJob = job.toDB
 
-    sql"""INSERT INTO job (uuid, contents) VALUES (${dbJob.uuid}, ${dbJob.contents})"""
-      .update
-      .run
+    sql"""INSERT INTO job (uuid, contents) VALUES (${dbJob.uuid}, ${dbJob.contents})""".update.run
       .transact(xa)
 
     job.copy(id = Some(dbJob.uuid))
-  }
 
   def queryAll(): IO[List[RpcJob]] =
     sql"""SELECT * FROM job"""
@@ -36,20 +33,14 @@ class JobRepository(xa: Transactor[IO]) {
       .transact(xa)
       .map(_ == 1)
 
-  def update(job: RpcJob): IO[RpcJob] = {
-    job.id match {
-      case None       => insert(job)
-      case Some(uuid) => exists(uuid).flatMap {
-        case false => insert(job)
-        case _     => delete(uuid).flatMap(_ => insert(job))
-      }
-    }
-  }
+  def update(job: RpcJob): IO[RpcJob] =
+    job.id match
+      case None => insert(job)
+      case Some(uuid) =>
+        exists(uuid).flatMap:
+          case false => insert(job)
+          case _     => delete(uuid).flatMap(_ => insert(job))
 
   def delete(id: UUID): IO[Int] =
-    sql"""DELETE FROM job WHERE id = $id"""
-      .update
-      .run
+    sql"""DELETE FROM job WHERE id = $id""".update.run
       .transact(xa)
-
-}

@@ -8,7 +8,7 @@ import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.shared.parser._
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.HTMLInputElement
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -22,28 +22,30 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 19.08.2017
   */
-object AuthClient {
+object AuthClient:
   type AuthToken = String
 
   val isSecureEndpoint: Boolean = dom.window.location.protocol == "https:"
 
-  private val TOKEN_VALID_TIME = 20*60*1000
+  private val TOKEN_VALID_TIME = 20 * 60 * 1000
   private var refreshTimeoutHandler: Int = -1
 
-  def validate(username: String, password: String): Future[Boolean] = {
+  def validate(username: String, password: String): Future[Boolean] =
     var n = ""
 
-    FetchHelper.get[String]("/auth")
-      .flatMap(nonce => {n = nonce; hashPassword(password, nonce) } )
+    FetchHelper
+      .get[String]("/auth")
+      .flatMap(nonce => { n = nonce; hashPassword(password, nonce) })
       .flatMap(pwHash => requestToken(User(username, pwHash, n)))
       .map(token => {
         if (token != null && token.nonEmpty) {
-         saveToken(token)
+          saveToken(token)
           true
         } else {
           false
         }
-      }).recover {
+      })
+      .recover:
         case e: FetchResponseException =>
           dom.console.error(e.localize)
           false
@@ -51,38 +53,32 @@ object AuthClient {
         case e: Exception =>
           e.printStackTrace()
           false
-      }
-  }
 
-  def validateSavedCredentials(): Future[Boolean] = {
+  def validateSavedCredentials(): Future[Boolean] =
     this.validate(
       dom.window.sessionStorage.getItem("username"),
       dom.window.sessionStorage.getItem("password")
     )
-  }
 
-  def validateAction(done: js.Function0[Unit]): Boolean = {
-    if (!FetchHelper.hasToken) {
+  def validateAction(done: js.Function0[Unit]): Boolean =
+    if (!FetchHelper.hasToken)
       NProgress.done(true)
       AppRouter.navigate(LoginPage.link)
       false
-    } else {
+    else
       enableTokenRefresh()
       done()
       true
-    }
-  }
 
-  private def requestToken(user: User): Future[AuthToken] = {
+  private def requestToken(user: User): Future[AuthToken] =
     if (user == null || user.username == null || user.passwordHash == null || user.nonce == null)
-      return Future.failed(new RuntimeException("User case class is not valid! ("+user+")"))
+      return Future.failed(new RuntimeException("User case class is not valid! (" + user + ")"))
     FetchHelper.post[User, AuthToken]("/auth", user)
-  }
 
-  private def hashPassword(password: String, nonce: String): Future[String] = {
+  private def hashPassword(password: String, nonce: String): Future[String] =
     if (isSecureEndpoint)
-      dom.crypto.crypto.subtle
-        .digest(dom.crypto.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
+      dom.crypto.subtle
+        .digest(dom.HashAlgorithm.`SHA-256`, new TextEncoder("utf-8").encode(nonce + password).buffer)
         .toFuture
         .map(buffer => {
           val hex = new StringBuilder()
@@ -95,43 +91,36 @@ object AuthClient {
         })
     else
       Future { password }
-  }
 
-  def refreshToken(): Future[AuthToken] = {
-    FetchHelper.get[AuthToken]("/auth/refresh")
+  def refreshToken(): Future[AuthToken] =
+    FetchHelper
+      .get[AuthToken]("/auth/refresh")
       .map(token => {
         saveToken(token)
         token
       })
-  }
 
-  def enableTokenRefresh(): Unit = {
+  def enableTokenRefresh(): Unit =
     if (refreshTimeoutHandler == -1)
       refreshTimeoutHandler = dom.window.setInterval(() => { refreshToken() }, TOKEN_VALID_TIME)
-  }
 
-  def loadFromLocalStorage(): Boolean = {
+  def loadFromLocalStorage(): Boolean =
     val tokenDate = dom.window.localStorage.getItem("auth/time")
-    val token     = dom.window.localStorage.getItem("auth/token")
+    val token = dom.window.localStorage.getItem("auth/token")
     if (tokenDate == null || token == null) return false
 
-    if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime()) {
+    if (tokenDate.toDouble + TOKEN_VALID_TIME < new Date().getTime())
       dom.window.localStorage.removeItem("auth/time")
       dom.window.localStorage.removeItem("auth/token")
 
       return false
-    }
 
     FetchHelper.setToken(token)
     true
-  }
 
-  private def saveToken(token: String): Unit = {
+  private def saveToken(token: String): Unit =
     dom.window.localStorage.setItem("auth/token", token)
     dom.window.localStorage.setItem("auth/time", new Date().getTime().toString)
 
     FetchHelper.setToken(token)
     enableTokenRefresh()
-  }
-
-}

@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincProjectStyle extends StyleDefinitions {
+object BoincProjectStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "boinc_project"
+  implicit override protected[this] val prefix: String = "boinc_project"
 
   val link = CSSIdentifier("link")
   val firstRowFixedWith = CSSIdentifier("first_row_fixed")
@@ -19,5 +19,3 @@ object BoincProjectStyle extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(link, firstRowFixedWith, floatingHeadbar, floatingHeadbarButton)
-
-}

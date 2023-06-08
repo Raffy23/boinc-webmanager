@@ -18,7 +18,7 @@ import scala.xml.Elem
   * @author Raphael
   * @version 30.08.2017
   */
-class BoincFileTransferLayout extends BoincClientLayout {
+class BoincFileTransferLayout extends BoincClientLayout:
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "transfers"
@@ -39,39 +39,31 @@ class BoincFileTransferLayout extends BoincClientLayout {
 
   private var syncTimerID: Int = _
 
-  private def loadData(refresh: Boolean = true): Unit = {
+  private def loadData(refresh: Boolean = true): Unit =
     if (!refresh)
       boinc.getCCState.foreach(state => ccState := Some(state))
 
     NProgress.start()
-    boinc.getFileTransfer.foreach{ fileTransfers =>
+    boinc.getFileTransfer.foreach { fileTransfers =>
       dataTable.reactiveData := fileTransfers.map(new FileTransferTableRow(_, ccState))
       NProgress.done(true)
     }
-  }
 
-  override def already(): Unit = {
+  override def already(): Unit =
     loadData(false)
-  }
 
-  override def leave(): Unit = {
+  override def leave(): Unit =
     dom.window.clearInterval(syncTimerID)
-  }
 
-  override def after(): Unit = {
+  override def after(): Unit =
     loadData(false)
     syncTimerID = dom.window.setInterval(() => loadData(), GlobalOptions.refreshDetailPageTimeout)
-  }
 
-  override def render: Elem = {
+  override def render: Elem =
     <div id="file_transfer">
       <h3 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-exchange-alt" aria-hidden="true"></i>
         {"file_transfer_header".localize}
       </h3>
-      { dataTable.component }
+      {dataTable.component}
     </div>
-  }
-
-
-}

@@ -12,9 +12,7 @@ import scala.scalajs.js.typedarray.Uint8Array
   */
 @js.native
 @JSGlobal
-class TextEncoder(encoding: String) extends js.Object {
+class TextEncoder(encoding: String) extends js.Object:
 
   def encode(buffer: String): Uint8Array = js.native
   def encode(buffer: String, options: Any): Uint8Array = js.native
-
-}

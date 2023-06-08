@@ -8,14 +8,12 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object Dialog extends StyleDefinitions {
+object Dialog extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "dialog"
+  implicit override protected[this] val prefix: String = "dialog"
 
   val header = CSSIdentifier("header")
   val button = CSSIdentifier("button")
 
   override private[css] def styles =
     Seq(header, button)
-
-}

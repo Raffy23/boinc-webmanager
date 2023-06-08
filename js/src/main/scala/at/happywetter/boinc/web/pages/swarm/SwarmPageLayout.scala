@@ -17,15 +17,14 @@ import scala.xml.Elem
   * @author Raphael
   * @version 18.02.2018
   */
-abstract class SwarmPageLayout extends Layout {
+abstract class SwarmPageLayout extends Layout:
 
   override def link: String = "/view/swarm/" + path
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit =
     AuthClient.validateAction(done)
-  }
 
-  override def render: Elem = {
+  override def render: Elem =
     <div id="swarm">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-industry" aria-hidden="true"></i>
@@ -35,18 +34,15 @@ abstract class SwarmPageLayout extends Layout {
 
       {renderChildView}
     </div>
-  }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     PageLayout.showMenu()
 
     DashboardMenuBuilder.renderClients()
     SwarmTopNavigation.render(Some(path))
 
     DashboardMenu.selectByMenuId("swarm_control")
-  }
 
   def renderChildView: Elem
 
   val header: String
-}

@@ -5,9 +5,13 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
+import cats.effect.std.{Backpressure, Dequeue}
 import cats.effect.{IO, Ref, Resource}
+import fs2.concurrent.SignallingRef
+import org.typelevel.otel4s.Attribute
+import org.typelevel.otel4s.trace.Tracer
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -17,7 +21,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Raphael
   * @version 12.09.2017
   */
-object PooledBoincClient {
+object PooledBoincClient:
 
   case class ConnectionException(e: Throwable) extends RuntimeException(e)
 
@@ -25,24 +29,46 @@ object PooledBoincClient {
 
   case class PoolState(lastUsed: Map[BoincClient, Long], finalizer: Map[BoincClient, IO[Unit]], pool: List[BoincClient])
 
-  def apply(poolSize: Int, address: String, port: Int = 31416, password: String): Resource[IO, PooledBoincClient] =
+  def apply(poolSize: Int, address: String, port: Int = 31416, password: String)(implicit
+    T: Tracer[IO]
+  ): Resource[IO, PooledBoincClient] =
     Resource.make(
       for {
-        ref <- ExclusiveRef(PoolState(Map.empty, Map.empty, List.empty))
+        queue <- Dequeue.bounded[IO, BoincClient](poolSize)
+        backpressure <- Backpressure[IO](Backpressure.Strategy.Lossless, poolSize)
         client <- IO {
-          new PooledBoincClient(BoincClientParameters(address, port, password), ref)
+          new PooledBoincClient(BoincClientParameters(address, port, password), queue, backpressure)
         }
       } yield client
     )(_.close())
 
-}
+class PooledBoincClient private (val details: BoincClientParameters,
+                                 connections: Dequeue[IO, BoincClient],
+                                 backPressure: Backpressure[IO]
+)(implicit T: Tracer[IO])
+    extends BoincCoreClient[IO]:
 
-class PooledBoincClient private(val details: BoincClientParameters, state: ExclusiveRef[PoolState]) extends BoincCoreClient[IO] {
+  private val finalizers: Ref[IO, Map[BoincClient, IO[Unit]]] = Ref.unsafe(Map.empty)
+  private val closingSignal: Ref[IO, Boolean] = Ref.unsafe(false)
 
   val deathCounter: Ref[IO, Int] = Ref.unsafe(0)
 
-  private def all = state.get.map(_.lastUsed.keys.toSeq)
+  // private def all = state.get.map(_.lastUsed.keys.toSeq)
 
+  private def takeConnection(): IO[BoincClient] =
+    closingSignal.get
+      .ifM(
+        IO.raiseError(new RuntimeException("Connection pool is shutting down!")),
+        OptionT(connections.tryTakeFront).getOrElseF(
+          BoincClient(details.address, details.port, details.password).allocated
+            .flatMap { case (client, finalizer) =>
+              finalizers.modify { state =>
+                (state.updated(client, finalizer), client)
+              }
+            }
+        )
+      )
+  /*
   private def takeConnection(): IO[BoincClient] = {
     state.modifyF[Either[Throwable, BoincClient]] { state =>
       state.pool match {
@@ -58,6 +84,7 @@ class PooledBoincClient private(val details: BoincClientParameters, state: Exclu
         }
 
         case Nil    => EitherT(
+          // F.uncancelable, long running blocking task:
           BoincClient(details.address, details.port, details.password)
             .allocated
             .map(Right(_))
@@ -83,25 +110,47 @@ class PooledBoincClient private(val details: BoincClientParameters, state: Exclu
     }
     .flatMap(_.fold(IO.raiseError, c => IO.pure(c)))
     .handleErrorWith(cause =>
-      deathCounter.update(_ + 1) *>
+      deathCounter.update(_ + 1) *> IO.println(cause) *>
       IO.raiseError(new RuntimeException(s"Client ${details.address}:${details.port} is unavailable!", cause))
     )
   }
+   */
+  private def connection[R](extractor: BoincClient => IO[R]): IO[R] = T.span("borrow connection").use { span =>
+    for
+      cSize <- connections.size
+      _ <- span.addAttribute(Attribute("connection-pool-size", cSize.toLong))
 
-  private def connection[R](extractor: BoincClient => IO[R]): IO[R] = {
-    takeConnection().bracketCase(extractor) {
-      case (connection, Succeeded(_)) => state.update(old => old.copy(pool = connection :: old.pool))
-      case (connection, Canceled())   => state.update(old => old.copy(pool = connection :: old.pool))
-      case (connection, Errored(e))   => for {
+      result <- backPressure
+        .metered(
+          takeConnection()
+            .bracketCase(extractor) {
+              case (connection, Succeeded(_)) => connections.offerFront(connection)
+              case (connection, Canceled())   => connections.offerFront(connection)
+              case (connection, Errored(e)) =>
+                for {
 
-        _ <- deathCounter.update(_ + 1)
-        _ <- closeConnection(connection)
-        _ <- IO.raiseError(ConnectionException(e))
-
-      } yield ()
-    }
+                  _ <- deathCounter.update(_ + 1)
+                  finF <- finalizers.modify { state =>
+                    state.get(connection) match {
+                      case Some(finF) => (state.removed(connection), finF)
+                      case None       => (state, IO.unit)
+                    }
+                  }
+                  _ <- finF
+                  _ <- span.recordException(e)
+                  _ <- IO.raiseError(ConnectionException(e))
+                } yield ()
+            }
+            .handleErrorWith { (ex: Throwable) =>
+              IO.println(s"${ex.getClass.getName}: ${ex.getMessage} for ${details.address}:${details.port}") *>
+                IO.raiseError(ex)
+            }
+        )
+        .map(_.get)
+    yield result
   }
 
+  /*
   private def closeConnection(connection: BoincClient): IO[Unit] = for {
 
     finalizer <- state.modify(state =>
@@ -118,28 +167,28 @@ class PooledBoincClient private(val details: BoincClientParameters, state: Exclu
     _ <- finalizer
 
   } yield ()
+   */
 
-  def close(): IO[Unit] = {
+  def close(): IO[Unit] =
     import cats.implicits._
 
-    all
-      .flatMap(_
-        .map(closeConnection)
-        .sequence
-      )
-      .void
-  }
+    // May close sockets while still in use!
+    for {
+      _ <- closingSignal.set(true)
+      _ <- finalizers.get.flatMap(_.values.toSeq.sequence_)
+    } yield ()
 
   def isAvailable: IO[Boolean] =
     getHostInfo
       .map(_ => true)
       .handleError(e => false)
 
-  def close(timeout: FiniteDuration): IO[Int] = {
+  def close(timeout: FiniteDuration): IO[Int] =
     import cats.implicits._
     val current = System.currentTimeMillis()
     val timeoutMillis = timeout.toMillis
 
+    /*
     state.modify { state =>
       val toBeClosed = state.lastUsed.filter {
         case (_, timestamp) => timestamp+timeoutMillis < current
@@ -160,9 +209,10 @@ class PooledBoincClient private(val details: BoincClientParameters, state: Exclu
       )
     }.flatTap(_._1.sequence_)
       .map(_._2)
-  }
+     */
+    IO.pure(0)
 
-  def hasOpenConnections: IO[Boolean] = state.get.map(_.pool.nonEmpty)
+  def hasOpenConnections: IO[Boolean] = IO.pure(false) // state.get.map(_.pool.nonEmpty)
 
   override def getTasks(active: Boolean): IO[List[Result]] = connection(_.getTasks(active))
 
@@ -228,5 +278,3 @@ class PooledBoincClient private(val details: BoincClientParameters, state: Exclu
 
   override def quit(): IO[Unit] =
     connection(_.quit())
-}
-

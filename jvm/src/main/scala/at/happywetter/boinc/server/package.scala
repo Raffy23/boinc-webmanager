@@ -11,7 +11,7 @@ import java.time.{ZoneOffset, ZonedDateTime}
  * @author Raphael
  * @version 11.11.2020
  */
-package object server {
+package object server:
 
   val bootUpTime: String = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.now(ZoneOffset.UTC))
 
@@ -19,5 +19,3 @@ package object server {
     HttpDate
       .fromZonedDateTime(ZonedDateTime.now(ZoneOffset.UTC))
       .getOrElse(throw new RuntimeException("Unable to compute bootup date!"))
-
-}

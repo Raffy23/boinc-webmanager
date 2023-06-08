@@ -19,34 +19,36 @@ class SimpleModalDialog(bodyElement: Node,
                         okAction: (SimpleModalDialog) => Unit,
                         abortAction: (SimpleModalDialog) => Unit,
                         okLabel: String = "dialog_ok".localize,
-                        abortLabel: String = "dialog_cancel".localize) extends Dialog("modal-dialog") {
+                        abortLabel: String = "dialog_cancel".localize
+) extends Dialog("modal-dialog"):
 
-  private val dialog = new
-      BasicModalDialog("modal-dialog",
-        List(headerElement),
-        List(bodyElement),
-        List(
-          <button class={Style.button.htmlClass} onclick={(event: Event) => {
-            event.preventDefault()
-            okAction(this)
-          }}>
+  private val dialog = new BasicModalDialog(
+    "modal-dialog",
+    List(headerElement),
+    List(bodyElement),
+    List(
+      <button class={Style.button.htmlClass} onclick={
+        (event: Event) => {
+          event.preventDefault()
+          okAction(this)
+        }
+      }>
             {okLabel}
           </button>,
-          <button class={Style.button.htmlClass} onclick={(event: Event) => {
-            event.preventDefault()
-            abortAction(this)
-          }}>
+      <button class={Style.button.htmlClass} onclick={
+        (event: Event) => {
+          event.preventDefault()
+          abortAction(this)
+        }
+      }>
             {abortLabel}
           </button>
-        )
-      )
+    )
+  )
 
   override def render(): Elem = dialog.render()
 
   def close(): Unit = SimpleModalDialog.remove()
 
-}
-
-object SimpleModalDialog {
+object SimpleModalDialog:
   def remove(): Unit = dom.document.body.removeChild(dom.document.getElementById("modal-dialog"))
-}

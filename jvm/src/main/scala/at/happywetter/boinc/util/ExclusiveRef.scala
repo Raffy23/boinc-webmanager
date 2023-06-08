@@ -3,22 +3,19 @@ package at.happywetter.boinc.util
 import cats.effect.IO
 import cats.effect.std.Semaphore
 
-object ExclusiveRef {
+object ExclusiveRef:
 
   def apply[T](initialValue: T): IO[ExclusiveRef[T]] = for {
     lock <- Semaphore[IO](1)
-    ref  <- IO.pure(new ExclusiveRef(initialValue, lock))
+    ref <- IO.pure(new ExclusiveRef(initialValue, lock))
   } yield ref
 
-}
-
-class ExclusiveRef[T] private(private var value: T, lock: Semaphore[IO]) {
+class ExclusiveRef[T] private (private var value: T, lock: Semaphore[IO]):
 
   def update(f: T => T): IO[Unit] =
     lock.permit.use { _ =>
-      IO {
+      IO:
         value = f(value)
-      }
     }
 
   def get: IO[T] =
@@ -28,14 +25,13 @@ class ExclusiveRef[T] private(private var value: T, lock: Semaphore[IO]) {
 
   def set(newValue: T): IO[Unit] =
     lock.permit.use { _ =>
-      IO.pure {
+      IO.pure:
         value = newValue
-      }
     }
 
   def modifyF[A](newF: T => IO[(T, A)]): IO[A] =
     lock.permit.use { _ =>
-      newF(value).map{ case (newValue, retValue) =>
+      newF(value).map { case (newValue, retValue) =>
         value = newValue
         retValue
       }
@@ -43,11 +39,8 @@ class ExclusiveRef[T] private(private var value: T, lock: Semaphore[IO]) {
 
   def modify[A](f: T => (T, A)): IO[A] =
     lock.permit.use { _ =>
-      IO {
+      IO:
         val (newValue, retValue) = f(value)
         value = newValue
         retValue
-      }
     }
-
-}

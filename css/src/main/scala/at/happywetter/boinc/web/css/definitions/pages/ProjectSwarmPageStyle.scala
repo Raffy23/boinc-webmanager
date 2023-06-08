@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object ProjectSwarmPageStyle extends StyleDefinitions {
+object ProjectSwarmPageStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "project_swarm_page"
+  implicit override protected[this] val prefix: String = "project_swarm_page"
 
   val masterCheckbox = BoincSwarmPageStyle.masterCheckbox
   val checkbox = BoincSwarmPageStyle.checkbox
@@ -24,5 +24,3 @@ object ProjectSwarmPageStyle extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(topNavigationAtion, lastRowSmall, floatingMenu)
-
-}

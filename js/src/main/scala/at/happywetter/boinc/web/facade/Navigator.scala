@@ -12,8 +12,6 @@ import scala.scalajs.js.annotation.JSGlobal
 
 @js.native
 @JSGlobal("navigator")
-object Navigator extends js.Object {
+object Navigator extends js.Object:
 
   val userAgent: String = js.native
-
-}

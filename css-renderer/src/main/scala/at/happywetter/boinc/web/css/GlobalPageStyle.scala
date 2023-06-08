@@ -11,7 +11,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 23.07.2017
  */
-object GlobalPageStyle extends StyleSheet.Standalone {
+object GlobalPageStyle extends StyleSheet.Standalone:
   import dsl._
 
   "html" - (
@@ -36,7 +36,6 @@ object GlobalPageStyle extends StyleSheet.Standalone {
     marginTop(80 px),
     height(100 %%),
     marginBottom(30 px),
-
     media.maxWidth(690 px)(
       marginTop(130 px)
     )
@@ -51,7 +50,6 @@ object GlobalPageStyle extends StyleSheet.Standalone {
     padding(7 px),
     boxSizing.borderBox,
     fontSize(14 px),
-
     &.focus - (
       outlineColor(c"#999"),
       outlineWidth(2 px)
@@ -63,11 +61,8 @@ object GlobalPageStyle extends StyleSheet.Standalone {
     padding(7 px),
     boxSizing.borderBox,
     fontSize(14 px),
-
     &.focus - (
       outlineColor(c"#999"),
       outlineWidth(2 px)
     )
   )
-
-}

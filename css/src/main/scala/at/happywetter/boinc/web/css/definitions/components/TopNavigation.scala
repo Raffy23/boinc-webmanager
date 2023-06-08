@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object TopNavigation extends StyleDefinitions {
+object TopNavigation extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "topnav"
+  implicit override protected[this] val prefix: String = "topnav"
 
   val nav = CSSIdentifier("")
   val bigScreenOnly = CSSIdentifier("big_screen")
@@ -18,5 +18,3 @@ object TopNavigation extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(nav, bigScreenOnly, active)
-
-}

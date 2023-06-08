@@ -22,10 +22,9 @@ trait Layout {
 
   def render: Elem
 
-  def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+  def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit =
     NProgress.start()
     AuthClient.validateAction(authenticatedHook(done))
-  }
 
   def after(): Unit = {}
   def leave(): Unit = {}

@@ -1,5 +1,10 @@
-# Hide IntelliJ Files:
+# Hide IDE fiels
 *.idea
+.idea/
+.bsp/
+.bloop/
+.metals/
+.vscode/
 
 # sbt stuff
 project/target
@@ -9,6 +14,12 @@ project/project
 js/target
 jvm/target
 shared/target
+shared/.js/target
+shared/.jvm/target
+css/target
+css/.js/target
+css/.jvm/target
+css-renderer/target
 /target
 
 # Ignore custom configuration files
@@ -16,11 +27,13 @@ shared/target
 all_projects_list.xml
 /web
 /conf
+.env
+*.jks
+*.patch
+*.db
 
 # Ignore .gtm folder
 /.gtm/
-
-*.jks
 
 # Deployment Files
 /jvm/src/main/resources/web-root/boinc-webmanager-jsdeps.min.js.gz

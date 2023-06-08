@@ -8,13 +8,11 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincMainHostStyle extends StyleDefinitions {
+object BoincMainHostStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "boinc_main_host"
+  implicit override protected[this] val prefix: String = "boinc_main_host"
 
   val table = CSSIdentifier("table")
 
   override private[css] def styles =
     Seq(table)
-
-}

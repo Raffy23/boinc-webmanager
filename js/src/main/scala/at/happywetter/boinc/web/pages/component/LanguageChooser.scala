@@ -13,33 +13,34 @@ import scala.xml.Elem
   * @author Raphael
   * @version 05.09.2017
   */
-class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int = 0) {
+class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int = 0):
 
   private val languages = Var(LanguageDataProvider.available.toList)
   private val selectedLang = Var(
-    LanguageDataProvider.available.find{ case (c,_,_) => c == Locale.current}.get
+    LanguageDataProvider.available.find { case (c, _, _) => c == Locale.current }.get
   )
 
   val component: Elem = new DropdownMenu(
     <span>
       {"login_lang_chooser".localize}
       {
-        selectedLang.map{
-          case (_, name, icon) =>
-            <span>
+      selectedLang.map { case (_, name, icon) =>
+        <span>
               <span style="padding-right:10px">
                 <span class={s"flag-icon flag-icon-${icon}"}></span>
               </span>
               {name}
             </span>
-        }
       }
+    }
     </span>,
-    languages.map(_.map{ case (lang_code, lang_name, icon) =>
-      <a href="#change-language" onclick={ (event: Event) => {
-        selectedLang.update(_ => (lang_code, lang_name, icon))
-        langChangeAction(event, lang_code)
-      }}>
+    languages.map(_.map { case (lang_code, lang_name, icon) =>
+      <a href="#change-language" onclick={
+        (event: Event) => {
+          selectedLang.update(_ => (lang_code, lang_name, icon))
+          langChangeAction(event, lang_code)
+        }
+      }>
         <span style="padding-right:10px">
           <span class={s"flag-icon flag-icon-${icon}"}></span>
         </span>
@@ -48,5 +49,3 @@ class LanguageChooser(langChangeAction: (Event, String) => Unit, left_prop: Int 
     }),
     if (left_prop != 0) s"left:${left_prop}px" else ""
   ).component
-
-}

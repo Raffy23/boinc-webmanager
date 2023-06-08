@@ -17,26 +17,26 @@ import scala.concurrent.Future
   * @author Raphael
   * @version 20.07.2017
   */
-class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) extends WebmanagerClient[Future] {
+class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) extends WebmanagerClient[Future]:
   import at.happywetter.boinc.shared.parser._
 
-  private val baseURI     = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
+  private val baseURI = s"/api/boinc/${dom.window.encodeURIComponent(hostname)}/"
   private val healthyFlag = "?healthy"
 
   @inline def uri(cmd: BoincRPC.Command.Command): String =
-    if(queryHealthyOnly) baseURI + cmd + healthyFlag
+    if (queryHealthyOnly) baseURI + cmd + healthyFlag
     else baseURI + cmd
 
   @inline def uri(cmd: BoincRPC.Command.Command, p: String) =
-    if(queryHealthyOnly) baseURI + cmd + "/" + p + healthyFlag
+    if (queryHealthyOnly) baseURI + cmd + "/" + p + healthyFlag
     else baseURI + cmd + "/" + p
 
   @inline def uri(cmd: String): String =
-    if(queryHealthyOnly) baseURI + cmd + healthyFlag
+    if (queryHealthyOnly) baseURI + cmd + healthyFlag
     else baseURI + cmd
 
   def getTasks(active: Boolean = true): Future[List[Result]] =
-    FetchHelper.get[List[Result]](uri(if(active) "tasks" else "all_tasks"))
+    FetchHelper.get[List[Result]](uri(if (active) "tasks" else "all_tasks"))
 
   override def getHostInfo: Future[HostInfo] =
     FetchHelper.get[HostInfo](uri(BoincRPC.Command.GetHostInfo))
@@ -146,4 +146,3 @@ class BoincClient(val hostname: String, val queryHealthyOnly: Boolean = false) e
     FetchHelper.post[AppConfig, Boolean](uri(s"app_config?url=${dom.window.encodeURIComponent(url)}"), config)
 
   override def quit(): Future[Unit] = ???
-}

@@ -5,110 +5,113 @@ import at.happywetter.boinc.server._
 import at.happywetter.boinc.util.http4s.CustomEmberServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, JobManager}
 import cats.effect._
-import cats.effect.std.Semaphore
-import cats.effect.unsafe.IORuntime
 import com.comcast.ip4s.{Host, Port}
-import fs2.io.net.SocketGroup
+import io.opentelemetry.api.GlobalOpenTelemetry
 import org.http4s.HttpRoutes
-import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.dsl.io._
+import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.middleware.GZip
 import org.http4s.server.websocket.WebSocketBuilder
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-import java.nio.channels.ServerSocketChannel
-
+import org.typelevel.otel4s.java.OtelJava
+import org.typelevel.otel4s.trace.Tracer
+import scala.concurrent.duration.Duration
+import util.http4s.Otel4sMiddelware._
 
 /**
   * @author Raphael
   * @version 19.07.2017
   */
-object WebServer extends IOApp {
-
-  // Lazy config such that it can be accessed everywhere in
-  // WebServer without getting passed around, but initialized
-  // later when needed
-  private lazy val config      = AppConfig.conf
+object WebServer extends IOApp:
 
   // Create top level routes
   // Seems kinda broken in 1.0.0-M3, can't access /api/webrpc or /api/hardware so they are outside /api for now ...
-  private def routes(webSocketBuilder: WebSocketBuilder[IO], hostManager: BoincManager, xmlProjectStore: XMLProjectStore, db: Database, jobManager: JobManager) = {
+  private def routes(config: AppConfig.Config,
+                     webSocketBuilder: WebSocketBuilder[IO],
+                     hostManager: BoincManager,
+                     xmlProjectStore: XMLProjectStore,
+                     db: Database,
+                     jobManager: JobManager
+  )(implicit T: Tracer[IO]) =
     val authService = new AuthenticationService(config)
-    val hw = {
-      if (config.hardware.isDefined && config.hardware.get.enabled) {
+    val hw =
+      if config.hardware.isDefined && config.hardware.get.enabled then
         HardwareAPIRoutes(
           config.hardware.get.hosts.toSet,
-          config.hardware.map(hardware =>
-            new HWStatusService(
-              hardware.binary,
-              hardware.params,
-              hardware.cacheTimeout,
-              hardware.actions
+          config.hardware
+            .map(hardware =>
+              new HWStatusService(
+                hardware.binary,
+                hardware.params,
+                hardware.cacheTimeout,
+                hardware.actions
+              )
             )
-          ).get
+            .get
         )
-      } else {
-        HttpRoutes.of[IO] {
+      else
+        HttpRoutes.of[IO]:
           case GET -> Root => NotFound()
-        }
-      }
-    }
 
     Router(
-      "/"              -> GZip(WebResourcesRoute(config)),
-      "/swagger"       -> SwaggerRoutes(),
-      "/api"           -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
-      "/webrpc"        -> authService.protectedService(WebRPCRoutes()),                               // <--- TODO: Document in Swagger
-      "/hardware"      -> authService.protectedService(hw),                                           // <--- TODO: Document in Swagger
-      "/ws"            -> WebsocketRoutes(webSocketBuilder, authService, hostManager),
-      "/auth"          -> authService.authService,
-      "/language"      -> LanguageService(),
-      "/jobs"          -> JobManagerRoutes(db, jobManager)
-    ).orNotFound
-  }
+      "/" -> GZip(WebResourcesRoute(config)),
+      "/swagger" -> SwaggerRoutes(),
+      "/api" -> authService.protectedService(BoincApiRoutes(hostManager, xmlProjectStore, db)),
+      "/webrpc" -> authService.protectedService(WebRPCRoutes()), // <--- TODO: Document in Swagger
+      "/hardware" -> authService.protectedService(hw), // <--- TODO: Document in Swagger
+      "/ws" -> WebsocketRoutes(webSocketBuilder, authService, hostManager),
+      "/auth" -> authService.authService,
+      "/language" -> LanguageService(),
+      "/jobs" -> JobManagerRoutes(db, jobManager)
+    ).orNotFound.traced
 
-  override def run(args: List[String]): IO[ExitCode] = {
+  private def tracerResource: Resource[IO, Tracer[IO]] =
+    Resource
+      .eval(IO(GlobalOpenTelemetry.get))
+      .evalMap(OtelJava.forAsync[IO])
+      .evalMap(_.tracerProvider.get("at.happywetter.boinc.WebServer"))
+
+  override def run(args: List[String]): IO[ExitCode] = tracerResource.use { implicit tracer: Tracer[IO] =>
     (for {
-      _  <- Resource.eval(for {
-        logger      <- Slf4jLogger.fromClass[IO](getClass)
-        _           <- logger.info(s"Current Boinc-Webmanager version: ${BuildInfo.version}")
-        _           <- ConfigurationChecker.checkConfiguration(config, logger)
-      } yield ())
+      config <- Resource.eval(for {
+        logger <- Slf4jLogger.fromClass[IO](getClass)
+        _ <- logger.info(s"Current Boinc-Webmanager version: ${BuildInfo.version}")
+        config <- IO.blocking(AppConfig.conf)
+        _ <- ConfigurationChecker.checkConfiguration(config, logger)
+      } yield config)
 
-      database    <- Database().onFinalize(IO.println("DONE Database"))
-      xmlPStore   <- XMLProjectStore(database, config).onFinalize(IO.println("DONE XMLProjectStore"))
+      database <- Database().onFinalize(IO.println("DONE Database"))
+      xmlPStore <- XMLProjectStore(database, config).onFinalize(IO.println("DONE XMLProjectStore"))
       hostManager <- BoincManager(config, database).onFinalize(IO.println("DONE BoincManager")) // <-- problematic
-      jobManager  <- JobManager(hostManager, database).onFinalize(IO.println("DONE JobManager"))
+      jobManager <- JobManager(hostManager, database).onFinalize(IO.println("DONE JobManager"))
 
       // TODO: for Linux with systemd privileged socket can be inherited,
       //       how to convince Blaze to use it?
-      webserver   <- EmberServerBuilder
-                        .default[IO]
-                        .withOptionalSSL(config)
-                        .withHostOption(Host.fromString(config.server.address))
-                        .withPort(Port.fromInt(config.server.port).get)
-                        .withHttpWebSocketApp(wsBuilder => routes(wsBuilder, hostManager, xmlPStore, database, jobManager))
-                        .build
-                        .onFinalize(IO.println("DONE EmberServerBuilder"))
+      webserver <- EmberServerBuilder
+        .default[IO]
+        .withShutdownTimeout(Duration.fromNanos(0))
+        .withOptionalSSL(config)
+        .withHostOption(Host.fromString(config.server.address))
+        .withPort(Port.fromInt(config.server.port).get)
+        .withHttpWebSocketApp(wsBuilder => routes(config, wsBuilder, hostManager, xmlPStore, database, jobManager))
+        .build
+        .onFinalize(IO.println("DONE EmberServerBuilder"))
 
       autoDiscovery <- BoincHostFinder(config, hostManager, database).onFinalize(IO.println("DONE BoincHostFinder"))
-    } yield (()))
-      .use(_ =>
-        if (config.serviceMode)
-          serviceMode
-        else
-          interactive
-      ).as(ExitCode.Success)
+    } yield config)
+      .use(config =>
+        if config.serviceMode then serviceMode
+        else interactive
+      )
+      .as(ExitCode.Success)
   }
 
   private val serviceMode = IO.println("Running in service mode, waiting for signal ...") *> IO.never
   private val interactive = for {
-    _     <- IO.println("Press ENTER to exit the server ...")
+    _ <- IO.println("Press ENTER to exit the server ...")
     fiber <- Spawn[IO].start(IO.readLine)
-    _     <- fiber.join
-    _     <- IO.println("Shutting down server ...")
+    _ <- fiber.join
+    _ <- IO.println("Shutting down server ...")
   } yield ()
-
-}

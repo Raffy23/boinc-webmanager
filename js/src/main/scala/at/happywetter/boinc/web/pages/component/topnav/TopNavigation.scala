@@ -17,7 +17,7 @@ import scala.xml.Elem
   * @author Raphael
   * @version 18.02.2018
   */
-trait TopNavigation {
+trait TopNavigation:
 
   protected var selected: Var[String]
   val componentId: String
@@ -30,31 +30,30 @@ trait TopNavigation {
 
   def clear(): Unit = PageLayout.clearNav()
 
-  def render(select: Option[String] = None): TopNavigation = {
+  def render(select: Option[String] = None): TopNavigation =
     select.foreach(selected := _)
     PageLayout.setNav(this)
     this
-  }
 
   lazy val component: Elem =
     <ul class={Style.nav.htmlClass} id={componentId}>
       {
       selected.map { selected =>
-        links.map{ case (nav, name, icon) =>
+        links.map { case (nav, name, icon) =>
           <li class={BoincClientStyle.inTextIcon.htmlClass}>
-            <a href={link(nav)} onclick={jsAction(link(nav))} class={if(selected == nav) Some(Style.active.htmlClass) else None}>
+            <a href={link(nav)} onclick={jsAction(link(nav))} class={
+            if (selected == nav) Some(Style.active.htmlClass) else None
+          }>
               <i class={icon} aria-hidden="true"></i>
               <span class={Style.bigScreenOnly.htmlClass}>{name.localize}</span>
             </a>
           </li>
         }
       }
-      }
+    }
     </ul>
 
   private def jsAction(link: Rx[String]): (Event) => Unit = event => {
     event.preventDefault()
     AppRouter.router.navigate(link.now)
   }
-
-}

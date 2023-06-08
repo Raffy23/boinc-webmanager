@@ -9,12 +9,12 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object LoginPageCSS extends StyleSheet.Standalone {
+object LoginPageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle._
   import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle.{content => style_content}
   import dsl._
 
-  style_content.cssName -(
+  style_content.cssName - (
     position.relative,
     zIndex(1),
     backgroundColor(c"#FFFFFF"),
@@ -22,16 +22,16 @@ object LoginPageCSS extends StyleSheet.Standalone {
     margin(250 px, auto),
     padding(10 px, 45 px, 45 px, 45 px),
     textAlign.center,
-    boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
+    boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)"
   )
 
-  input.cssName -(
-    width(100%%),
+  input.cssName - (
+    width(100 %%),
     padding(15 px),
-    margin(0 px, 0 px, 15 px, 0 px),
+    margin(0 px, 0 px, 15 px, 0 px)
   )
 
-  headerBar.cssName -(
+  headerBar.cssName - (
     position.fixed,
     top.`0`,
     left.`0`,
@@ -43,7 +43,7 @@ object LoginPageCSS extends StyleSheet.Standalone {
     textAlign.center
   )
 
-  button.cssName -(
+  button.cssName - (
     textTransform.uppercase,
     outline.`0`,
     backgroundColor(c"#428bca"),
@@ -53,10 +53,7 @@ object LoginPageCSS extends StyleSheet.Standalone {
     color(c"#FFFFFF"),
     cursor.pointer,
     margin.`0`,
-
     &.hover(
       backgroundColor(c"#74a9d8")
     )
   )
-  
-}

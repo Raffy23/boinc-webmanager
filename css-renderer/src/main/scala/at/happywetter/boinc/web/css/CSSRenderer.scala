@@ -9,9 +9,9 @@ import at.happywetter.boinc.web.css.pages._
  * @author Raphael
  * @version 03.02.2020
  */
-object CSSRenderer extends App {
+object CSSRenderer extends App:
 
-  def render(): String = {
+  def render(): String =
     import AppCSS.CSSDefaults._
 
     Seq(
@@ -38,8 +38,5 @@ object CSSRenderer extends App {
       ProjectSwarmPageCSS,
       DashboardMenuCSS
     ).map(_.render[String])
-     .foldLeft(new StringBuilder)(_ append _)
-     .toString
-  }
-
-}
+      .foldLeft(new StringBuilder)(_ append _)
+      .toString

@@ -8,20 +8,18 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object BasicModalStyle extends StyleDefinitions {
+object BasicModalStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "modal"
+  implicit override protected[this] val prefix: String = "modal"
 
   val modal = CSSIdentifier("")
   val content = CSSIdentifier("content")
   val body = CSSIdentifier("body")
   val header = CSSIdentifier("header")
   val footer = CSSIdentifier("footer")
-  val button =  CSSIdentifier("button")
+  val button = CSSIdentifier("button")
   val actionList = CSSIdentifier("action_list")
   val action = CSSIdentifier("action")
 
   override private[css] def styles =
     Seq(modal, content, body, header, footer, button, actionList, action)
-
-}

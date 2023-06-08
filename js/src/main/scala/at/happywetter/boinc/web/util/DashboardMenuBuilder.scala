@@ -14,26 +14,26 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 21.09.2017
   */
-object DashboardMenuBuilder {
+object DashboardMenuBuilder:
 
   private var rendered: Boolean = false
   var afterRenderHooks: ListBuffer[() => Unit] = ListBuffer.empty
 
-  def renderClients(clients: List[String]): Unit = {
+  def renderClients(clients: List[String]): Unit =
     if (rendered) return
     else rendered = true
 
     DashboardMenu.removeMenuReferences("boinc-client-entry")
 
-    ClientManager.getGroups.foreach( groups => {
-      val clientsInGroup   = groups.flatMap(_._2).toSeq
+    ClientManager.getGroups.foreach(groups => {
+      val clientsInGroup = groups.flatMap(_._2).toSeq
       val ungroupedClients = clients.diff(clientsInGroup)
 
       ungroupedClients.foreach(client =>
-        DashboardMenu.addComputer(BoincClientLayout.link(client),client, Some("boinc-client-entry"))
+        DashboardMenu.addComputer(BoincClientLayout.link(client), client, Some("boinc-client-entry"))
       )
 
-      groups.keys.foreach( groupHeader => {
+      groups.keys.foreach(groupHeader => {
         DashboardMenu.addGroup(groupHeader, s"group-$groupHeader", Some("boinc-client-entry"))
         groups(groupHeader).foreach(client =>
           if (clients.contains(client))
@@ -46,14 +46,10 @@ object DashboardMenuBuilder {
       afterRenderHooks.foreach(_())
       afterRenderHooks = ListBuffer.empty
     })
-  }
 
   def renderClients(): Unit =
     ClientManager.readClients().map(renderClients)
 
-  def invalidateCache(): Unit = {
+  def invalidateCache(): Unit =
     rendered = false
     renderClients()
-  }
-
-}

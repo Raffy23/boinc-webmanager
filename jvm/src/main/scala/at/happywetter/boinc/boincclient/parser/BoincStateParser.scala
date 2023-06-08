@@ -12,20 +12,20 @@ import scala.xml.NodeSeq
   * @author Raphael
   * @version 25.08.2017
   */
-object BoincStateParser {
-  private def toBool(nodeSeq: NodeSeq): Boolean = nodeSeq.text.toInt==1
+object BoincStateParser:
+  private def toBool(nodeSeq: NodeSeq): Boolean = nodeSeq.text.toInt == 1
 
-  def fromXML(node: NodeSeq): BoincState = {
+  def fromXML(node: NodeSeq): BoincState =
     val hostInfo = HostInfoParser.fromXML(node \ "host_info")
     val boincVersion =
       (node \ "core_client_major_version").text + "." +
-      (node \ "core_client_minor_version").text + "." +
-      (node \ "core_client_release").text
+        (node \ "core_client_minor_version").text + "." +
+        (node \ "core_client_release").text
 
-    val apps      = new mutable.HashMap[String,App]()
-    val projects  = new ListBuffer[Project]
+    val apps = new mutable.HashMap[String, App]()
+    val projects = new ListBuffer[Project]
     val workunits = new ListBuffer[Workunit]
-    val results   = new ListBuffer[Result]
+    val results = new ListBuffer[Result]
 
     val netStats = NetStats(
       (node \ "net_stats" \ "bwup").text.toDouble,
@@ -50,14 +50,14 @@ object BoincStateParser {
       (node \ "time_stats" \ "now").toScalaDouble,
       (node \ "time_stats" \ "previous_uptime").toScalaDouble,
       (node \ "time_stats" \ "session_active_duration").toScalaDouble,
-      (node \ "time_stats" \ "session_gpu_active_duration").toScalaDouble,
+      (node \ "time_stats" \ "session_gpu_active_duration").toScalaDouble
     )
 
     var curProject: Project = null
     val curApp: mutable.Queue[NodeSeq] = new mutable.Queue[NodeSeq]()
 
-    for( n <- node.head.child ) {
-      n.label match {
+    for n <- node.head.child do
+      n.label match
         case "project" =>
           curProject = ProjectParser.fromNodeXML(n);
           projects += curProject
@@ -66,22 +66,22 @@ object BoincStateParser {
           curApp.enqueue(n)
 
         case "app_version" =>
-          if( !apps.contains( (n \ "app_name").text) ) {
-            if (curApp.isEmpty)
-              throw new RuntimeException("Unable get get app_version for " + (n \ "app_name").text)
+          if !apps.contains((n \ "app_name").text) then
+            if curApp.isEmpty then throw new RuntimeException("Unable get get app_version for " + (n \ "app_name").text)
 
-            @inline def coproc(nodeSeq: NodeSeq): Option[AppVersionCoProc] = {
-              if (nodeSeq == null || nodeSeq.isEmpty)
-                return None
+            @inline def coproc(nodeSeq: NodeSeq): Option[AppVersionCoProc] =
+              if nodeSeq == null || nodeSeq.isEmpty then return None
 
-              Some(AppVersionCoProc(
-                (nodeSeq \ "type").text,
-                (nodeSeq \ "count").toScalaDouble
-              ))
-            }
+              Some(
+                AppVersionCoProc(
+                  (nodeSeq \ "type").text,
+                  (nodeSeq \ "count").toScalaDouble
+                )
+              )
 
             val app = curApp.dequeue()
-            apps.put((app \ "name").text,
+            apps.put(
+              (app \ "name").text,
               App(
                 (app \ "name").text,
                 (app \ "user_friendly_name").text,
@@ -99,11 +99,10 @@ object BoincStateParser {
                   (n \ "gpu_ram").toOptionDouble,
                   (n \ "dont_throttle").existsNode,
                   (n \ "needs_network").existsNode
-                )
-                , curProject.url
+                ),
+                curProject.url
               )
             )
-          }
 
         case "workunit" =>
           workunits += WorkunitParser.fromXML(n)
@@ -112,13 +111,11 @@ object BoincStateParser {
           results += ResultParser.fromXML(n)
 
         case _ => /* Nothing to do ... */
-        //case tag => println(tag + " => " + n) //DEBUGING CODE
+        // case tag => println(tag + " => " + n) //DEBUGING CODE
 
         // Maybe implement following tags in near future:
         // executing_as_daemon, global_preferences?
         // Some flags may be present: have_ati, have_nv ...
-      }
-    }
 
     BoincState(
       hostInfo,
@@ -126,11 +123,8 @@ object BoincStateParser {
       apps.toMap,
       workunits.toList,
       boincVersion,
-      (node \  "platform_name").text,
+      (node \ "platform_name").text,
       results.toList,
       netStats,
       timeStats
     )
-  }
-
-}

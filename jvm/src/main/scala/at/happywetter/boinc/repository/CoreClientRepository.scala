@@ -14,18 +14,17 @@ import doobie.h2.implicits._
  * @author Raphael
  * @version 08.07.2020
  */
-class CoreClientRepository(xa: Transactor[IO]) {
+class CoreClientRepository(xa: Transactor[IO]):
 
-  private implicit val CoreClientWrite: Write[CoreClient] = Write[(String, String, Int, String, String)].contramap( coreClient =>
-    (coreClient.name, coreClient.address, coreClient.port, coreClient.password, coreClient.addedBy)
-  )
+  implicit private val CoreClientWrite: Write[CoreClient] =
+    Write[(String, String, Int, String, String)].contramap(coreClient =>
+      (coreClient.name, coreClient.address, coreClient.port, coreClient.password, coreClient.addedBy)
+    )
 
-  private implicit val IPAddressWrite: Write[IpAddress] = Write[String].contramap(ip => ip.toInetAddress.getHostAddress)
+  implicit private val IPAddressWrite: Write[IpAddress] = Write[String].contramap(ip => ip.toInetAddress.getHostAddress)
 
   def insert(coreClient: CoreClient): IO[Int] =
-    sql"""INSERT INTO core_client (name, address, port, password, added_by) VALUES ($coreClient)"""
-      .update
-      .run
+    sql"""INSERT INTO core_client (name, address, port, password, added_by) VALUES ($coreClient)""".update.run
       .transact(xa)
 
   def queryAll(): IO[List[CoreClient]] =
@@ -42,17 +41,12 @@ class CoreClientRepository(xa: Transactor[IO]) {
       .map(_ == 1)
 
   def update(coreClient: CoreClient): IO[Int] =
-    exists(coreClient.name).flatMap {
+    exists(coreClient.name).flatMap:
       case false => insert(coreClient)
-      case true  => delete(coreClient.name).flatMap(_ =>
-        insert(coreClient)
-      )
-    }
+      case true  => delete(coreClient.name).flatMap(_ => insert(coreClient))
 
   def delete(name: String): IO[Int] =
-    sql"""DELETE FROM core_client WHERE name = $name"""
-      .update
-      .run
+    sql"""DELETE FROM core_client WHERE name = $name""".update.run
       .transact(xa)
 
   def searchBy(ip: IpAddress, port: Int): IO[List[CoreClient]] =
@@ -60,5 +54,3 @@ class CoreClientRepository(xa: Transactor[IO]) {
       .query[CoreClient]
       .to[List]
       .transact(xa)
-
-}

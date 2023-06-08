@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincMessageStyle extends StyleDefinitions {
+object BoincMessageStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "boinc_message_layout"
+  implicit override protected[this] val prefix: String = "boinc_message_layout"
 
   val dateCol = CSSIdentifier("date_column")
   val tableRow = CSSIdentifier("table_row")
@@ -19,5 +19,3 @@ object BoincMessageStyle extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(dateCol, tableRow, noticeList, filterBox)
-
-}

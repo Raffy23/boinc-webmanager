@@ -11,7 +11,9 @@
   <logger name="org.http4s.blaze.channel.nio1.NIO1SocketServerGroup" level="WARN"/>
   <logger name="org.http4s.blaze.channel.nio1.SelectorLoop" level="WARN"/>
 
-  <root level="INFO">
+  <logger name="at.happywetter.*" level="INFO"/>
+
+  <root level="TRACE">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

@@ -6,13 +6,10 @@ package at.happywetter.boinc.shared.util
  * @author Raphael
  * @version 01.02.2020
  */
-object StringLengthAlphaOrdering extends Ordering[String] {
+object StringLengthAlphaOrdering extends Ordering[String]:
 
-  def compare(left: String, right: String): Int = {
+  def compare(left: String, right: String): Int =
     val lenDiff = left.length - right.length
 
-    if (lenDiff == 0) left.compareTo(right)
+    if lenDiff == 0 then left.compareTo(right)
     else lenDiff
-  }
-
-}

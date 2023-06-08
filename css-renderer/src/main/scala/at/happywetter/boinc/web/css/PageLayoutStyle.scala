@@ -9,7 +9,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object PageLayoutStyle extends StyleSheet.Standalone {
+object PageLayoutStyle extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle._
   import dsl._
 
@@ -24,7 +24,6 @@ object PageLayoutStyle extends StyleSheet.Standalone {
     color(c"#F2F2F2"),
     boxShadow := "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
     zIndex :=! "100",
-
     media.maxWidth(690 px)(
       height(100 px)
     )
@@ -57,10 +56,7 @@ object PageLayoutStyle extends StyleSheet.Standalone {
 
   clientContainer.cssName - (
     marginLeft(229 px),
-
     media.maxWidth(690 px)(
       marginLeft(5 px)
     )
   )
-
-}

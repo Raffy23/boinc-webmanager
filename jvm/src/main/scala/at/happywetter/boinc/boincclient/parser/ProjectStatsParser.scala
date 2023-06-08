@@ -10,13 +10,17 @@ import scala.xml.NodeSeq
   * @author Raphael
   * @version 02.09.2017
   */
-object ProjectStatsParser {
+object ProjectStatsParser:
 
   def fromXML(node: NodeSeq) =
     Statistics(
-      (node \ "statistics" \ "project_statistics").theSeq.map(projectStatNode => {
-        ((projectStatNode \ "master_url").text, (projectStatNode \ "daily_statistics").theSeq.map(parseDailyEntry).toList)
-      }).toMap
+      (node \ "statistics" \ "project_statistics").theSeq
+        .map(projectStatNode => {
+          ((projectStatNode \ "master_url").text,
+           (projectStatNode \ "daily_statistics").theSeq.map(parseDailyEntry).toList
+          )
+        })
+        .toMap
     )
 
   private def parseDailyEntry(node: NodeSeq) = DailyStatistic(
@@ -24,6 +28,5 @@ object ProjectStatsParser {
     (node \ "user_total_credit").text.toDouble,
     (node \ "user_expavg_credit").text.toDouble,
     (node \ "host_total_credit").text.toDouble,
-    (node \ "host_expavg_credit").text.toDouble,
+    (node \ "host_expavg_credit").text.toDouble
   )
-}

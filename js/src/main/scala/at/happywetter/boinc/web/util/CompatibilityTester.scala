@@ -8,8 +8,6 @@ import at.happywetter.boinc.web.facade.Navigator
   * @author Raphael
   * @version 01.11.2017
   */
-object CompatibilityTester {
+object CompatibilityTester:
 
   def isFirefox: Boolean = Navigator.userAgent.toLowerCase().indexOf("firefox") > -1
-
-}

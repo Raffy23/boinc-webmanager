@@ -9,7 +9,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincClientCSS extends StyleSheet.Standalone {
+object BoincClientCSS extends StyleSheet.Standalone:
 
   import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle._
   import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle.{content => style_content}
@@ -21,7 +21,6 @@ object BoincClientCSS extends StyleSheet.Standalone {
     borderBottom :=! "1px solid #DDD",
     fontSize(28 px),
     fontWeight._300,
-
     unsafeChild("i")(
       marginRight(10 px)
     )
@@ -52,55 +51,45 @@ object BoincClientCSS extends StyleSheet.Standalone {
 
   style_content.cssName - (
     paddingLeft(8 px)
-    )
+  )
 
   inTextIcon.cssName - (
     unsafeChild("i")(
       marginRight(10 px)
     )
-    )
+  )
 
   progressBar.cssName - (
-
     unsafeChild("progress")(
       backgroundColor(c"#EEE"),
       border.`0`,
       height(18 px),
       width :=! "calc(100% - 3em)"
     ),
-
     unsafeChild("progress[value]::progress-value")(
       backgroundColor(c"#428bca"),
       borderRadius(1 px),
       boxShadow := "0 2px 2px rgba(0, 0, 0, 0.25) inset"
     ),
-
     unsafeChild("progress[value]::-webkit-progress-value")(
       backgroundColor(c"#428bca"),
       borderRadius(1 px),
       boxShadow := "0 2px 2px rgba(0, 0, 0, 0.25) inset"
     ),
-
     unsafeChild("progress[value]::-webkit-progress-ue")(
       backgroundColor(c"#428bca")
     ),
-
     unsafeChild("progress[value]::-webkit-progress-bar")(
       backgroundColor(c"#eee"),
       borderRadius(1 px),
       boxShadow := "0 2px 2px rgba(0, 0, 0, 0.25) inset"
     ),
-
     unsafeChild("progress::-moz-progress-bar")(
       backgroundColor(c"#428bca"),
       borderRadius(1 px),
       boxShadow := "0 2px 2px rgba(0, 0, 0, 0.25) inset"
     ),
-
     unsafeChild("span")(
       float.right
-    ),
-
+    )
   )
-
-}

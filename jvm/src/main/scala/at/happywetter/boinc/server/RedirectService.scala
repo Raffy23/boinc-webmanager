@@ -10,30 +10,28 @@ import org.http4s.headers.{Host, Location}
   * @author Raphael
   * @version 08.09.2017
   */
-object RedirectService {
+object RedirectService:
   import cats.effect._
   import org.http4s._
   import org.http4s.dsl.io._
 
-  def apply(config: Config): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(config: Config): HttpRoutes[IO] = HttpRoutes.of[IO]:
     case request =>
-      request.headers.get[Host] match {
+      request.headers.get[Host] match
         case Some(Host(host, _)) => MovedPermanently(buildUri(request, host, config.server.port))
-        case _ => BadRequest()
-      }
-  }
+        case _                   => BadRequest()
 
   private def buildUri(request: Request[IO], host: String, securePort: Int) = Location(
-    request.uri.copy(
-      scheme    = Some(Scheme.https),
-      authority = Some(
-        Authority(
-          request.uri.authority.flatMap(_.userInfo),
-          RegName(host),
-          port = Some(securePort)
+    request.uri
+      .copy(
+        scheme = Some(Scheme.https),
+        authority = Some(
+          Authority(
+            request.uri.authority.flatMap(_.userInfo),
+            RegName(host),
+            port = Some(securePort)
+          )
         )
       )
-    ).withPath(request.uri.path)
+      .withPath(request.uri.path)
   )
-
-}

@@ -9,7 +9,7 @@ import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitActi
   * @author Raphael
   * @version 20.07.2016
   */
-trait BoincCoreClient[F[_]] {
+trait BoincCoreClient[F[_]]:
 
   def getVersion: F[BoincVersion]
 
@@ -47,4 +47,3 @@ trait BoincCoreClient[F[_]] {
   def setAppConfig(url: String, config: AppConfig): F[Boolean]
 
   def quit(): F[Unit]
-}

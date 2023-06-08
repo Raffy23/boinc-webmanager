@@ -12,9 +12,9 @@ import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 
 import java.util.UUID
 
-object JobManagerRoutes extends ResponseEncodingHelper {
+object JobManagerRoutes extends ResponseEncodingHelper:
 
-  def apply(db: Database, manager: JobManager): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(db: Database, manager: JobManager): HttpRoutes[IO] = HttpRoutes.of[IO]:
 
     case req @ GET -> Root =>
       Ok(
@@ -37,29 +37,27 @@ object JobManagerRoutes extends ResponseEncodingHelper {
     case req @ POST -> Root / uuid / "start" =>
       val jobID = UUID.fromString(uuid)
 
-      manager.status(jobID).flatMap {
-        case Stopped => Ok(manager.start(jobID).as(""), req)
-        case Running => Ok("", req)
-      }
+      manager
+        .status(jobID)
+        .flatMap:
+          case Stopped => Ok(manager.start(jobID).as(""), req)
+          case Running => Ok("", req)
 
     case req @ POST -> Root / uuid / "stop" =>
       val jobID = UUID.fromString(uuid)
 
-      manager.status(jobID).flatMap {
-        case Stopped => Ok("", req)
-        case Running => Ok(manager.stop(jobID).as(""), req)
-      }
+      manager
+        .status(jobID)
+        .flatMap:
+          case Stopped => Ok("", req)
+          case Running => Ok(manager.stop(jobID).as(""), req)
 
     case req @ DELETE -> Root / uuid =>
       val jobID = UUID.fromString(uuid)
 
       Ok(
         db.jobs.delete(jobID) *>
-        manager.delete(jobID) *>
-        IO.pure(""),
+          manager.delete(jobID) *>
+          IO.pure(""),
         req
       )
-
-  }
-
-}

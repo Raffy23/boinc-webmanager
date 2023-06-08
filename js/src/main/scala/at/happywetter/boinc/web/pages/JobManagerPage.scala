@@ -13,7 +13,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 
-object JobManagerPage extends Layout {
+object JobManagerPage extends Layout:
 
   override val path: String = "jobs"
 
@@ -28,20 +28,17 @@ object JobManagerPage extends Layout {
 
   private val dataTable: DataTable[JobTableRow] = new DataTable[JobTableRow](tableHeaders, paged = true)
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     JobManagerClient
       .all()
       .map(dataTable.reactiveData := _)
       .foreach(_ => NProgress.done(true))
-  }
 
-  override def already(): Unit = {
+  override def already(): Unit =
     JobManagerClient.all().map(dataTable.reactiveData := _)
-  }
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     DashboardMenu.selectByMenuId("jobs")
-  }
 
   override def render: Elem =
     <div id="job_manager">
@@ -52,20 +49,19 @@ object JobManagerPage extends Layout {
 
       <div class={Style.floatingHeadbar.htmlClass}>
         {
-        new Tooltip(
-          Var("job_new_tooltip".localize),
-          <a href="#add-job" class={Style.floatingHeadbarButton.htmlClass} onclick={jsJobAddAction}>
+      new Tooltip(
+        Var("job_new_tooltip".localize),
+        <a href="#add-job" class={Style.floatingHeadbarButton.htmlClass} onclick={jsJobAddAction}>
             <i class="fa fa-plus-square"></i>
           </a>
-        ).toXML
-        }
+      ).toXML
+    }
       </div>
 
       {dataTable.component}
     </div>
 
-
-  private val jsJobAddAction: (Event) => Unit = (event) => {
+  private val jsJobAddAction: (Event) => Unit = event => {
     event.preventDefault()
     new JobAddDialog(jobOpt => {
       jobOpt.foreach(job => dataTable.reactiveData.update(l => job :: l))
@@ -84,6 +80,5 @@ object JobManagerPage extends Layout {
     r.map(job => dataTable.reactiveData.update(l => job :: l))
      .recover(_.printStackTrace())
      .foreach(_ => NProgress.done(true))
-    */
+     */
   }
-}

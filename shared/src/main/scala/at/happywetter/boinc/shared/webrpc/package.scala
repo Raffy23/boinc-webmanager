@@ -6,10 +6,12 @@ package at.happywetter.boinc.shared
   * @author Raphael
   * @version 04.03.2018
   */
-package object webrpc {
+package object webrpc:
 
-  case class ServerStatus(daemon_status: Seq[Daemon], database_file_states: DatabaseFileStates,
-                          tasks_by_app: Seq[ServerStatusApp])
+  case class ServerStatus(daemon_status: Seq[Daemon],
+                          database_file_states: DatabaseFileStates,
+                          tasks_by_app: Seq[ServerStatusApp]
+  )
 
   case class Daemon(host: String, command: String, status: String)
 
@@ -26,11 +28,17 @@ package object webrpc {
                                 hosts_with_recent_credit: Int,
                                 hosts_with_credit: Int,
                                 hosts_registered_in_past_24_hours: Int,
-                                current_floating_point_speed: Double)
+                                current_floating_point_speed: Double
+  )
 
-  case class ServerStatusApp(id: Int, name: String, unsent: Int, in_progress: Int, avg_runtime: Double,
-                             min_runtime: Double, max_runtime: Double, users: Int)
+  case class ServerStatusApp(id: Int,
+                             name: String,
+                             unsent: Int,
+                             in_progress: Int,
+                             avg_runtime: Double,
+                             min_runtime: Double,
+                             max_runtime: Double,
+                             users: Int
+  )
 
   final case class User(username: String, passwordHash: String, nonce: String)
-
-}

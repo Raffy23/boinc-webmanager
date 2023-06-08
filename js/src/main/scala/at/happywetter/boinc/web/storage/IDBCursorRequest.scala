@@ -2,7 +2,7 @@ package at.happywetter.boinc.web.storage
 
 import at.happywetter.boinc.web.storage.IDBCursorRequest.TransactionException
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{ErrorEvent, IDBCursorWithValue, IDBRequest}
+import org.scalajs.dom.{ErrorEvent, IDBCursorWithValue, IDBRequest}
 
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
@@ -13,34 +13,34 @@ import scala.scalajs.js
  * @author Raphael
  * @version 16.02.2020
  */
-object IDBCursorRequest {
+object IDBCursorRequest:
 
-  // TODO: 
-  class TransactionException(event: Event)
-    extends RuntimeException(s"${event.`type`}")
+  // TODO:
+  class TransactionException(event: Event) extends RuntimeException(s"${event.`type`}")
 
-  implicit class IDBRequestConverter(private val request: IDBRequest) extends AnyVal {
+  /* Just stopped working in Scala 3:
+  implicit class IDBRequestConverter(private val request: IDBRequest[_, _]) extends AnyVal {
     def toCursor[A]: IDBCursorRequest[A] = new IDBCursorRequest[A](request)
   }
+   */
 
-}
+  extension (request: IDBRequest[_, _]) def toCursor[A]: IDBCursorRequest[A] = new IDBCursorRequest[A](request)
 
-class IDBCursorRequest[A](val cursor: IDBRequest) {
+class IDBCursorRequest[A](val cursor: IDBRequest[_, _]):
 
-  def head[B](f: (IDBCursorWithValue, A) => B): Future[Option[B]] = {
+  def head[B](f: (IDBCursorWithValue[_], A) => B): Future[Option[B]] =
     val promise = Promise[Option[B]]()
     var result: Option[B] = None
 
     cursor.onsuccess = { event =>
-      val cursorResult = event.target.asInstanceOf[IDBRequest].result
-      if (cursorResult != null) {
-        val cursor  = cursorResult.asInstanceOf[IDBCursorWithValue]
+      val cursorResult = event.target.asInstanceOf[IDBRequest[_, IDBCursorWithValue[A]]].result
+      if (cursorResult != null)
+        val cursor = cursorResult
         val resultA = cursor.value.asInstanceOf[js.UndefOr[A]]
 
         resultA.toOption.foreach { resultA =>
           result = Some(f(cursor, resultA))
         }
-      }
     }
 
     cursor.transaction.oncomplete = { _ =>
@@ -49,19 +49,18 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
 
     cursor.transaction.onerror = { event =>
       // TODO: This changes from org.scalajs.dom.raw.ErrorEvent to org.scalajs.dom.raw.Event ?
-      promise.failure(new TransactionException(event.asInstanceOf[ErrorEvent]))
+      promise.failure(new TransactionException(event))
     }
 
     promise.future
-  }
 
-  def foreach(f: (IDBCursorWithValue, A) => Unit): Future[Unit] = {
+  def foreach(f: (IDBCursorWithValue[_], A) => Unit): Future[Unit] =
     val promise = Promise[Unit]()
 
     cursor.onsuccess = { event =>
-      val cursorResult = event.target.asInstanceOf[IDBRequest].result
-      if (cursorResult != null) {
-        val cursor  = cursorResult.asInstanceOf[IDBCursorWithValue]
+      val cursorResult = event.target.asInstanceOf[IDBRequest[_, IDBCursorWithValue[A]]].result
+      if (cursorResult != null)
+        val cursor = cursorResult
         val resultA = cursor.value.asInstanceOf[js.UndefOr[A]]
 
         resultA.toOption.foreach { resultA =>
@@ -69,7 +68,6 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
         }
 
         cursor.continue()
-      }
     }
 
     cursor.transaction.oncomplete = { _ =>
@@ -81,16 +79,15 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
     }
 
     promise.future
-  }
 
-  def map[B](f: A => B): Future[Seq[B]] = {
+  def map[B](f: A => B): Future[Seq[B]] =
     val promise = Promise[Seq[B]]()
-    var result  = List.empty[B]
+    var result = List.empty[B]
 
     cursor.onsuccess = { event =>
-      val cursorResult = event.target.asInstanceOf[IDBRequest].result
-      if (cursorResult != null) {
-        val cursor  = cursorResult.asInstanceOf[IDBCursorWithValue]
+      val cursorResult = event.target.asInstanceOf[IDBRequest[_, IDBCursorWithValue[A]]].result
+      if (cursorResult != null)
+        val cursor = cursorResult
         val resultA = cursor.value.asInstanceOf[js.UndefOr[A]]
 
         resultA.toOption.foreach { resultA =>
@@ -98,7 +95,6 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
         }
 
         cursor.continue()
-      }
     }
 
     cursor.transaction.oncomplete = { _ =>
@@ -110,16 +106,15 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
     }
 
     promise.future
-  }
 
-  def fold[B](start: B)(f: (B, IDBCursorWithValue, A) => B): Future[B] = {
+  def fold[B](start: B)(f: (B, IDBCursorWithValue[_], A) => B): Future[B] =
     val promise = Promise[B]()
-    var result  = start
+    var result = start
 
     cursor.onsuccess = { event =>
-      val cursorResult = event.target.asInstanceOf[IDBRequest].result
-      if (cursorResult != null) {
-        val cursor  = cursorResult.asInstanceOf[IDBCursorWithValue]
+      val cursorResult = event.target.asInstanceOf[IDBRequest[_, IDBCursorWithValue[A]]].result
+      if (cursorResult != null)
+        val cursor = cursorResult
         val resultA = cursor.value.asInstanceOf[js.UndefOr[A]]
 
         resultA.toOption.foreach { resultA =>
@@ -127,7 +122,6 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
         }
 
         cursor.continue()
-      }
     }
 
     cursor.transaction.oncomplete = { _ =>
@@ -139,6 +133,3 @@ class IDBCursorRequest[A](val cursor: IDBRequest) {
     }
 
     promise.future
-  }
-
-}

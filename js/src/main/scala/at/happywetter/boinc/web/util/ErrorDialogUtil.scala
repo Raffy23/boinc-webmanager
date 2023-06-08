@@ -12,36 +12,33 @@ import I18N._
   * @author Raphael
   * @version 21.09.2017
   */
-object ErrorDialogUtil {
+object ErrorDialogUtil:
   import XMLHelper._
 
-  val showDialog: PartialFunction[Throwable, Unit] = {
+  val showDialog: PartialFunction[Throwable, Unit] =
     case ex: FetchResponseException if ex.statusCode == 500 =>
       printStackTraceAndStopProgress(ex)
 
       new OkDialog("dialog_error_header".localize, List("server_connection_loss".localize))
-        .renderToBody().show()
+        .renderToBody()
+        .show()
 
     case ex: FetchResponseException =>
       printStackTraceAndStopProgress(ex)
 
       new OkDialog("dialog_error_header".localize, List(ex.reason.localize))
-        .renderToBody().show()
+        .renderToBody()
+        .show()
 
     case ex: Exception =>
       printStackTraceAndStopProgress(ex)
 
-      new OkDialog("dialog_error_header".localize, List(
-        "ups_something_went_wrong".localize, <br/>, ex.getLocalizedMessage)
+      new OkDialog("dialog_error_header".localize,
+                   List("ups_something_went_wrong".localize, <br/>, ex.getLocalizedMessage)
       ).renderToBody().show()
-
-  }
 
   def apply(): PartialFunction[Throwable, Unit] = ErrorDialogUtil.showDialog
 
-  private def printStackTraceAndStopProgress(ex: Throwable): Unit = {
+  private def printStackTraceAndStopProgress(ex: Throwable): Unit =
     NProgress.done(true)
     ex.printStackTrace()
-  }
-
-}

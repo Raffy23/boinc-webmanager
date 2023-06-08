@@ -12,12 +12,10 @@ import scala.language.implicitConversions
   * @author Raphael
   * @version 09.07.2019
   */
-object Implicits {
+object Implicits:
 
   implicit def convertStringToEntityBody(str: String): Entity[IO] =
     EntityEncoder.stringEncoder.toEntity(str)
 
   implicit def convertByteArrayToEntityBody(array: Array[Byte]): Entity[IO] =
     EntityEncoder.byteArrayEncoder.toEntity(array)
-
-}

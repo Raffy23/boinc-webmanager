@@ -20,7 +20,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
  * @author Raphael
  * @version 09.07.2020
  */
-object HostDetailsTableModel extends TableModel[HostDetails, HostDetailsTableRow] {
+object HostDetailsTableModel extends TableModel[HostDetails, HostDetailsTableRow]:
 
   override val header: List[(String, Boolean)] = List(
     ("name".localize, true),
@@ -34,9 +34,7 @@ object HostDetailsTableModel extends TableModel[HostDetails, HostDetailsTableRow
   override def convert(data: List[HostDetails]): List[HostDetailsTableRow] =
     data.map(new HostDetailsTableRow(_))
 
-}
-
-class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
+class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow:
 
   protected val jsEditAction: Event => Unit = event => {
     EditHostDetailsDialog(this).renderToBody().show()
@@ -46,16 +44,18 @@ class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
     new ConfirmDialog(
       "delete_host".localize,
       List(Text("delete_host_dialog_body".localize)),
-      (_) => {
+      _ => {
         NProgress.start()
-        ClientManager.removeClient(details.name).foreach(succ => {
-          NProgress.done(true)
+        ClientManager
+          .removeClient(details.name)
+          .foreach(succ => {
+            NProgress.done(true)
 
-          if (succ) this.weakTableRef.reactiveData.update(_.filterNot(_ == this))
-          else dom.window.alert("Error: Could not delete Host!")
-        })
+            if (succ) this.weakTableRef.reactiveData.update(_.filterNot(_ == this))
+            else dom.window.alert("Error: Could not delete Host!")
+          })
       },
-      (_) => {/* Do nothing */}
+      _ => { /* Do nothing */ }
     ).renderToBody().show()
   }
 
@@ -75,33 +75,34 @@ class HostDetailsTableRow(details: HostDetails) extends DataTable.TableRow {
     new IntegerColumn(port),
     new StringColumn(addedBy),
     new IntegerColumn(Var(details.errors)),
-    new TableColumn(Var(
-      <div>
+    new TableColumn(
+      Var(
+        <div>
         {
           Tooltip(Var("edit".localize),
-            <a onclick={jsEditAction}>
+                  <a onclick={jsEditAction}>
               <i class="fas fa-edit"></i>
             </a>
           )
         }
         {
           Tooltip(Var("direct_connection".localize),
-            <a onclick={jsDirectConnect}>
+                  <a onclick={jsDirectConnect}>
               <i class="fas fa-link"></i>
             </a>
           )
         }
         {
           Tooltip(Var("delete".localize),
-            <a onclick={jsDeleteAction}>
+                  <a onclick={jsDeleteAction}>
               <i class="fas fa-trash"></i>
             </a>
           )
         }
       </div>
-    ), this) {
+      ),
+      this
+    ) {
       override def compare(that: TableColumn): Int = 0
     }
   )
-
-}

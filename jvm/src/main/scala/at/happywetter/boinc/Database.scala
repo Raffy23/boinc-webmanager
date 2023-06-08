@@ -18,39 +18,38 @@ import java.util.Properties
  * @author Raphael
  * @version 02.07.2020
  */
-class Database private (xa: Transactor[IO], logger: SelfAwareStructuredLogger[IO]) {
+class Database private (xa: Transactor[IO], logger: SelfAwareStructuredLogger[IO]):
 
-  val clients  = new CoreClientRepository(xa)
+  val clients = new CoreClientRepository(xa)
   val projects = new ProjectRepository(xa)
   val jobs = new JobRepository(xa)
 
-}
-object Database {
+object Database:
 
   def apply(): Resource[IO, Database] =
     for {
       logger <- Resource.eval(Slf4jLogger.fromClass[IO](getClass))
 
       ce <- ExecutionContexts.fixedThreadPool[IO](4)
-      xa <- HikariTransactor.fromHikariConfig[IO]({
-        val properties = new Properties()
+      xa <- HikariTransactor.fromHikariConfig[IO](
+        {
+          val properties = new Properties()
 
-        ConfigFactory
-          .parseResources("database/database.conf")
-          .resolveWith(AppConfig.typesafeConfig)
-          .resolve()
-          .entrySet()
-          .forEach(entry => {
-            properties.put(entry.getKey, entry.getValue.unwrapped())
-          })
+          ConfigFactory
+            .parseResources("database/database.conf")
+            .resolveWith(AppConfig.typesafeConfig)
+            .resolve()
+            .entrySet()
+            .forEach(entry => {
+              properties.put(entry.getKey, entry.getValue.unwrapped())
+            })
 
-        new HikariConfig(properties)
-      }, ce)
+          new HikariConfig(properties)
+        },
+        ce
+      )
 
       database <- Resource.eval(
         IO.pure(new Database(xa, logger))
       )
-
     } yield database
-
-}

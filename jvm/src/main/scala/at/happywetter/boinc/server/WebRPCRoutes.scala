@@ -15,11 +15,11 @@ import at.happywetter.boinc.shared.parser._
   * @author Raphael
   * @version 09.07.2019
   */
-object WebRPCRoutes extends ResponseEncodingHelper {
+object WebRPCRoutes extends ResponseEncodingHelper:
 
   object ServerParamDecoder extends QueryParamDecoderMatcher[String]("server")
 
-  def apply(/*implicit conf: AppConfig.WebRPC*/): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply( /*implicit conf: AppConfig.WebRPC*/ ): HttpRoutes[IO] = HttpRoutes.of[IO]:
 
     case request @ GET -> Root => NotAcceptable()
 
@@ -28,7 +28,3 @@ object WebRPCRoutes extends ResponseEncodingHelper {
       println("        : " + server)
       println("========================================================")
       Ok(WebRPC.getServerStatus(server)(), request)
-
-  }
-
-}

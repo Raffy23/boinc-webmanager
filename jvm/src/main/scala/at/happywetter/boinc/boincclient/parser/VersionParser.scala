@@ -10,13 +10,11 @@ import scala.xml.NodeSeq
  * @author Raphael
  * @version 13.07.2020
  */
-object VersionParser {
+object VersionParser:
 
   def fromXML(node: NodeSeq): BoincVersion =
     BoincVersion(
       (node \ "major").text.toInt,
       (node \ "minor").text.toInt,
-      (node \ "release").text.toInt,
+      (node \ "release").text.toInt
     )
-
-}

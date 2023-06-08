@@ -15,7 +15,7 @@ import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.HTMLInputElement
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -30,48 +30,42 @@ import scala.xml.{Elem, Node}
   * @author Raphael
   * @version 13.09.2017
   */
-object BoincSwarmPage {
+object BoincSwarmPage:
 
   def link = "/view/swarm/boinc"
 
-  private sealed trait ComputingMode
+  sealed private trait ComputingMode
   private object GPU extends ComputingMode
   private object CPU extends ComputingMode
   private object Network extends ComputingMode
   private object RunMode extends ComputingMode
 
-  private object UICCState extends Enumeration {
-    val Enabled: UICCState.Value  = Value(CCState.State.Enabled.id)
-    val Auto: UICCState.Value     = Value(CCState.State.Auto.id)
+  private object UICCState extends Enumeration:
+    val Enabled: UICCState.Value = Value(CCState.State.Enabled.id)
+    val Auto: UICCState.Value = Value(CCState.State.Auto.id)
     val Disabled: UICCState.Value = Value(CCState.State.Disabled.id)
-    val Loading: UICCState.Value  = Value(-1)
-    val Error: UICCState.Value    = Value(-2)
-  }
+    val Loading: UICCState.Value = Value(-1)
+    val Error: UICCState.Value = Value(-2)
 
-  private def stateToText(state: UICCState.Value): String = state match {
-    //case UICCState.Always  => "always".localize
+  private def stateToText(state: UICCState.Value): String = state match
+    // case UICCState.Always  => "always".localize
     case UICCState.Auto     => "auto".localize
     case UICCState.Enabled  => "always".localize
     case UICCState.Disabled => "never".localize
-    case a => a.toString
-  }
+    case a                  => a.toString
 
-  private implicit def integerToCCState(value: Int): UICCState.Value = UICCState.apply(value)
+  implicit private def integerToCCState(value: Int): UICCState.Value = UICCState.apply(value)
 
-  private implicit def convertModetoUIState(mode: Modes.Value): UICCState.Value = mode match {
+  implicit private def convertModetoUIState(mode: Modes.Value): UICCState.Value = mode match
     case Modes.Auto    => UICCState.Auto
     case Modes.Always  => UICCState.Enabled
     case Modes.Never   => UICCState.Disabled
     case Modes.Restore => UICCState.Auto
-  }
 
-  private implicit class RichMode(val state: UICCState.Value) extends AnyVal {
+  implicit private class RichMode(val state: UICCState.Value) extends AnyVal:
     def toState: String = stateToText(state)
-  }
 
-}
-
-class BoincSwarmPage extends SwarmPageLayout {
+class BoincSwarmPage extends SwarmPageLayout:
   import BoincSwarmPage._
 
   override val header = "Boinc"
@@ -81,49 +75,45 @@ class BoincSwarmPage extends SwarmPageLayout {
   private val clients = Var(Map.empty[String, Var[Option[Either[ClientEntry, Exception]]]])
   private val checkAllState = Var(true)
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     super.beforeRender(params)
 
-    clients := ClientManager.clients.keys.map(name =>
-      (name, Var(Option.empty[Either[ClientEntry, Exception]]))
-    ).toMap
-  }
+    clients := ClientManager.clients.keys.map(name => (name, Var(Option.empty[Either[ClientEntry, Exception]]))).toMap
 
   override def already(): Unit = onRender()
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     NProgress.start()
 
-    ClientManager
-      .getClients
-      .map(_.map(boinc =>
-        boinc
-          .getCCState
-          .map { state =>
-            clients.map { clients =>
-              val data: Option[Either[ClientEntry, Exception]] = Some(
-                Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode))
-              )
+    ClientManager.getClients
+      .map(
+        _.map(boinc =>
+          boinc.getCCState
+            .map { state =>
+              clients.map { clients =>
+                val data: Option[Either[ClientEntry, Exception]] = Some(
+                  Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode))
+                )
 
-              if (clients.contains(boinc.hostname)) clients(boinc.hostname) := data
-              else this.clients.update(v => v.updated(boinc.hostname, Var(data)))
-            }.now
-          }.recover {
-            case ex: Exception =>
+                if (clients.contains(boinc.hostname)) clients(boinc.hostname) := data
+                else this.clients.update(v => v.updated(boinc.hostname, Var(data)))
+              }.now
+            }
+            .recover { case ex: Exception =>
               ex.printStackTrace()
 
               clients.map { clients =>
                 if (clients.contains(boinc.hostname)) clients(boinc.hostname) := Some(Right(ex))
                 else this.clients.update(v => v.updated(boinc.hostname, Var(Some(Right(ex)))))
               }.now
-          }
+            }
+        )
       )
-    ).foreach { x =>
-      Future.sequence(x).foreach(_ => NProgress.done(true))
-    }
-  }
+      .foreach { x =>
+        Future.sequence(x).foreach(_ => NProgress.done(true))
+      }
 
-  override def renderChildView: Elem = {
+  override def renderChildView: Elem =
     <div>
       <table class={TableTheme.table.htmlClass} id="swarm-host-choose-table" style="width:auto">
         <thead>
@@ -131,11 +121,11 @@ class BoincSwarmPage extends SwarmPageLayout {
             <th>
               <a class={Style.masterCheckbox.htmlClass} onclick={jsSelectAllListener}>
                 {
-                  new Tooltip(
-                    checkAllState.map(status => if (status) "check_all".localize else "uncheck_all".localize),
-                    <i class={checkAllState.map( state => s"far fa${ if (state) "-check" else ""}-square")} href="#select-all"></i>
-                  ).toXML
-                }
+      new Tooltip(
+        checkAllState.map(status => if (status) "check_all".localize else "uncheck_all".localize),
+        <i class={checkAllState.map(state => s"far fa${if (state) "-check" else ""}-square")} href="#select-all"></i>
+      ).toXML
+    }
               </a>
               <span style="float:left">{"table_host".localize}</span>
             </th>
@@ -146,15 +136,22 @@ class BoincSwarmPage extends SwarmPageLayout {
         </thead>
         <tbody>
           {
-            clients.map(_.toSeq.sortBy(_._1)(ord = StringLengthAlphaOrdering).map(client => {
-                <tr>
-                  <td><input class={Style.checkbox.htmlClass} type="checkbox" data-client={client._1}></input>{injectErrorTooltip(client)}</td>
+      clients.map(
+        _.toSeq
+          .sortBy(_._1)(ord = StringLengthAlphaOrdering)
+          .map(client => {
+            <tr>
+                  <td><input class={Style.checkbox.htmlClass} type="checkbox" data-client={client._1}></input>{
+              injectErrorTooltip(client)
+            }</td>
                   <td>{client._2.map(_.map(_.fold(_.run.toState, _ => "")).getOrElse("offline".localize))}</td>
                   <td>{client._2.map(_.map(_.fold(_.gpu.toState, _ => "")).getOrElse("offline".localize))}</td>
                   <td>{client._2.map(_.map(_.fold(_.net.toState, _ => "")).getOrElse("offline".localize))}</td>
                 </tr>
-            }).toSeq)
-          }
+          })
+          .toSeq
+      )
+    }
         </tbody>
       </table>
 
@@ -182,36 +179,36 @@ class BoincSwarmPage extends SwarmPageLayout {
         </tbody>
       </table>
     </div>
-  }
 
   // TODO: Code duplication with Dashboard, should move to own utility
-  private def injectErrorTooltip(client: (String, Var[Option[Either[ClientEntry, Exception]]])): Rx[Seq[Node]] = {
+  private def injectErrorTooltip(client: (String, Var[Option[Either[ClientEntry, Exception]]])): Rx[Seq[Node]] =
     val data = client._2
     val name = client._1
 
     data.map { dataOption =>
-      dataOption.map { data =>
-        data.fold(
-          _ => Seq(name.toXML),
-          ex =>
-            Seq(
-              ex match {
-                case _: FetchResponseException => Tooltip.warningTriangle("offline").toXML
-                case _ => Tooltip.warningTriangle("error".localize).toXML
-              },
-              name.toXML
-            )
-        )
-      }.getOrElse(
-        Seq(
-          <span style="padding-left:1em">
+      dataOption
+        .map { data =>
+          data.fold(
+            _ => Seq(name.toXML),
+            ex =>
+              Seq(
+                ex match {
+                  case _: FetchResponseException => Tooltip.warningTriangle("offline").toXML
+                  case _                         => Tooltip.warningTriangle("error".localize).toXML
+                },
+                name.toXML
+              )
+          )
+        }
+        .getOrElse(
+          Seq(
+            <span style="padding-left:1em">
             {Tooltip.loadingSpinner("loading").toXML}
           </span>,
-          name.toXML
+            name.toXML
+          )
         )
-      )
     }
-  }
 
   private def jsAction(status: ComputingMode, mode: Modes.Value): Event => Unit = event => {
     event.preventDefault()
@@ -221,33 +218,44 @@ class BoincSwarmPage extends SwarmPageLayout {
     val boxes = dom.document.querySelectorAll("#swarm-host-choose-table input[type='checkbox']")
     val changeList = new mutable.ArrayBuffer[Future[(String, ComputingMode, Boolean)]](boxes.length)
 
-    boxes.forEach( (node, _, _) => {
+    boxes.forEach((node, _, _) => {
       val checkBox = node.asInstanceOf[HTMLInputElement]
 
       if (checkBox.checked) {
-        val name = node.asInstanceOf[HTMLInputElement].dataset("client")
+        val name = node.asInstanceOf[HTMLInputElement].dataset.apply("client")
         val client = ClientManager.clients(name)
 
         val action = status match {
-          case CPU     => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(cpu = UICCState.Loading)))).now; client.setCpu(mode)
-          case GPU     => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(gpu = UICCState.Loading)))).now; client.setGpu(mode)
-          case Network => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(net = UICCState.Loading)))).now; client.setNetwork(mode)
-          case RunMode => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(run = UICCState.Loading)))).now; client.setRun(mode)
+          case CPU =>
+            clients.map(_(name).update(opt => transformToLoading(opt, _.copy(cpu = UICCState.Loading)))).now;
+            client.setCpu(mode)
+          case GPU =>
+            clients.map(_(name).update(opt => transformToLoading(opt, _.copy(gpu = UICCState.Loading)))).now;
+            client.setGpu(mode)
+          case Network =>
+            clients.map(_(name).update(opt => transformToLoading(opt, _.copy(net = UICCState.Loading)))).now;
+            client.setNetwork(mode)
+          case RunMode =>
+            clients.map(_(name).update(opt => transformToLoading(opt, _.copy(run = UICCState.Loading)))).now;
+            client.setRun(mode)
         }
 
         action.map { ret =>
           status match {
-            case CPU     if  ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(cpu = mode)))).now;
-            case GPU     if  ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(gpu = mode)))).now;
-            case Network if  ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(net = mode)))).now;
-            case RunMode if  ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(run = mode)))).now;
-            case _       if !ret =>
+            case CPU if ret     => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(cpu = mode)))).now;
+            case GPU if ret     => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(gpu = mode)))).now;
+            case Network if ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(net = mode)))).now;
+            case RunMode if ret => clients.map(_(name).update(opt => transformToLoading(opt, _.copy(run = mode)))).now;
+            case _ if !ret =>
               clients.map(_(name).update(opt => transformToLoading(opt, _.copy(cpu = UICCState.Error)))).now
               client.getCCState
                 .map { state =>
-                  clients.map(_(name) := Some(Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode))))
-                }.recover{
-                  case ex: Exception => clients.map(_(name) := Some(Right(ex)))
+                  clients.map(
+                    _(name) := Some(Left(ClientEntry(UICCState.Auto, state.taskMode, state.gpuMode, state.networkMode)))
+                  )
+                }
+                .recover { case ex: Exception =>
+                  clients.map(_(name) := Some(Right(ex)))
                 }
           }
 
@@ -271,10 +279,9 @@ class BoincSwarmPage extends SwarmPageLayout {
     checkAllState.update(!_)
   }
 
-  private def transformToLoading(entry: Option[Either[ClientEntry, Exception]], f: ClientEntry => ClientEntry): Option[Either[ClientEntry, Exception]] = entry match {
-      case None              => None
-      case Some(Right(_))    => None
-      case Some(Left(entry)) => Some(Left(f(entry)))
-  }
-
-}
+  private def transformToLoading(entry: Option[Either[ClientEntry, Exception]],
+                                 f: ClientEntry => ClientEntry
+  ): Option[Either[ClientEntry, Exception]] = entry match
+    case None              => None
+    case Some(Right(_))    => None
+    case Some(Left(entry)) => Some(Left(f(entry)))

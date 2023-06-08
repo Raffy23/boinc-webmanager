@@ -6,15 +6,8 @@ package at.happywetter.boinc.boincclient.webrpc
   * @author Raphael
   * @version 10.07.2019
   */
-object ProjectRules {
+object ProjectRules:
 
   val UseXMLParser = 1
   val UseHtmlParser = 2
   val UseXMLParserForEmbeddedXML = 3
-
-
-
-
-
-
-}

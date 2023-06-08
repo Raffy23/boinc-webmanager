@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object Tooltip extends StyleDefinitions {
+object Tooltip extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "tooltip"
+  implicit override protected[this] val prefix: String = "tooltip"
 
   val errorIcon = CSSIdentifier("error")
   val loadingIcon = CSSIdentifier("loading")
@@ -21,5 +21,3 @@ object Tooltip extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(errorIcon, tooltipText, tooltip, topText, leftText, loadingIcon)
-
-}

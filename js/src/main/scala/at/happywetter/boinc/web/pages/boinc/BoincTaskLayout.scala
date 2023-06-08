@@ -22,7 +22,7 @@ import Ordering.Double.TotalOrdering
   * @author Raphael
   * @version 01.08.2017
   */
-class BoincTaskLayout extends BoincClientLayout {
+class BoincTaskLayout extends BoincClientLayout:
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "tasks"
@@ -42,7 +42,7 @@ class BoincTaskLayout extends BoincClientLayout {
   private var fullSyncHandle: Int = _
   private val dataTable: DataTable[WuTableRow] = new DataTable[WuTableRow](tableHeaders, paged = true)
 
-  private class HeaderBarData {
+  private class HeaderBarData:
     var toCompute: Int = 0
     var inProgress: Int = 0
     var inTransfer: Int = 0
@@ -54,155 +54,152 @@ class BoincTaskLayout extends BoincClientLayout {
     def updateInTransfer(value: Int): HeaderBarData = { inTransfer = inTransfer + value; this }
     def updateFinished(value: Int): HeaderBarData = { finished = finished + value; this }
     def updateAllTasks(value: Int): HeaderBarData = { allTasks = allTasks + value; this }
-  }
 
-  private val headBarData  = Var(new HeaderBarData)
+  private val headBarData = Var(new HeaderBarData)
 
-  private def loadResults(): Unit = {
+  private def loadResults(): Unit =
     NProgress.start()
 
-    boinc.getTasks(active = false).map(results => {
-      dataTable.reactiveData := results.sortBy(f => f.activeTask.map(t => -t.done).getOrElse(0D))
+    boinc
+      .getTasks(active = false)
+      .map(results => {
+        dataTable.reactiveData := results.sortBy(f => f.activeTask.map(t => -t.done).getOrElse(0d))
 
-      val data = new HeaderBarData
-      results.foreach(x => updateTaskHeadline(data, x))
-      data.updateAllTasks(results.size)
+        val data = new HeaderBarData
+        results.foreach(x => updateTaskHeadline(data, x))
+        data.updateAllTasks(results.size)
 
-      headBarData := data
+        headBarData := data
 
-      NProgress.done(true)
-    }).recover(ErrorDialogUtil.showDialog)
-  }
+        NProgress.done(true)
+      })
+      .recover(ErrorDialogUtil.showDialog)
 
-  override def render: Elem = {
+  override def render: Elem =
     <div id="workunits">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-tasks" aria-hidden="true"></i>
         {"workunit_header".localize}
         <span style="font-size:16px">
           {
-            new Tooltip(
-              Var("tasks_in_progress".localize),
-              <span>
+      new Tooltip(
+        Var("tasks_in_progress".localize),
+        <span>
                 {headBarData.map(_.inProgress)}
                 <i class="fa fa-cogs" style="margin-left:2px"></i>
               </span>
-            ).toXML
-          }
+      ).toXML
+    }
           {
-            new Tooltip(
-              Var("tasks_in_transfer".localize),
-              <span>
+      new Tooltip(
+        Var("tasks_in_transfer".localize),
+        <span>
                 {headBarData.map(_.inTransfer)}
                 <i class="fa fa-exchange-alt" style="margin-left:2px"></i>
               </span>
-            ).toXML
-          }
+      ).toXML
+    }
           {
-            new Tooltip(
-              Var("tasks_to_compute".localize),
-              <span>
+      new Tooltip(
+        Var("tasks_to_compute".localize),
+        <span>
                 {headBarData.map(_.toCompute)}
                 <i class="fa fa-tasks" style="margin-left:2px"></i>
               </span>
-            ).toXML
-          }
+      ).toXML
+    }
           {
-            new Tooltip(
-              Var("all_tasks".localize),
-              <span>
+      new Tooltip(
+        Var("all_tasks".localize),
+        <span>
                 {headBarData.map(_.allTasks)}
                 <i class="fa fa-globe" style="margin-left:2px"></i>
               </span>
-            ).toXML
-          }
+      ).toXML
+    }
         </span>
       </h2>
       {dataTable.component}
     </div>
-  }
 
-  private def updateTaskHeadline(data: HeaderBarData, result: Result, _value: Int = 1): Unit = {
-    Result.State(result.state) match {
+  private def updateTaskHeadline(data: HeaderBarData, result: Result, _value: Int = 1): Unit =
+    Result.State(result.state) match
       case Result.State.Result_New => data.updateToCompute(_value)
       case Result.State.Result_Files_Downloaded =>
-
-        result.activeTask.foreach(task => Result.ActiveTaskState(task.activeTaskState) match {
-          case Result.ActiveTaskState.PROCESS_EXECUTING => data.updateInProgress(_value)
-          case Result.ActiveTaskState.PROCESS_SUSPENDED => data.updateToCompute(_value)
-          case Result.ActiveTaskState.PROCESS_EXITED => data.updateToCompute(_value)
-          case Result.ActiveTaskState.PROCESS_UNINITIALIZED =>  data.updateToCompute(_value)
-          case _ => data.updateFinished(_value)
-        })
+        result.activeTask.foreach(task =>
+          Result.ActiveTaskState(task.activeTaskState) match {
+            case Result.ActiveTaskState.PROCESS_EXECUTING     => data.updateInProgress(_value)
+            case Result.ActiveTaskState.PROCESS_SUSPENDED     => data.updateToCompute(_value)
+            case Result.ActiveTaskState.PROCESS_EXITED        => data.updateToCompute(_value)
+            case Result.ActiveTaskState.PROCESS_UNINITIALIZED => data.updateToCompute(_value)
+            case _                                            => data.updateFinished(_value)
+          }
+        )
 
         if (result.activeTask.isEmpty)
           data.updateToCompute(_value)
 
-      case Result.State.Result_Files_Uploaded => data.updateInTransfer(_value)
-      case Result.State.Result_Files_Uploading => data.updateInTransfer(_value)
+      case Result.State.Result_Files_Uploaded   => data.updateInTransfer(_value)
+      case Result.State.Result_Files_Uploading  => data.updateInTransfer(_value)
       case Result.State.Result_File_Downloading => data.updateInTransfer(_value)
-      case Result.State.Result_Upload_Failed => data.updateInTransfer(_value)
-      case x => dom.console.log("Unknown Result state: " + x)
-    }
-  }
+      case Result.State.Result_Upload_Failed    => data.updateInTransfer(_value)
+      case x                                    => dom.console.log("Unknown Result state: " + x)
 
-
-  private def updateActiveTasks(): Unit = {
+  private def updateActiveTasks(): Unit =
     val client = ClientManager.clients(boincClientName)
 
-    client.getTasks().foreach(result => {
-      result.foreach(task => {
-        dataTable.reactiveData.now.find(_.result.name.now == task.name).foreach{ current =>
-          Result.State(current.result.state.now) match {
-            case Result.State.Result_New => headBarData.update(_.updateToCompute(-1))
-            case Result.State.Result_Files_Downloaded =>
+    client
+      .getTasks()
+      .foreach(result => {
+        result.foreach(task => {
+          dataTable.reactiveData.now.find(_.result.name.now == task.name).foreach { current =>
+            Result.State(current.result.state.now) match {
+              case Result.State.Result_New => headBarData.update(_.updateToCompute(-1))
+              case Result.State.Result_Files_Downloaded =>
+                current.result.activeTask.map(
+                  _.foreach(task =>
+                    Result.ActiveTaskState(task.activeTaskState) match {
+                      case Result.ActiveTaskState.PROCESS_EXECUTING     => headBarData.update(_.updateInProgress(-1))
+                      case Result.ActiveTaskState.PROCESS_SUSPENDED     => headBarData.update(_.updateToCompute(-1))
+                      case Result.ActiveTaskState.PROCESS_EXITED        => headBarData.update(_.updateToCompute(-1))
+                      case Result.ActiveTaskState.PROCESS_UNINITIALIZED => headBarData.update(_.updateToCompute(-1))
+                      case _                                            => headBarData.update(_.updateFinished(-1));
+                    }
+                  )
+                )
 
-              current.result.activeTask.map(_.foreach(task => Result.ActiveTaskState(task.activeTaskState) match {
-                case Result.ActiveTaskState.PROCESS_EXECUTING => headBarData.update(_.updateInProgress(-1))
-                case Result.ActiveTaskState.PROCESS_SUSPENDED => headBarData.update(_.updateToCompute(-1))
-                case Result.ActiveTaskState.PROCESS_EXITED => headBarData.update(_.updateToCompute(-1))
-                case Result.ActiveTaskState.PROCESS_UNINITIALIZED =>  headBarData.update(_.updateToCompute(-1))
-                case _ => headBarData.update(_.updateFinished(-1));
-              }))
+                current.result.activeTask.map(x =>
+                  if (x.isEmpty)
+                    headBarData.update(_.updateToCompute(-1))
+                )
 
-              current.result.activeTask.map(x =>
-                if( x.isEmpty)
-                  headBarData.update(_.updateToCompute(-1))
-              )
+              case Result.State.Result_Files_Uploaded   => headBarData.update(_.updateInTransfer(-1))
+              case Result.State.Result_Files_Uploading  => headBarData.update(_.updateInTransfer(-1))
+              case Result.State.Result_File_Downloading => headBarData.update(_.updateInTransfer(-1))
+              case Result.State.Result_Upload_Failed    => headBarData.update(_.updateInTransfer(-1))
+            }
 
-            case Result.State.Result_Files_Uploaded => headBarData.update(_.updateInTransfer(-1))
-            case Result.State.Result_Files_Uploading => headBarData.update(_.updateInTransfer(-1))
-            case Result.State.Result_File_Downloading => headBarData.update(_.updateInTransfer(-1))
-            case Result.State.Result_Upload_Failed => headBarData.update(_.updateInTransfer(-1))
+            current.result.activeTask := task.activeTask
+            current.result.remainingCPU := task.remainingCPU
+            current.result.supsended := task.supsended
+            current.result.state := task.state
           }
 
-
-          current.result.activeTask := task.activeTask
-          current.result.remainingCPU := task.remainingCPU
-          current.result.supsended := task.supsended
-          current.result.state := task.state
-        }
-
+        })
       })
-    })
-  }
 
   private def syncTaskViewWithServer(): Unit = loadResults()
 
-  override def after(): Unit = {
+  override def after(): Unit =
     loadResults()
 
     refreshHandle = dom.window.setInterval(() => updateActiveTasks(), GlobalOptions.refreshDetailPageTimeout)
-    fullSyncHandle = dom.window.setInterval(() => syncTaskViewWithServer(), GlobalOptions.refreshDetailPageFullSyncTimeout)
-  }
+    fullSyncHandle =
+      dom.window.setInterval(() => syncTaskViewWithServer(), GlobalOptions.refreshDetailPageFullSyncTimeout)
 
-  override def leave(): Unit = {
+  override def leave(): Unit =
     dom.window.clearInterval(refreshHandle)
     dom.window.clearInterval(fullSyncHandle)
-  }
 
-  override def already(): Unit = {
+  override def already(): Unit =
     syncTaskViewWithServer()
-  }
-
-}

@@ -11,14 +11,14 @@ import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N.TranslatableString
 import mhtml.Var
-import org.scalajs.dom.raw.Event
+import org.scalajs.dom.Event
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.language.implicitConversions
 import at.happywetter.boinc.web.util.RichRx._
 
-object JobTableModel {
+object JobTableModel:
 
-  class JobTableRow(entry: Job) extends DataTable.TableRow {
+  class JobTableRow(entry: Job) extends DataTable.TableRow:
 
     protected val reactiveState: Var[jobs.JobStatus] = Var(entry.status)
 
@@ -29,52 +29,50 @@ object JobTableModel {
       new StringColumn(Var(entry.action.toString)),
       new StringColumn(reactiveState.map(_.toString)),
       new TableColumn(
-        Var (
+        Var(
           <div>
             {
-              new Tooltip(
-                reactiveState.map {
-                  case Running    => "job_stop".localize
-                  case Stopped    => "job_start".localize
-                  case Errored(_) => "job_start".localize
-                },
-                <a href="#change-job-state" onclick={jsChangeStateJobAction}>
+            new Tooltip(
+              reactiveState.map {
+                case Running    => "job_stop".localize
+                case Stopped    => "job_start".localize
+                case Errored(_) => "job_start".localize
+              },
+              <a href="#change-job-state" onclick={jsChangeStateJobAction}>
                   <i class={
-                    reactiveState.map {
-                      case Running    => "fas fa-stop-circle"
-                      case Stopped    => "fas fa-play-circle"
-                      case Errored(_) => "fas fa-play-circle"
-                    }
-                  }></i>
+                reactiveState.map {
+                  case Running    => "fas fa-stop-circle"
+                  case Stopped    => "fas fa-play-circle"
+                  case Errored(_) => "fas fa-play-circle"
+                }
+              }></i>
                 </a>
-              ).toXML
-            }{
-              new Tooltip(
-                Var("job_info".localize),
-                <a href="#job-info" onclick={jsJobDetailAction}>
+            ).toXML
+          }{
+            new Tooltip(
+              Var("job_info".localize),
+              <a href="#job-info" onclick={jsJobDetailAction}>
                   <i class="fas fa-info-circle"></i>
                 </a>
-              ).toXML
-            }
+            ).toXML
+          }
           </div>
-
-        )
-        , this) {
+        ),
+        this
+      ) {
         override def compare(that: TableColumn): Int = ???
       }
     )
 
-    private lazy val jsChangeStateJobAction: (Event) => Unit = (event) => {
+    private lazy val jsChangeStateJobAction: (Event) => Unit = event => {
       event.preventDefault()
       NProgress.start()
 
-      val action = {
-        reactiveState.now match {
+      val action =
+        reactiveState.now match
           case Running    => JobManagerClient.stop(entry).map(_ => Stopped)
           case Stopped    => JobManagerClient.start(entry).map(_ => Running)
           case Errored(_) => JobManagerClient.start(entry).map(_ => Running)
-        }
-      }
 
       action
         .foreach { status =>
@@ -83,7 +81,7 @@ object JobTableModel {
         }
     }
 
-    private lazy val jsJobDetailAction: (Event) => Unit = (event) => {
+    private lazy val jsJobDetailAction: (Event) => Unit = event => {
       event.preventDefault()
 
       new OkDialog(
@@ -101,8 +99,8 @@ object JobTableModel {
                 <td>
                   <ul>
                     {
-                      entry.action.hosts.map(host => <li>{host}</li>)
-                    }
+            entry.action.hosts.map(host => <li>{host}</li>)
+          }
                   </ul>
                 </td>
               </tr>
@@ -118,14 +116,14 @@ object JobTableModel {
                 </a>
               </li>
             </ul>
-          </div>,
+          </div>
         )
       ).renderToBody()
-       .show()
+        .show()
 
     }
 
-    private val jsDeleteJobAction: (Event) => Unit = (event) => {
+    private val jsDeleteJobAction: (Event) => Unit = event => {
       event.preventDefault()
       NProgress.start()
 
@@ -138,10 +136,6 @@ object JobTableModel {
         }
     }
 
-  }
-
   implicit def job2TableRow(job: Job): JobTableRow = new JobTableRow(job)
 
   implicit def jobList2TableRows(jobs: List[Job]): List[JobTableRow] = jobs.map(job2TableRow)
-
-}

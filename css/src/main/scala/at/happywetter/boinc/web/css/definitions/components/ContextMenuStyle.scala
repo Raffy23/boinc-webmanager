@@ -8,14 +8,12 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object ContextMenuStyle extends StyleDefinitions {
+object ContextMenuStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "context_menu"
+  implicit override protected[this] val prefix: String = "context_menu"
 
   val contextMenu = CSSIdentifier("")
   val elem = CSSIdentifier("element")
 
   override private[css] def styles =
     Seq(contextMenu, elem)
-
-}

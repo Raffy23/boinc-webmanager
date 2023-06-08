@@ -2,7 +2,7 @@ package at.happywetter.boinc.server
 
 import cats.effect.IO
 import org.http4s.dsl.io._
-import org.http4s.headers.{Location, `Content-Type`, `Last-Modified`}
+import org.http4s.headers.{`Content-Type`, `Last-Modified`, Location}
 import org.http4s.{Charset, Headers, HttpRoutes, MediaType, Response, StaticFile, Uri}
 
 /**
@@ -11,26 +11,22 @@ import org.http4s.{Charset, Headers, HttpRoutes, MediaType, Response, StaticFile
  * @author Raphael
  * @version 30.06.2020
  */
-object SwaggerRoutes {
+object SwaggerRoutes:
 
   private val SWAGGER_VERSION = "4.18.1"
 
-  def redirectToEndpoint(): IO[Response[IO]] = {
-    //val queryParameters = Map("url" -> Seq("swagger-config.yaml"))
+  def redirectToEndpoint(): IO[Response[IO]] =
+    // val queryParameters = Map("url" -> Seq("swagger-config.yaml"))
     Uri
       .fromString(s"/swagger/")
       // .map(uri => uri.setQueryParams(queryParameters))
       .map(uri => PermanentRedirect(Location(uri)))
       .getOrElse(NotFound())
-  }
 
-  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO] {
+  def apply(): HttpRoutes[IO] = HttpRoutes.of[IO]:
 
     case GET -> Root =>
-      Ok(indexHtmlContent,
-        `Content-Type`(MediaType.text.html, Charset.`UTF-8`),
-        `Last-Modified`(bootUpDate),
-      )
+      Ok(indexHtmlContent, `Content-Type`(MediaType.text.html, Charset.`UTF-8`), `Last-Modified`(bootUpDate))
 
     case GET -> Root / file ~ "yaml" =>
       StaticFile
@@ -42,8 +38,6 @@ object SwaggerRoutes {
       StaticFile
         .fromResource[IO](filePath)
         .getOrElseF(NotFound())
-
-  }
 
   private val indexHtmlContent =
     """<!-- Custom version of swagger-ui index.html -->
@@ -108,5 +102,3 @@ object SwaggerRoutes {
       |  </body>
       |</html>
       |""".stripMargin
-
-}

@@ -15,13 +15,13 @@ import scala.util.Try
   * @author Raphael
   * @version 29.08.2017
   */
-object LanguageDataProvider {
+object LanguageDataProvider:
 
   val fallbackLanguage: String = Locale.English
-  val languageData = new mutable.HashMap[String,Map[String,String]]()
+  val languageData = new mutable.HashMap[String, Map[String, String]]()
   var available = new ListBuffer[(String, String, String)]
 
-  def bootstrap: Future[Map[String,String]] = {
+  def bootstrap: Future[Map[String, String]] =
     fetchAvailableLanguages
       .flatMap(languages => {
         languages.foreach(available += _)
@@ -33,20 +33,18 @@ object LanguageDataProvider {
         languageData.put(Locale.current, lang)
         lang
       })
-  }
 
   def loadLanguage(lang: String): Future[Map[String, String]] =
     if (languageData.keys.exists(_ == lang)) Future { languageData(lang) }
-    else fetchLanguage(lang).map(data => {languageData.put(lang, data); data})
+    else fetchLanguage(lang).map(data => { languageData.put(lang, data); data })
 
   def fetchAvailableLanguages: Future[List[(String, String, String)]] =
-    FetchHelper.get[List[(String, String, String)]]("/language").recover{
-      case ex: Exception =>
-        ex.printStackTrace()
-        List.empty
-    }
+    FetchHelper
+      .get[List[(String, String, String)]]("/language")
+      .recover:
+        case ex: Exception =>
+          ex.printStackTrace()
+          List.empty
 
   private def fetchLanguage(lang: String = Locale.current): Future[Map[String, String]] =
     FetchHelper.get[Map[String, String]]("/language/" + lang)
-
-}

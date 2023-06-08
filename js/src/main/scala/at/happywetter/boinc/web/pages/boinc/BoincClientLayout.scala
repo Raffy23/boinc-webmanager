@@ -19,15 +19,13 @@ import scala.util.Try
   * @author Raphael
   * @version 31.07.2017
   */
-object BoincClientLayout {
+object BoincClientLayout:
 
   def link(client: String, path: String): String = s"/view/boinc-client/${dom.window.encodeURIComponent(client)}/$path"
 
   def link(client: String): String = s"/view/boinc-client/${dom.window.encodeURIComponent(client)}"
 
-}
-
-abstract class BoincClientLayout extends Layout {
+abstract class BoincClientLayout extends Layout:
 
   implicit var boincClientName: String = _
 
@@ -35,48 +33,39 @@ abstract class BoincClientLayout extends Layout {
     s"/view/boinc-client/${dom.window.encodeURIComponent(host)}/$path"
 
   override def link: String =
-    if(boincClientName != null)
+    if (boincClientName != null)
       linkForHost(boincClientName)
     else
       s"/view/boinc-client/:client/$path"
 
-  protected implicit var boinc: BoincClient = _
+  implicit protected var boinc: BoincClient = _
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
-    if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]]) {
+  override def beforeRender(params: Dictionary[String]): Unit =
+    if (params == null || js.undefined == params.asInstanceOf[js.UndefOr[Dictionary[String]]])
       dom.console.error("Unable to instantiate Boinc Client Layout without params!")
-      if (boinc == null) {
+      if (boinc == null)
         dom.console.error("No Fallback Client from prev. view, falling back to Dashboard!")
         AppRouter.navigate(Dashboard)
-      }
-
-    } else {
+    else
       parse(params)
       BoincRootLayout.currentController = this
-    }
 
     BoincTopNavigation.clientName := boincClientName
     BoincTopNavigation.render(Some(path))
-  }
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit =
     DashboardMenuBuilder.afterRenderHooks += (() => DashboardMenu.selectMenuItemByContent(boincClientName))
-    super.before(() => {parse(params); done()}, params)
-  }
+    super.before(() => { parse(params); done() }, params)
 
-  private def parse(params: js.Dictionary[String]): Unit = {
-    if(params == null)
+  private def parse(params: js.Dictionary[String]): Unit =
+    if (params == null)
       return
 
     boincClientName = params.get("client").get
 
     Try(
       this.boinc = ClientManager.clients(boincClientName)
-    ).recover{
+    ).recover:
       case e: Exception =>
         ErrorDialogUtil.showDialog(e)
         AppRouter.navigate(Dashboard)
-    }
-  }
-
-}

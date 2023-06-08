@@ -7,18 +7,13 @@ import upickle.default._
 import java.util.UUID
 import scala.language.implicitConversions
 
-object JobDTO {
+object JobDTO:
 
   // Database Record
-  case class Job(uuid: UUID, contents: Array[Byte]) {
+  case class Job(uuid: UUID, contents: Array[Byte]):
     def toRPC: rpc.jobs.Job = readBinary[rpc.jobs.Job](contents)
-  }
 
-  implicit class JobConverter(private val job: rpc.jobs.Job) extends AnyVal {
-    def toDB: Job = {
+  implicit class JobConverter(private val job: rpc.jobs.Job) extends AnyVal:
+    def toDB: Job =
       val jobUUID = job.id.getOrElse(UUID.randomUUID())
       Job(jobUUID, writeBinary(job.copy(id = Some(jobUUID))))
-    }
-  }
-
-}

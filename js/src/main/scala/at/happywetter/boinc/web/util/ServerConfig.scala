@@ -13,7 +13,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 20.09.2017
   */
-object ServerConfig {
+object ServerConfig:
   val config: Var[ServerSharedConfig] = Var(
     ServerSharedConfig(12 * 60 * 60 * 1000, hardware = false)
   )
@@ -26,5 +26,3 @@ object ServerConfig {
 
   def queryFromServer: Future[ServerSharedConfig] =
     FetchHelper.get[ServerSharedConfig]("/api/config")
-
-}

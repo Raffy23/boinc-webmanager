@@ -8,7 +8,7 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-object JobManagerClient {
+object JobManagerClient:
 
   def all(): Future[List[Job]] =
     FetchHelper.get[List[Job]]("/jobs")
@@ -26,5 +26,3 @@ object JobManagerClient {
 
   def delete(job: Job): Future[String] =
     FetchHelper.delete[String](s"/jobs/${job.id.get}")
-
-}

@@ -1,23 +1,30 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
+import at.happywetter.boinc.shared.boincrpc.DayEntry
+import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
 import at.happywetter.boinc.web.boincclient.BoincFormatter
 import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.css.definitions.components.FloatingMenu
-import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincSwarmPageStyle, BoincGlobalPrefsStyle => Style}
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.XMLHelper._
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.css.definitions.pages.BoincSwarmPageStyle
+import at.happywetter.boinc.web.css.definitions.pages.{BoincGlobalPrefsStyle => Style}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.{Rx, Var}
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
+import mhtml.Rx
+import mhtml.Var
 import org.scalajs.dom
-import org.scalajs.dom.{Event, document, window}
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.document
+import org.scalajs.dom.window
 
 import scala.language.postfixOps
-import scala.xml.{Elem, Node}
+import scala.xml.Elem
+import scala.xml.Node
 
 /**
   * Created by: 
@@ -25,24 +32,53 @@ import scala.xml.{Elem, Node}
   * @author Raphael
   * @version 26.08.2017
   */
-class BoincGlobalPrefsLayout extends BoincClientLayout {
+class BoincGlobalPrefsLayout extends BoincClientLayout:
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "global_prefs"
 
   private val globalPrefsOverride = Var(
-    GlobalPrefsOverride(false,0D,0D,false,false,0D,0D,false,false,0D,0D,0D,0D,0D,0D,0D,0D, 0D,0D,0D,0D,0D,0D,0,false,(-1D,-1D),(-1D,-1D),List.empty)
+    GlobalPrefsOverride(false,
+                        0d,
+                        0d,
+                        false,
+                        false,
+                        0d,
+                        0d,
+                        false,
+                        false,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0d,
+                        0,
+                        false,
+                        (-1d, -1d),
+                        (-1d, -1d),
+                        List.empty,
+                        0.0
+    )
   )
 
   override def already(): Unit = onRender()
 
-  override def render: Elem = {
+  override def render: Elem =
     @inline def v[T](x: GlobalPrefsOverride => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
     @inline def b[T](x: GlobalPrefsOverride => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
     @inline def r[T](x: GlobalPrefsOverride => T): Rx[T] = globalPrefsOverride.map(x)
 
     @inline def orDefault[T](x: GlobalPrefsOverride => Double, default: String = ""): Rx[String] =
-      globalPrefsOverride.map(x.andThen(d => if (d > 0D) d.toString else ""))
+      globalPrefsOverride.map(x.andThen(d => if (d > 0d) d.toString else ""))
 
     <div id="global_prefs" class={Style.rootPane.htmlClass}>
       <div class={Seq(FloatingMenu.root.htmlClass, BoincClientStyle.inTextIcon).mkString(" ")}>
@@ -166,25 +202,25 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
         <input class={Style.input.htmlClass} id="cpu_end" placeholder="24:00"/>
         <br/>
         {
-          globalPrefsOverride.map(globalPrefsOverride => {
-            val itr = globalPrefsOverride.dayPrefs.iterator;
-            var cur = itr.nextOption()
+      globalPrefsOverride.map(globalPrefsOverride => {
+        val itr = globalPrefsOverride.dayPrefs.iterator;
+        var cur = itr.nextOption()
 
-            (1 to 7).map { dayIndex =>
-              val day = cur.getOrElse(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)))
+        (1 to 7).map { dayIndex =>
+          val day = cur.getOrElse(DayEntry(dayIndex, (-1d, -1d), (-1d, -1d)))
 
-              var r: Node = null
-              if (day.day == dayIndex) {
-                r = renderDay(day, _.cpu, "cpu")
-                cur = itr.nextOption()
-              } else {
-                r = renderDay(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)), _.cpu, "cpu")
-              }
+          var r: Node = null
+          if (day.day == dayIndex) {
+            r = renderDay(day, _.cpu, "cpu")
+            cur = itr.nextOption()
+          } else {
+            r = renderDay(DayEntry(dayIndex, (-1d, -1d), (-1d, -1d)), _.cpu, "cpu")
+          }
 
-              r
-            }
-          })
+          r
         }
+      })
+    }
       </div>
       <br/>
       <br/>
@@ -196,43 +232,45 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
         <input class={Style.input.htmlClass} id="network_end" placeholder="24:00"/>
         <br/>
         {
-          globalPrefsOverride.map(globalPrefsOverride => {
-            val itr = globalPrefsOverride.dayPrefs.iterator;
-            var cur = itr.nextOption()
+      globalPrefsOverride.map(globalPrefsOverride => {
+        val itr = globalPrefsOverride.dayPrefs.iterator;
+        var cur = itr.nextOption()
 
-            (1 to 7).map { dayIndex =>
-              val day = cur.getOrElse(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)))
+        (1 to 7).map { dayIndex =>
+          val day = cur.getOrElse(DayEntry(dayIndex, (-1d, -1d), (-1d, -1d)))
 
-              var r: Node = null
-              if (day.day == dayIndex) {
-                r = renderDay(day, _.network, "net")
-                cur = itr.nextOption()
-              } else {
-                r = renderDay(DayEntry(dayIndex, (-1D, -1D), (-1D, -1D)), _.network, "net")
-              }
+          var r: Node = null
+          if (day.day == dayIndex) {
+            r = renderDay(day, _.network, "net")
+            cur = itr.nextOption()
+          } else {
+            r = renderDay(DayEntry(dayIndex, (-1d, -1d), (-1d, -1d)), _.network, "net")
+          }
 
-              r
-            }
-          })
+          r
         }
+      })
+    }
       </div>
     </div>
-  }
 
-  private def renderDay(day: DayEntry, f: DayEntry => (Double,Double), prefix: String): Node = {
+  private def renderDay(day: DayEntry, f: DayEntry => (Double, Double), prefix: String): Node =
     @inline def fmt(double: Double): String = if (double > 0) double.toTimeHHMM else ""
 
     <span>{weekday(day).localize}:
       <label for={s"${prefix}_start_${day.day}"}>{"from".localize}</label>
-      <input class={Style.input.htmlClass} id={s"${prefix}_start_${day.day}"} placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._1)}/>
+      <input class={Style.input.htmlClass} id={
+      s"${prefix}_start_${day.day}"
+    } placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._1)}/>
       <label for={s"${prefix}_end_${day.day}"}>{"to".localize}</label>
-      <input class={Style.input.htmlClass} id={s"${prefix}_end_${day.day}"} placeholder="24:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._2)}/>
+      <input class={Style.input.htmlClass} id={
+      s"${prefix}_end_${day.day}"
+    } placeholder="24:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._2)}/>
       <br/>
     </span>
-  }
 
-  private def weekday(day: DayEntry): String = {
-    day.day match {
+  private def weekday(day: DayEntry): String =
+    day.day match
       case 1 => "monday"
       case 2 => "tuesday"
       case 3 => "wednesday"
@@ -240,97 +278,118 @@ class BoincGlobalPrefsLayout extends BoincClientLayout {
       case 5 => "friday"
       case 6 => "saturday"
       case 7 => "sunday"
-    }
-  }
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     boinc.getGlobalPrefsOverride
       .map(f => this.globalPrefsOverride := f)
       .recover(ErrorDialogUtil.showDialog)
       .foreach(_ => NProgress.done(true))
-  }
 
-  private val jsOnSubmitListener: (Event) => Unit = (event) => {
+  private val jsOnSubmitListener: (Event) => Unit = event => {
     NProgress.start()
 
     val globalPrefsOverride = this.globalPrefsOverride.now
 
-    import at.happywetter.boinc.web.facade.NodeListConverter._
+    import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
 
-    case class MutableDayEntry(var cpuStart: Double = -1D, var cpuEnd: Double = -1D, var netStart: Double = -1D, var netEnd: Double = -1D)
+    case class MutableDayEntry(var cpuStart: Double = -1d,
+                               var cpuEnd: Double = -1d,
+                               var netStart: Double = -1d,
+                               var netEnd: Double = -1d
+    )
     val dayPrefsData = IndexedSeq(
-      MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry(), MutableDayEntry()
+      MutableDayEntry(),
+      MutableDayEntry(),
+      MutableDayEntry(),
+      MutableDayEntry(),
+      MutableDayEntry(),
+      MutableDayEntry(),
+      MutableDayEntry()
     )
 
-    document.querySelectorAll("[id^='net_start_']").forEach {
-      case (node, index, unit) => dayPrefsData(index).netStart = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
-    }
-    document.querySelectorAll("[id^='net_end_']").forEach {
-      case (node, index, unit) => dayPrefsData(index).netEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
-    }
-    document.querySelectorAll("[id^='cpu_start_']").forEach {
-      case (node, index, unit) => dayPrefsData(index).cpuStart = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
-    }
-    document.querySelectorAll("[id^='cpu_end_']").forEach {
-      case (node, index, unit) => dayPrefsData(index).cpuEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
-    }
+    document
+      .querySelectorAll("[id^='net_start_']")
+      .forEach:
+        case (node, index, unit) =>
+          dayPrefsData(index).netStart =
+            BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    document
+      .querySelectorAll("[id^='net_end_']")
+      .forEach:
+        case (node, index, unit) =>
+          dayPrefsData(index).netEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    document
+      .querySelectorAll("[id^='cpu_start_']")
+      .forEach:
+        case (node, index, unit) =>
+          dayPrefsData(index).cpuStart =
+            BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
+    document
+      .querySelectorAll("[id^='cpu_end_']")
+      .forEach:
+        case (node, index, unit) =>
+          dayPrefsData(index).cpuEnd = BoincFormatter.convertTimeHHMMtoDouble(node.asInstanceOf[HTMLInputElement].value)
 
-    boinc.setGlobalPrefsOverride(
-      GlobalPrefsOverride(
-        !getHTMLInputElement("run_on_batteries").checked,
-        globalPrefsOverride.batteryChargeMinPct,
-        globalPrefsOverride.batteryMaxTemperature,
-        !getHTMLInputElement("run_if_active").checked,
-        !getHTMLInputElement("run_gpu_if_active").checked,
-        globalPrefsOverride.idleTimeToRun,
-        globalPrefsOverride.suspendCpuUsage,
-        getHTMLInputElement("leave_apps_in_memory").checked,
-        getHTMLInputElement("dont_verify_images").checked,
-        getHTMLInputElement("workBufferDays").value.toDouble,
-        getHTMLInputElement("workBufferAdd").value.toDouble,
-        getHTMLInputElement("NcpuPct").value.toDouble,
-        getHTMLInputElement("shedPeriod").value.toDouble,
-        getHTMLInputElement("diskInterval").value.toDouble,
-        getHTMLInputElement("max_disk_usage").value.toDouble,
-        getHTMLInputElement("max_disk_usage_pct").value.toDouble,
-        getHTMLInputElement("min_disk_free").value.toDouble,
-        getHTMLInputElement("ram_used_busy").value.toDouble,
-        getHTMLInputElement("ram_used_idle").value.toDouble,
-        getHTMLInputElement("maxBytesUp").value.toDouble.fromSpeedValue(1),
-        getHTMLInputElement("maxBytesDown").value.toDouble.fromSpeedValue(1),
-        getHTMLInputElement("cpuUsageLimit").value.toDouble,
-        getHTMLInputElement("maxBytes").value.toDouble,
-        getHTMLInputElement("maxBytesPeriod").value.toInt,
-        globalPrefsOverride.networkWifiOnly,
-        globalPrefsOverride.cpuTime,
-        globalPrefsOverride.netTime,
-        dayPrefsData.zipWithIndex.map {
-          case (day, index) => DayEntry(index+1, (day.cpuStart, day.cpuEnd), (day.netStart, day.netEnd))
-        }.toList
+    boinc
+      .setGlobalPrefsOverride(
+        GlobalPrefsOverride(
+          !getHTMLInputElement("run_on_batteries").checked,
+          globalPrefsOverride.batteryChargeMinPct,
+          globalPrefsOverride.batteryMaxTemperature,
+          !getHTMLInputElement("run_if_active").checked,
+          !getHTMLInputElement("run_gpu_if_active").checked,
+          globalPrefsOverride.idleTimeToRun,
+          globalPrefsOverride.suspendCpuUsage,
+          getHTMLInputElement("leave_apps_in_memory").checked,
+          getHTMLInputElement("dont_verify_images").checked,
+          getHTMLInputElement("workBufferDays").value.toDouble,
+          getHTMLInputElement("workBufferAdd").value.toDouble,
+          getHTMLInputElement("NcpuPct").value.toDouble,
+          getHTMLInputElement("shedPeriod").value.toDouble,
+          getHTMLInputElement("diskInterval").value.toDouble,
+          getHTMLInputElement("max_disk_usage").value.toDouble,
+          getHTMLInputElement("max_disk_usage_pct").value.toDouble,
+          getHTMLInputElement("min_disk_free").value.toDouble,
+          getHTMLInputElement("ram_used_busy").value.toDouble,
+          getHTMLInputElement("ram_used_idle").value.toDouble,
+          getHTMLInputElement("maxBytesUp").value.toDouble.fromSpeedValue(1),
+          getHTMLInputElement("maxBytesDown").value.toDouble.fromSpeedValue(1),
+          getHTMLInputElement("cpuUsageLimit").value.toDouble,
+          getHTMLInputElement("maxBytes").value.toDouble,
+          getHTMLInputElement("maxBytesPeriod").value.toInt,
+          globalPrefsOverride.networkWifiOnly,
+          globalPrefsOverride.cpuTime,
+          globalPrefsOverride.netTime,
+          dayPrefsData.zipWithIndex.map { case (day, index) =>
+            DayEntry(index + 1, (day.cpuStart, day.cpuEnd), (day.netStart, day.netEnd))
+          }.toList,
+          globalPrefsOverride.vmMaxUsedFrac
+        )
       )
-    ).map(result => {
+      .map(result => {
 
-      if (!result) {
-        NProgress.done(true)
-
-        new OkDialog("__SET_GLOBAL_OVERRIDE_PREFS", List("RESULT => false")).renderToBody().show()
-      } else {
-        boinc.readGlobalPrefsOverride.map(result => {
+        if (!result) {
           NProgress.done(true)
 
-          if (!result) {
-            new OkDialog("__READ_GLOBAL_OVERRIDE_PREFS", List("RESULT => false")).renderToBody().show()
-          }
-        }).recover(ErrorDialogUtil.showDialog)
-      }
+          new OkDialog("__SET_GLOBAL_OVERRIDE_PREFS", List("RESULT => false")).renderToBody().show()
+        } else {
+          boinc.readGlobalPrefsOverride
+            .map(result => {
+              NProgress.done(true)
 
-    }).recover(ErrorDialogUtil.showDialog)
+              if (!result) {
+                new OkDialog("__READ_GLOBAL_OVERRIDE_PREFS", List("RESULT => false")).renderToBody().show()
+              }
+            })
+            .recover(ErrorDialogUtil.showDialog)
+        }
+
+      })
+      .recover(ErrorDialogUtil.showDialog)
   }
 
   private def getHTMLInputElement(elementID: String): HTMLInputElement =
     dom.document.getElementById(elementID).asInstanceOf[HTMLInputElement]
-  
-  private def checkbox(checkStatus: Boolean, cID: String): Node =
-    <input type="checkbox" checked={if(checkStatus) Some("checked") else None} id={cID}/>
 
-}
+  private def checkbox(checkStatus: Boolean, cID: String): Node =
+    <input type="checkbox" checked={if (checkStatus) Some("checked") else None} id={cID}/>

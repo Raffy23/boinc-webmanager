@@ -21,7 +21,7 @@ import scala.xml.Elem
  * @author Raphael
  * @version 09.07.2020
  */
-object HostSettings extends Layout {
+object HostSettings extends Layout:
 
   override val path: String = "settings/hosts"
 
@@ -34,27 +34,21 @@ object HostSettings extends Layout {
         {"settings_header".localize} -  <small>{"host_details".localize}</small>
       </h2>
 
-      { dataTable.component }
+      {dataTable.component}
     </div>
 
-  override def already(): Unit = {
+  override def already(): Unit =
     loadData()
-  }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     SettingsTopNavigation.render(Some("hosts"))
     loadData()
-  }
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     DashboardMenu.selectByMenuId("settings")
-  }
 
-  private def loadData(): Unit = {
+  private def loadData(): Unit =
     ClientManager.queryClientDetails().foreach { data =>
       dataTable.reactiveData := HostDetailsTableModel.convert(data)
       NProgress.done(true)
     }
-  }
-
-}

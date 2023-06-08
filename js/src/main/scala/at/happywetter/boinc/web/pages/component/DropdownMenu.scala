@@ -11,13 +11,10 @@ import scala.xml.Elem
   * @author Raphael
   * @version 29.08.2017
   */
-class DropdownMenu(text: Elem, elements: Rx[List[Elem]], dropdownStyle: String = "") {
+class DropdownMenu(text: Elem, elements: Rx[List[Elem]], dropdownStyle: String = ""):
 
-  val component: Elem = {
+  val component: Elem =
     <div class={Style.dropdown.htmlClass}>
       <a class={Style.button.htmlClass}>{text}</a>
       <div class={Style.dropdownContent.htmlClass} style={dropdownStyle}>{elements}</div>
     </div>
-  }
-
-}

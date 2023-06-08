@@ -11,7 +11,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincGlobalPrefsCSS extends StyleSheet.Standalone {
+object BoincGlobalPrefsCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincGlobalPrefsStyle._
   import dsl._
 
@@ -35,5 +35,3 @@ object BoincGlobalPrefsCSS extends StyleSheet.Standalone {
   h4Padding.cssName - (
     marginTop(30 px)
   )
-
-}

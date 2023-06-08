@@ -21,10 +21,10 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 05.09.2017
   */
-object SettingsPage extends Layout {
+object SettingsPage extends Layout:
   override val path: String = "settings"
 
-  override def render: Elem = {
+  override def render: Elem =
     <div id="settings">
       <h2 class={BoincClientStyle.pageHeader.htmlClass}>
         <i class="fa fa-cog" aria-hidden="true"></i>
@@ -39,7 +39,9 @@ object SettingsPage extends Layout {
           <tbody>
             <tr><td><b>{"verion".localize}</b></td><td>{BuildInfo.version}</td></tr>
             <tr><td><b>{"git_branch".localize}</b></td><td>{BuildInfo.gitCurrentBranch}</td></tr>
-            <tr><td><b>{"buid_date".localize}</b></td><td>{new Date(BuildInfo.builtAtMillis.toDouble).toLocaleDateString()}</td></tr>
+            <tr><td><b>{"buid_date".localize}</b></td><td>{
+      new Date(BuildInfo.builtAtMillis.toDouble).toLocaleDateString()
+    }</td></tr>
             <tr><td><b>{"scala_version".localize}</b></td><td>{BuildInfo.scalaVersion}</td></tr>
           </tbody>
         </table>
@@ -49,37 +51,32 @@ object SettingsPage extends Layout {
         </h3>
         <div style="margin-top:25px">
           {
-            new LanguageChooser((event, lang_code) => {
-              import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-                event.preventDefault()
+      new LanguageChooser((event, lang_code) => {
+        import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+        event.preventDefault()
 
-                NProgress.start()
-                LanguageDataProvider
-                  .loadLanguage(lang_code)
-                  .foreach(_ => {
-                    Locale.save(lang_code)
+        NProgress.start()
+        LanguageDataProvider
+          .loadLanguage(lang_code)
+          .foreach(_ => {
+            Locale.save(lang_code)
 
-                    // Force complete page re-render
-                    LayoutManager.init()
-                    this.beforeRender(null)
+            // Force complete page re-render
+            LayoutManager.init()
+            this.beforeRender(null)
 
-                    AppRouter.router.updatePageLinks()
-                    NProgress.done(true)
-                  })
-              }).component
-          }
+            AppRouter.router.updatePageLinks()
+            NProgress.done(true)
+          })
+      }).component
+    }
         </div>
       </div>
     </div>
-  }
 
-  override def after(): Unit = {
+  override def after(): Unit =
     NProgress.done(true)
-  }
 
-  override def beforeRender(params: Dictionary[String]): Unit = {
+  override def beforeRender(params: Dictionary[String]): Unit =
     SettingsTopNavigation.render(Some(""))
     DashboardMenu.selectByMenuId("settings")
-  }
-
-}

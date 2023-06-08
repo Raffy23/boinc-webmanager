@@ -17,27 +17,21 @@ import at.happywetter.boinc.web.css.definitions.pages.{BoincMessageStyle => Styl
  * @author Raphael Ludwig
  * @version 14.02.20
  */
-object MessageTableModel {
+object MessageTableModel:
 
-  private class DateColumn(val date: Rx[Long]) extends TableColumn(content = date.map(_.toDate.toXML), null) {
+  private class DateColumn(val date: Rx[Double]) extends TableColumn(content = date.map(_.toDate.toXML), null):
     override def compare(that: TableColumn): Int = date.now.compare(that.asInstanceOf[DateColumn].date.now)
-  }
 
   def convert(message: Message): MessageTableRow = new MessageTableRow(Var(message))
 
-  class MessageTableRow(val message: Var[Message]) extends TableRow {
+  class MessageTableRow(val message: Var[Message]) extends TableRow:
     override val columns: List[DataTable.TableColumn] = List(
       new StringColumn(message.map(_.project)),
-      new DateColumn(message.map(_.time)),
+      new DateColumn(message.map(_.time.toDouble)),
       new StringColumn(message.map(_.msg))
     )
 
-    override lazy val htmlRow: Elem = {
+    override lazy val htmlRow: Elem =
       <tr class={Style.tableRow.htmlClass} data-prio={message.map(_.priority.toString)}>
         {columns.map(column => <td>{column.content}</td>)}
       </tr>
-    }
-
-  }
-
-}

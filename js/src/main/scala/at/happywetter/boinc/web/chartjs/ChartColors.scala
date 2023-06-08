@@ -6,7 +6,7 @@ package at.happywetter.boinc.web.chartjs
   * @author Raphael
   * @version 02.09.2017
   */
-object ChartColors {
+object ChartColors:
 
   lazy val stream: LazyList[String] = colors.to(LazyList) #::: stream
 
@@ -31,5 +31,3 @@ object ChartColors {
     "#CE62BE",
     "#CE7262"
   )
-
-}

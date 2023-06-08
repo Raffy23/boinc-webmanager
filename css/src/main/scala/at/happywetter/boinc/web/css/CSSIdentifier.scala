@@ -6,13 +6,11 @@ package at.happywetter.boinc.web.css
  * @author Raphael
  * @version 03.02.2020
  */
-object CSSIdentifier {
+object CSSIdentifier:
   def apply(name: String)(implicit prefix: String): CSSIdentifier =
-    if (name.nonEmpty) new CSSIdentifier(prefix + "-" + name)
+    if name.nonEmpty then new CSSIdentifier(prefix + "-" + name)
     else new CSSIdentifier(prefix)
-}
 
-class CSSIdentifier(val name: String) extends AnyVal {
-  def cssName: String   = "." + GlobalRegistry._getCSSName(name)
+class CSSIdentifier(val name: String) extends AnyVal:
+  def cssName: String = "." + GlobalRegistry._getCSSName(name)
   def htmlClass: String = GlobalRegistry._getCSSName(name)
-}

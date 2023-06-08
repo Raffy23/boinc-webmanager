@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object DashboardMenuStyle extends StyleDefinitions {
+object DashboardMenuStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "dashboard_menu"
+  implicit override protected[this] val prefix: String = "dashboard_menu"
 
   val menu = CSSIdentifier("menu")
   val elem = CSSIdentifier("element")
@@ -20,5 +20,3 @@ object DashboardMenuStyle extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(menu, elem, active, clickable, subMenuHosts)
-
-}

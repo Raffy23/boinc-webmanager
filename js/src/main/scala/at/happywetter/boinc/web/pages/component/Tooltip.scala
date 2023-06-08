@@ -14,7 +14,7 @@ import at.happywetter.boinc.web.util.I18N._
   * @author Raphael
   * @version 08.08.2017
   */
-object Tooltip {
+object Tooltip:
 
   def warningTriangle(label: String): Tooltip =
     new Tooltip(
@@ -30,21 +30,25 @@ object Tooltip {
       style = Some(Style.loadingIcon)
     )
 
-  def apply(text: Rx[String], parent: Elem, textOrientation: CSSIdentifier = Style.topText,
-            tooltipId: Option[String] = None, style: Option[CSSIdentifier] = None): Elem =
+  def apply(text: Rx[String],
+            parent: Elem,
+            textOrientation: CSSIdentifier = Style.topText,
+            tooltipId: Option[String] = None,
+            style: Option[CSSIdentifier] = None
+  ): Elem =
     new Tooltip(text, parent, textOrientation, tooltipId, style).component
 
-}
-class Tooltip(text: Rx[String], parent: Elem, textOrientation: CSSIdentifier = Style.topText,
-              tooltipId: Option[String] = None, val style: Option[CSSIdentifier] = None) {
+class Tooltip(text: Rx[String],
+              parent: Elem,
+              textOrientation: CSSIdentifier = Style.topText,
+              tooltipId: Option[String] = None,
+              val style: Option[CSSIdentifier] = None
+):
 
-  val component: Elem = {
+  val component: Elem =
     <div class={Seq(Some(Style.tooltip.htmlClass), style.map(_.htmlClass)).flatten.mkString(" ")}>
       <span class={Style.tooltipText.htmlClass + " " + textOrientation.htmlClass}>{text}</span>
       {parent}
     </div>
-  }
 
   def toXML: Node = component
-
-}

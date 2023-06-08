@@ -8,10 +8,8 @@ import at.happywetter.boinc.web.pages.component.DataTable.TableRow
  * @author Raphael
  * @version 10.07.2020
  */
-trait TableModel[A, T <: TableRow] {
+trait TableModel[A, T <: TableRow]:
 
   val header: List[(String, Boolean)]
 
   def convert(data: List[A]): List[T]
-
-}

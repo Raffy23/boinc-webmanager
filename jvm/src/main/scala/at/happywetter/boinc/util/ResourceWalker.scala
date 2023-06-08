@@ -13,18 +13,17 @@ import scala.jdk.CollectionConverters._
   * @author Raphael
   * @version 29.08.2017
   */
-object ResourceWalker {
+object ResourceWalker:
 
   val RESOURCE_ROOT = "/resources"
   lazy val resource: URL = ResourceWalker.getClass.getResource(RESOURCE_ROOT)
   lazy val resourceURI: URI = resource.toURI
 
-
-  def listFiles(path: String): List[String] = {
-    val targetPath = resourceURI.getScheme match {
-      case "jar" => FileSystems.newFileSystem(resourceURI, Collections.emptyMap[String, Any]).getPath(RESOURCE_ROOT + path)
-      case _ => Paths.get(Paths.get(resourceURI).toString+path)
-    }
+  def listFiles(path: String): List[String] =
+    val targetPath = resourceURI.getScheme match
+      case "jar" =>
+        FileSystems.newFileSystem(resourceURI, Collections.emptyMap[String, Any]).getPath(RESOURCE_ROOT + path)
+      case _ => Paths.get(Paths.get(resourceURI).toString + path)
 
     Files
       .walk(targetPath, 1)
@@ -32,8 +31,5 @@ object ResourceWalker {
       .asScala
       .toList
       .map(p => p.getFileName.toString)
-  }
 
   def getStream(file: String): InputStream = ResourceWalker.getClass.getResourceAsStream(file)
-
-}

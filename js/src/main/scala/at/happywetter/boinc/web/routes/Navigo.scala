@@ -12,8 +12,8 @@ import scala.scalajs.js.annotation.{JSGlobal, JSImport}
   */
 
 @js.native
-@JSGlobal//@JSImport("navigo", JSImport.Namespace)
-object Navigo extends js.Object {
+@JSGlobal //@JSImport("navigo", JSImport.Namespace)
+object Navigo extends js.Object:
 
   val PARAMETER_REGEXP: String = js.native
   val WILDCARD_REGEXP: String = js.native
@@ -22,17 +22,15 @@ object Navigo extends js.Object {
   val FOLLOWED_BY_SLASH_REGEXP: String = js.native
   var MATCH_REGEXP_FLAGS: String = js.native
 
-}
-
 @js.native
-@JSGlobal//@JSImport("navigo", JSImport.Namespace)
-class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") extends js.Object {
+@JSGlobal //@JSImport("navigo", JSImport.Namespace)
+class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") extends js.Object:
 
-  //Doesn't work but is in Docs
-  //def on(genericHook: GenericHook): Navigo = js.native
+  // Doesn't work but is in Docs
+  // def on(genericHook: GenericHook): Navigo = js.native
 
-  //Is in docs, but not tested
-  //def on(routes: Map[String, RouteCallback]): Navigo = js.native
+  // Is in docs, but not tested
+  // def on(routes: Map[String, RouteCallback]): Navigo = js.native
 
   def on(route: String, callback: js.Function0[Unit]): Navigo = js.native
   def on(route: String, callback: js.Function1[js.Dictionary[String], Unit]): Navigo = js.native
@@ -67,9 +65,7 @@ class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") 
 
   def resolve(): Boolean = js.native
 
-}
-
-abstract class Hook extends js.Object {
+abstract class Hook extends js.Object:
 
   def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit
 
@@ -79,15 +75,11 @@ abstract class Hook extends js.Object {
 
   def already(params: js.Dictionary[String]): Unit
 
-}
-
-abstract class GenericHook extends js.Object {
+abstract class GenericHook extends js.Object:
 
   def before(done: js.Function0[Unit], params: String): Unit
 
   def after(params: String): Unit
-
-}
 
 @js.native
 trait ResolvedRoute extends js.Object {

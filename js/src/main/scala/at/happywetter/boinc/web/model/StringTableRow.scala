@@ -10,9 +10,7 @@ import mhtml.Var
  * @author Raphael Ludwig
  * @version 09.02.20
  */
-class StringTableRow(entries: List[String]) extends DataTable.TableRow {
+class StringTableRow(entries: List[String]) extends DataTable.TableRow:
 
   override val columns: List[DataTable.TableColumn] =
     entries.map(s => new component.DataTable.StringColumn(Var(s)))
-
-}

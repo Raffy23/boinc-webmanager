@@ -13,8 +13,9 @@ import scala.xml.NodeSeq
   */
 object ResultParser {
 
-  def fromXML(node: NodeSeq): Result = {
-    Result((node \ "name").text,
+  def fromXML(node: NodeSeq): Result =
+    Result(
+      (node \ "name").text,
       (node \ "wu_name").text,
       (node \ "platform").text,
       (node \ "version_num").text,
@@ -22,7 +23,7 @@ object ResultParser {
       (node \ "project_url").text,
       (node \ "state").text.toInt,
       (node \ "suspended_via_gui").xml_==(<suspended_via_gui/>),
-      if((node \ "active_task" ).text.nonEmpty) Some((node \ "active_task").toTask)
+      if (node \ "active_task").text.nonEmpty then Some((node \ "active_task").toTask)
       else None,
       (node \ "estimated_cpu_time_remaining").text.toDouble,
       (node \ "report_deadline").text.toDouble,
@@ -31,6 +32,5 @@ object ResultParser {
       (node \ "exit_status").tryToInt,
       (node \ "resources").optionalText
     )
-  }
 
 }

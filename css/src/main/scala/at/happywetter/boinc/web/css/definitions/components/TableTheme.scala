@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object TableTheme extends StyleDefinitions {
+object TableTheme extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "table"
+  implicit override protected[this] val prefix: String = "table"
 
   val container = CSSIdentifier("container")
   val table = CSSIdentifier("")
@@ -21,5 +21,3 @@ object TableTheme extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(table, lastRowSmall, verticalText, noBorder, container, sortable)
-
-}

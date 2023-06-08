@@ -9,11 +9,11 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincStatisticsCSS extends StyleSheet.Standalone {
+object BoincStatisticsCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincStatisticsStyle._
   import dsl._
 
-  button.cssName -(
+  button.cssName - (
     textDecoration := "none",
     outline.`0`,
     width(100 %%),
@@ -21,17 +21,13 @@ object BoincStatisticsCSS extends StyleSheet.Standalone {
     padding(14 px),
     color(c"#333"),
     cursor.pointer,
-
     borderTop :=! "1px #AAA solid",
     borderRight :=! "1px #AAA solid",
-
     &.hover(
       backgroundColor(c"#c3daee")
     )
   )
 
-  active.cssName -(
+  active.cssName - (
     backgroundColor(c"#c3daee")
   )
-
-}

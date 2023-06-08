@@ -6,10 +6,8 @@ package at.happywetter.boinc.web.util
  * @author Raphael
  * @version 19.04.2020
  */
-object GlobalOptions {
+object GlobalOptions:
 
-  val refreshDetailPageTimeout          =  5_000 // s
+  val refreshDetailPageTimeout = 5_000 // s
 
-  val refreshDetailPageFullSyncTimeout  = 60_000 // s
-
-}
+  val refreshDetailPageFullSyncTimeout = 60_000 // s

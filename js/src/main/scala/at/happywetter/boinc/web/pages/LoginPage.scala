@@ -1,15 +1,21 @@
 package at.happywetter.boinc.web.pages
 
-import at.happywetter.boinc.web.util.XMLHelper._
+import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.definitions.pages.{LoginPageStyle => Style}
+import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.component.LanguageChooser
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
-import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
+import at.happywetter.boinc.web.routes.AppRouter
+import at.happywetter.boinc.web.routes.LayoutManager
+import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.{LanguageDataProvider, ServerConfig}
+import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.ServerConfig
+import at.happywetter.boinc.web.util.XMLHelper._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.HTMLInputElement
 
 import scala.concurrent.Future
 import scala.language.postfixOps
@@ -17,7 +23,6 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
-import at.happywetter.boinc.BuildInfo
 
 /**
   * Created by: 
@@ -25,20 +30,19 @@ import at.happywetter.boinc.BuildInfo
   * @author Raphael
   * @version 23.07.2017
   */
-object LoginPage {
+object LoginPage:
 
   def link: String = "/view/login"
 
-}
-
-class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layout {
+class LoginPage(loginValidator: (String, String) => Future[Boolean]) extends Layout:
   override val path = "login"
 
-  override def render: Elem = {
+  override def render: Elem =
     <div>
       <div id="language-selector-area" style="position:fixed;top:74px;right:22px">
       {
-        new LanguageChooser((event, lang_code) => {
+      new LanguageChooser(
+        (event, lang_code) => {
           event.preventDefault()
 
           NProgress.start()
@@ -52,8 +56,10 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
               AppRouter.router.updatePageLinks()
               NProgress.done(true)
             })
-        }, -35).component
-      }
+        },
+        -35
+      ).component
+    }
       </div>
 
       <div>
@@ -73,15 +79,14 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
         <small><b>Version: </b>{BuildInfo.version}</small>
       </span>
     </div>
-  }
 
-  private val loginAction: (Event) => Unit = (event) => {
+  private val loginAction: (Event) => Unit = event => {
 
     NProgress.start()
     val username = dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value
     val password = dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value
 
-    loginValidator(username, password).foreach {
+    loginValidator(username, password).foreach:
       case true =>
         dom.window.sessionStorage.setItem("username", username)
         dom.window.sessionStorage.setItem("password", password)
@@ -94,16 +99,15 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
         new OkDialog(
           "dialog_error_header".localize,
           List("login_wrong_password_msg".localize),
-          (_) => {dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus()}
+          _ => { dom.document.getElementById("login-username").asInstanceOf[HTMLElement].focus() }
         ).renderToBody().show()
 
         NProgress.done(true)
-    }
 
     event.preventDefault()
   }
 
-  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit = {
+  override def before(done: js.Function0[Unit], params: js.Dictionary[String]): Unit =
     val usr = dom.window.sessionStorage.getItem("username")
     val pwd = dom.window.sessionStorage.getItem("password")
 
@@ -111,8 +115,8 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
     PageLayout.hideMenu()
     done()
 
-    if (usr != null && pwd != null) {
-      loginValidator(usr, pwd).foreach {
+    if (usr != null && pwd != null)
+      loginValidator(usr, pwd).foreach:
         case true =>
           AppRouter.navigate(Dashboard.link)
           PageLayout.showMenu()
@@ -122,15 +126,9 @@ class LoginPage(loginValidator: (String,String) => Future[Boolean]) extends Layo
           dom.window.sessionStorage.removeItem("username")
           dom.window.sessionStorage.removeItem("password")
           NProgress.done(true)
-      }
-    }
-  }
 
-  override def already(): Unit = {
+  override def already(): Unit =
     dom.document.getElementById("login-username").asInstanceOf[HTMLInputElement].value = ""
     dom.document.getElementById("login-password").asInstanceOf[HTMLInputElement].value = ""
-  }
 
   override def beforeRender(params: Dictionary[String]): Unit = {}
-
-}

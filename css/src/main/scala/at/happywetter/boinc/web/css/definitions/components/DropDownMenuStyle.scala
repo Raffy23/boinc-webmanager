@@ -8,9 +8,9 @@ import at.happywetter.boinc.web.css.{CSSIdentifier, StyleDefinitions}
  * @author Raphael
  * @version 03.02.2020
  */
-object DropDownMenuStyle extends StyleDefinitions {
+object DropDownMenuStyle extends StyleDefinitions:
 
-  override protected[this] implicit val prefix: String = "dropdown_menu"
+  implicit override protected[this] val prefix: String = "dropdown_menu"
 
   val dropdown = CSSIdentifier("dropdown")
   val button = CSSIdentifier("button")
@@ -18,5 +18,3 @@ object DropDownMenuStyle extends StyleDefinitions {
 
   override private[css] def styles =
     Seq(dropdown, button, dropdownContent)
-
-}

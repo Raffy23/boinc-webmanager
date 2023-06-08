@@ -11,7 +11,7 @@ import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N
 import mhtml.{Rx, Var}
-import org.scalajs.dom.raw.{Event, HTMLElement, HTMLInputElement}
+import org.scalajs.dom.{Event, HTMLElement, HTMLInputElement}
 import at.happywetter.boinc.web.util.I18N._
 
 import scala.scalajs.js
@@ -24,213 +24,211 @@ import scala.xml.{Elem, Node, Text}
   * @author Raphael
   * @version 25.09.2017
   */
-object DataTable {
+object DataTable:
 
-  abstract class TableColumn(val content: Rx[Node], val datasource: TableRow, val dataEntry: Option[String] = None) extends Ordered[TableColumn] {}
+  abstract class TableColumn(val content: Rx[Node], val datasource: TableRow, val dataEntry: Option[String] = None)
+      extends Ordered[TableColumn] {}
 
-  class LinkColumn(val source: Rx[(String, String)]) extends TableColumn(
-    source.map( data =>
-      <a href={data._2} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
+  class LinkColumn(val source: Rx[(String, String)])
+      extends TableColumn(
+        source.map(data => <a href={data._2} onclick={AppRouter.openExternal} class={BoincProjectStyle.link.htmlClass}>
         {data._1}
-      </a>
-    ), null
-  ) {
+      </a>),
+        null
+      ):
     override def compare(that: TableColumn): Int = source.now._1.compareTo(that.asInstanceOf[LinkColumn].source.now._1)
-  }
 
-  class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text), null) {
+  class StringColumn(val source: Rx[String]) extends TableColumn(content = source.map(Text.apply), null):
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[StringColumn].source.now)
-  }
 
-  class IntegerColumn(val source: Rx[Int]) extends TableColumn(
-    datasource = null,
-    dataEntry = Some("number"),
-    content = source.map(int => {
-      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
-      int.asInstanceOf[JSNumberOps].toLocaleString()
-    })) {
+  class IntegerColumn(val source: Rx[Int])
+      extends TableColumn(
+        datasource = null,
+        dataEntry = Some("number"),
+        content = source.map(int => {
+          import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+          int.asInstanceOf[JSNumberOps].toLocaleString()
+        })
+      ):
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[IntegerColumn].source.now)
-  }
 
-  class DoubleColumn(val source: Rx[Double]) extends TableColumn(
-    datasource = null,
-    dataEntry = Some("number"),
-    content = source.map(number => {
-      import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
-      number.asInstanceOf[JSNumberOps].toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2, "maximumFractionDigits" -> 2))
-    })) {
+  class DoubleColumn(val source: Rx[Double])
+      extends TableColumn(
+        datasource = null,
+        dataEntry = Some("number"),
+        content = source.map(number => {
+          import at.happywetter.boinc.web.facade.Implicits.JSNumberOps
+          number
+            .asInstanceOf[JSNumberOps]
+            .toLocaleString(js.undefined, js.Dictionary("minimumFractionDigits" -> 2, "maximumFractionDigits" -> 2))
+        })
+      ):
     override def compare(that: TableColumn): Int = source.now.compare(that.asInstanceOf[DoubleColumn].source.now)
-  }
 
   val PageSizes: List[Int] = List(10, 20, 30, 40, 50, 100, 200)
   val DefaultPageSize = 30
 
-  abstract class TableRow {
+  abstract class TableRow:
 
     protected[component] var weakTableRef: DataTable[TableRow] = _
 
     val columns: List[TableColumn]
-    val contextMenuHandler: (Event) => Unit = (_) => {}
+    val contextMenuHandler: (Event) => Unit = _ => {}
 
-    lazy val htmlRow: Elem = {
+    lazy val htmlRow: Elem =
       <tr oncontextmenu={contextMenuHandler}>
         {columns.map(column => <td data-type={column.dataEntry}>{column.content}</td>)}
       </tr>
-    }
 
-  }
-
-  def of[A, T <: TableRow](model: TableModel[A,T], paged: Boolean = false) = new DataTable[T](
-    model.header,
-    paged = paged
-  )
-
-}
+  def of[A, T <: TableRow](model: TableModel[A, T], paged: Boolean = false): DataTable[T] =
+    new DataTable[T](
+      model.header,
+      paged = paged
+    )
 
 class DataTable[T <: TableRow](headers: List[(String, Boolean)],
-                               val tableData: List[T] = List.empty,
+                               val tableData: List[T] = List.empty[T], // TODO: Why is type inference broken here?
                                tableStyle: List[CSSIdentifier] = List(TableTheme.table, TableTheme.lastRowSmall),
-                               paged: Boolean = false) {
+                               paged: Boolean = false
+):
 
   val reactiveData: Var[List[T]] = Var(tableData)
   val currentPage: Var[Int] = Var(1)
+
   val curPageSize: Var[Int] = Var(DataTable.DefaultPageSize)
 
-  lazy val component: Elem = {
+  lazy val component: Elem =
     <div class={TableTheme.container.htmlClass}>
       {
-        if(paged) {
-          Some(
-            <div>
+      if (paged)
+        Some(
+          <div>
               <label>
                 {
-                  "table_page_size_select".localizeTags(
-                    <select onchange={onPageSizeChange}>
-                      {DataTable.PageSizes.map(s =>
-                      <option value={s.toString} selected={if (s == curPageSize.now) Some("") else None}>
+            "table_page_size_select".localizeTags(
+              <select onchange={onPageSizeChange}>
+                      {
+                DataTable.PageSizes.map(s =>
+                  <option value={s.toString} selected={if (s == curPageSize.now) Some("") else None}>
                         {s.toString}
                       </option>
-                    )}
+                )
+              }
                     </select>
-                  )
-                }
+            )
+          }
               </label>
             </div>
-          )
-        } else None
-      }
+        )
+      else None
+    }
       <table class={tableStyle.map(_.htmlClass).mkString(" ")}>
         <thead>
           <tr>
             {
-              headers.zipWithIndex.map { case ((header, sortable), idx) =>
-                if (sortable)
-                  <th class={TableTheme.sortable.htmlClass} onclick={tableSortFunction(idx)}>
+      headers.zipWithIndex.map { case ((header, sortable), idx) =>
+        if (sortable)
+          <th class={TableTheme.sortable.htmlClass} onclick={tableSortFunction(idx)}>
                     {header}
                     <i class="fa fa-sort" data-sort-icon="icon" aria-hidden="true"></i>
                   </th>
-                else
-                  <th>{header}</th>
-              }
-            }
+        else
+          <th>{header}</th>
+      }
+    }
           </tr>
         </thead>
         <tbody>
           {
-          if(paged) {
-            currentPage.zip(curPageSize).zip(reactiveData).map { case ((page, size), data) =>
-              val start = (page-1) * size
-              data.slice(start, start + size).map(renderAndBindRow)
-            }
-          } else {
-            reactiveData.map(_.map(renderAndBindRow))
-          }
-          }
+      if (paged)
+        currentPage.zip(curPageSize).zip(reactiveData).map { case ((page, size), data) =>
+          val start = (page - 1) * size
+          data.slice(start, start + size).map(renderAndBindRow)
+        }
+      else
+        reactiveData.map(_.map(renderAndBindRow))
+    }
         </tbody>
       </table>
       {
-        if(paged) {
-          val pages = reactiveData.zip(curPageSize).map { case (data, size) => (data.length / size)+1 }
+      if (paged)
+        val pages = reactiveData.zip(curPageSize).map { case (data, size) => (data.length / size) + 1 }
 
-          Some(
-            <div>
+        Some(
+          <div>
               <a onclick={prevPage}>
                 <i class="fas fa-angle-left"></i>
                 {"table_prev_page".localize}
               </a>
               {
-              currentPage.zip(pages).map { case (page, pages) =>
-                <input type="number" value={page.toString} onchange={onPageChange} style={s"padding:7px;width:${3.5 + (pages/100)}em"}
-                       min="1" max={(pages+1).toString} aria-label={"current_page".localize}>
+            currentPage.zip(pages).map { case (page, pages) =>
+              <input type="number" value={page.toString} onchange={onPageChange} style={
+                s"padding:7px;width:${3.5 + (pages / 100)}em"
+              }
+                       min="1" max={(pages + 1).toString} aria-label={"current_page".localize}>
                 </input>
-              }
-              }
-              / { pages }
+            }
+          }
+              / {pages}
               <a onclick={nextPage}>
                 {"table_next_page".localize}
                 <i class="fas fa-angle-right"></i>
               </a>
             </div>
-          )
-        } else None
-      }
+        )
+      else None
+    }
     </div>
-  }
 
-  private def renderAndBindRow(row: T): Elem = {
+  private def renderAndBindRow(row: T): Elem =
     row.weakTableRef = this.asInstanceOf[DataTable[TableRow]]
     row.htmlRow
-  }
 
   private val onPageSizeChange: Event => Unit = { event =>
     curPageSize.update(_ => event.target.asInstanceOf[HTMLInputElement].value.toInt)
     currentPage.update { old =>
-      if(reactiveData.now.length / curPageSize.now >= old) old
-      else (reactiveData.now.length / curPageSize.now)+1
+      if (reactiveData.now.length / curPageSize.now >= old) old
+      else (reactiveData.now.length / curPageSize.now) + 1
     }
   }
 
   private val onPageChange: Event => Unit = { event =>
     val value = event.target.asInstanceOf[HTMLInputElement].value.toInt
-    if(value >= 1 && value <= reactiveData.now.length / curPageSize.now)
+    if (value >= 1 && value <= reactiveData.now.length / curPageSize.now)
       currentPage := value
   }
 
   private val nextPage: Event => Unit = { _ =>
     currentPage.update { old =>
-      if(reactiveData.now.length / curPageSize.now >= old) old + 1
+      if (reactiveData.now.length / curPageSize.now >= old) old + 1
       else old
     }
   }
 
   private def prevPage: Event => Unit = { _ =>
     currentPage.update { old =>
-      if(old > 1) old - 1
+      if (old > 1) old - 1
       else old
     }
   }
 
-  private def tableSortFunction(idx: Int): (Event) => Unit = (event) => {
+  private def tableSortFunction(idx: Int): (Event) => Unit = event => {
     import at.happywetter.boinc.web.facade.NodeListConverter.convNodeList
 
     var target = event.target.asInstanceOf[HTMLElement]
-    while (target.nodeName != "TH") {
+    while (target.nodeName != "TH")
       target = target.parentNode.asInstanceOf[HTMLElement]
-    }
 
     val icon = target.querySelector("i[data-sort-icon]")
     val sortState = icon.getAttribute("class")
 
     val allIcons = target.parentNode.asInstanceOf[HTMLElement].querySelectorAll("i[data-sort-icon]")
-    allIcons.forEach((node, _, _ ) => node.asInstanceOf[HTMLElement].setAttribute("class","fa fa-sort"))
+    allIcons.forEach((node, _, _) => node.asInstanceOf[HTMLElement].setAttribute("class", "fa fa-sort"))
 
-    if (sortState == "fa fa-sort" || sortState == "fa fa-sort-up") {
+    if (sortState == "fa fa-sort" || sortState == "fa fa-sort-up")
       reactiveData.update(_.sortBy(_.columns(idx)))
-      icon.setAttribute("class","fa fa-sort-down")
-    } else {
+      icon.setAttribute("class", "fa fa-sort-down")
+    else
       reactiveData.update(_.sortBy(_.columns(idx)).reverse)
-      icon.setAttribute("class","fa fa-sort-up")
-    }
+      icon.setAttribute("class", "fa fa-sort-up")
   }
-}
-

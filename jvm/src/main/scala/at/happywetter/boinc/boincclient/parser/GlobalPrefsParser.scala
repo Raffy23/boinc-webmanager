@@ -11,19 +11,16 @@ import scala.xml.{NodeSeq, Text}
   * @author Raphael
   * @version 25.08.2017
   */
-object GlobalPrefsParser {
+object GlobalPrefsParser:
 
-  private implicit class ScalaBoolean(val b: Boolean) {
-    def toBoincString: String = if(b) "1" else "0"
-  }
+  implicit private class ScalaBoolean(val b: Boolean):
+    def toBoincString: String = if b then "1" else "0"
 
-  private implicit class BoincDouble(val d: Double) {
-    def toBoincDouble: String = d.formatted("%.6f").replace(",",".")
-  }
+  implicit private class BoincDouble(val d: Double):
+    def toBoincDouble: String = "%.6f".format(d).replace(",", ".")
 
-  private implicit class TryParser(string: String) {
-    def tryToDouble: Double = Try(string.toDouble).getOrElse(-1D)
-  }
+  implicit private class TryParser(string: String):
+    def tryToDouble: Double = Try(string.toDouble).getOrElse(-1d)
 
   def fromXML(node: NodeSeq) = GlobalPrefsOverride(
     (node \ "run_on_batteries").toScalaBoolean,
@@ -34,7 +31,7 @@ object GlobalPrefsParser {
     (node \ "idle_time_to_run").text.toDouble,
     (node \ "suspend_cpu_usage").text.toDouble,
     (node \ "leave_apps_in_memory").text.toInt == 1,
-    (node \ "dont_verify_images").text.toInt==1,
+    (node \ "dont_verify_images").text.toInt == 1,
     (node \ "work_buf_min_days").text.toDouble,
     (node \ "work_buf_additional_days").text.toDouble,
     (node \ "max_ncpus_pct").text.toDouble,
@@ -50,16 +47,15 @@ object GlobalPrefsParser {
     (node \ "cpu_usage_limit").text.toDouble,
     (node \ "daily_xfer_limit_mb").text.toDouble,
     (node \ "daily_xfer_period_days").text.toInt,
-    (node \ "network_wifi_only").tryToInt==1,
+    (node \ "network_wifi_only").tryToInt == 1,
     (
-      (node \ "start_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble,
-      (node \ "end_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble
+      (node \ "start_hour").head.child.collect { case Text(t) => t }.mkString(" ").tryToDouble,
+      (node \ "end_hour").head.child.collect { case Text(t) => t }.mkString(" ").tryToDouble
     ),
     (
-      (node \ "net_start_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble,
-      (node \ "net_end_hour").head.child.collect{ case Text(t) => t}.mkString(" ").tryToDouble
+      (node \ "net_start_hour").head.child.collect { case Text(t) => t }.mkString(" ").tryToDouble,
+      (node \ "net_end_hour").head.child.collect { case Text(t) => t }.mkString(" ").tryToDouble
     ),
-
     (node \ "day_prefs").theSeq.map { dayNode =>
       DayEntry(
         (dayNode \ "day_of_week").text.toInt,
@@ -73,16 +69,17 @@ object GlobalPrefsParser {
         )
       )
     }.toList,
-    //(node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
+    // (node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
+    (node \ "vm_max_used_frac").text.tryToDouble
   )
 
-  def toXML(globalPrefsOverride: GlobalPrefsOverride): NodeSeq = {
+  def toXML(globalPrefsOverride: GlobalPrefsOverride): NodeSeq =
     val g = globalPrefsOverride
-    
+
     <global_preferences>
       <run_on_batteries>{g.runOnBatteries.toBoincString}</run_on_batteries>
-      {/*<battery_charge_min_pct>{g.batteryChargeMinPct.toBoincDouble}</battery_charge_min_pct>*/}
-      {/*<battery_max_temperature>{g.batteryMaxTemperature.toBoincDouble}</battery_max_temperature>*/}
+      { /*<battery_charge_min_pct>{g.batteryChargeMinPct.toBoincDouble}</battery_charge_min_pct>*/ }
+      { /*<battery_max_temperature>{g.batteryMaxTemperature.toBoincDouble}</battery_max_temperature>*/ }
       <run_if_user_active>{g.runIfUserActive.toBoincString}</run_if_user_active>
       <run_gpu_if_user_active>{g.runGPUIfUserActive.toBoincString}</run_gpu_if_user_active>
       <idle_time_to_run>{g.idleTimeToRun.toBoincDouble}</idle_time_to_run>
@@ -102,40 +99,42 @@ object GlobalPrefsParser {
       <max_bytes_sec_down>{g.maxBytesSecDownload.toBoincDouble}</max_bytes_sec_down>
       <cpu_usage_limit>{g.cpuUsageLimit.toBoincDouble}</cpu_usage_limit>
       <daily_xfer_limit_mb>{g.dailyXFerLimitMB.toBoincDouble}</daily_xfer_limit_mb>
-      <daily_xfer_period_days>{g.dailyXFerPeriodDays.toBoincDouble}</daily_xfer_period_days>
+      <daily_xfer_period_days>{g.dailyXFerPeriodDays}</daily_xfer_period_days>
       <network_wifi_only>{g.networkWifiOnly.toBoincString}</network_wifi_only>
       {
-        if (g.cpuTime._1 > 0D && g.cpuTime._2 > 0D) {
-          <start_hour>{g.cpuTime._1.toBoincDouble}</start_hour>
+      if g.cpuTime._1 > 0d && g.cpuTime._2 > 0d then
+        Seq(
+          <start_hour>{g.cpuTime._1.toBoincDouble}</start_hour>,
           <end_hour>{g.cpuTime._2.toBoincDouble}</end_hour>
-        }
-      }
+        )
+    }
       {
-        if (g.netTime._1 > 0D && g.netTime._2 > 0D) {
-          <net_start_hour>{g.netTime._1.toBoincDouble}</net_start_hour>
+      if g.netTime._1 > 0d && g.netTime._2 > 0d then
+        Seq(
+          <net_start_hour>{g.netTime._1.toBoincDouble}</net_start_hour>,
           <net_end_hour>{g.netTime._2.toBoincDouble}</net_end_hour>
-        }
-      }
+        )
+    }
       {
-        globalPrefsOverride.dayPrefs.map { case DayEntry(day, (start, end), (net_start, net_end)) =>
-            <day_prefs>
+      globalPrefsOverride.dayPrefs.map { case DayEntry(day, (start, end), (net_start, net_end)) =>
+        <day_prefs>
               <day_of_week>{day}</day_of_week>
               {
-                if (start > 0D && end > 0D) {
-                  <start_hour>{start}</start_hour>
-                  <end_hour>{end}</end_hour>
-                }
-              }
-              {
-                if (net_start > 0D && net_end > 0D) {
-                  <net_start_hour>{net_start}</net_start_hour>
-                  <net_end_hour>{net_end}</net_end_hour>
-                }
-              }
-              </day_prefs>
+          if start > 0d && end > 0d then
+            Seq(
+              <start_hour>{start}</start_hour>,
+              <end_hour>{end}</end_hour>
+            )
         }
+              {
+          if net_start > 0d && net_end > 0d then
+            Seq(
+              <net_start_hour>{net_start}</net_start_hour>,
+              <net_end_hour>{net_end}</net_end_hour>
+            )
+        }
+              </day_prefs>
       }
+    }
+      <vm_max_used_frac>{g.vmMaxUsedFrac.toBoincDouble}</vm_max_used_frac>
     </global_preferences>
-  }
-
-}

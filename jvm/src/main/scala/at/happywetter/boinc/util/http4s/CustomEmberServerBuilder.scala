@@ -15,12 +15,12 @@ import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
  * @author Raphael
  * @version 27.02.2020
  */
-object CustomEmberServerBuilder {
+object CustomEmberServerBuilder:
 
-  implicit class SSLContextBlazeServerBuilder[F[_]: Async](private val sb: EmberServerBuilder[F]) {
+  implicit class SSLContextBlazeServerBuilder[F[_]: Async](private val sb: EmberServerBuilder[F]):
 
-    def withOptionalSSL(config: Config): EmberServerBuilder[F] = {
-      if (config.server.ssl.enabled) {
+    def withOptionalSSL(config: Config): EmberServerBuilder[F] =
+      if config.server.ssl.enabled then
         val trustStoreInputStream = new FileInputStream(config.server.ssl.keystore)
         val trustStore = KeyStore.getInstance(KeyStore.getDefaultType)
         trustStore.load(trustStoreInputStream, config.server.ssl.password.toCharArray)
@@ -36,10 +36,4 @@ object CustomEmberServerBuilder {
         sslContext.init(keyManager.getKeyManagers, trustManager.getTrustManagers, null)
 
         sb.withTLS(TLSContext.Builder.forAsync[F].fromSSLContext(sslContext))
-      } else {
-        sb
-      }
-    }
-  }
-
-}
+      else sb

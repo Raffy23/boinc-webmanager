@@ -8,8 +8,6 @@ import at.happywetter.boinc.shared.rpc.DashboardDataEntry
  * @author Raphael
  * @version 22.11.2020
  */
-trait WebmanagerClient[F[_]] extends BoincCoreClient[F] {
+trait WebmanagerClient[F[_]] extends BoincCoreClient[F]:
 
   def getDashboardData: F[DashboardDataEntry]
-
-}

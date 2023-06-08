@@ -9,11 +9,11 @@ import mhtml.{Rx, Var}
   * @author Raphael
   * @version 06.02.2018
   */
-object BoincTopNavigation extends TopNavigation {
+object BoincTopNavigation extends TopNavigation:
 
   val clientName: Var[String] = Var("none")
 
-  override protected var selected: Var[String] = Var("boinc")
+  protected var selected: Var[String] = Var("boinc")
 
   override protected val links = List(
     ("boinc", "head_menu_boinc", "fa fa-address-card"),
@@ -30,5 +30,3 @@ object BoincTopNavigation extends TopNavigation {
 
   override protected def link(nav: String): Rx[String] =
     clientName.map(clientName => BoincClientLayout.link(clientName, nav))
-
-}

@@ -16,7 +16,7 @@ import at.happywetter.boinc.web.util.I18N._
 import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
+import org.scalajs.dom.{HTMLElement, HTMLInputElement}
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -30,7 +30,7 @@ import Ordering.Double.TotalOrdering
   * @author Raphael
   * @version 14.09.2017
   */
-class ProjectSwarmPage extends SwarmPageLayout {
+class ProjectSwarmPage extends SwarmPageLayout:
   override val path: String = "projects"
 
   private val dataset: Var[Map[String, List[(BoincClient, Project)]]] = Var(Map.empty)
@@ -40,71 +40,72 @@ class ProjectSwarmPage extends SwarmPageLayout {
 
   override def already(): Unit = onRender()
 
-  override def onRender(): Unit = {
+  override def onRender(): Unit =
     NProgress.start()
     ClientManager.getClients.foreach(clients => {
-      Future.sequence(
-        clients
-          .map(client =>
-            client.getProjects
-              .map(_.map(project => {
-                (client, project)
-              }))
-              .recover { case _: Exception => List() }
-          )
-      ).map(_.flatten.groupBy(_._2.url))
-       .map(projects => dataset := projects)
-       .foreach(_ => NProgress.done(true))
+      Future
+        .sequence(
+          clients
+            .map(client =>
+              client.getProjects
+                .map(_.map(project => {
+                  (client, project)
+                }))
+                .recover { case _: Exception => List() }
+            )
+        )
+        .map(_.flatten.groupBy(_._2.url))
+        .map(projects => dataset := projects)
+        .foreach(_ => NProgress.done(true))
     })
-  }
 
-  override def renderChildView: Elem = {
+  override def renderChildView: Elem =
     <div id="swarm-project-content">
       <div style="position:absolute;top:80px;right:20px">
         {
-          Seq(
-            new Tooltip(
-              Var("project_swarm_play".localize),
-              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
+      Seq(
+        new Tooltip(
+          Var("project_swarm_play".localize),
+          <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Resume)}>
                 <i class="fas fa-play-circle"></i>
               </a>,
-              textOrientation = TooltipStyle.topText
-            ).toXML,
-            new Tooltip(
-              Var("project_swarm_pause".localize),
-              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
+          textOrientation = TooltipStyle.topText
+        ).toXML,
+        new Tooltip(
+          Var("project_swarm_pause".localize),
+          <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Suspend)}>
                 <i class="fas fa-pause-circle"></i>
               </a>,
-              textOrientation = TooltipStyle.topText
-            ).toXML,
-            new Tooltip(
-              Var("project_swarm_refresh".localize),
-              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
+          textOrientation = TooltipStyle.topText
+        ).toXML,
+        new Tooltip(
+          Var("project_swarm_refresh".localize),
+          <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Update)}>
                 <i class="fas fa-sync"></i>
               </a>,
-              textOrientation = TooltipStyle.topText
-            ).toXML,
-            new Tooltip(
-              Var("project_swarm_trash".localize),
-              <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
+          textOrientation = TooltipStyle.topText
+        ).toXML,
+        new Tooltip(
+          Var("project_swarm_trash".localize),
+          <a class={Style.topNavigationAtion.htmlClass} href="#apply-to_all-project"
                  onclick={jsPlayAllSelectedAction(BoincRPC.ProjectAction.Remove)}>
                 <i class="fas fa-trash"></i>
               </a>,
-              textOrientation = TooltipStyle.topText
-            ).toXML,
-            new Tooltip(
-              Var("project_new_tooltip".localize),
-              <a class={Style.topNavigationAtion.htmlClass} href="#add-project"
+          textOrientation = TooltipStyle.topText
+        ).toXML,
+        new Tooltip(
+          Var("project_new_tooltip".localize),
+          <a class={Style.topNavigationAtion.htmlClass} href="#add-project"
                  onclick={jsAddNewProjectAction}>
                 <i class="fa fa-plus-square"></i>
               </a>,
-              textOrientation = TooltipStyle.topText
-            ).toXML
-          )
-        }
+          textOrientation = TooltipStyle.topText
+        ).toXML
+      )
+    }
       </div>
       <table class={TableTheme.table.htmlClass} id="swarm-project-data-table">
         <thead>
@@ -124,16 +125,21 @@ class ProjectSwarmPage extends SwarmPageLayout {
         </thead>
         <tbody>
           {
-            dataset.map(projects => {
-              projects.toList.sortBy(entry => entry._2.headOption.map(_._2.name).getOrElse(entry._1)).map { case (url, data) =>
-                val project = data.head._2
-                val accounts = data.map { case (_, project) => Account(project.userName, project.teamName, project.userAvgCredit) }
-                val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
+      dataset.map(projects => {
+        projects.toList.sortBy(entry => entry._2.headOption.map(_._2.name).getOrElse(entry._1)).map {
+          case (url, data) =>
+            val project = data.head._2
+            val accounts = data.map { case (_, project) =>
+              Account(project.userName, project.teamName, project.userAvgCredit)
+            }
+            val creditsRange = (accounts.map(_.credits).min, accounts.map(_.credits).max)
 
-                <tr>
+            <tr>
                   <td style="max-width:100px">
                     <input type="checkbox" value={url}></input>
-                    <a class={Style.link.htmlClass} href={project.url} onclick={AppRouter.openExternal}>{updateCache(project)}</a>
+                    <a class={Style.link.htmlClass} href={project.url} onclick={AppRouter.openExternal}>{
+              updateCache(project)
+            }</a>
                   </td>
                   <td style="text-align:center">{data.size}</td>
                   <td>{accounts.map(t => t.userName).distinct.flatMap(t => List(t.toXML, <br/>))}</td>
@@ -141,57 +147,63 @@ class ProjectSwarmPage extends SwarmPageLayout {
                   <td>{s"${creditsRange._1} - ${creditsRange._2}"}</td>
                   <td>
                     {
-                      new Tooltip(
-                        Var("project_properties".localize),
-                        <a href="#project-properties" onclick={jsShowProjectProperties(url, data)}>
+              new Tooltip(
+                Var("project_properties".localize),
+                <a href="#project-properties" onclick={jsShowProjectProperties(url, data)}>
                           <i class="fa fa-info-circle"></i>
                         </a>,
-                        textOrientation = TooltipStyle.leftText
-                      ).toXML
-                    }
+                textOrientation = TooltipStyle.leftText
+              ).toXML
+            }
                   </td>
                 </tr>
-              }
-            })
-          }
+        }
+      })
+    }
         </tbody>
       </table>
     </div>
-  }
 
-  private lazy val jsAddNewProjectAction: (Event) => Unit = (event) => {
+  private lazy val jsAddNewProjectAction: (Event) => Unit = event => {
     event.preventDefault()
 
-    //TODO: Use some cache ...
-    ClientManager.queryCompleteProjectList().foreach(data => {
-      new ProjectAddDialog(data, (url, username, password, name) => {
-        NProgress.start()
+    // TODO: Use some cache ...
+    ClientManager
+      .queryCompleteProjectList()
+      .foreach(data => {
+        new ProjectAddDialog(
+          data,
+          (url, username, password, name) => {
+            NProgress.start()
 
-        ClientManager
-          .getClients
-          .map(_.map(
-            _.attachProject(url, username, password, name).recover { case _: Exception => false })
-          ).flatMap(
-          Future
-            .sequence(_)
-            .map(_.count(_.unary_!))
-            .map(failures => {
-              if (failures > 0) {
-                new OkDialog("dialog_error_header".localize, List("project_new_error_msg".localize), (_) => {
-                  dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
-                }).renderToBody().show()
-              }
+            ClientManager.getClients
+              .map(_.map(_.attachProject(url, username, password, name).recover { case _: Exception => false }))
+              .flatMap(
+                Future
+                  .sequence(_)
+                  .map(_.count(_.unary_!))
+                  .map(failures => {
+                    if (failures > 0) {
+                      new OkDialog(
+                        "dialog_error_header".localize,
+                        List("project_new_error_msg".localize),
+                        _ => {
+                          dom.document.getElementById("pad-username").asInstanceOf[HTMLElement].focus()
+                        }
+                      ).renderToBody().show()
+                    }
 
-              NProgress.done(true)
-              failures == 0
-            })
-        )
+                    NProgress.done(true)
+                    failures == 0
+                  })
+              )
 
-      }).renderToBody().show()
-    })
+          }
+        ).renderToBody().show()
+      })
   }
 
-  private def jsShowProjectProperties(project: String, data: List[(BoincClient, Project)]): (Event) => Unit = (event) => {
+  private def jsShowProjectProperties(project: String, data: List[(BoincClient, Project)]): (Event) => Unit = event => {
     event.preventDefault()
 
     new OkDialog(
@@ -202,7 +214,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
       .show()
   }
 
-  private def jsPlayAllSelectedAction(action: ProjectAction): (Event) => Unit = (event) => {
+  private def jsPlayAllSelectedAction(action: ProjectAction): (Event) => Unit = event => {
     event.preventDefault()
 
     new SimpleModalDialog(
@@ -210,19 +222,22 @@ class ProjectSwarmPage extends SwarmPageLayout {
       <h4 class={Seq(DialogStyle.header.htmlClass, BoincClientStyle.pageHeaderSmall).mkString(" ")}>
         {"are_you_sure".localize}
       </h4>,
-      (dialog) => {
+      dialog => {
         dialog.close()
         NProgress.start()
         applyToAllSelected(action).foreach(_ => {
           NProgress.done(true)
         })
       },
-      (dialog) => {dialog.close()}
+      dialog => { dialog.close() }
     ).renderToBody().show()
 
   }
 
-  private def applyAction(clientList: List[BoincClient], project: String, action: ProjectAction): Future[List[Boolean]] =
+  private def applyAction(clientList: List[BoincClient],
+                          project: String,
+                          action: ProjectAction
+  ): Future[List[Boolean]] =
     Future.sequence(
       clientList.map(_.project(project, action).recover { case _: Exception => false })
     )
@@ -235,7 +250,7 @@ class ProjectSwarmPage extends SwarmPageLayout {
       getSelectedProjects.map(project => applyToAll(project, action))
     )
 
-  private def getSelectedProjects: List[String] = {
+  private def getSelectedProjects: List[String] =
     val result = new ListBuffer[String]()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
@@ -247,9 +262,8 @@ class ProjectSwarmPage extends SwarmPageLayout {
 
     println(result)
     result.toList
-  }
 
-  private val jsSelectAllListener: (Event) => Unit = (event) => {
+  private val jsSelectAllListener: (Event) => Unit = event => {
     event.preventDefault()
     val boxes = dom.document.querySelectorAll("#swarm-project-data-table input[type='checkbox']")
 
@@ -257,9 +271,6 @@ class ProjectSwarmPage extends SwarmPageLayout {
     boxes.forEach((node, _, _) => node.asInstanceOf[HTMLInputElement].checked = true)
   }
 
-  private[this] def updateCache(project: Project): String = {
+  private[this] def updateCache(project: Project): String =
     ProjectNameCache.save(project.url, project.name)
     project.name
-  }
-
-}

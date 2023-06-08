@@ -1,7 +1,17 @@
 package at.happywetter.boinc.web.css
 
 import at.happywetter.boinc.web.css.definitions._
-import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, ContextMenuStyle, Dialog, DropDownMenuStyle, FloatingMenu, PageLayoutStyle, TableTheme, Tooltip, TopNavigation}
+import at.happywetter.boinc.web.css.definitions.components.{
+  BasicModalStyle,
+  ContextMenuStyle,
+  Dialog,
+  DropDownMenuStyle,
+  FloatingMenu,
+  PageLayoutStyle,
+  TableTheme,
+  Tooltip,
+  TopNavigation
+}
 import at.happywetter.boinc.web.css.definitions.pages._
 
 /**
@@ -10,9 +20,9 @@ import at.happywetter.boinc.web.css.definitions.pages._
  * @author Raphael
  * @version 03.02.2020
  */
-object AppCSSRegistry {
+object AppCSSRegistry:
 
-  def registerCSSNames(): Int = {
+  def registerCSSNames(): Int =
     GlobalRegistry.registerDefinitions(
       FloatingMenu,
       PageLayoutStyle,
@@ -35,6 +45,3 @@ object AppCSSRegistry {
       ProjectSwarmPageStyle,
       DashboardMenuStyle
     )(GlobalRegistry.ProdMode)
-  }
-
-}

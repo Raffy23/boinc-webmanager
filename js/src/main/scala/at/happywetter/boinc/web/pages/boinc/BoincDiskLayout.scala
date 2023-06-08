@@ -13,7 +13,7 @@ import at.happywetter.boinc.web.util.I18N._
 import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.CanvasRenderingContext2D
-import org.scalajs.dom.raw.HTMLCanvasElement
+import org.scalajs.dom.HTMLCanvasElement
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -27,7 +27,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
   * @author Raphael
   * @version 30.08.2017
   */
-class BoincDiskLayout extends BoincClientLayout {
+class BoincDiskLayout extends BoincClientLayout:
   import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   override val path = "disk"
@@ -38,19 +38,21 @@ class BoincDiskLayout extends BoincClientLayout {
   private def getSize(f: (DiskUsage) => Double): Rx[Option[String]] =
     data.map(opt => opt.map(x => BoincFormatter.convertSize(f(x))))
 
-  override def render: Elem = {
+  override def render: Elem =
     boinc.getDiskUsage.foreach(diskUsage => {
       data := Some(diskUsage)
 
-      Future.sequence(
-        diskUsage.diskUsage.keys.map(url => ProjectNameCache.get(url).map(f => (url, f)))
-      ).map(names => names.map{ case (url, nameOpt) => (url, nameOpt.getOrElse(url)) })
-       .map(_.toMap)
-       .map(x => names := x)
-       .foreach(_ => {
-         buildChart(diskUsage)
-         NProgress.done(true)
-       })
+      Future
+        .sequence(
+          diskUsage.diskUsage.keys.map(url => ProjectNameCache.get(url).map(f => (url, f)))
+        )
+        .map(names => names.map { case (url, nameOpt) => (url, nameOpt.getOrElse(url)) })
+        .map(_.toMap)
+        .map(x => names := x)
+        .foreach(_ => {
+          buildChart(diskUsage)
+          NProgress.done(true)
+        })
     })
 
     <div>
@@ -77,17 +79,18 @@ class BoincDiskLayout extends BoincClientLayout {
             </thead>
             <tbody>
               {
-                data.map(_.map(usage => {
-                  usage.diskUsage.zip(ChartColors.stream).toList.sortBy(f => -f._1._2).map{
-                    case ((name, usage), color) =>
-                      <tr>
-                        <td style="width:32px"><div style={"height:24px;width:24px;background-color:"+color}></div></td>
+      data.map(_.map(usage => {
+        usage.diskUsage.zip(ChartColors.stream).toList.sortBy(f => -f._1._2).map { case ((name, usage), color) =>
+          <tr>
+                        <td style="width:32px"><div style={
+            "height:24px;width:24px;background-color:" + color
+          }></div></td>
                         <td >{names.map(_.getOrElse(name, name))}</td>
                         <td>{BoincFormatter.convertSize(usage)}</td>
                       </tr>
-                  }
-                }))
-              }
+        }
+      }))
+    }
             </tbody>
           </table>
         </div>
@@ -96,47 +99,45 @@ class BoincDiskLayout extends BoincClientLayout {
         </div>
       </div>
     </div>
-  }
 
-  private def buildChart(usage: DiskUsage): Unit = {
+  private def buildChart(usage: DiskUsage): Unit =
     val context =
-      dom.document.getElementById("chart-area")
+      dom.document
+        .getElementById("chart-area")
         .asInstanceOf[HTMLCanvasElement]
         .getContext("2d")
         .asInstanceOf[CanvasRenderingContext2D]
 
     import js.JSConverters._
-    new ChartJS(context, new ChartConfig {
-      override val data: ChartData = new ChartData {
-        override val datasets: js.Array[Dataset] = List(new Dataset {
-          data = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
-          backgroundColor = ChartColors.stream.take(usage.diskUsage.size).toJSArray
-          label = "disk_usage_legend".localize
-        }).toJSArray
+    new ChartJS(
+      context,
+      new ChartConfig {
+        override val data: ChartData = new ChartData {
+          override val datasets: js.Array[Dataset] = List(new Dataset {
+            this.data = usage.diskUsage.map { case (_, value) => value }.toJSArray.asInstanceOf[js.Array[js.Any]]
+            this.backgroundColor = ChartColors.stream.take(usage.diskUsage.size).toJSArray
+            this.label = "disk_usage_legend".localize
+          }).toJSArray
 
-        labels = usage.diskUsage.map { case (name, _) => name }.toJSArray
+          labels = usage.diskUsage.map { case (name, _) => name }.toJSArray
+        }
+        override val `type`: String = "pie"
+        override val options: ChartOptions = new ChartOptions {
+          legend.display = false
+          tooltips.callbacks.label = tooltipLabel
+          maintainAspectRatio = false
+        }
       }
-      override val `type`: String = "pie"
-      override val options: ChartOptions = new ChartOptions {
-        legend.display = false
-        tooltips.callbacks.label = tooltipLabel
-        maintainAspectRatio = false
-      }
-    })
-  }
+    )
 
-  private def getTooltipLabel(tooltipItem: TooltipItem, data: ChartData): String = {
+  private def getTooltipLabel(tooltipItem: TooltipItem, data: ChartData): String =
     val idx = tooltipItem.index.intValue()
     names.map(x => x(data.labels(idx))).now
-  }
 
-  private def getTooltipValue(tooltipItem: TooltipItem, data: ChartData): String = {
+  private def getTooltipValue(tooltipItem: TooltipItem, data: ChartData): String =
     val idx = tooltipItem.index.intValue()
-    this.data.map(_.map(u => u.diskUsage(data.labels(idx))).getOrElse(0D)).now.toSize
-  }
+    this.data.map(_.map(u => u.diskUsage(data.labels(idx))).getOrElse(0d)).now.toSize
 
   private val tooltipLabel: js.Function2[TooltipItem, ChartData, String] = (tooltipItem, data) => {
     s"${getTooltipLabel(tooltipItem, data)}: ${getTooltipValue(tooltipItem, data)}"
   }
-
-}

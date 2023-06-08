@@ -5,21 +5,18 @@ import cats.effect.IO
 import cats.effect.kernel.{Ref, Resource, Spawn}
 import cats.effect.std.Queue
 
-class Observer[A] private (subscribers: Ref[IO, List[Subscriber[A]]], queue: Queue[IO, A]) {
+class Observer[A] private (subscribers: Ref[IO, List[Subscriber[A]]], queue: Queue[IO, A]):
 
   private val backgroundTask =
-    queue
-      .take
-      .flatTap { msg =>
-        subscribers
-          .get
-          .flatMap { subscribers =>
-            import cats.implicits._
-            subscribers
-              .map(_(msg))
-              .sequence
-          }
-      }.foreverM
+    queue.take.flatTap { msg =>
+      subscribers.get
+        .flatMap { subscribers =>
+          import cats.implicits._
+          subscribers
+            .map(_(msg))
+            .sequence
+        }
+    }.foreverM
 
   def enqueue(event: A): IO[Unit] =
     queue.offer(event)
@@ -33,15 +30,13 @@ class Observer[A] private (subscribers: Ref[IO, List[Subscriber[A]]], queue: Que
   def unregister(subscriber: Subscriber[A]): IO[Unit] =
     subscribers.update(_.filterNot(_ == subscriber))
 
-}
-
-object Observer {
+object Observer:
 
   type Subscriber[A] = A => IO[Unit]
 
   def unbounded[A]: Resource[IO, Observer[A]] =
     for {
-      queue    <- Resource.eval(Queue.unbounded[IO, A])
+      queue <- Resource.eval(Queue.unbounded[IO, A])
       observer <- Observer.of[A](queue)
     } yield observer
 
@@ -50,11 +45,9 @@ object Observer {
       observer <- Resource.eval(
         for {
           subscribers <- Ref.of[IO, List[Subscriber[A]]](List.empty[Subscriber[A]])
-          observer    <- IO.pure(new Observer[A](subscribers, queue))
+          observer <- IO.pure(new Observer[A](subscribers, queue))
         } yield observer
       )
 
       _ <- Spawn[IO].background[Nothing](observer.backgroundTask)
     } yield observer
-
-}

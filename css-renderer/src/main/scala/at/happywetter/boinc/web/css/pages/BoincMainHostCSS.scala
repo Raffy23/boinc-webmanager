@@ -9,7 +9,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincMainHostCSS extends StyleSheet.Standalone {
+object BoincMainHostCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincMainHostStyle._
   import dsl._
 
@@ -17,9 +17,7 @@ object BoincMainHostCSS extends StyleSheet.Standalone {
     unsafeChild("tbody>tr>td:first-child")(
       width(200 px)
     ),
-
     unsafeChild("tbody>tr>td")(
       padding(8 px).important
     )
   )
-}

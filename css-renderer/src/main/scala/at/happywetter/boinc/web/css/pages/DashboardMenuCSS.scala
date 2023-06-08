@@ -9,13 +9,13 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object DashboardMenuCSS extends StyleSheet.Standalone {
+object DashboardMenuCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.DashboardMenuStyle._
   import dsl._
 
   private val menuMargin = 10
 
-  menu.cssName -(
+  menu.cssName - (
     position.fixed,
     overflowX.auto,
     bottom.`0`,
@@ -28,13 +28,12 @@ object DashboardMenuCSS extends StyleSheet.Standalone {
     border :=! "1px solid #EEE",
     boxShadow := " 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)",
     zIndex :=! "98",
-
     media.maxWidth(690 px)(
       top(100 px)
     )
   )
 
-  elem.cssName -(
+  elem.cssName - (
     unsafeChild("a")(
       display.block,
       width(207 px),
@@ -42,12 +41,10 @@ object DashboardMenuCSS extends StyleSheet.Standalone {
       padding(menuMargin px, 15 px),
       boxSizing.borderBox,
       color(c"#333"),
-
       &.hover(
         backgroundColor(c"#74a9d8"),
         color.white
       ),
-
       unsafeChild("i")(
         marginRight(menuMargin px),
         width(1 em)
@@ -55,16 +52,16 @@ object DashboardMenuCSS extends StyleSheet.Standalone {
     )
   )
 
-  active.cssName -(
+  active.cssName - (
     backgroundColor(c"#428bca"),
     color :=! "white !important"
   )
 
-  clickable.cssName -(
+  clickable.cssName - (
     cursor.pointer
   )
 
-  subMenuHosts.cssName -(
+  subMenuHosts.cssName - (
     float.right,
     margin(0 px, (-1 * menuMargin + 5) px, 0 px, 0 px),
     fontSize.smaller,
@@ -75,5 +72,3 @@ object DashboardMenuCSS extends StyleSheet.Standalone {
     borderRadius(6 px),
     textAlign.center
   )
-
-}

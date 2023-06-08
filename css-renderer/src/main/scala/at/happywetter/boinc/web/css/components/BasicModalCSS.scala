@@ -9,7 +9,7 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BasicModalCSS extends StyleSheet.Standalone {
+object BasicModalCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.BasicModalStyle._
   import at.happywetter.boinc.web.css.definitions.components.BasicModalStyle.{content => style_content}
   import dsl._
@@ -42,11 +42,10 @@ object BasicModalCSS extends StyleSheet.Standalone {
     padding(2 px, 16 px),
     overflow.auto,
     marginBottom(4 px)
-    )
+  )
 
   header.cssName - (
     padding(2 px, 16 px),
-
     unsafeChild("h3")(
       borderBottom :=! "1px solid #DDD",
       fontSize(20 px),
@@ -72,18 +71,16 @@ object BasicModalCSS extends StyleSheet.Standalone {
     cursor.pointer,
     margin(6 px, 6 px),
     textDecoration := none,
-
     &.hover(
       backgroundColor(c"#74a9d8")
     )
   )
 
-  action.cssName -(
+  action.cssName - (
     userSelect :=! "none",
     color(c"#333"),
     cursor.pointer,
     textDecoration := "underline",
-
     &.hover(
       color(c"#428bca")
     )
@@ -94,5 +91,3 @@ object BasicModalCSS extends StyleSheet.Standalone {
       padding(0.3 em)
     )
   )
-
-}

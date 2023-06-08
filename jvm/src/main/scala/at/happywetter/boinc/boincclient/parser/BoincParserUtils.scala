@@ -11,9 +11,9 @@ import scala.xml.NodeSeq
   * @author Raphael
   * @version 25.08.2017
   */
-object BoincParserUtils {
+object BoincParserUtils:
 
-  implicit class BoincXMLNodeSeq(val node: NodeSeq) extends AnyVal {
+  implicit class BoincXMLNodeSeq(val node: NodeSeq) extends AnyVal:
 
     def toTask: Task = TaskParser.fromXML(node)
     def toResult: Result = ResultParser.fromXML(node)
@@ -27,22 +27,11 @@ object BoincParserUtils {
     def toStatistics: Statistics = ProjectStatsParser.fromXML(node)
     def toVersion: BoincVersion = VersionParser.fromXML(node)
 
-  }
-
-  implicit class RichGlobalPrefs(val globalPrefsOverride: GlobalPrefsOverride) extends AnyVal {
+  implicit class RichGlobalPrefs(val globalPrefsOverride: GlobalPrefsOverride) extends AnyVal:
 
     def toXML: NodeSeq = GlobalPrefsParser.toXML(globalPrefsOverride)
 
-  }
-
-  implicit class BoincHtmlDocument(val document: Document) extends AnyVal {
+  implicit class BoincHtmlDocument(val document: Document) extends AnyVal:
 
     def toMessages: List[Message] = MessageParser.fromDocument(document)
     def toNotices: List[Notice] = NoticeParser.fromDocument(document)
-
-  }
-
-}
-
-
-

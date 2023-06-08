@@ -1,7 +1,7 @@
 package at.happywetter.boinc.web.storage
 
 import at.happywetter.boinc.shared.boincrpc.Workunit
-import org.scalajs.dom.raw.{IDBCursorWithValue, IDBRequest}
+import org.scalajs.dom.{IDBCursorWithValue, IDBRequest}
 
 import scala.concurrent.Future
 import scala.scalajs.js
@@ -13,18 +13,17 @@ import scala.scalajs.js.{Date, Promise}
   * @author Raphael
   * @version 04.08.2017
   */
-object AppSettingsStorage extends DatabaseProvider {
+object AppSettingsStorage extends DatabaseProvider:
 
-  private[storage] implicit val objStore: String = "workunit_storage"
-  private implicit val storeNames: js.Array[String] = js.Array(objStore)
+  implicit private[storage] val objStore: String = "workunit_storage"
+  implicit private val storeNames: js.Array[String] = js.Array(objStore)
 
   @js.native
-  private trait StorageObject extends js.Object {
+  private trait StorageObject extends js.Object:
     val appName: String = js.native
     val client: String = js.native
     val wuname: String = js.native
     val timestamp: Double = js.native
-  }
 
   def save(boincName: String, wu: Workunit): Future[Unit] =
     transaction(_.put(toJSLiteral(boincName, wu)))
@@ -34,22 +33,20 @@ object AppSettingsStorage extends DatabaseProvider {
 
   def delete(before: js.Date): Future[Unit] =
     transaction { transaction =>
-      val cursor     = transaction.openCursor()
+      val cursor = transaction.openCursor()
 
       cursor.onsuccess = { event =>
-        val cursorResult = event.target.asInstanceOf[IDBRequest].result
-        if (cursorResult != null) {
-          val cursor = cursorResult.asInstanceOf[IDBCursorWithValue]
+        val cursorResult = event.target.asInstanceOf[IDBRequest[_, IDBCursorWithValue[_]]].result
+        if (cursorResult != null)
+          val cursor = cursorResult
           val result = cursor.value.asInstanceOf[js.UndefOr[StorageObject]]
 
           result.toOption.foreach { result =>
-            if (result.timestamp < before.getTime()) {
+            if (result.timestamp < before.getTime())
               cursor.delete()
-            }
           }
 
           cursor.continue()
-        }
       }
     }
 
@@ -61,15 +58,14 @@ object AppSettingsStorage extends DatabaseProvider {
       "timestamp" -> new Date().getTime()
     )
 
-  private def toScala(value: js.UndefOr[StorageObject]): Option[Workunit] = {
-    value.toOption.map(any => Workunit(any.wuname,any.appName,0D,0D,0D,0D))
-  }
+  private def toScala(value: js.UndefOr[StorageObject]): Option[Workunit] =
+    value.toOption.map(any => Workunit(any.wuname, any.appName, 0d, 0d, 0d, 0d))
 
-  private def unpack(request: IDBRequest): Future[Option[Workunit]] =
+  private def unpack(request: IDBRequest[_, _]): Future[Option[Workunit]] =
     new Promise[Option[Workunit]]((resolve, reject) => {
-      request.onsuccess = (_) => resolve(
-        toScala(request.result.asInstanceOf[js.UndefOr[StorageObject]])
-      )
+      request.onsuccess = _ =>
+        resolve(
+          toScala(request.result.asInstanceOf[js.UndefOr[StorageObject]])
+        )
       request.onerror = reject
     }).toFuture
-}

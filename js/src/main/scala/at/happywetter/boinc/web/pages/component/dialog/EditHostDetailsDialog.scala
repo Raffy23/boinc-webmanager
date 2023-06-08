@@ -1,14 +1,15 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
 import at.happywetter.boinc.web.boincclient.ClientManager
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.components.{Dialog => DialogStyle}
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.model.HostDetailsTableRow
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.HTMLInputElement
+
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
@@ -17,7 +18,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
  * @author Raphael
  * @version 10.07.2020
  */
-object EditHostDetailsDialog {
+object EditHostDetailsDialog:
 
   def apply(hostDetails: HostDetailsTableRow): Dialog =
     new SimpleModalDialog(
@@ -66,9 +67,6 @@ object EditHostDetailsDialog {
           }
         }
       },
-      dialog => {dialog.close()},
+      dialog => { dialog.close() },
       "save".localize
     )
-
-
-}

@@ -16,16 +16,17 @@ import scala.xml.Elem
   * @author Raphael
   * @version 25.07.2017
   */
-object LayoutManager {
+object LayoutManager:
 
   private val rootElement = dom.document.getElementById("app-container")
-  private val childLayout = Var[Layout](new BootstrapLayout) //TODO
+  private val childLayout = Var[Layout](new BootstrapLayout) // TODO
   private val mainContent = Var[Elem](<div>{childLayout.map(_.render)}</div>)
 
-  def init(): Unit = {
+  def init(): Unit =
     rootElement.innerHTML = ""
     mhtml.mount(rootElement, PageLayout.heading)
-    mhtml.mount(rootElement,
+    mhtml.mount(
+      rootElement,
       <main>
         {DashboardMenu.component}
         <div id="client-container" class={PageLayoutStyle.clientContainer.htmlClass}>
@@ -33,19 +34,16 @@ object LayoutManager {
         </div>
       </main>
     )
-  }
 
-  def renderLayout(params: js.Dictionary[String], page: Layout): Unit = {
+  def renderLayout(params: js.Dictionary[String], page: Layout): Unit =
     page.beforeRender(params)
     render(page)
-  }
 
-  def render(page: Layout): Unit = {
+  def render(page: Layout): Unit =
     childLayout := page
     page.onRender()
-  }
 
-  class BootstrapLayout extends Layout {
+  class BootstrapLayout extends Layout:
     override val path: String = "/"
     override def render: Elem =
       <div>
@@ -53,6 +51,3 @@ object LayoutManager {
       </div>
 
     override def beforeRender(params: Dictionary[String]): Unit = {}
-  }
-
-}

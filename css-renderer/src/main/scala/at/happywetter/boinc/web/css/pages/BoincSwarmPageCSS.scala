@@ -11,15 +11,15 @@ import scala.language.postfixOps
  * @author Raphael
  * @version 03.02.2020
  */
-object BoincSwarmPageCSS extends StyleSheet.Standalone {
+object BoincSwarmPageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincSwarmPageStyle._
   import dsl._
 
-  checkbox.cssName -(
+  checkbox.cssName - (
     marginRight(10 px)
   )
 
-  masterCheckbox.cssName -(
+  masterCheckbox.cssName - (
     textDecoration := "none",
     color(c"#333"),
     float.left,
@@ -29,5 +29,3 @@ object BoincSwarmPageCSS extends StyleSheet.Standalone {
   button.cssName - (
     Button.normal
   )
-  
-}

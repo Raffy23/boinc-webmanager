@@ -11,7 +11,7 @@ import scala.xml.NodeSeq
   * @author Raphael
   * @version 25.08.2017
   */
-object ProjectParser {
+object ProjectParser:
 
   def fromXML(node: NodeSeq): List[Project] = (node \ "project").theSeq.map(fromNodeXML).toList
 
@@ -37,14 +37,11 @@ object ProjectParser {
     (node \ "njobs_success").tryToInt,
     (node \ "njobs_error").tryToInt,
     readGUIUrls(node \ "gui_urls")
-    )
+  )
 
   def readGUIUrls(node: NodeSeq): List[ProjectGuiURL] = (
-    for (guiurl <- node \ "gui_url") yield ProjectGuiURL((guiurl \ "name").text
-      , getText(guiurl \ "description")
-      , (guiurl \ "url").text)
-    ).toList
+    for guiurl <- node \ "gui_url"
+    yield ProjectGuiURL((guiurl \ "name").text, getText(guiurl \ "description"), (guiurl \ "url").text)
+  ).toList
 
-  private def getText(node: NodeSeq): String = if( node.text == null ) "<empty>" else node.text
-
-}
+  private def getText(node: NodeSeq): String = if node.text == null then "<empty>" else node.text
