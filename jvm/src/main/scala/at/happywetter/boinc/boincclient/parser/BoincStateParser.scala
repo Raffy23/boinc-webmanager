@@ -1,10 +1,10 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.boincrpc._
-
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.xml.NodeSeq
+
+import at.happywetter.boinc.shared.boincrpc._
 
 /**
   * Created by: 

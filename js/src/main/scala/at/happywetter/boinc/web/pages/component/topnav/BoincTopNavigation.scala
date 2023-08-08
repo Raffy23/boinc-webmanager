@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
+
 import mhtml.{Rx, Var}
 
 /**

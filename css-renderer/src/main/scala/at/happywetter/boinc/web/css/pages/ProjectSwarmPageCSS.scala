@@ -1,8 +1,8 @@
 package at.happywetter.boinc.web.css.pages
 
-import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
-
 import scala.language.postfixOps
+
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 
 /**
  * Created by: 
@@ -12,6 +12,7 @@ import scala.language.postfixOps
  */
 object ProjectSwarmPageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.ProjectSwarmPageStyle._
+
   import dsl._
 
   topNavigationAtion.cssName - (

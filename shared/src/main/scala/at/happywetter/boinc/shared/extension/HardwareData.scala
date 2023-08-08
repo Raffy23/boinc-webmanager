@@ -12,3 +12,7 @@ object HardwareData:
     def toValueUnitString: String = s"$value $unit"
 
   type SensorsData = Map[String, SensorsRow]
+
+  case class Actions(global: Map[String, Action], host: Map[String, Action])
+
+  case class Action(icon: String, name: String, command: String, args: Seq[String])

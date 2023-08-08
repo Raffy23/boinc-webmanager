@@ -1,25 +1,26 @@
 package at.happywetter.boinc.web.pages.boinc
 
-import at.happywetter.boinc.shared.boincrpc.DiskUsage
-import at.happywetter.boinc.web.boincclient.BoincFormatter
-import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
-import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
-import at.happywetter.boinc.web.chartjs._
-import at.happywetter.boinc.web.css.definitions.components.TableTheme
-import at.happywetter.boinc.web.routes.NProgress
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.storage.ProjectNameCache
-import at.happywetter.boinc.web.util.I18N._
-import mhtml.{Rx, Var}
 import org.scalajs.dom
 import org.scalajs.dom.CanvasRenderingContext2D
 import org.scalajs.dom.HTMLCanvasElement
-
 import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.xml.Elem
+
+import at.happywetter.boinc.shared.boincrpc.DiskUsage
+import at.happywetter.boinc.web.boincclient.BoincFormatter
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
+import at.happywetter.boinc.web.chartjs._
+import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
+import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.storage.ProjectNameCache
+import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.RichRx._
+
 import Ordering.Double.TotalOrdering
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

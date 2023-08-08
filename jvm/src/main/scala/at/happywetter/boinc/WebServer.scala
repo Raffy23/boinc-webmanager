@@ -1,9 +1,12 @@
 package at.happywetter.boinc
 
+import scala.concurrent.duration.Duration
+
 import at.happywetter.boinc.extensions.linux.HWStatusService
 import at.happywetter.boinc.server._
 import at.happywetter.boinc.util.http4s.CustomEmberServerBuilder._
 import at.happywetter.boinc.util.{BoincHostFinder, ConfigurationChecker, JobManager}
+
 import cats.effect._
 import com.comcast.ip4s.{Host, Port}
 import io.opentelemetry.api.GlobalOpenTelemetry
@@ -17,7 +20,6 @@ import org.http4s.server.websocket.WebSocketBuilder
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.otel4s.java.OtelJava
 import org.typelevel.otel4s.trace.Tracer
-import scala.concurrent.duration.Duration
 import util.http4s.Otel4sMiddelware._
 
 /**
@@ -46,7 +48,8 @@ object WebServer extends IOApp:
                 hardware.binary,
                 hardware.params,
                 hardware.cacheTimeout,
-                hardware.actions
+                hardware.actions,
+                hardware.globalActions
               )
             )
             .get
@@ -82,10 +85,10 @@ object WebServer extends IOApp:
         _ <- ConfigurationChecker.checkConfiguration(config, logger)
       } yield config)
 
-      database <- Database().onFinalize(IO.println("DONE Database"))
-      xmlPStore <- XMLProjectStore(database, config).onFinalize(IO.println("DONE XMLProjectStore"))
-      hostManager <- BoincManager(config, database).onFinalize(IO.println("DONE BoincManager")) // <-- problematic
-      jobManager <- JobManager(hostManager, database).onFinalize(IO.println("DONE JobManager"))
+      database <- Database()
+      xmlPStore <- XMLProjectStore(database, config)
+      hostManager <- BoincManager(config, database)
+      jobManager <- JobManager(hostManager, database)
 
       // TODO: for Linux with systemd privileged socket can be inherited,
       //       how to convince Blaze to use it?
@@ -97,9 +100,8 @@ object WebServer extends IOApp:
         .withPort(Port.fromInt(config.server.port).get)
         .withHttpWebSocketApp(wsBuilder => routes(config, wsBuilder, hostManager, xmlPStore, database, jobManager))
         .build
-        .onFinalize(IO.println("DONE EmberServerBuilder"))
 
-      autoDiscovery <- BoincHostFinder(config, hostManager, database).onFinalize(IO.println("DONE BoincHostFinder"))
+      autoDiscovery <- BoincHostFinder(config, hostManager, database)
     } yield config)
       .use(config =>
         if config.serviceMode then serviceMode

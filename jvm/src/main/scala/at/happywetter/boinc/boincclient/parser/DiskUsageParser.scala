@@ -1,9 +1,9 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.boincrpc.DiskUsage
-
 import scala.collection.mutable
 import scala.xml.NodeSeq
+
+import at.happywetter.boinc.shared.boincrpc.DiskUsage
 
 /**
   * Created by: 

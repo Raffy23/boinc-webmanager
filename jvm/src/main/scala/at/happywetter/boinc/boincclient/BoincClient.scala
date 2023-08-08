@@ -367,7 +367,6 @@ class BoincClient private (socket: Socket[IO],
     version.get.map(_.get)
 
   def close(): IO[Unit] = for {
-    _ <- IO.println(s"CLOSING ${logHeader}")
     _ <- shutdownSignal.set(true)
     _ <- socket.endOfInput
     _ <- socket.endOfOutput
@@ -380,7 +379,7 @@ class BoincClient private (socket: Socket[IO],
     T.span("getAppConfig").surround:
       this.execAction(
         <get_app_config>
-          <url>$
+          <url>
             {url}
           </url>
         </get_app_config>

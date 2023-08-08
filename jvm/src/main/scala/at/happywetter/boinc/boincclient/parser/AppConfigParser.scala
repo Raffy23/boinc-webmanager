@@ -1,8 +1,8 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.boincrpc.AppConfig
-
 import scala.xml.NodeSeq
+
+import at.happywetter.boinc.shared.boincrpc.AppConfig
 
 object AppConfigParser:
   import AppConfig._

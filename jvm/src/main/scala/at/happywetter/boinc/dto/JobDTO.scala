@@ -1,11 +1,13 @@
 package at.happywetter.boinc.dto
 
-import at.happywetter.boinc.shared.rpc
-import at.happywetter.boinc.shared.parser.jobParser
-import upickle.default._
-
 import java.util.UUID
+
 import scala.language.implicitConversions
+
+import at.happywetter.boinc.shared.parser.jobParser
+import at.happywetter.boinc.shared.rpc
+
+import upickle.default._
 
 object JobDTO:
 

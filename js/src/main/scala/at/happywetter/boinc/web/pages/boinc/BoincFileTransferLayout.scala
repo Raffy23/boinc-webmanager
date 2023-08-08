@@ -1,5 +1,8 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.CCState
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.model.FileTransferTableModel.FileTransferTableRow
@@ -7,10 +10,8 @@ import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.GlobalOptions
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.Var
-import org.scalajs.dom
 
-import scala.xml.Elem
+import mhtml.Var
 
 /**
   * Created by: 

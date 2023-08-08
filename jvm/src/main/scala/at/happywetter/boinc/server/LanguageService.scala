@@ -1,18 +1,19 @@
 package at.happywetter.boinc.server
 
-import at.happywetter.boinc.util.ResourceWalker
-import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
-import com.typesafe.config.{Config => TypesafeConfig, ConfigFactory}
-
-import scala.io.{Codec => IOCodec, Source}
-import upickle.default._
-import cats.effect._
-import org.http4s._
-import org.http4s.dsl.io._
 import java.security.MessageDigest
 
+import scala.io.{Codec => IOCodec, Source}
+
+import at.happywetter.boinc.util.ResourceWalker
+import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+
+import cats.effect._
+import com.typesafe.config.{Config => TypesafeConfig, ConfigFactory}
+import org.http4s._
+import org.http4s.dsl.io._
 import org.http4s.headers.`Content-Length`
 import org.http4s.server.middleware.GZip
+import upickle.default._
 
 /**
   * Created by: 

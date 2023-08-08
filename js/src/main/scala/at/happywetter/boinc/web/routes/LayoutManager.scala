@@ -1,24 +1,25 @@
 package at.happywetter.boinc.web.routes
 
-import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle
-import at.happywetter.boinc.web.pages.component.DashboardMenu
-import at.happywetter.boinc.web.pages.{Layout, PageLayout}
-import mhtml.Var
 import org.scalajs.dom
-
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
 
+import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle
+import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.{Layout, PageLayout}
+
+import mhtml.Var
+
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 25.07.2017
   */
 object LayoutManager:
 
-  private val rootElement = dom.document.getElementById("app-container")
+  private val rootElement = dom.document.getElementById("app")
   private val childLayout = Var[Layout](new BootstrapLayout) // TODO
   private val mainContent = Var[Elem](<div>{childLayout.map(_.render)}</div>)
 

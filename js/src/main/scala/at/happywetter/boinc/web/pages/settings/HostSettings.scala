@@ -1,19 +1,19 @@
 package at.happywetter.boinc.web.pages.settings
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.model.HostDetailsTableModel
 import at.happywetter.boinc.web.model.HostDetailsTableRow
 import at.happywetter.boinc.web.pages.Layout
-import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.pages.component.topnav.SettingsTopNavigation
+import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
-
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
 
 /**
  * Created by: 

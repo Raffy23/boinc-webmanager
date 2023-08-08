@@ -1,13 +1,14 @@
 package at.happywetter.boinc.repository
 
+import java.util.UUID
+
 import at.happywetter.boinc.dto.JobDTO.{Job, JobConverter}
 import at.happywetter.boinc.shared.rpc.jobs.{Job => RpcJob}
+
 import cats.effect.IO
 import doobie.Transactor
-import doobie.implicits._
 import doobie.h2.implicits._
-
-import java.util.UUID
+import doobie.implicits._
 
 class JobRepository(xa: Transactor[IO]):
 

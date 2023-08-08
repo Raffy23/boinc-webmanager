@@ -1,7 +1,8 @@
 package at.happywetter.boinc.web.css.components
 
-import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import scala.language.postfixOps
+
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 
 /**
  * Created by: 
@@ -11,6 +12,7 @@ import scala.language.postfixOps
  */
 object FloatingMenu extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.FloatingMenu._
+
   import dsl._
 
   root.cssName - (

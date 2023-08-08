@@ -3,13 +3,14 @@ package at.happywetter.boinc.util.http4s
 import at.happywetter.boinc.server.{bootUpDate, bootUpTime}
 import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper.withNotMatchingEtag
+
 import cats.effect.IO
 import org.http4s._
-import org.http4s.implicits._
 import org.http4s.dsl.io._
-import org.http4s.headers.{`Content-Type`, `Last-Modified`, ETag}
+import org.http4s.headers.{ETag, `Content-Type`, `Last-Modified`}
+import org.http4s.implicits._
 import org.typelevel.ci.CIString
-import upickle.default.{write, writeBinary, Writer}
+import upickle.default.{Writer, write, writeBinary}
 
 /**
   * Hint: This was caused by updating http4s from 0.18.0 to 0.21.0-M4

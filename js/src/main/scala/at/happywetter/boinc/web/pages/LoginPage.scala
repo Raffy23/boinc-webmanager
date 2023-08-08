@@ -1,5 +1,16 @@
 package at.happywetter.boinc.web.pages
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.HTMLInputElement
+import scala.concurrent.Future
+import scala.language.postfixOps
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.css.definitions.pages.{LoginPageStyle => Style}
 import at.happywetter.boinc.web.pages.component.DashboardMenu
@@ -12,17 +23,6 @@ import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.LanguageDataProvider
 import at.happywetter.boinc.web.util.ServerConfig
 import at.happywetter.boinc.web.util.XMLHelper._
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.HTMLInputElement
-
-import scala.concurrent.Future
-import scala.language.postfixOps
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
 
 /**
   * Created by: 

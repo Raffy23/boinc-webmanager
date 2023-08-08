@@ -1,10 +1,10 @@
 package at.happywetter.boinc.web.pages.component.dialog
-import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.HTMLElement
-
 import scala.xml.{Elem, Node}
+
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
 
 /**
   * Created by: 

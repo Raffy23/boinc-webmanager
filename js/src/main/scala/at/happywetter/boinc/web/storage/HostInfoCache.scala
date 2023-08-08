@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.storage
 
+import org.scalajs.dom
+import scala.util.Try
+
 import at.happywetter.boinc.shared.boincrpc.{BoincState, HostInfo}
 import at.happywetter.boinc.shared.parser._
-import org.scalajs.dom
-import upickle.default
 
-import scala.util.Try
+import upickle.default
 
 /**
   * Created by: 

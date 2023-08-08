@@ -1,9 +1,9 @@
 package at.happywetter.boinc
 
-import org.http4s.{HttpDate, ParseResult}
-
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, ZonedDateTime}
+
+import org.http4s.{HttpDate, ParseResult}
 
 /**
  * Created by: 

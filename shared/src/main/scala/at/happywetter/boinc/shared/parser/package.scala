@@ -1,11 +1,11 @@
 package at.happywetter.boinc.shared
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
-
-import java.time.format.DateTimeFormatter
-import java.time.LocalDateTime
 
 /**
   * Created by: 
@@ -14,7 +14,7 @@ import java.time.LocalDateTime
   * @version 05.07.2019
   */
 package object parser:
-  import upickle.default.{macroRW, readwriter, ReadWriter => RW}
+  import upickle.default.{ReadWriter => RW, macroRW, readwriter}
 
   implicit val fileRefParser: RW[boincrpc.FileRef] = macroRW
   implicit val appVersionCoProcParser: RW[boincrpc.AppVersionCoProc] = macroRW
@@ -61,6 +61,8 @@ package object parser:
 
   implicit val hwSensorsParser: RW[extension.HardwareData.SensorsRow] = macroRW
   implicit val addNewHostRequestBodyParser: RW[boincrpc.AddNewHostRequestBody] = macroRW
+  implicit val hwActionParser: RW[`extension`.HardwareData.Action] = macroRW
+  implicit val hwActionsParser: RW[`extension`.HardwareData.Actions] = macroRW
 
   implicit val hostDetailsParser: RW[rpc.HostDetails] = macroRW
 

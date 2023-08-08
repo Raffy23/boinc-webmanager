@@ -1,21 +1,22 @@
 package at.happywetter.boinc.web.model
 
+import org.scalajs.dom.Event
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.Node
+
 import at.happywetter.boinc.shared.extension.HardwareData.SensorsRow
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn}
 import at.happywetter.boinc.web.pages.component.dialog.OkDialog
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
-import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
 import at.happywetter.boinc.web.routes.{NProgress, Navigo}
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.{Rx, Var}
-import org.scalajs.dom.Event
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.Node
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 
@@ -23,9 +24,9 @@ import scala.xml.Node
   * @author Raphael
   * @version 03.11.2017
   */
-object HardwareTableModel:
+object SensorHardwareTableModel:
 
-  class HardwareTableRow(client: HardwareStatusClient, actions: Rx[List[String]]) extends DataTable.TableRow:
+  class SensorHardwareTableRow(client: HardwareStatusClient) extends DataTable.TableRow:
     private val cpuFrequ = client.getCpuFrequency
     private val sensors = client.getSensorsData
 
@@ -36,7 +37,7 @@ object HardwareTableModel:
           cpuFrequ.value.get.toOption
             .getOrElse(0d)
             .compare(
-              that.datasource.asInstanceOf[HardwareTableRow].cpuFrequ.value.get.toOption.getOrElse(0d)
+              that.datasource.asInstanceOf[SensorHardwareTableRow].cpuFrequ.value.get.toOption.getOrElse(0d)
             )
       },
       newColumn("CPU Temp", "--- GHz"),
@@ -54,14 +55,15 @@ object HardwareTableModel:
                 </a>
             ).toXML
           }{
-            new Tooltip(
+            <span></span>
+            /*new Tooltip(
               Var("show_functions".localize),
               <a href="execute-functions" style="color:#333;text-decoration:none;font-size:30px" onclick={
                 jsExecuteActions
               }>
                   <i class="fa-solid fa-book"></i>
                 </a>
-            ).toXML
+            ).toXML*/
           }
           </div>
         ),
@@ -92,7 +94,7 @@ object HardwareTableModel:
             .getOrElse(0d)
             .compare(
               that.datasource
-                .asInstanceOf[HardwareTableRow]
+                .asInstanceOf[SensorHardwareTableRow]
                 .sensors
                 .value
                 .get
@@ -131,6 +133,7 @@ object HardwareTableModel:
       ).renderToBody().show()
     }
 
+    /*
     private lazy val jsExecuteActions: (Event) => Unit = event => {
       event.preventDefault()
 
@@ -158,6 +161,7 @@ object HardwareTableModel:
         )
       ).renderToBody().show()
     }
+     */
 
-  def convert(data: List[HardwareStatusClient], actions: Rx[List[String]]): List[HardwareTableRow] =
-    data.map(new HardwareTableRow(_, actions))
+  def convert(data: List[HardwareStatusClient]): List[SensorHardwareTableRow] =
+    data.map(new SensorHardwareTableRow(_))

@@ -1,18 +1,19 @@
 package at.happywetter.boinc.util
 
+import java.net.InetAddress
+
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.BoincManager.AddedByDiscovery
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.{BoincManager, Database}
+
 import cats.data.OptionT
 import cats.effect.{IO, Resource}
 import com.comcast.ip4s.Host
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.otel4s.trace.Tracer
-
-import java.net.InetAddress
 
 /**
   * Created by: 

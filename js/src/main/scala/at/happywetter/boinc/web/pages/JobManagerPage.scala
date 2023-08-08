@@ -1,4 +1,9 @@
 package at.happywetter.boinc.web.pages
+import org.scalajs.dom.Event
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.JobManagerClient
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle => Style}
 import at.happywetter.boinc.web.model.JobTableModel.JobTableRow
@@ -6,12 +11,8 @@ import at.happywetter.boinc.web.pages.component.dialog.{JobAddDialog, OkDialog}
 import at.happywetter.boinc.web.pages.component.{DashboardMenu, DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N.TranslatableString
-import mhtml.Var
-import org.scalajs.dom.Event
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
+import mhtml.Var
 
 object JobManagerPage extends Layout:
 

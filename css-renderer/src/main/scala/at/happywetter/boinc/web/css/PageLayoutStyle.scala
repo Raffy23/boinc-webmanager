@@ -1,7 +1,8 @@
 package at.happywetter.boinc.web.css
 
-import AppCSS.CSSDefaults._
 import scala.language.postfixOps
+
+import AppCSS.CSSDefaults._
 
 /**
  * Created by: 
@@ -11,6 +12,7 @@ import scala.language.postfixOps
  */
 object PageLayoutStyle extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.PageLayoutStyle._
+
   import dsl._
 
   heading.cssName - (

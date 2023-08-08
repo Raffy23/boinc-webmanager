@@ -1,20 +1,22 @@
 package at.happywetter.boinc.server
 
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicReference
+
+import scala.xml.XML
+
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.Database
 import at.happywetter.boinc.dto.DatabaseDTO.Project
 import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
+
 import cats.effect._
 import cats.effect.unsafe.implicits.global
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.xml.XML
-import java.security.MessageDigest
-
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 10.08.2017
@@ -64,8 +66,9 @@ object XMLProjectStore:
         .flatMap { projectStore =>
           val logger = Slf4jLogger.getLoggerFromClass[IO](getClass)
 
-          logger.trace("Reading projects.xml") *>
-            IO.blocking {
+          for {
+            _ <- logger.trace("Reading projects.xml")
+            _ <- IO.blocking {
               projectStore.projects.updateAndGet(
                 _ ++
                   (XML.loadFile(new File(config.boinc.projects.xmlSource)) \ "project")
@@ -83,8 +86,9 @@ object XMLProjectStore:
                     )
                     .toMap
               )
-            } *>
-        projectStore.importFrom(config).map(_ => projectStore) <*
-          logger.trace("Finished importing")
+            }
+            r <- projectStore.importFrom(config).map(_ => projectStore)
+            _ <- logger.trace("Finished importing")
+          } yield r
         }
     )

@@ -1,6 +1,7 @@
 package at.happywetter.boinc.util.http4s
 
 import cats.data.Kleisli
+import cats.data.OptionT
 import cats.effect.{Async, IO, Sync}
 import org.http4s.{Header, HttpApp, Request}
 import org.typelevel.ci.CIString
@@ -32,19 +33,18 @@ object Otel4sMiddelware:
               reqBodySize <- req.body.compile.count
               _ <- span.addAttribute(Attribute("http.request.body.size", reqBodySize))
 
-              response <- service(req)
-                .onError { error =>
-                  IO {
-                    error.printStackTrace()
-                  }
-                }
-                .flatTap { p =>
-                  IO { println(s"DONE request: ${req.uri.renderString}, ${p.status}") }
-                }
+              response <- service(req).handleErrorWith { case error: Throwable =>
+                IO { error.printStackTrace() } *>
+                  span.recordException(error) *>
+                  span.setStatus(Status.Error) *>
+                  IO.raiseError(error)
+              }
 
               // Can't do that here because that drains static file contents confusing Ember:
-              // respBodySize <- response.body.compile.count
-              // _            <- span.addAttribute(Attribute("http.response.body.size", respBodySize))
+              _ <- OptionT.fromOption[IO](response.headers.get(CIString("Content-Length"))).foreachF {
+                contentLengthHeader =>
+                  span.addAttribute(Attribute("http.response.body.size", contentLengthHeader.head.value))
+              }
 
               _ <- span.addAttribute(Attribute("http.status-code", response.status.code.toLong))
               _ <-
@@ -54,5 +54,4 @@ object Otel4sMiddelware:
               val traceIdHeader = Header.Raw(CIString("traceId"), span.context.traceIdHex)
               response.putHeaders(traceIdHeader)
           }
-          .onError { error => IO { error.printStackTrace() } }
       }

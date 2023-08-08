@@ -1,13 +1,13 @@
 package at.happywetter.boinc.util.http4s
 
-import cats.{Applicative, Monad}
-import org.http4s.dsl.io._
-import org.http4s.headers.`Content-Type`
-import org.http4s._
-import upickle.default.{read, readBinary, Reader}
-
 import scala.language.higherKinds
 import scala.util.Try
+
+import cats.{Applicative, Monad}
+import org.http4s._
+import org.http4s.dsl.io._
+import org.http4s.headers.`Content-Type`
+import upickle.default.{Reader, read, readBinary}
 
 /**
   * Created by: 

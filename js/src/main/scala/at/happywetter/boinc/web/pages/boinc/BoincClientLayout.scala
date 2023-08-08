@@ -1,5 +1,10 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.util.Try
+
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientManager}
 import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.pages.component.DashboardMenu
@@ -7,11 +12,6 @@ import at.happywetter.boinc.web.pages.component.topnav.BoincTopNavigation
 import at.happywetter.boinc.web.pages.{Dashboard, Layout}
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
-import org.scalajs.dom
-
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.util.Try
 
 /**
   * Created by: 

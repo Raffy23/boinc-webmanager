@@ -1,9 +1,9 @@
 package at.happywetter.boinc.web.css.pages
 
+import scala.language.postfixOps
+
 import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import at.happywetter.boinc.web.css.components.Button
-
-import scala.language.postfixOps
 
 /**
  * Created by: 
@@ -13,6 +13,7 @@ import scala.language.postfixOps
  */
 object BoincSwarmPageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincSwarmPageStyle._
+
   import dsl._
 
   checkbox.cssName - (

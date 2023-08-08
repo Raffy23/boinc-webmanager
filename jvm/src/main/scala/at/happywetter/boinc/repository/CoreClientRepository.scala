@@ -1,12 +1,13 @@
 package at.happywetter.boinc.repository
 
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
+
 import cats.effect.IO
 import com.comcast.ip4s.IpAddress
-import doobie.{Transactor, Write}
-import doobie.implicits.toSqlInterpolator
-import doobie.implicits._
 import doobie.h2.implicits._
+import doobie.implicits._
+import doobie.implicits.toSqlInterpolator
+import doobie.{Transactor, Write}
 
 /**
  * Created by: 

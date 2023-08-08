@@ -1,13 +1,13 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.web.util.I18N.Locale
 import org.scalajs.dom
-
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Try
+
+import at.happywetter.boinc.web.util.I18N.Locale
 
 /**
   * Created by: 

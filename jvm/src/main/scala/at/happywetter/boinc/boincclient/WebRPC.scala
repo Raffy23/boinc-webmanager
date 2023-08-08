@@ -1,16 +1,16 @@
 package at.happywetter.boinc.boincclient
 
-import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
-import at.happywetter.boinc.shared.webrpc.*
-import cats.effect.IO
-import org.http4s.{Headers, Request, Uri}
-import org.http4s.ember.client.EmberClientBuilder
-//import scalaj.http.{Http, HttpOptions, HttpRequest}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
 import scala.xml.{NodeSeq, XML}
+
+import at.happywetter.boinc.boincclient.webrpc.ServerStatusParser
+import at.happywetter.boinc.shared.webrpc.*
+
+import cats.effect.IO
+import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.{Headers, Request, Uri}
 
 /**
  * Created by:

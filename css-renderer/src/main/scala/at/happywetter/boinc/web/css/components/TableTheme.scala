@@ -1,9 +1,9 @@
 package at.happywetter.boinc.web.css.components
 
+import scala.language.postfixOps
+
 import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import at.happywetter.boinc.web.css.components.BasicModalCSS.&
-
-import scala.language.postfixOps
 
 /**
  * Created by: 
@@ -13,6 +13,7 @@ import scala.language.postfixOps
  */
 object TableTheme extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.TableTheme._
+
   import dsl._
 
   container.cssName - (

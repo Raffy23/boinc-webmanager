@@ -2,15 +2,20 @@ package at.happywetter.boinc.web.routes
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
+import scala.scalajs.js.annotation.JSImport
+
+@js.native
+@JSImport("nprogress/nprogress.css", JSImport.Namespace)
+object NProgressCSS extends js.Object
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 24.07.2017
   */
 @js.native
-@JSGlobal //@JSImport("nprogress", JSImport.Namespace)
+@JSImport("nprogress/nprogress.js", JSImport.Namespace)
 object NProgress extends js.Object {
 
   def start(): Unit = js.native

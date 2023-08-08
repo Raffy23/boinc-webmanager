@@ -1,18 +1,19 @@
 package at.happywetter.boinc.web.model
 
-import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
-import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormatter}
-import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
-import at.happywetter.boinc.web.pages.component.DataTable.{DoubleColumn, LinkColumn, StringColumn, TableColumn}
-import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
-import mhtml.{Rx, Var}
-import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-
 import scala.util.Try
 import scala.xml.Text
+
+import at.happywetter.boinc.shared.boincrpc.{CCState, FileTransfer}
+import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
+import at.happywetter.boinc.web.boincclient.{BoincClient, BoincFormatter}
+import at.happywetter.boinc.web.pages.component.DataTable.{DoubleColumn, LinkColumn, StringColumn, TableColumn}
+import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
+import at.happywetter.boinc.web.util.I18N._
+
+import mhtml.{Rx, Var}
 
 /**
  * Created by: 

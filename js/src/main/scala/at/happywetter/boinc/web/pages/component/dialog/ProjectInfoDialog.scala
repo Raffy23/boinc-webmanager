@@ -1,4 +1,6 @@
 package at.happywetter.boinc.web.pages.component.dialog
+import org.scalajs.dom.Event
+
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.boincclient.BoincFormatter
 import at.happywetter.boinc.web.css.definitions.components.BasicModalStyle
@@ -9,7 +11,6 @@ import at.happywetter.boinc.web.model.ProjectDataTableModel.ReactiveProject
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.StatisticPlatforms
-import org.scalajs.dom.Event
 
 object ProjectInfoDialog:
   import at.happywetter.boinc.web.facade.Implicits.JSNumberOps

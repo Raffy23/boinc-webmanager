@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
-import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
-import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
-import at.happywetter.boinc.web.util.I18N._
 import org.scalajs.dom
 import org.scalajs.dom.Event
-
 import scala.xml.{Elem, Node}
+
+import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle => Style}
+import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 
 /**
   * Created by:

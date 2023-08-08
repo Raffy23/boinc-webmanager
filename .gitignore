@@ -1,4 +1,4 @@
-# Hide IDE fiels
+# Hide IDE speicifc files
 *.idea
 .idea/
 .bsp/
@@ -9,6 +9,9 @@
 # sbt stuff
 project/target
 project/project
+
+# IntelliJ stuff
+out/
 
 # Don't push Scala build directories
 js/target

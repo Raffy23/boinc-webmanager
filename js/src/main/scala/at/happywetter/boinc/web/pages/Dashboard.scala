@@ -1,5 +1,11 @@
 package at.happywetter.boinc.web.pages
 
+import org.scalajs.dom
+import org.scalajs.dom.{Event, HTMLElement}
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.xml.{Elem, Node}
+
 import at.happywetter.boinc.shared.boincrpc.Result
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.boincclient.*
@@ -15,13 +21,8 @@ import at.happywetter.boinc.web.util.I18N.*
 import at.happywetter.boinc.web.util.RichRx.*
 import at.happywetter.boinc.web.util.XMLHelper.*
 import at.happywetter.boinc.web.util.{ErrorDialogUtil, WebSocketClient}
-import mhtml.{Rx, Var}
-import org.scalajs.dom
-import org.scalajs.dom.{Event, HTMLElement}
 
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.xml.{Elem, Node}
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

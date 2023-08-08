@@ -2,7 +2,7 @@ package at.happywetter.boinc.server
 
 import cats.effect.IO
 import org.http4s.dsl.io._
-import org.http4s.headers.{`Content-Type`, `Last-Modified`, Location}
+import org.http4s.headers.{Location, `Content-Type`, `Last-Modified`}
 import org.http4s.{Charset, Headers, HttpRoutes, MediaType, Response, StaticFile, Uri}
 
 /**

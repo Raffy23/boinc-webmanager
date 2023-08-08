@@ -1,11 +1,11 @@
 package at.happywetter.boinc.web.storage
 
-import at.happywetter.boinc.web.storage.IDBCursorRequest.TransactionException
 import org.scalajs.dom.Event
 import org.scalajs.dom.{ErrorEvent, IDBCursorWithValue, IDBRequest}
-
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
+
+import at.happywetter.boinc.web.storage.IDBCursorRequest.TransactionException
 
 /**
  * Created by: 

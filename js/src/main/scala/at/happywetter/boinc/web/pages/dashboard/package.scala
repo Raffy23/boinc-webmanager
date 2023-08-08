@@ -1,12 +1,13 @@
 package at.happywetter.boinc.web.pages
 
+import scala.util.Try
+
 import at.happywetter.boinc.shared.boincrpc.{App, BoincState, Result, Workunit}
 import at.happywetter.boinc.web.boincclient.BoincFormatter
 import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
 import at.happywetter.boinc.web.util.boincrpc.Implicits._
-import mhtml.Var
 
-import scala.util.Try
+import mhtml.Var
 
 /**
  * Created by: 

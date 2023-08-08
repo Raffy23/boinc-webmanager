@@ -1,4 +1,10 @@
 package at.happywetter.boinc.web.pages.component.dialog
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLElement
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.AppConfig.AppVersion
 import at.happywetter.boinc.shared.boincrpc.{AppConfig, Project}
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
@@ -8,16 +14,10 @@ import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.TaskSpecCache
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLElement
 import at.happywetter.boinc.web.util.I18N._
-
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.{Rx, Var}
 
-import scala.xml.Elem
+import mhtml.{Rx, Var}
 
 class AppConfigDialog(parentID: String, project: Project)(implicit boinc: BoincClient)
     extends Dialog("appconfig-dialog"):

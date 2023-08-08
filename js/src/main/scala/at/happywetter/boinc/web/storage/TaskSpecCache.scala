@@ -1,14 +1,15 @@
 package at.happywetter.boinc.web.storage
 
-import scala.concurrent.Future
-import scala.scalajs.js
-import at.happywetter.boinc.shared.boincrpc.App
-import at.happywetter.boinc.web.util.CompatibilityTester
 import org.scalajs.dom
 import org.scalajs.dom.IDBRequest
-
-import scala.scalajs.js.{Date, Promise}
+import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.{Date, Promise}
+
+import at.happywetter.boinc.shared.boincrpc.App
+import at.happywetter.boinc.web.util.CompatibilityTester
+
 import upickle.default._
 
 /**

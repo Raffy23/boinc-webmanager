@@ -1,13 +1,14 @@
 package at.happywetter.boinc.util.http4s
 
-import at.happywetter.boinc.AppConfig.Config
-import cats.effect.Async
-import fs2.io.net.tls.TLSContext
-import org.http4s.ember.server.EmberServerBuilder
-
 import java.io.FileInputStream
 import java.security.KeyStore
+
+import at.happywetter.boinc.AppConfig.Config
+
+import cats.effect.Async
+import fs2.io.net.tls.TLSContext
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
+import org.http4s.ember.server.EmberServerBuilder
 
 /**
  * Created by: 

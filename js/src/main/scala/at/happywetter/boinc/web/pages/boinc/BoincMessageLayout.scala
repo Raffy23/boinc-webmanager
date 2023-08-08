@@ -1,5 +1,13 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import org.scalajs.dom.*
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.{Message, Notice}
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits.*
@@ -14,15 +22,8 @@ import at.happywetter.boinc.web.storage.MessageCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N.*
 import at.happywetter.boinc.web.util.RichRx.*
-import mhtml.{Cancelable, Rx, Var}
-import org.scalajs.dom
-import org.scalajs.dom.*
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
+import mhtml.{Cancelable, Rx, Var}
 
 /**
   * Created by: 

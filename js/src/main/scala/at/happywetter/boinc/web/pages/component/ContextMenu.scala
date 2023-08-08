@@ -1,16 +1,17 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.definitions.components.{ContextMenuStyle => Style}
-import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.MouseEvent
-
 import scala.language.postfixOps
 import scala.scalajs.js
 import scala.xml.Elem
 import scala.xml.Node
+
+import at.happywetter.boinc.web.css.definitions.components.{ContextMenuStyle => Style}
+
+import mhtml.Var
 
 /**
   * Created by: 

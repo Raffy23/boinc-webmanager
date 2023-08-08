@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.util
 
-import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
-import at.happywetter.boinc.shared.parser._
-import mhtml.Var
-
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
+import at.happywetter.boinc.shared.parser._
+
+import mhtml.Var
 
 /**
   * Created by:
@@ -15,7 +16,7 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
   */
 object ServerConfig:
   val config: Var[ServerSharedConfig] = Var(
-    ServerSharedConfig(12 * 60 * 60 * 1000, hardware = false)
+    ServerSharedConfig(12 * 60 * 60 * 1000, hardware = true)
   )
 
   def query: Future[ServerSharedConfig] =

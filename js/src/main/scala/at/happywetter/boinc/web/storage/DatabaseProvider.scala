@@ -2,12 +2,12 @@ package at.happywetter.boinc.web.storage
 
 import org.scalajs.dom
 import org.scalajs.dom.{IDBDatabase, IDBObjectStore, IDBRequest, IDBTransactionMode}
-
+import scala.concurrent.Future
 import scala.language.implicitConversions
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.Promise
+
 import at.happywetter.boinc.web.util.CompatibilityTester
 
 /**

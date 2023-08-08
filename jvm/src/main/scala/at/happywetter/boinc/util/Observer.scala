@@ -1,6 +1,7 @@
 package at.happywetter.boinc.util
 
 import at.happywetter.boinc.util.Observer.Subscriber
+
 import cats.effect.IO
 import cats.effect.kernel.{Ref, Resource, Spawn}
 import cats.effect.std.Queue

@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.facade
 
 import org.scalajs.dom.{Node, NodeList}
-
 import scala.language.implicitConversions
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal

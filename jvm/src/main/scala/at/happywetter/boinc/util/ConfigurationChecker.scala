@@ -1,7 +1,9 @@
 package at.happywetter.boinc.util
 
 import java.io.File
+
 import at.happywetter.boinc.AppConfig.Config
+
 import cats.effect.IO
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 

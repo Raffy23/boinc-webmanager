@@ -1,15 +1,16 @@
 package at.happywetter.boinc.web.model
 
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.Message
 import at.happywetter.boinc.web.boincclient.BoincFormatter.Implicits._
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.XMLHelper._
+import at.happywetter.boinc.web.css.definitions.pages.{BoincMessageStyle => Style}
 import at.happywetter.boinc.web.pages.component.DataTable
 import at.happywetter.boinc.web.pages.component.DataTable.{StringColumn, TableColumn, TableRow}
-import mhtml.{Rx, Var}
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 
-import scala.xml.Elem
-import at.happywetter.boinc.web.css.definitions.pages.{BoincMessageStyle => Style}
+import mhtml.{Rx, Var}
 
 /**
  * Created by 

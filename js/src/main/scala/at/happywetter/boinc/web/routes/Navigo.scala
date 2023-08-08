@@ -23,7 +23,7 @@ object Navigo extends js.Object:
   var MATCH_REGEXP_FLAGS: String = js.native
 
 @js.native
-@JSGlobal //@JSImport("navigo", JSImport.Namespace)
+@JSImport("navigo", JSImport.Namespace)
 class Navigo(root: String = null, useHash: Boolean = false, hash: String = "#") extends js.Object:
 
   // Doesn't work but is in Docs

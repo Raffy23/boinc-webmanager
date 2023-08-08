@@ -1,10 +1,13 @@
 package at.happywetter.boinc.util
 
+import scala.concurrent.duration.FiniteDuration
+
 import at.happywetter.boinc.boincclient.BoincClient
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc._
 import at.happywetter.boinc.util.PooledBoincClient.{BoincClientParameters, ConnectionException, PoolState}
+
 import cats.data.{EitherT, OptionT}
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
 import cats.effect.std.{Backpressure, Dequeue}
@@ -12,8 +15,6 @@ import cats.effect.{IO, Ref, Resource}
 import fs2.concurrent.SignallingRef
 import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.trace.Tracer
-
-import scala.concurrent.duration.FiniteDuration
 
 /**
   * Created by:

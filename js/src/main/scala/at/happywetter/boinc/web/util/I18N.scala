@@ -1,13 +1,13 @@
 package at.happywetter.boinc.web.util
 
+import org.scalajs.dom
+import org.scalajs.dom.HTMLElement
+import scala.collection.immutable.ArraySeq
+import scala.xml.Node
+
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.util.I18N._
-import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
-
-import scala.collection.immutable.ArraySeq
-import scala.xml.Node
 
 /**
   * Created by: 

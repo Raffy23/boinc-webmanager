@@ -1,7 +1,8 @@
 package at.happywetter.boinc.web.css.pages
 
-import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import scala.language.postfixOps
+
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 
 /**
  * Created by: 
@@ -12,6 +13,7 @@ import scala.language.postfixOps
 object LoginPageCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle._
   import at.happywetter.boinc.web.css.definitions.pages.LoginPageStyle.{content => style_content}
+
   import dsl._
 
   style_content.cssName - (

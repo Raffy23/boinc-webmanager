@@ -1,10 +1,11 @@
 package at.happywetter.boinc.repository
 
 import at.happywetter.boinc.dto.DatabaseDTO.Project
+
 import cats.effect.IO
-import doobie.{Transactor, Write}
-import doobie.implicits._
 import doobie.h2.implicits._
+import doobie.implicits._
+import doobie.{Transactor, Write}
 
 /**
  * Created by: 

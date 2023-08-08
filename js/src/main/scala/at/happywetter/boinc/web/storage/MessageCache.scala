@@ -1,15 +1,16 @@
 package at.happywetter.boinc.web.storage
 
+import org.scalajs.dom
+import org.scalajs.dom.{IDBCursorDirection, IDBKeyRange}
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+
 import at.happywetter.boinc.shared.boincrpc.Message
 import at.happywetter.boinc.shared.parser.messageParser
 import at.happywetter.boinc.web.storage.IDBCursorRequest._
-import org.scalajs.dom
-import org.scalajs.dom.{IDBCursorDirection, IDBKeyRange}
-import upickle.default.*
 
-import scala.concurrent.Future
-import scala.scalajs.js
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import upickle.default.*
 
 /**
  * Created by: 

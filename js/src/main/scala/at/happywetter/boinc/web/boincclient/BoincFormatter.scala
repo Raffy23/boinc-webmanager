@@ -3,7 +3,7 @@ package at.happywetter.boinc.web.boincclient
 import scala.scalajs.js.Date
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 17.08.2017
@@ -22,8 +22,8 @@ object BoincFormatter:
     val min = (time.toInt / 60) % 60
     val sec = time.toInt % 60
 
-    (if (day > 0) s"$day T, ${(hour - day * 24).formatted("%02d")}" else s"${hour.formatted("%02d")}") ++
-      s":${min.formatted("%02d")}:${sec.formatted("%02d")}"
+    (if (day > 0) s"$day T, ${"%02d".format(hour - day * 24)}" else s"${"%02d".format(hour)}") ++
+      s":${"%02d".format(min)}:${"%02d".format(sec)}"
 
   def convertTime(time: String): Int =
     if (time.length < 1)
@@ -49,7 +49,7 @@ object BoincFormatter:
       value = value / 1024
       cnt = cnt + 1
 
-    s"${value.formatted("%.1f")} ${labels(cnt)}"
+    s"${"%.1f".format(value)} ${labels(cnt)}"
 
   def convertSpeed(size: Double): String =
     var value = size
@@ -59,7 +59,7 @@ object BoincFormatter:
       value = value / 1024
       cnt = cnt + 1
 
-    s"${value.formatted("%.1f")} ${labels(cnt)}/s"
+    s"${"%.1f".format(value)} ${labels(cnt)}/s"
 
   def convertSpeedValue(size: Double, step: Int): Double =
     var value = size
@@ -76,9 +76,9 @@ object BoincFormatter:
   def convertTimeHHMM(double: Double): String =
     val intPart = double.toInt
     val fracPart = double - intPart.toDouble
-
     val minutes = 60 * fracPart
-    intPart.formatted("%02d") + ":" + minutes.formatted("%02.0f")
+
+    "%02d".format(intPart) + ":" + "%02.0f".format(minutes)
 
   def convertTimeHHMMtoDouble(time: String): Double =
     val splitted = time.split(":")
@@ -89,8 +89,7 @@ object BoincFormatter:
 
   object Implicits:
 
-    implicit class BoincFormatNumber(double: Double):
-
+    extension (double: Double)
       def toSize: String = convertSize(double)
       def toSpeed: String = convertSpeed(double)
       def toSpeedValue(step: Int): Double = convertSpeedValue(double, step)

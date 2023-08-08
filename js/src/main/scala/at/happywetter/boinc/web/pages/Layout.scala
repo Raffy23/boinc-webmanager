@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.pages
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.routes.{AppRouter, NProgress}
 import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil}
-
-import scala.scalajs.js
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.xml.Elem
 
 /**
   * Created by: 

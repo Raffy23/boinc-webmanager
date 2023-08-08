@@ -1,5 +1,7 @@
 package at.happywetter.boinc.server
 
+import scala.util.Try
+
 import at.happywetter.boinc.BoincManager.AddedByUser
 import at.happywetter.boinc.boincclient.WebRPC
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
@@ -22,12 +24,11 @@ import at.happywetter.boinc.util.PooledBoincClient
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
 import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
 import at.happywetter.boinc.{AppConfig, BoincManager, Database}
+
 import cats.effect._
 import cats.effect.unsafe.implicits.global
 import org.http4s._
 import org.http4s.dsl.io._
-
-import scala.util.Try
 
 /**
   * Created by: 
@@ -128,8 +129,12 @@ object BoincApiRoutes extends ResponseEncodingHelper:
         (client, requestBody) => {
           WebRPC
             .lookupAccount(requestBody.projectUrl, requestBody.user, Some(requestBody.password))
-            .map { case (_, auth) =>
-              auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName))
+            .map {
+              case (false, _) =>
+                Some(IO.pure(false))
+
+              case (true, auth) =>
+                auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName))
             }
             .flatMap(result => result.getOrElse(IO { false }))
         }

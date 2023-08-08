@@ -1,6 +1,6 @@
 package at.happywetter.boinc.shared
 
-import upickle.default.{macroRW, ReadWriter}
+import upickle.default.{ReadWriter, macroRW}
 
 /**
   * Created by: 

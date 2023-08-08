@@ -1,15 +1,15 @@
 package at.happywetter.boinc.web.boincclient
 
+import org.scalajs.dom
+import scala.concurrent.Future
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction.WorkunitAction
-import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 import at.happywetter.boinc.shared.boincrpc._
+import at.happywetter.boinc.shared.boincrpc.{BoincCoreClient, BoincRPC}
 import at.happywetter.boinc.shared.rpc.DashboardDataEntry
-import org.scalajs.dom
 import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.util.FetchHelper
-
-import scala.concurrent.Future
 
 /**
   * Created by: 

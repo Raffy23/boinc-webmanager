@@ -8,18 +8,17 @@ import org.scalajs.dom.Fetch
 import org.scalajs.dom.Headers
 import org.scalajs.dom.HttpMethod
 import org.scalajs.dom.RequestInit
-import upickle.default.Reader
-import upickle.default.Writer
-import upickle.default.read
-import upickle.default.readBinary
-import upickle.default.write
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 
 import ResponseHelper._
+import upickle.default.Reader
+import upickle.default.Writer
+import upickle.default.read
+import upickle.default.readBinary
+import upickle.default.write
 
 /**
   * Created by:
@@ -59,11 +58,19 @@ object FetchHelper:
         .mapData(data => readData[A](data))
     )
 
+  @deprecated
   def post[A, R](uri: String, data: A)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] =
     dom.console.log("POST", uri)
 
     Fetch
-      .fetch(uri, requestPostParameters(write(data)))
+      .fetch(uri, requestPostParameters(Some(write(data))))
+      .mapData(data => readData[R](data))
+
+  def post[A, R](uri: String, data: Option[A] = None)(implicit encoder: Writer[A], decoder: Reader[R]): Future[R] =
+    dom.console.log("POST", uri)
+
+    Fetch
+      .fetch(uri, requestPostParameters(data.map(data => write(data))))
       .mapData(data => readData[R](data))
 
   def patch[A](uri: String)(implicit decoder: Reader[A]): Future[A] =
@@ -100,10 +107,10 @@ object FetchHelper:
     this.headers = header
     this.signal = _signal
 
-  private def requestPostParameters(content: String) = new RequestInit:
+  private def requestPostParameters(content: Option[String]) = new RequestInit:
     this.method = HttpMethod.POST
     this.headers = header
-    this.body = content
+    this.body = content.getOrElse(js.undefined)
 
   private def requestPatchParameters(content: UndefOr[BodyInit] = js.undefined) = new RequestInit:
     this.method = HttpMethod.PATCH

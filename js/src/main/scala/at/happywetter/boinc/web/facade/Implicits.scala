@@ -1,7 +1,6 @@
 package at.happywetter.boinc.web.facade
 
 import org.scalajs.dom
-
 import scala.scalajs.js
 import scala.scalajs.js.JSNumberOps
 import scala.scalajs.js.annotation.JSGlobalScope

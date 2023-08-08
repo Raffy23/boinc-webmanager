@@ -2,22 +2,24 @@ package at.happywetter.boinc.server
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.Date
+
+import scala.language.implicitConversions
+import scala.util.{Failure, Random, Success, Try}
+
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-
-import scala.util.{Failure, Random, Success, Try}
-import scala.language.implicitConversions
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.webrpc.User
-import upickle.default.writeBinary
-import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
-import cats.data.Kleisli
 import at.happywetter.boinc.util.http4s.Implicits._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+import at.happywetter.boinc.util.http4s.RichMsgPackRequest.RichMsgPacKResponse
+
+import cats.data.Kleisli
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import org.typelevel.ci.CIString
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import upickle.default.writeBinary
 
 /**
   * Created by: 
@@ -29,7 +31,8 @@ class AuthenticationService(config: Config) extends ResponseEncodingHelper:
 
   import AuthenticationService.toDate
   import cats.effect._
-  import org.http4s._, org.http4s.dsl.io._
+  import org.http4s._
+  import org.http4s.dsl.io._
 
   private val algorithm = Algorithm.HMAC512(config.server.secret)
   private val jwtBuilder = JWT.create()

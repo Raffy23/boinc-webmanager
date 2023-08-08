@@ -2,7 +2,6 @@ package at.happywetter.boinc.web.storage
 
 import org.scalajs.dom
 import org.scalajs.dom.{IDBCreateObjectStoreOptions, IDBDatabase, IDBFactory, IDBRequest}
-
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.Promise

@@ -1,9 +1,9 @@
 package at.happywetter.boinc.boincclient.parser
 
+import scala.xml.NodeSeq
+
 import at.happywetter.boinc.boincclient.parser.BoincParserUtils._
 import at.happywetter.boinc.shared.boincrpc.Result
-
-import scala.xml.NodeSeq
 
 /**
   * Created by: 

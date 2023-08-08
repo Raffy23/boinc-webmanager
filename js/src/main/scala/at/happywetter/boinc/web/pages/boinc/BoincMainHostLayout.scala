@@ -1,5 +1,11 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes.Mode
 import at.happywetter.boinc.shared.boincrpc.CCState
@@ -15,14 +21,9 @@ import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.storage.HostInfoCache
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
+
 import mhtml.Rx
 import mhtml.Var
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLInputElement
-
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.xml.Elem
 
 /**
   * Created by: 

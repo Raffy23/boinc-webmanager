@@ -1,19 +1,18 @@
 package at.happywetter.boinc.web.util
 
+import org.scalajs.dom
+import org.scalajs.dom.Response
+import scala.concurrent.Future
+import scala.scalajs.js
+import scala.scalajs.js.typedarray.Int8Array
+import scala.util.Try
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.web.boincclient.FetchResponseException
 import at.happywetter.boinc.web.pages.LoginPage
 import at.happywetter.boinc.web.routes.AppRouter
-import org.scalajs.dom
-import org.scalajs.dom.Response
-
-import scala.concurrent.Future
-import scala.scalajs.js
-import scala.scalajs.js.typedarray.Int8Array
-import scala.util.Try
-
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by:

@@ -1,5 +1,9 @@
 package at.happywetter.boinc.web.model
 
+import org.scalajs.dom.Event
+import scala.language.implicitConversions
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.shared.rpc.jobs
 import at.happywetter.boinc.shared.rpc.jobs.{Errored, Job, Running, Stopped}
 import at.happywetter.boinc.web.JobManagerClient
@@ -10,11 +14,9 @@ import at.happywetter.boinc.web.pages.component.dialog.{Dialog, OkDialog}
 import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N.TranslatableString
-import mhtml.Var
-import org.scalajs.dom.Event
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.language.implicitConversions
 import at.happywetter.boinc.web.util.RichRx._
+
+import mhtml.Var
 
 object JobTableModel:
 

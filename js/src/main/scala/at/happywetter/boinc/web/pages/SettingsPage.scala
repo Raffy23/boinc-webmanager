@@ -1,5 +1,10 @@
 package at.happywetter.boinc.web.pages
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.{Date, Dictionary}
+import scala.xml.Elem
+
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
@@ -9,11 +14,6 @@ import at.happywetter.boinc.web.pages.component.{DashboardMenu, LanguageChooser}
 import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, LanguageDataProvider}
-
-import scala.scalajs.js
-import scala.scalajs.js.{Date, Dictionary}
-import scala.xml.Elem
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 

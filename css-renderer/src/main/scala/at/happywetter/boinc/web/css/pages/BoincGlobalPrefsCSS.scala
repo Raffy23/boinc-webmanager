@@ -1,9 +1,10 @@
 package at.happywetter.boinc.web.css.pages
 
-import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
-import scalacss.internal.mutable.StyleSheet
-
 import scala.language.postfixOps
+
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
+
+import scalacss.internal.mutable.StyleSheet
 
 /**
  * Created by: 
@@ -13,6 +14,7 @@ import scala.language.postfixOps
  */
 object BoincGlobalPrefsCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.pages.BoincGlobalPrefsStyle._
+
   import dsl._
 
   rootPane.cssName - (

@@ -1,16 +1,17 @@
 package at.happywetter.boinc.util
 
-import at.happywetter.boinc.{BoincManager, Database}
+import java.util.UUID
+
 import at.happywetter.boinc.shared.rpc
 import at.happywetter.boinc.shared.rpc.jobs.{Errored, JobStatus, Running, Stopped}
 import at.happywetter.boinc.util.JobManager._
+import at.happywetter.boinc.{BoincManager, Database}
+
 import cats.effect.kernel.Fiber
 import cats.effect.std.Supervisor
 import cats.effect.{IO, Ref, Resource, Spawn}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-import java.util.UUID
 
 object JobManager:
 

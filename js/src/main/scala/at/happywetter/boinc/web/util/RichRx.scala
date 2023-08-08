@@ -1,8 +1,9 @@
 package at.happywetter.boinc.web.util
 
-import mhtml.{Rx, Var}
-
 import scala.concurrent.Future
+
+import mhtml.Rx
+import mhtml.Var
 
 /**
   * Created by:

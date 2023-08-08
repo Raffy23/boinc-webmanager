@@ -1,11 +1,11 @@
 package at.happywetter.boinc.web.storage
 
-import at.happywetter.boinc.shared.boincrpc.Workunit
 import org.scalajs.dom.{IDBCursorWithValue, IDBRequest}
-
 import scala.concurrent.Future
 import scala.scalajs.js
 import scala.scalajs.js.{Date, Promise}
+
+import at.happywetter.boinc.shared.boincrpc.Workunit
 
 /**
   * Created by: 

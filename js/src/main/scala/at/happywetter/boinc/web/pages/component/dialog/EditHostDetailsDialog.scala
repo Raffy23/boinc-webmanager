@@ -1,5 +1,9 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
+import org.scalajs.dom
+import org.scalajs.dom.HTMLInputElement
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.{Dialog => DialogStyle}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
@@ -7,10 +11,6 @@ import at.happywetter.boinc.web.model.HostDetailsTableRow
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
-import org.scalajs.dom
-import org.scalajs.dom.HTMLInputElement
-
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
  * Created by: 

@@ -1,9 +1,9 @@
 package at.happywetter.boinc.boincclient.parser
 
-import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
-
 import scala.util.Try
 import scala.xml.{NodeSeq, Text}
+
+import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
 
 /**
   * Created by: 

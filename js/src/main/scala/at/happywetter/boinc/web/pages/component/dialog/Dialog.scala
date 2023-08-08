@@ -2,11 +2,11 @@ package at.happywetter.boinc.web.pages.component.dialog
 
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
-
+import org.scalajs.dom.document.getElementById
 import scala.xml.Elem
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 31.08.2017
@@ -16,7 +16,7 @@ abstract class Dialog(protected val dialogID: String):
   def render(): Elem
 
   def renderToBody(): Dialog =
-    val existingDialog = dom.document.getElementById(dialogID)
+    val existingDialog = getElementById(dialogID)
     if (existingDialog != null)
       dom.document.body.removeChild(existingDialog)
 
@@ -25,13 +25,12 @@ abstract class Dialog(protected val dialogID: String):
 
   def hide(): Unit = Dialog.hideByID(dialogID)
   def show(): Unit = Dialog.showByID(dialogID)
-  def destroy(): Unit = dom.document.body.removeChild(dom.document.getElementById(dialogID))
+  def destroy(): Unit = dom.document.body.removeChild(getElementById(dialogID))
 
 object Dialog {
 
-  def exists(dialogID: String): Boolean = dom.document.getElementById(dialogID) != null
-  def hideByID(dialogID: String): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style = ""
-  def showByID(dialogID: String): Unit = dom.document.getElementById(dialogID).asInstanceOf[HTMLElement].style =
-    "display:block;"
+  def exists(dialogID: String): Boolean = getElementById(dialogID) != null
+  def hideByID(dialogID: String): Unit = getElementById(dialogID).asInstanceOf[HTMLElement].style = ""
+  def showByID(dialogID: String): Unit = getElementById(dialogID).asInstanceOf[HTMLElement].style = "display:block;"
 
 }

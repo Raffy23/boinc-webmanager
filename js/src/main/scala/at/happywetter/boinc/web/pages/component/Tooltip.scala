@@ -1,12 +1,13 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.definitions.components.{Tooltip => Style}
-import at.happywetter.boinc.web.css.CSSIdentifier
-import mhtml.{Rx, Var}
-
 import scala.language.postfixOps
 import scala.xml.{Elem, Node}
+
+import at.happywetter.boinc.web.css.CSSIdentifier
+import at.happywetter.boinc.web.css.definitions.components.{Tooltip => Style}
 import at.happywetter.boinc.web.util.I18N._
+
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

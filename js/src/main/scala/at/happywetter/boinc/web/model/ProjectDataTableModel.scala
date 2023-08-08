@@ -1,5 +1,10 @@
 package at.happywetter.boinc.web.model
 
+import org.scalajs.dom.Event
+import org.scalajs.dom.MouseEvent
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.boincrpc.Project
 import at.happywetter.boinc.web.boincclient.BoincClient
@@ -25,13 +30,9 @@ import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.StatisticPlatforms
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
+
 import mhtml.Rx
 import mhtml.Var
-import org.scalajs.dom.Event
-import org.scalajs.dom.MouseEvent
-
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.xml.Elem
 
 /**
   * Created by: 

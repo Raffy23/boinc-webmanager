@@ -1,15 +1,16 @@
 package at.happywetter.boinc.web.pages.dashboard
 
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.shared.boincrpc.Result
 import at.happywetter.boinc.shared.rpc.DashboardDataEntry
 import at.happywetter.boinc.web.boincclient.{BoincClient, ClientCacheHelper, ClientManager}
 import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.Var
 import at.happywetter.boinc.web.util.boincrpc.Implicits._
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import mhtml.Var
 
 /**
  * Created by: 

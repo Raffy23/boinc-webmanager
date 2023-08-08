@@ -2,15 +2,18 @@ package at.happywetter.boinc
 
 import java.io.File
 import java.util.concurrent.TimeUnit
-import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
-import cats.effect.{Async, IO}
-import com.typesafe.config.{Config as TypesafeConfig, ConfigFactory}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.io.Source
 
+import at.happywetter.boinc.extensions.linux.HWStatusService.Action
+import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
+
+import cats.effect.{Async, IO}
+import com.typesafe.config.{Config as TypesafeConfig, ConfigFactory}
+
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 19.07.2017
@@ -34,7 +37,7 @@ object AppConfig:
                     username: String,
                     password: String,
                     secureEndpoint: Boolean,
-                    webroot: String = "",
+                    webroot: String = "public/",
                     secret: String,
                     ssl: SSLConfig
   )
@@ -64,7 +67,8 @@ object AppConfig:
                       binary: String,
                       params: List[String],
                       cacheTimeout: Long,
-                      actions: Map[String, Seq[String]]
+                      actions: Map[String, Action],
+                      globalActions: Map[String, Action]
   )
 
   // case class WebRPC(parser: Parser, rules: Map[String, WebRPCRule])
@@ -81,6 +85,7 @@ object AppConfig:
     given ConfigReader[ProjectEntry] = ConfigReader.derived
     given ConfigReader[SSLConfig] = ConfigReader.derived
     given ConfigReader[AutoDiscovery] = ConfigReader.derived
+    given ConfigReader[Action] = ConfigReader.derived
     given ConfigReader[Hardware] = ConfigReader.derived
 
     ConfigSource

@@ -1,22 +1,23 @@
 package at.happywetter.boinc.web.pages.component
 
+import org.scalajs.dom.{Event, HTMLElement, HTMLInputElement}
+import scala.scalajs.js
+import scala.util.Random
+import scala.xml.{Elem, Node, Text}
+
 import at.happywetter.boinc.web.css.CSSIdentifier
 import at.happywetter.boinc.web.css.definitions.Misc
 import at.happywetter.boinc.web.css.definitions.components.{BasicModalStyle, Dialog, TableTheme}
 import at.happywetter.boinc.web.css.definitions.pages.{BoincClientStyle, BoincProjectStyle}
 import at.happywetter.boinc.web.model.TableModel
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 import at.happywetter.boinc.web.pages.component.DataTable.TableRow
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N
-import mhtml.{Rx, Var}
-import org.scalajs.dom.{Event, HTMLElement, HTMLInputElement}
 import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
 
-import scala.scalajs.js
-import scala.util.Random
-import scala.xml.{Elem, Node, Text}
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

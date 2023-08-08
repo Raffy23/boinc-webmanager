@@ -1,4 +1,18 @@
 package at.happywetter.boinc.web.pages.component.dialog
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.HTMLSelectElement
+import org.scalajs.dom.document
+import scala.concurrent.duration.FiniteDuration
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Date
+import scala.xml.Elem
+import scala.xml.Text
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction
 import at.happywetter.boinc.shared.rpc.jobs.At
@@ -22,20 +36,8 @@ import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N.TranslatableString
 import at.happywetter.boinc.web.util.RichRx.NowRx
-import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLInputElement
-import org.scalajs.dom.HTMLSelectElement
-import org.scalajs.dom.document
 
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Date
-import scala.xml.Elem
-import scala.xml.Text
+import mhtml.Var
 
 class JobAddDialog(onComplete: Option[Job] => Unit) extends Dialog("job-modal-dialog"):
 

@@ -1,15 +1,15 @@
 package at.happywetter.boinc.web.pages.swarm
 
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.pages.component.topnav.SwarmTopNavigation
 import at.happywetter.boinc.web.pages.{Layout, PageLayout}
-import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder}
 import at.happywetter.boinc.web.util.I18N._
-
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
+import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder}
 
 /**
   * Created by: 

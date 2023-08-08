@@ -1,24 +1,24 @@
 package at.happywetter.boinc.web.boincclient
 
-import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, BoincProjectMetaData}
 import org.scalajs.dom
-import upickle.default._
-
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.Date
 import scala.util.Try
+
+import at.happywetter.boinc.shared.boincrpc.{AddNewHostRequestBody, BoincProjectMetaData}
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.shared.websocket._
-import at.happywetter.boinc.web.util.{DashboardMenuBuilder, FetchHelper, ServerConfig, WebSocketClient}
-import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.pages.Dashboard
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.{DashboardMenuBuilder, FetchHelper, ServerConfig, WebSocketClient}
 
-import scala.collection.mutable.ListBuffer
+import upickle.default._
 
 /**
   * Created by: 

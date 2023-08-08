@@ -1,14 +1,16 @@
 package at.happywetter.boinc.util
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.rpc.jobs
 import at.happywetter.boinc.shared.rpc.jobs.{At, BoincProjectAction, BoincRunModeAction, CPU, Every, GPU, Network, Once}
-import cats.effect.IO
 
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import scala.concurrent.duration._
-import scala.language.postfixOps
+import cats.effect.IO
 
 object JobEffectUtil:
   import cats.implicits._

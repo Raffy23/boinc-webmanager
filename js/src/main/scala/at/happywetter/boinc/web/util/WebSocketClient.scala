@@ -1,13 +1,20 @@
 package at.happywetter.boinc.web.util
 
 import org.scalajs.dom
-import org.scalajs.dom.{Blob, FileReader, WebSocket}
-import upickle.default.{readBinary, writeBinary, Reader, Writer}
+import org.scalajs.dom.Blob
+import org.scalajs.dom.FileReader
+import org.scalajs.dom.WebSocket
 import scala.collection.mutable
-import scala.scalajs.js.typedarray.{ArrayBuffer, DataView}
+import scala.scalajs.js.typedarray.ArrayBuffer
+import scala.scalajs.js.typedarray.DataView
 
 import at.happywetter.boinc.shared.websocket.WebSocketMessage
 import at.happywetter.boinc.shared.websocket.webSocketMessageParser
+
+import upickle.default.Reader
+import upickle.default.Writer
+import upickle.default.readBinary
+import upickle.default.writeBinary
 
 /**
   * Created by:

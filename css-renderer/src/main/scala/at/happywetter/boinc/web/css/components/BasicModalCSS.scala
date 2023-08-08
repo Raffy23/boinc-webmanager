@@ -1,7 +1,8 @@
 package at.happywetter.boinc.web.css.components
 
-import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 import scala.language.postfixOps
+
+import at.happywetter.boinc.web.css.AppCSS.CSSDefaults._
 
 /**
  * Created by: 
@@ -12,6 +13,7 @@ import scala.language.postfixOps
 object BasicModalCSS extends StyleSheet.Standalone:
   import at.happywetter.boinc.web.css.definitions.components.BasicModalStyle._
   import at.happywetter.boinc.web.css.definitions.components.BasicModalStyle.{content => style_content}
+
   import dsl._
 
   modal.cssName - (

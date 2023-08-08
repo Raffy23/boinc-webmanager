@@ -1,10 +1,10 @@
 package at.happywetter.boinc.boincclient.webrpc
 
-import at.happywetter.boinc.boincclient.parser._
-import at.happywetter.boinc.shared.webrpc.{Daemon, DatabaseFileStates, ServerStatus, ServerStatusApp}
-
 import scala.language.{implicitConversions, postfixOps}
 import scala.xml.{Node, NodeSeq}
+
+import at.happywetter.boinc.boincclient.parser._
+import at.happywetter.boinc.shared.webrpc.{Daemon, DatabaseFileStates, ServerStatus, ServerStatusApp}
 
 /**
   * Created by: 

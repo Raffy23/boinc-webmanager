@@ -1,22 +1,23 @@
 package at.happywetter.boinc
 
+import java.util.concurrent.TimeUnit
+
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
 import at.happywetter.boinc.AppConfig.Config
 import at.happywetter.boinc.BoincManager._
 import at.happywetter.boinc.dto.DatabaseDTO.CoreClient
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.util.{Observer, PooledBoincClient}
+
 import cats.data.OptionT
 import cats.effect.{IO, Ref, Resource, Spawn}
+import cats.implicits._
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import cats.implicits._
 import org.typelevel.otel4s.trace.{SpanKind, Tracer}
-
-import java.util.concurrent.TimeUnit
 
 /**
   * Created by:
@@ -63,8 +64,8 @@ object BoincManager:
     } yield ())
 
     /* Start all background tasks for the manager */
-    _ <- Spawn[IO].background[Nothing](manager.autoCloser).onFinalize(IO.println("DONE #1"))
-    _ <- Spawn[IO].background[Nothing](manager.connectionCloser).onFinalize(IO.println("DONE #2"))
+    _ <- Spawn[IO].background[Nothing](manager.autoCloser)
+    _ <- Spawn[IO].background[Nothing](manager.connectionCloser)
 
     /* Initialize the manager with all the clients that are stored in the DB
      * do this lazily in the background so we don't block the creation ...
@@ -92,7 +93,7 @@ object BoincManager:
                           case CoreClient.ADDED_BY_USER      => AddedByUser
                         }
                       )
-                      .flatTap(_ => IO.println(s"add completed for ${coreClient.name}"))
+                // .flatTap(_ => IO.println(s"add completed for ${coreClient.name}"))
 
                 }
                 .parSequence
@@ -103,7 +104,6 @@ object BoincManager:
           }
           .handleErrorWith(ex => Slf4jLogger.fromClass[IO](BoincManager.getClass).flatMap(_.error(ex.getMessage)))
       )
-      .onFinalize(IO.println("DONE #3"))
   } yield manager
 
 class BoincManager private (poolSize: Int,
@@ -330,7 +330,6 @@ class BoincManager private (poolSize: Int,
 
   def close(): IO[Unit] = for {
     t <- IO.realTime
-    _ <- IO.println("CLOSING")
     _ <- boincClients.get
       .flatMap(_.map { case (_, BoincClientEntry(_, _, finalizer, _)) => finalizer }.toList.sequence_)
     t1 <- IO.realTime

@@ -1,5 +1,15 @@
 package at.happywetter.boinc.web.pages.component.dialog
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.HTMLSelectElement
+import scala.concurrent.Future
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.Random
+import scala.xml.Elem
+import scala.xml.Node
+
 import at.happywetter.boinc.shared.boincrpc.BoincProjectMetaData
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
@@ -10,17 +20,8 @@ import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLInputElement
-import org.scalajs.dom.HTMLSelectElement
 
-import scala.concurrent.Future
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.util.Random
-import scala.xml.Elem
-import scala.xml.Node
+import mhtml.Var
 
 /**
   * Created by: 

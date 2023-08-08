@@ -2,12 +2,13 @@ package at.happywetter.boinc.server
 
 import at.happywetter.boinc.AppConfig
 import at.happywetter.boinc.boincclient.WebRPC
+import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.util.http4s.ResponseEncodingHelper
+
 import cats.effect.IO
 import org.http4s.HttpRoutes
 import org.http4s.dsl._
 import org.http4s.dsl.io._
-import at.happywetter.boinc.shared.parser._
 
 /**
   * Created by: 

@@ -1,5 +1,14 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.document
+import org.scalajs.dom.window
+import scala.language.postfixOps
+import scala.xml.Elem
+import scala.xml.Node
+
 import at.happywetter.boinc.shared.boincrpc.DayEntry
 import at.happywetter.boinc.shared.boincrpc.GlobalPrefsOverride
 import at.happywetter.boinc.web.boincclient.BoincFormatter
@@ -14,17 +23,9 @@ import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper._
+
 import mhtml.Rx
 import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLInputElement
-import org.scalajs.dom.document
-import org.scalajs.dom.window
-
-import scala.language.postfixOps
-import scala.xml.Elem
-import scala.xml.Node
 
 /**
   * Created by: 

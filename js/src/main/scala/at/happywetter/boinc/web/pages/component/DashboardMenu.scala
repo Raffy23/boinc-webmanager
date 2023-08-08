@@ -1,24 +1,25 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
-import at.happywetter.boinc.web.pages.Dashboard
-import at.happywetter.boinc.web.pages.HardwarePage
-import at.happywetter.boinc.web.pages.JobManagerPage
-import at.happywetter.boinc.web.pages.SettingsPage
-import at.happywetter.boinc.web.pages.WebRPCProjectPage
-import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
-import at.happywetter.boinc.web.util.I18N._
-import at.happywetter.boinc.web.util.ServerConfig
-import mhtml.Rx
-import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.HTMLAnchorElement
 import org.scalajs.dom.HTMLElement
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
 import scala.xml.Elem
+
+import at.happywetter.boinc.web.css.definitions.pages.{DashboardMenuStyle => Style}
+import at.happywetter.boinc.web.pages.Dashboard
+import at.happywetter.boinc.web.pages.JobManagerPage
+import at.happywetter.boinc.web.pages.SettingsPage
+import at.happywetter.boinc.web.pages.WebRPCProjectPage
+import at.happywetter.boinc.web.pages.hardware.SensorsHardwarePage
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
+import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.ServerConfig
+
+import mhtml.Rx
+import mhtml.Var
 
 /**
   * Created by: 
@@ -33,7 +34,7 @@ object DashboardMenu:
     ServerConfig.config.map { config =>
       if (config.hardware)
         <li class={Style.elem.htmlClass}>
-          <a href={HardwarePage.link} onclick={masterSelectionListener}
+          <a href={SensorsHardwarePage.link} onclick={masterSelectionListener}
              data-navigo={true} data-menu-id="dashboard_hardware">
             <i style="margin-right:14px" class="fa fa-microchip"></i>{"dashboard_hardware".localize}
           </a>

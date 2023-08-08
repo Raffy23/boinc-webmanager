@@ -1,5 +1,10 @@
 package at.happywetter.boinc.web.model
 
+import java.text.DecimalFormat
+
+import org.scalajs.dom.Event
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.shared.boincrpc.App
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.WorkunitAction
 import at.happywetter.boinc.shared.boincrpc.Result
@@ -23,14 +28,10 @@ import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
-import mhtml.Rx
-import mhtml.Var
-import org.scalajs.dom.Event
-
-import java.text.DecimalFormat
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 import BoincFormatter.Implicits._
+import mhtml.Rx
+import mhtml.Var
 
 /**
   * Created by: 

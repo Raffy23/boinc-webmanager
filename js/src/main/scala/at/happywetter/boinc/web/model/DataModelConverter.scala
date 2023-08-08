@@ -4,7 +4,8 @@ import at.happywetter.boinc.shared.boincrpc.{Message, Project, Result}
 import at.happywetter.boinc.shared.rpc.HostDetails
 import at.happywetter.boinc.web.boincclient.BoincClient
 import at.happywetter.boinc.web.extensions.HardwareStatusClient
-import at.happywetter.boinc.web.model.HardwareTableModel.HardwareTableRow
+import at.happywetter.boinc.web.model.SensorHardwareTableModel
+import at.happywetter.boinc.web.model.SensorHardwareTableModel.SensorHardwareTableRow
 import at.happywetter.boinc.web.pages.component.DataTable
 
 /**

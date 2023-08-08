@@ -1,5 +1,15 @@
 package at.happywetter.boinc.web.pages.swarm
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLInputElement
+import scala.collection.mutable
+import scala.concurrent.Future
+import scala.language.implicitConversions
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Dictionary
+import scala.xml.{Elem, Node}
+
 import at.happywetter.boinc.shared.boincrpc.BoincRPC.Modes
 import at.happywetter.boinc.shared.boincrpc.CCState
 import at.happywetter.boinc.shared.util.StringLengthAlphaOrdering
@@ -7,22 +17,13 @@ import at.happywetter.boinc.web.boincclient.{ClientManager, FetchResponseExcepti
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.css.definitions.pages.{BoincSwarmPageStyle => Style}
-import at.happywetter.boinc.web.util.RichRx._
-import at.happywetter.boinc.web.util.XMLHelper._
 import at.happywetter.boinc.web.pages.component.Tooltip
 import at.happywetter.boinc.web.routes.NProgress
 import at.happywetter.boinc.web.util.I18N._
-import mhtml.{Rx, Var}
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLInputElement
+import at.happywetter.boinc.web.util.RichRx._
+import at.happywetter.boinc.web.util.XMLHelper._
 
-import scala.collection.mutable
-import scala.concurrent.Future
-import scala.language.implicitConversions
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Dictionary
-import scala.xml.{Elem, Node}
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

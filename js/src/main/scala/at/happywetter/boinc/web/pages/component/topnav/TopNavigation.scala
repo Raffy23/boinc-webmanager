@@ -1,15 +1,16 @@
 package at.happywetter.boinc.web.pages.component.topnav
 
+import org.scalajs.dom.Event
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.css.definitions.components.{TopNavigation => Style}
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
 import at.happywetter.boinc.web.pages.PageLayout
 import at.happywetter.boinc.web.routes.AppRouter
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.{Rx, Var}
-import org.scalajs.dom.Event
 
-import scala.xml.Elem
+import mhtml.{Rx, Var}
 
 /**
   * Created by: 

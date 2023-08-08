@@ -1,11 +1,12 @@
 package at.happywetter.boinc.shared.rpc
 
-import at.happywetter.boinc.shared.boincrpc.BoincRPC
-import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
-
 import java.time.LocalDateTime
 import java.util.UUID
+
 import scala.concurrent.duration.FiniteDuration
+
+import at.happywetter.boinc.shared.boincrpc.BoincRPC
+import at.happywetter.boinc.shared.boincrpc.BoincRPC.ProjectAction.ProjectAction
 
 package object jobs:
 

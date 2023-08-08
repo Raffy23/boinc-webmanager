@@ -2,30 +2,49 @@ package at.happywetter.boinc.web
 
 import at.happywetter.boinc.BuildInfo
 import at.happywetter.boinc.shared.boincrpc.ServerSharedConfig
-import at.happywetter.boinc.web.boincclient.{ClientCacheHelper, ClientManager}
+import at.happywetter.boinc.web.boincclient.ClientCacheHelper
+import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.AppCSSRegistry
 import at.happywetter.boinc.web.pages._
 import at.happywetter.boinc.web.pages.boinc._
 import at.happywetter.boinc.web.pages.component.DashboardMenu
+import at.happywetter.boinc.web.pages.hardware.ActionsHardwarePage
+import at.happywetter.boinc.web.pages.hardware.SensorsHardwarePage
 import at.happywetter.boinc.web.pages.settings.HostSettings
-import at.happywetter.boinc.web.pages.swarm.{BoincSwarmPage, ProjectSwarmPage}
-import at.happywetter.boinc.web.routes.{AppRouter, LayoutManager, NProgress}
-import at.happywetter.boinc.web.util.I18N.{Locale, _}
-import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, LanguageDataProvider, ServerConfig}
+import at.happywetter.boinc.web.pages.swarm.BoincSwarmPage
+import at.happywetter.boinc.web.pages.swarm.ProjectSwarmPage
+import at.happywetter.boinc.web.routes.AppRouter
+import at.happywetter.boinc.web.routes.LayoutManager
+import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.routes.NProgressCSS
+import at.happywetter.boinc.web.stylesheets.FontAwesomeCss
+import at.happywetter.boinc.web.util.AuthClient
+import at.happywetter.boinc.web.util.DashboardMenuBuilder
+import at.happywetter.boinc.web.util.I18N.Locale
+import at.happywetter.boinc.web.util.I18N._
+import at.happywetter.boinc.web.util.LanguageDataProvider
+import at.happywetter.boinc.web.util.ServerConfig
 import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js.annotation.JSImport
 import scala.util.Try
+
+@js.native
+@JSImport("./Main.css", JSImport.Namespace)
+private object Style extends js.Object
 
 /**
   * Created by:
-  *
   * @author Raphael
-  * @version 19.07.2017
   */
 @JSExportTopLevel("Main")
 object Main:
+  NProgressCSS
+  FontAwesomeCss
+  Style
 
   @JSExport
   @Deprecated
@@ -92,8 +111,11 @@ object Main:
     AppRouter += Dashboard
     AppRouter += SettingsPage
     AppRouter += WebRPCProjectPage
-    AppRouter += HardwarePage
     AppRouter += JobManagerPage
+
+    // Hardware pages:
+    AppRouter += SensorsHardwarePage
+    AppRouter += ActionsHardwarePage
 
     // Settings pages:
     AppRouter += HostSettings

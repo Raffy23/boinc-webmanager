@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.util
 
+import scala.collection.mutable.ListBuffer
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.pages.boinc.BoincClientLayout
 import at.happywetter.boinc.web.pages.component.DashboardMenu
 import at.happywetter.boinc.web.routes.AppRouter
-
-import scala.collection.mutable.ListBuffer
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 /**
   * Created by: 

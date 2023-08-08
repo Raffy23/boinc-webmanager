@@ -1,6 +1,7 @@
 package at.happywetter.boinc.web.util
 
-import scala.xml.{Node, Text}
+import scala.xml.Node
+import scala.xml.Text
 
 /**
   * Created by:

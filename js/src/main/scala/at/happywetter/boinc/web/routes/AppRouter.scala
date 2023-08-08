@@ -1,12 +1,12 @@
 package at.happywetter.boinc.web.routes
 
-import at.happywetter.boinc.web.pages.Layout
 import org.scalajs.dom
 import org.scalajs.dom.Event
 import org.scalajs.dom.HTMLElement
-
 import scala.collection.mutable
 import scala.scalajs.js
+
+import at.happywetter.boinc.web.pages.Layout
 
 /**
   * Created by: 

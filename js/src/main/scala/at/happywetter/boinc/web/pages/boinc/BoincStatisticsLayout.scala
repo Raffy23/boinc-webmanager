@@ -1,5 +1,18 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import org.scalajs.dom.CanvasRenderingContext2D
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLCanvasElement
+import org.scalajs.dom.HTMLDivElement
+import org.scalajs.dom.HTMLInputElement
+import scala.collection.mutable
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
+import scala.scalajs.js.Date
+import scala.scalajs.js.JSConverters._
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.boincrpc.DailyStatistic
 import at.happywetter.boinc.shared.boincrpc.Statistics
 import at.happywetter.boinc.web.chartjs._
@@ -10,22 +23,9 @@ import at.happywetter.boinc.web.storage.ProjectNameCache
 import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
-import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.CanvasRenderingContext2D
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLCanvasElement
-import org.scalajs.dom.HTMLDivElement
-import org.scalajs.dom.HTMLInputElement
-
-import scala.collection.mutable
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js
-import scala.scalajs.js.Date
-import scala.scalajs.js.JSConverters._
-import scala.xml.Elem
 
 import Ordering.Double.TotalOrdering
+import mhtml.Var
 
 /**
   * Created by: 

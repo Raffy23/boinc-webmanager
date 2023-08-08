@@ -1,12 +1,13 @@
 package at.happywetter.boinc.web
 
-import at.happywetter.boinc.shared.rpc.jobs.Job
-import at.happywetter.boinc.web.util.FetchHelper
-import at.happywetter.boinc.shared.parser._
-
 import java.util.UUID
+
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+import at.happywetter.boinc.shared.parser._
+import at.happywetter.boinc.shared.rpc.jobs.Job
+import at.happywetter.boinc.web.util.FetchHelper
 
 object JobManagerClient:
 

@@ -1,9 +1,10 @@
 package at.happywetter.boinc.web.pages.component
 
-import at.happywetter.boinc.web.css.definitions.components.{DropDownMenuStyle => Style}
-import mhtml.Rx
-
 import scala.xml.Elem
+
+import at.happywetter.boinc.web.css.definitions.components.{DropDownMenuStyle => Style}
+
+import mhtml.Rx
 
 /**
   * Created by: 

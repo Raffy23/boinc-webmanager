@@ -1,9 +1,9 @@
 package at.happywetter.boinc.web.pages.boinc
-import at.happywetter.boinc.web.routes.AppRouter
-
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.xml.Elem
+
+import at.happywetter.boinc.web.routes.AppRouter
 
 /**
   * Created by: 

@@ -1,18 +1,20 @@
 package at.happywetter.boinc.util
 
 import java.net.{InetSocketAddress, Socket}
+
 import scala.concurrent.duration._
+import scala.language.postfixOps
+
 import at.happywetter.boinc.AppConfig.AutoDiscovery
 import at.happywetter.boinc.BoincManager
+
 import cats.effect.std.Semaphore
 import cats.effect.{IO, Ref, Resource}
+import com.comcast.ip4s._
 import com.comcast.ip4s.{Host, IpAddress, SocketAddress}
+import fs2.io.net.Network
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import com.comcast.ip4s._
-import fs2.io.net.Network
-
-import scala.language.postfixOps
 
 /**
   * Created by: 

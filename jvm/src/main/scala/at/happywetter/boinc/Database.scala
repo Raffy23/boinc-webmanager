@@ -1,6 +1,9 @@
 package at.happywetter.boinc
 
+import java.util.Properties
+
 import at.happywetter.boinc.repository.{CoreClientRepository, JobRepository, ProjectRepository}
+
 import cats.effect.{IO, Resource}
 import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.HikariConfig
@@ -9,8 +12,6 @@ import doobie.hikari.HikariTransactor
 import doobie.{ExecutionContexts, Transactor}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-import java.util.Properties
 
 /**
  * Created by: 

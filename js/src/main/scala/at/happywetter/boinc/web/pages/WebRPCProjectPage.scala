@@ -1,5 +1,12 @@
 package at.happywetter.boinc.web.pages
 
+import org.scalajs.dom
+import org.scalajs.dom.{Event, HTMLSelectElement}
+import scala.concurrent.Future
+import scala.scalajs.js
+import scala.scalajs.js.Dictionary
+import scala.xml.Elem
+
 import at.happywetter.boinc.shared.parser.*
 import at.happywetter.boinc.shared.webrpc.ServerStatus
 import at.happywetter.boinc.web.boincclient.ClientManager
@@ -12,14 +19,8 @@ import at.happywetter.boinc.web.util.FetchHelper.FetchRequest
 import at.happywetter.boinc.web.util.I18N.*
 import at.happywetter.boinc.web.util.RichRx.*
 import at.happywetter.boinc.web.util.{AuthClient, DashboardMenuBuilder, ErrorDialogUtil, FetchHelper}
-import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.{Event, HTMLSelectElement}
 
-import scala.concurrent.Future
-import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scala.xml.Elem
+import mhtml.Var
 
 /**
   * Created by:

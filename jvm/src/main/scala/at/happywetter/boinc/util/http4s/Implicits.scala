@@ -1,10 +1,10 @@
 package at.happywetter.boinc.util.http4s
 
-import cats.effect.IO
-import org.http4s.{Entity, EntityBody, EntityEncoder}
-
 import scala.language.higherKinds
 import scala.language.implicitConversions
+
+import cats.effect.IO
+import org.http4s.{Entity, EntityBody, EntityEncoder}
 
 /**
   * Created by: 

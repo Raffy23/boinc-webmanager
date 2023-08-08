@@ -1,5 +1,10 @@
 package at.happywetter.boinc.web.pages.boinc
 
+import org.scalajs.dom
+import org.scalajs.dom.Event
+import org.scalajs.dom.HTMLElement
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.boincclient.ClientManager
 import at.happywetter.boinc.web.css.definitions.components.TableTheme
 import at.happywetter.boinc.web.css.definitions.pages.BoincClientStyle
@@ -16,12 +21,8 @@ import at.happywetter.boinc.web.util.ErrorDialogUtil
 import at.happywetter.boinc.web.util.I18N._
 import at.happywetter.boinc.web.util.RichRx._
 import at.happywetter.boinc.web.util.XMLHelper.toXMLTextNode
-import mhtml.Var
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.HTMLElement
 
-import scala.xml.Elem
+import mhtml.Var
 
 /**
   * Created by:

@@ -1,10 +1,13 @@
 package at.happywetter.boinc.server
 
+import scala.language.implicitConversions
+
 import at.happywetter.boinc.BoincManager
 import at.happywetter.boinc.shared.boincrpc.ApplicationError
 import at.happywetter.boinc.shared.parser._
 import at.happywetter.boinc.shared.websocket._
 import at.happywetter.boinc.util.http4s.Implicits._
+
 import cats.effect.IO
 import cats.effect.std.{Queue, Supervisor}
 import cats.effect.unsafe.implicits.global
@@ -15,9 +18,7 @@ import org.http4s.websocket.WebSocketFrame
 import org.http4s.websocket.WebSocketFrame._
 import org.http4s.{EntityEncoder, HttpRoutes, Response}
 import scodec.bits.ByteVector
-import upickle.default.{readBinary, writeBinary, Writer}
-
-import scala.language.implicitConversions
+import upickle.default.{Writer, readBinary, writeBinary}
 
 /**
   * Created by: 

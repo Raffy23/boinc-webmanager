@@ -1,11 +1,11 @@
 package at.happywetter.boinc.web.boincclient
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js.Date
+
 import at.happywetter.boinc.shared.boincrpc.BoincState
 import at.happywetter.boinc.web.storage.{AppSettingsStorage, HostInfoCache, MessageCache, TaskSpecCache}
 import at.happywetter.boinc.web.util.ErrorDialogUtil
-
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scala.scalajs.js.Date
 
 /**
   * Created by: 
@@ -52,7 +52,7 @@ object ClientCacheHelper:
           MessageCache.delete(name).foreach(count => s"Deleted $count entries for $name")
 
         case _ =>
-      /* Do nothing, client has not been restarted since last page cache update  */
+    /* Do nothing, client has not been restarted since last page cache update  */
 
     HostInfoCache.saveFromState(name, state)
     TaskSpecCache.updateCacheTimeStamp(name)

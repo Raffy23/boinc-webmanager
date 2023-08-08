@@ -1,6 +1,7 @@
 package at.happywetter.boinc.server
 
 import at.happywetter.boinc.AppConfig.Config
+
 import org.http4s.Uri.{Authority, RegName, Scheme}
 import org.http4s.headers.{Host, Location}
 

@@ -1,18 +1,19 @@
 package at.happywetter.boinc.web.model
 
-import at.happywetter.boinc.shared.rpc.HostDetails
-import at.happywetter.boinc.web.boincclient.ClientManager
-import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
-import at.happywetter.boinc.web.pages.component.DataTable.{IntegerColumn, StringColumn, TableColumn}
-import at.happywetter.boinc.web.pages.component.dialog.{ConfirmDialog, EditHostDetailsDialog}
-import at.happywetter.boinc.web.routes.NProgress
-import at.happywetter.boinc.web.util.I18N._
-import mhtml.Var
 import org.scalajs.dom
 import org.scalajs.dom.Event
-
 import scala.xml.Text
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+import at.happywetter.boinc.shared.rpc.HostDetails
+import at.happywetter.boinc.web.boincclient.ClientManager
+import at.happywetter.boinc.web.pages.component.DataTable.{IntegerColumn, StringColumn, TableColumn}
+import at.happywetter.boinc.web.pages.component.dialog.{ConfirmDialog, EditHostDetailsDialog}
+import at.happywetter.boinc.web.pages.component.{DataTable, Tooltip}
+import at.happywetter.boinc.web.routes.NProgress
+import at.happywetter.boinc.web.util.I18N._
+
+import mhtml.Var
 
 /**
  * Created by: 

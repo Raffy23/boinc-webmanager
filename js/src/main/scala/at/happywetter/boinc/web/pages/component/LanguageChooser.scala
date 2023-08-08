@@ -1,11 +1,12 @@
 package at.happywetter.boinc.web.pages.component
 
+import org.scalajs.dom.Event
+import scala.xml.Elem
+
 import at.happywetter.boinc.web.util.I18N.{Locale, _}
 import at.happywetter.boinc.web.util.LanguageDataProvider
-import mhtml.Var
-import org.scalajs.dom.Event
 
-import scala.xml.Elem
+import mhtml.Var
 
 /**
   * Created by: 
