@@ -25,7 +25,7 @@ import at.happywetter.boinc.web.util.ServerConfig
 import at.happywetter.boinc.web.util.XMLHelper._
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 23.07.2017

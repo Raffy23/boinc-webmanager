@@ -19,21 +19,24 @@ import mhtml.Var
   */
 object LayoutManager:
 
-  private val rootElement = dom.document.getElementById("app")
+  private val rootElement = dom.document.body
   private val childLayout = Var[Layout](new BootstrapLayout) // TODO
   private val mainContent = Var[Elem](<div>{childLayout.map(_.render)}</div>)
 
   def init(): Unit =
     rootElement.innerHTML = ""
-    mhtml.mount(rootElement, PageLayout.heading)
+
     mhtml.mount(
       rootElement,
+      <div id="app">
+      {PageLayout.heading}
       <main>
         {DashboardMenu.component}
         <div id="client-container" class={PageLayoutStyle.clientContainer.htmlClass}>
           {mainContent}
         </div>
       </main>
+    </div>
     )
 
   def renderLayout(params: js.Dictionary[String], page: Layout): Unit =

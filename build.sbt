@@ -182,10 +182,6 @@ lazy val clientJS = (project in file("js"))
       "feather-icons" -> "4.29.0"
     ),
     Compile / npmDevDependencies ++= Seq(
-      "@tailwindcss/aspect-ratio" -> "0.4.2",
-      "@tailwindcss/forms" -> "0.5.4",
-      "@tailwindcss/typography" -> "0.5.9",
-      "tailwindcss" -> "3.3.3",
       // PostCSS plugins:
       "autoprefixer" -> "10.4.14",
       "cssnano" -> "6.0.1",

@@ -31,7 +31,7 @@ import org.http4s._
 import org.http4s.dsl.io._
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 17.08.2017
@@ -129,14 +129,14 @@ object BoincApiRoutes extends ResponseEncodingHelper:
         (client, requestBody) => {
           WebRPC
             .lookupAccount(requestBody.projectUrl, requestBody.user, Some(requestBody.password))
-            .map {
-              case (false, _) =>
-                Some(IO.pure(false))
-
-              case (true, auth) =>
-                auth.map(accKey => client.attachProject(requestBody.projectUrl, accKey, requestBody.projectName))
-            }
-            .flatMap(result => result.getOrElse(IO { false }))
+            .foldF(
+              ex =>
+                IO.println(ex) *>
+                IO.pure(false),
+              auth =>
+                client.attachProject(requestBody.projectUrl, auth, requestBody.projectName) *>
+                IO.pure(true)
+            )
         }
       )
 

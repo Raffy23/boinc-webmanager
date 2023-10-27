@@ -1,9 +1,9 @@
 module.exports = (api) => {
-  const tailwindcss = require('./tailwind.config')(api)
+  //const tailwindcss = require('./tailwind.config')(api)
   const plugins = {
     'postcss-import': {},
     'postcss-nested': {},
-    tailwindcss,
+    //tailwindcss,
     autoprefixer: {}
   }
   if (api.mode === 'production') {

@@ -16,7 +16,7 @@ import at.happywetter.boinc.web.util.XMLHelper._
 import mhtml.Var
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 25.07.2017

@@ -46,7 +46,7 @@ object WebResourcesRoute:
           link(rel := "shortcut icon", href := "/favicon.ico", `type` := "image/x-icon"),
           scalatags.Text.tags2.title("BOINC Webmanager"),
           link(rel := "stylesheet", `type` := "text/css", href := "/files/css/app.css"),
-          link(rel := "stylesheet", `type` := "text/css", href := "/files/boinc-webmanager_client-fastopt-bundle.css")
+          link(rel := "stylesheet", `type` := "text/css", href := "/files/app.css")
         ),
         body(
           div(
@@ -79,6 +79,8 @@ object WebResourcesRoute:
 
     case request @ GET -> Root / "files" / "app.js" => completeWithGipFile(appJS, request)
 
+    case request @ GET -> Root / "files" / "app.css" => completeWithGipFile(appCSS, request)
+
     case request @ GET -> Root / "favicon.ico" => completeWithGipFile("favicon.ico", request)
 
     case request @ GET -> Root / "files" / "css" / "app.css" =>
@@ -99,6 +101,10 @@ object WebResourcesRoute:
     if config.development.getOrElse(false) then "boinc-webmanager_client-fastopt-bundle.js"
     else "boinc-webmanager_client-opt-bundle.js"
 
+  private def appCSS(implicit config: Config): String =
+    if config.development.getOrElse(false) then "boinc-webmanager_client-fastopt-bundle.css"
+    else "boinc-webmanager_client-opt-bundle.css"
+
   private def fromResource(file: String, request: Request[IO]) =
     StaticFile.fromResource("/public/" + file, Some(request))
 
@@ -115,6 +121,7 @@ object WebResourcesRoute:
   private def fromFile(file: String, request: Request[IO])(implicit config: Config) =
     StaticFile.fromString(config.server.webroot + file, Some(request))
 
+  // TODO: Check Accept-Encoding: gzip, br
   private def completeWithGipFile(file: String, request: Request[IO])(implicit config: Config) =
     lazy val zipFile =
       if config.development.getOrElse(false) then fromFile(file + ".gz", request)
