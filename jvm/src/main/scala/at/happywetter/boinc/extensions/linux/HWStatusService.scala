@@ -18,7 +18,7 @@ import org.typelevel.otel4s.Attribute
 import org.typelevel.otel4s.trace.Tracer
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 02.11.2017
@@ -38,13 +38,14 @@ class HWStatusService(resolverBinary: String,
   private val logger = Slf4jLogger.getLoggerFromClass[IO](HWStatusService.getClass)
 
   private def executeResolver(host: String): IO[(CPUFrequency, SensorsData)] =
+    logger.info(s"executeResolver '$resolverBinary' with $parameters ::: List($host)") *>
     ProcessBuilder(resolverBinary, parameters ::: List(host))
       .spawn[IO]
       .use { process =>
         process.stdout.through(text.utf8.decode).compile.string
       }
       .map { stdout =>
-        val data = XML.load(stdout)
+        val data = XML.loadString(stdout)
 
         (
           CpuFreqOutputParser.parse((data \ "cpu-freq").text),

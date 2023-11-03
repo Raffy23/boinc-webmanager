@@ -13,7 +13,7 @@ import org.typelevel.otel4s.trace.Tracer
 import upickle.default._
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 02.11.2017
@@ -37,7 +37,11 @@ object HardwareAPIRoutes extends ResponseEncodingHelper:
               hwStatusService
                 .query(host)
                 .map { case (cpuFreq, sensors) => (host, cpuFreq, sensors) }
-                .handleError(_ => (host, Double.NaN, Map.empty))
+                .handleError { case throwable => {
+                  throwable.printStackTrace();
+
+                  (host, Double.NaN, Map.empty)
+                }}
             })
             .parUnorderedSequence,
           request
