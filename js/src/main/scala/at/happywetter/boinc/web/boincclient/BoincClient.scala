@@ -12,7 +12,7 @@ import at.happywetter.boinc.web.facade.Implicits._
 import at.happywetter.boinc.web.util.FetchHelper
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 20.07.2017

@@ -13,13 +13,13 @@ Boinc Webmanager is compatible with most **7.x.x** BOINC Versions
 * Auto Discovery for BOINC Clients in local network
 
 ## Building
-The Boinc Webmanager currently needs scala **3**. 
+The Boinc Webmanager currently needs scala **3.3.0**. 
 All other Dependencies are managed by SBT. To build the Project follow theses steps: 
 
  - Execute following commands to Build the Javascript Client: `clientJS/fullOptJS`
  - Copy `boinc-webmanager--opt.js` and `boinc-webmanager--jsdepts.min.js` into the `jvm/src/main/resources/web-root/` Folder
  - *(Optional) gzip the `*.js` Files to lower the amount of bytes which are transferred*
- - Run sbt in Project folder and execute `serverJVM/universal:packageBin`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-3.3.0/`
+ - Run sbt in Project folder and execute `serverJVM / Universal / packageBin`, this wil build a Fat-Jar in the following Folder: `jvm/target/scala-3.3.0/`
 
 *Note: this project does use the [native-packager](https://github.com/sbt/sbt-native-packager) and 
 therefore also linux/windows packages and a docker image can be build*

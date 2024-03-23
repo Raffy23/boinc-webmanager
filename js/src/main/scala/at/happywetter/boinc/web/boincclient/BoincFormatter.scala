@@ -83,7 +83,7 @@ object BoincFormatter:
   def convertTimeHHMMtoDouble(time: String): Double =
     val splitted = time.split(":")
     if (splitted.length != 2)
-      return -1
+      return 0.0D
 
     splitted(0).toInt + splitted(1).toInt / 60d
 

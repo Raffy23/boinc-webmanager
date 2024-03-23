@@ -28,7 +28,7 @@ import mhtml.Rx
 import mhtml.Var
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 26.08.2017
@@ -64,8 +64,8 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
                         0d,
                         0,
                         false,
-                        (-1d, -1d),
-                        (-1d, -1d),
+                        (0.0d, 0.0d),
+                        (0.0d, 0.0d),
                         List.empty,
                         0.0
     )
@@ -77,6 +77,13 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
     @inline def v[T](x: GlobalPrefsOverride => T): Rx[String] = globalPrefsOverride.map(x).map(_.toString)
     @inline def b[T](x: GlobalPrefsOverride => Boolean): Rx[Boolean] = globalPrefsOverride.map(x)
     @inline def r[T](x: GlobalPrefsOverride => T): Rx[T] = globalPrefsOverride.map(x)
+    @inline def d(x: GlobalPrefsOverride => Double): Rx[String] = globalPrefsOverride.map(x).map { case value =>
+      if (value == 0.0d) {
+        ""
+      } else {
+        BoincFormatter.convertTimeHHMM(value)
+      }
+    }
 
     @inline def orDefault[T](x: GlobalPrefsOverride => Double, default: String = ""): Rx[String] =
       globalPrefsOverride.map(x.andThen(d => if (d > 0d) d.toString else ""))
@@ -198,9 +205,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
       <div>
         <b>CPU:</b>
         <label for="cpu_start">{"start".localize}</label>
-        <input class={Style.input.htmlClass} id="cpu_start" placeholder="00:00"/>
+        <input class={Style.input.htmlClass} id="cpu_start" placeholder="00:00" value={d(_.cpuTime._1)}/>
         <label for="cpu_end">{"end".localize}</label>
-        <input class={Style.input.htmlClass} id="cpu_end" placeholder="24:00"/>
+        <input class={Style.input.htmlClass} id="cpu_end" placeholder="24:00" value={d(_.cpuTime._2)}/>
         <br/>
         {
       globalPrefsOverride.map(globalPrefsOverride => {
@@ -228,9 +235,9 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
       <div>
         <b>Network:</b>
         <label for="network_start">{"start".localize}</label>
-        <input class={Style.input.htmlClass} id="network_start" placeholder="00:00"/>
+        <input class={Style.input.htmlClass} id="net_start" placeholder="00:00" value={d(_.netTime._1)}/>
         <label for="network_end">{"end".localize}</label>
-        <input class={Style.input.htmlClass} id="network_end" placeholder="24:00"/>
+        <input class={Style.input.htmlClass} id="net_end" placeholder="24:00" value={d(_.netTime._2)}/>
         <br/>
         {
       globalPrefsOverride.map(globalPrefsOverride => {
@@ -262,11 +269,11 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
       <label for={s"${prefix}_start_${day.day}"}>{"from".localize}</label>
       <input class={Style.input.htmlClass} id={
       s"${prefix}_start_${day.day}"
-    } placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._1)}/>
+    } placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._1)} disabled={true} />
       <label for={s"${prefix}_end_${day.day}"}>{"to".localize}</label>
       <input class={Style.input.htmlClass} id={
       s"${prefix}_end_${day.day}"
-    } placeholder="24:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._2)}/>
+    } placeholder="24:00" pattern="[0-9]{2}:[0-9]{2}" value={fmt(f(day)._2)} disabled={true} />
       <br/>
     </span>
 
@@ -359,8 +366,22 @@ class BoincGlobalPrefsLayout extends BoincClientLayout:
           getHTMLInputElement("maxBytes").value.toDouble,
           getHTMLInputElement("maxBytesPeriod").value.toInt,
           globalPrefsOverride.networkWifiOnly,
-          globalPrefsOverride.cpuTime,
-          globalPrefsOverride.netTime,
+          (
+            BoincFormatter.convertTimeHHMMtoDouble(
+              document.querySelector("[id='cpu_start']").asInstanceOf[HTMLInputElement].value
+            ),
+            BoincFormatter.convertTimeHHMMtoDouble(
+              document.querySelector("[id='cpu_end']").asInstanceOf[HTMLInputElement].value
+            )
+          ),
+          (
+            BoincFormatter.convertTimeHHMMtoDouble(
+              document.querySelector("[id='net_start']").asInstanceOf[HTMLInputElement].value
+            ),
+            BoincFormatter.convertTimeHHMMtoDouble(
+              document.querySelector("[id='net_end']").asInstanceOf[HTMLInputElement].value
+            )
+          ),
           dayPrefsData.zipWithIndex.map { case (day, index) =>
             DayEntry(index + 1, (day.cpuStart, day.cpuEnd), (day.netStart, day.netEnd))
           }.toList,

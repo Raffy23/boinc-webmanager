@@ -30,8 +30,10 @@ object Otel4sMiddelware:
           .build
           .use { span =>
             for {
-              reqBodySize <- req.body.compile.count
-              _ <- span.addAttribute(Attribute("http.request.body.size", reqBodySize))
+              _ <- OptionT.fromOption[IO](req.headers.get(CIString("Content-Length"))).foreachF {
+                contentLengthHeader =>
+                  span.addAttribute(Attribute("http.request.body.size", contentLengthHeader.head.value))
+              }
 
               response <- service(req).handleErrorWith { case error: Throwable =>
                 IO { error.printStackTrace() } *>
@@ -40,7 +42,6 @@ object Otel4sMiddelware:
                   IO.raiseError(error)
               }
 
-              // Can't do that here because that drains static file contents confusing Ember:
               _ <- OptionT.fromOption[IO](response.headers.get(CIString("Content-Length"))).foreachF {
                 contentLengthHeader =>
                   span.addAttribute(Attribute("http.response.body.size", contentLengthHeader.head.value))

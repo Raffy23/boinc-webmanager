@@ -191,6 +191,7 @@ object BoincApiRoutes extends ResponseEncodingHelper:
         }
       )
 
+    // TODO: Should this be PUT ?
     case request @ POST -> Root / "boinc" / name / "global_prefs_override" =>
       executeForClient[GlobalPrefsOverride, Boolean](hostManager,
                                                      name,

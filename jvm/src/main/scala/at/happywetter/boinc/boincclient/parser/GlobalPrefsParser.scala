@@ -6,7 +6,7 @@ import scala.xml.{NodeSeq, Text}
 import at.happywetter.boinc.shared.boincrpc.{DayEntry, GlobalPrefsOverride}
 
 /**
-  * Created by: 
+  * Created by:
   *
   * @author Raphael
   * @version 25.08.2017
@@ -70,7 +70,7 @@ object GlobalPrefsParser:
       )
     }.toList,
     // (node \ "net_start_hour").theSeq.zip(node \ "net_end_hour").map { case (start, end) => (start.text.toDouble, end.text.toDouble) }.toList,
-    (node \ "vm_max_used_frac").text.tryToDouble
+    (node \ "vm_max_used_pct").text.tryToDouble
   )
 
   def toXML(globalPrefsOverride: GlobalPrefsOverride): NodeSeq =
@@ -107,6 +107,7 @@ object GlobalPrefsParser:
           <start_hour>{g.cpuTime._1.toBoincDouble}</start_hour>,
           <end_hour>{g.cpuTime._2.toBoincDouble}</end_hour>
         )
+      else NodeSeq.Empty
     }
       {
       if g.netTime._1 > 0d && g.netTime._2 > 0d then
@@ -114,27 +115,34 @@ object GlobalPrefsParser:
           <net_start_hour>{g.netTime._1.toBoincDouble}</net_start_hour>,
           <net_end_hour>{g.netTime._2.toBoincDouble}</net_end_hour>
         )
+      else NodeSeq.Empty
     }
       {
-      globalPrefsOverride.dayPrefs.map { case DayEntry(day, (start, end), (net_start, net_end)) =>
-        <day_prefs>
+      globalPrefsOverride.dayPrefs
+        .filter { case DayEntry(day, (start, end), (net_start, net_end)) =>
+          (start > 0d && end > 0d) || (net_start > 0d && net_end > 0d)
+        }
+        .map { case DayEntry(day, (start, end), (net_start, net_end)) =>
+          <day_prefs>
               <day_of_week>{day}</day_of_week>
               {
-          if start > 0d && end > 0d then
-            Seq(
-              <start_hour>{start}</start_hour>,
-              <end_hour>{end}</end_hour>
-            )
-        }
+            if start > 0d && end > 0d then
+              Seq(
+                <start_hour>{start}</start_hour>,
+                <end_hour>{end}</end_hour>
+              )
+            else NodeSeq.Empty
+          }
               {
-          if net_start > 0d && net_end > 0d then
-            Seq(
-              <net_start_hour>{net_start}</net_start_hour>,
-              <net_end_hour>{net_end}</net_end_hour>
-            )
-        }
+            if net_start > 0d && net_end > 0d then
+              Seq(
+                <net_start_hour>{net_start}</net_start_hour>,
+                <net_end_hour>{net_end}</net_end_hour>
+              )
+            else NodeSeq.Empty
+          }
               </day_prefs>
-      }
+        }
     }
-      <vm_max_used_frac>{g.vmMaxUsedFrac.toBoincDouble}</vm_max_used_frac>
+      <vm_max_used_pct>{g.vmMaxUsedFrac.toBoincDouble}</vm_max_used_pct>
     </global_preferences>
